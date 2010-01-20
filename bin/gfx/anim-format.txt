@@ -1,0 +1,10 @@
+[animation-name] // reserved names: default, stand, spawn, death, inactive
+index: filename frametime nextframe
+index: filename frametime nextframe
+index: filename frametime nextframe
+index: filename frametime nextframe
+...
+// index: 1..999 - frame ID for this animation
+// filename: png file in gfx/ folder. must NOT contain spaces
+// frametime 0..999 - how to long this frame is shown, in ms. 0 means infinite
+// nextframe 0..999 - index of next frame OR name of next animation. "rm" means remove (NYI).
