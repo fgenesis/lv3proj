@@ -32,6 +32,10 @@ void Engine::InitScreen(uint32 sizex, uint32 sizey, uint8 bpp /* = 0 */, bool fu
     if(fullscreen)
         flags |= SDL_FULLSCREEN;
     _screen = SDL_SetVideoMode(sizex, sizey, bpp, flags);
+
+    // the tile mgr uses an additional surface to pre-render static objects to save CPU,
+    // which copies information from the screen surface and must be created after it
+    _tilemgr->InitStaticSurface();
 }
 
 void Engine::Run(void)
@@ -51,12 +55,25 @@ void Engine::Run(void)
 
 void Engine::_ProcessEvents(void)
 {
-    SDL_PollEvent(&_event);
-    switch(_event.type)
+    SDL_Event evt;
+    SDL_PollEvent(&evt);
+    switch(evt.type)
     {
-    case SDL_QUIT:
-        _quit = true;
-        break;
+        case SDL_KEYDOWN:
+            OnKeyDown(evt.key.keysym.sym, evt.key.keysym.mod);
+            break;
+
+        case SDL_KEYUP:
+            OnKeyUp(evt.key.keysym.sym, evt.key.keysym.mod);
+            break;
+
+        case SDL_ACTIVEEVENT:
+            OnWindowEvent(evt.active.gain);
+            break;
+
+        case SDL_QUIT:
+            _quit = true;
+            break;
     }
 }
 
@@ -86,81 +103,27 @@ void Engine::_CalcFPS(void)
 
 bool Engine::Setup(void)
 {
-    SDL_Surface *pic = IMG_Load("gfx/test.png");
-    resMgr.AddResource("test.png", (void*)pic, ALLOC_FREESURFACE);
-
+    // load all *.anim files, and all additional files referenced in them
     std::deque<std::string> files = GetFileList("gfx");
     for(std::deque<std::string>::iterator it = files.begin(); it != files.end(); it++)
     {
         if(!memicmp(it->c_str() + (it->size() - 5), ".anim", 5))
         {
-            std::string fn("gfx/");
-            fn += *it;
-            Anim *ani = LoadAnimFile((char*)fn.c_str());
-            resMgr.AddResource((char*)it->c_str(), (void*)ani, ALLOC_DELETE);
+            Anim *ani = resMgr.LoadAnim((char*)it->c_str(), true);
 
             for(AnimMap::iterator am = ani->anims.begin(); am != ani->anims.end(); am++)
-            {
                 for(AnimFrameStore::iterator af = am->second.begin(); af != am->second.end(); af++)
-                {
-                    if(SDL_Surface *surface = (SDL_Surface*)resMgr.GetResource((char*)af->filename.c_str(), true))
-                    {
-                        af->surface = surface;
-                    }
-                    else
-                    {
-                        std::string fn2("gfx/");
-                        fn2 += af->filename;
-                        af->surface = IMG_Load(fn2.c_str());
-                        resMgr.AddResource((char*)af->filename.c_str(), (void*)af->surface, ALLOC_FREESURFACE);
-                    }
-                }
-            }
-
+                    af->surface = resMgr.LoadImage((char*)af->filename.c_str(), true); // get all images referenced
         }
     }
 
-    // TEMP HACK: LETS SEE HOW IT WORKS
-    SDL_Surface *blk = IMG_Load("gfx/block1.png");
-    SDL_Surface *oleft = IMG_Load("gfx/outlet1.png");
-    SDL_Surface *oright = IMG_Load("gfx/outlet2.png");
-
-
-    _tilemgr->SetStaticTileSurface(0,20,oleft);
-    _tilemgr->SetStaticTileSurface(15,20,oright);
-    for(uint32 i = 1; i < 15; i++)
-    {
-        _tilemgr->SetAnimatedTileSurface(i,20, new AnimatedTile("en.anim"));
-    }
-
- 
-    for(uint32 x = 16; x < 22; x++)
-        for(uint32 y = 1; y < 6; y++)
-            _tilemgr->SetStaticTileSurface(x,y,blk);
-
-    _tilemgr->SetStaticTileSurface(17,11,oleft);
-    _tilemgr->SetAnimatedTileSurface(18,11, new AnimatedTile("en.anim"));
-    _tilemgr->SetAnimatedTileSurface(19,11, new AnimatedTile("en.anim"));
-    _tilemgr->SetStaticTileSurface(20,11,oright);
-
-    _tilemgr->SetStaticTileSurface(6,11,oleft);
-    _tilemgr->SetAnimatedTileSurface(7,11, new AnimatedTile("en.anim"));
-    _tilemgr->SetAnimatedTileSurface(8,11, new AnimatedTile("en.anim"));
-    _tilemgr->SetStaticTileSurface(9,11,oright);
-
-
-    _tilemgr->SetStaticTileSurface(6,27,blk);
-    _tilemgr->SetStaticTileSurface(7,27,blk);
-    _tilemgr->SetStaticTileSurface(8,27,blk);
-    _tilemgr->SetStaticTileSurface(9,27,blk);
-
-    _tilemgr->SetStaticTileSurface(5,28,oleft);
-    _tilemgr->SetAnimatedTileSurface(6,28, new AnimatedTile("en.anim"));
-    _tilemgr->SetAnimatedTileSurface(7,28, new AnimatedTile("en.anim"));
-    _tilemgr->SetAnimatedTileSurface(8,28, new AnimatedTile("en.anim"));
-    _tilemgr->SetAnimatedTileSurface(9,28, new AnimatedTile("en.anim"));
-    _tilemgr->SetStaticTileSurface(10,28,oright);
-
+    Anim *en = resMgr.LoadAnim("en.anim");
+    _tilemgr->SetStaticTileSurface(3,10, resMgr.LoadImage("outlet1.png"));
+    _tilemgr->SetAnimatedTileSurface(4,10, new AnimatedTile("en.anim"));
+    _tilemgr->SetAnimatedTileSurface(5,10, new AnimatedTile("en.anim"));
+    _tilemgr->SetAnimatedTileSurface(6,10, new AnimatedTile("en.anim"));
+    _tilemgr->SetAnimatedTileSurface(7,10, new AnimatedTile("en.anim"));
+    _tilemgr->SetStaticTileSurface(8,10, resMgr.LoadImage("outlet2.png"));
 
     return true;
 }
@@ -170,11 +133,34 @@ void Engine::_Process(uint32 ms)
     _tilemgr->HandleAnimation(ms);
 }
 
+void Engine::OnWindowEvent(bool active)
+{
+    // TODO: pause if lost focus?
+}
+
+void Engine::OnKeyDown(SDLKey key, SDLMod mod)
+{
+    if(key == SDLK_F4 && (mod & KMOD_LALT))
+        _quit = true;
+    if(key == SDLK_RETURN && (mod & KMOD_LALT))
+    {
+        uint32 x = GetResX();
+        uint32 y = GetResY();
+        uint8 bpp = GetBPP();
+        bool fullscreen = _screen->flags & SDL_FULLSCREEN;
+        SDL_FreeSurface(_screen);
+        InitScreen(x,y,bpp, !fullscreen);
+    }
+
+}
+
+void Engine::OnKeyUp(SDLKey key, SDLMod mod)
+{
+}
+
 void Engine::_Render(void)
 {
-    // TODO: render background?
-    SDL_BlitSurface((SDL_Surface*)resMgr.GetResource("test.png"), NULL, GetSurface(), NULL);
-
+    //_tilemgr->RenderBackground();
     _tilemgr->RenderStaticTiles();
     _tilemgr->RenderAnimatedTiles();
     // TODO: render sprites

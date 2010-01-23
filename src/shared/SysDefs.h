@@ -81,6 +81,12 @@
     typedef uint32 DWORD;
 #endif
 
+#ifdef _LP64 // to be set for 64 bit compile
+#   define PTRFMT "0x"I64FMT
+#else
+#   define PTRFMT "0x%u"
+#endif
+
 #ifndef SIGQUIT
 #define SIGQUIT 3
 #endif

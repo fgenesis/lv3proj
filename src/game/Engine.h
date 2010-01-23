@@ -6,6 +6,27 @@
 
 #include "TileMgr.h"
 
+/* // -- not used, maybe later?
+enum SurfaceLayer
+{
+    LAYER_BACKGROUND = 0, // background, can be animated (spaceship, for example)
+    LAYER_STATICTILES,    // foreground, static tiles (to be drawn on a singe surface and only updated if needed)
+    LAYER_DYNAMICTILES,   // animated tiles, to be drawn on every frame
+    LAYER_SPRITES,        // sprite layer (monsters, items, switches, vikings, effects, etc)
+
+    LAYER_MAX             // do not use
+};
+*/
+
+
+struct Point
+{
+    Point() : x(0), y(0) {}
+    Point(uint32 x_, uint32 y_) : x(x_), y(y_) {}
+    uint32 x;
+    uint32 y;
+};
+
 class Engine
 {
 public:
@@ -16,11 +37,15 @@ public:
     bool Setup(void);
 
     void OnMouseEvent(uint32 button, uint32 x, uint32 y, int32 rx, uint32 ry);
-    void OnKeyDown(uint32 key);
-    void OnKeyUp(uint32 key);
+    void OnKeyDown(SDLKey key, SDLMod mod);
+    void OnKeyUp(SDLKey key, SDLMod mod);
     void OnWindowEvent(bool active);
 
 
+    inline uint32 GetResX(void) { return _screen->w; }
+    inline uint32 GetResY(void) { return _screen->h; }
+    inline uint8 GetBPP(void) { return _screen->format->BitsPerPixel; }
+    inline Point GetCameraPos(void) { return _cameraPos; }
     inline SDL_Surface *GetSurface(void) { return _screen; }
     void SetTitle(char *title);
     inline uint32 GetFPS(void) { return _fps; }
@@ -36,7 +61,6 @@ private:
     void _Render(void);
     void _Process(uint32 ms);
 
-    SDL_Event _event;
     std::string _wintitle;
     SDL_Surface *_screen;
     uint32 _winsizex;
@@ -45,6 +69,7 @@ private:
     uint32 _framecounter;
     uint32 _fpsclock;
     uint32 _sleeptime;
+    Point _cameraPos; // camera / "screen anchor" position in 2D-space, top-left corner (starts with (0,0) )
     bool _quit;
 
 };
