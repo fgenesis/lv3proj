@@ -1,13 +1,13 @@
 [stand]
-1: en1.png 75 2
-2: en2.png 75 3
-3: en3.png 75 1
+1: sprites/en1.png 75 2
+2: sprites/en2.png 75 3
+3: sprites/en3.png 75 1
 
 [spawn]
-1: en1.png 1 stand
+1: sprites/en1.png 1 stand
 
 [death]
-1: en3.png 400 0
+1: sprites/en3.png 400 0
 
 [inactive]
-1: empty16.png 0 0
+1: sprites/empty16.png 0 0

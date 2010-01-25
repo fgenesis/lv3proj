@@ -23,6 +23,9 @@
 *.suo
 *.ncb
 *.pdb
+*.ilk
+*.exp
+*.tmp
 temp/*
 
 #

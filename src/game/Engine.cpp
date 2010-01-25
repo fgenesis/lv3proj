@@ -1,16 +1,18 @@
 #include "common.h"
 #include "Animparser.h"
 #include "ResourceMgr.h"
+#include "SoundCore.h"
+#include "AsciiLevelParser.h"
 #include "Engine.h"
 
 
-
+volatile uint32 Engine::s_curFrameTime;
 
 Engine::Engine()
 : _screen(NULL), _fps(0), _sleeptime(0), _quit(false), _framecounter(0)
 {
     _tilemgr = new TileMgr(this);
-    _fpsclock = clock();
+    _fpsclock = s_curFrameTime = clock();
 }
 
 Engine::~Engine()
@@ -28,7 +30,7 @@ void Engine::InitScreen(uint32 sizex, uint32 sizey, uint8 bpp /* = 0 */, bool fu
 {
     _winsizex = sizex;
     _winsizey = sizey;
-    uint32 flags = SDL_HWSURFACE | SDL_DOUBLEBUF | SDL_ANYFORMAT;
+    uint32 flags = SDL_HWSURFACE | SDL_DOUBLEBUF | SDL_ANYFORMAT | SDL_HWACCEL;
     if(fullscreen)
         flags |= SDL_FULLSCREEN;
     _screen = SDL_SetVideoMode(sizex, sizey, bpp, flags);
@@ -44,6 +46,7 @@ void Engine::Run(void)
     uint32 oldms;
     while(!_quit)
     {
+        s_curFrameTime = ms;
         _ProcessEvents();
         oldms = ms;
         ms = clock();
@@ -117,20 +120,18 @@ bool Engine::Setup(void)
         }
     }
 
-    Anim *en = resMgr.LoadAnim("en.anim");
-    _tilemgr->SetStaticTileSurface(3,10, resMgr.LoadImage("outlet1.png"));
-    _tilemgr->SetAnimatedTileSurface(4,10, new AnimatedTile("en.anim"));
-    _tilemgr->SetAnimatedTileSurface(5,10, new AnimatedTile("en.anim"));
-    _tilemgr->SetAnimatedTileSurface(6,10, new AnimatedTile("en.anim"));
-    _tilemgr->SetAnimatedTileSurface(7,10, new AnimatedTile("en.anim"));
-    _tilemgr->SetStaticTileSurface(8,10, resMgr.LoadImage("outlet2.png"));
+    AsciiLevel *level = LoadAsciiLevel("levels/testlevel.txt");
+    _tilemgr->LoadAsciiLevel(level);
+    delete level;
+
+    sndCore.PlayMusic("lv1_snes_ship.ogg");
 
     return true;
 }
 
 void Engine::_Process(uint32 ms)
 {
-    _tilemgr->HandleAnimation(ms);
+    _tilemgr->HandleAnimation();
 }
 
 void Engine::OnWindowEvent(bool active)

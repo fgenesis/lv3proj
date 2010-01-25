@@ -6,6 +6,7 @@
 
 class Engine;
 struct SDL_Surface;
+struct AsciiLevel;
 
 class TileMgr
 {
@@ -32,7 +33,9 @@ public:
     void InitStaticSurface(void);
     void RenderStaticTiles(void);
     void RenderAnimatedTiles(void);
-    void HandleAnimation(uint32 ms);
+    void HandleAnimation(void);
+
+    bool LoadAsciiLevel(AsciiLevel *level);
 
 
 private:

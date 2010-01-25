@@ -19,7 +19,7 @@
 		<Configuration
 			Name="Debug|Win32"
 			OutputDirectory="$(SolutionDir)bin"
-			IntermediateDirectory="$(SolutionDir)temp\$(ConfigurationName)"
+			IntermediateDirectory="$(SolutionDir)temp\$(ConfigurationName)\$(ProjectName)"
 			ConfigurationType="1"
 			CharacterSet="2"
 			>
@@ -94,7 +94,7 @@
 		<Configuration
 			Name="Release|Win32"
 			OutputDirectory="$(SolutionDir)bin"
-			IntermediateDirectory="$(SolutionDir)temp\$(ConfigurationName)"
+			IntermediateDirectory="$(SolutionDir)temp\$(ConfigurationName)\$(ProjectName)"
 			ConfigurationType="1"
 			CharacterSet="2"
 			WholeProgramOptimization="1"
@@ -145,7 +145,7 @@
 				Name="VCLinkerTool"
 				OutputFile="$(OutDir)\lv3proj.exe"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="lib"
+				AdditionalLibraryDirectories=""
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				OptimizeReferences="2"

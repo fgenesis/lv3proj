@@ -25,6 +25,8 @@ public:
             n >>= 1;
             ++req;
         }
+        if((1 << req) < dim)
+            req++;
 
         bool mustcopy = _size || data;
 

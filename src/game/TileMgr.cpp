@@ -1,6 +1,7 @@
 #include "common.h"
 #include "Engine.h"
 #include "ResourceMgr.h"
+#include "AsciiLevelParser.h"
 #include "TileMgr.h"
 
 AnimatedTile::AnimatedTile(char *afile)
@@ -9,6 +10,16 @@ AnimatedTile::AnimatedTile(char *afile)
     ani = resMgr.LoadAnim(afile, false);
     ASSERT(ani);
     SetupDefaults();
+    nextupdate = Engine::GetCurFrameTime() + curFrame->frametime;
+}
+
+AnimatedTile::AnimatedTile(Anim *a)
+: surface(NULL)
+{
+    ani = a;
+    ASSERT(ani);
+    SetupDefaults();
+    nextupdate = Engine::GetCurFrameTime() + curFrame->frametime;
 }
 
 TileMgr::TileMgr(Engine* e)
@@ -27,7 +38,7 @@ void TileMgr::InitStaticSurface(void)
 
     // create the surface where static tiles will be drawn to,
     // use the same resolution as the screen
-    _staticSurface = SDL_CreateRGBSurface(SDL_HWSURFACE, engine->GetResX(), engine->GetResY(), engine->GetBPP(), 0, 0, 0, 0);
+    _staticSurface = SDL_CreateRGBSurface(SDL_HWSURFACE | SDL_HWACCEL, engine->GetResX(), engine->GetResY(), engine->GetBPP(), 0, 0, 0, 0);
     ASSERT(_staticSurface);
 }
 
@@ -101,19 +112,16 @@ void TileMgr::RenderAnimatedTiles(void)
     }
 }
 
-void TileMgr::HandleAnimation(uint32 ms)
+void TileMgr::HandleAnimation(void)
 {
     uint32 to = animTiles.size2d();
     AnimatedTile *tile;
-    uint32 diff;
     for(uint32 i = 0; i < to; ++i)
     {
         if(tile = animTiles[i])
         {
-            if(tile->timeleft < ms)
+            if(tile->nextupdate < Engine::GetCurFrameTime())
             {
-                diff = ms - tile->timeleft;
-                tile->timeleft = diff;
                 if(tile->curFrame->nextframe)
                 {
                     tile->curFrame = &((*tile->curFrameStore)[tile->curFrame->nextframe - 1]);
@@ -125,12 +133,54 @@ void TileMgr::HandleAnimation(uint32 ms)
                     tile->curFrame = &((*tile->curFrameStore)[0]);
                     tile->surface = tile->curFrame->surface;
                 }
-                tile->timeleft = tile->curFrame->frametime;
-            }
-            else
-            {
-                tile->timeleft -= ms;
+                tile->nextupdate = Engine::GetCurFrameTime() + tile->curFrame->frametime;
             }
         }
     }
 }
+
+bool TileMgr::LoadAsciiLevel(AsciiLevel *level)
+{
+    std::map<std::string, AnimatedTile*> atmap; // stores already allocated animated tiles
+    std::map<std::string, AnimatedTile*>::iterator it;
+    for(uint32 y = 0; y < level->tiles.size1d(); ++y)
+    {
+        for(uint32 x = 0; x < level->tiles.size1d(); ++x)
+        {
+            std::vector<std::string>& filevect = level->tiledata[level->tiles(x,y)];
+            if(filevect.size())
+            {
+                for(uint32 i = 0; i < filevect.size(); ++i)
+                {
+                    std::string& f = filevect[i];
+                    if(f.size() >= 4 && f.substr(f.size() - 4, 4) == ".png")
+                    {
+                        SetStaticTileSurface(x,y,resMgr.LoadImage((char*)f.c_str()));
+                    }
+                    else if(f.size() >= 5 && f.substr(f.size() - 5, 5) == ".anim")
+                    {
+                        it = atmap.find(f);
+                        AnimatedTile *atile = NULL;
+                        if(it == atmap.end())
+                        {
+                            Anim *ani = resMgr.LoadAnim((char*)f.c_str());
+                            if(ani)
+                            {
+                                atile = new AnimatedTile(ani);
+                                atmap[f] = atile;
+                            }
+                            else
+                                logerror("TileMgr::LoadAsciiLevel: Error loading '%s'", f.c_str());
+                        }
+                        else
+                            atile = it->second;
+                            
+                        SetAnimatedTileSurface(x,y,atile);
+                    }
+                }
+            }
+        }
+    }
+    return true;
+}
+            

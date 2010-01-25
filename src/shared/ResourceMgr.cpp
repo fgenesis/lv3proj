@@ -1,5 +1,6 @@
 #include <SDL/SDL.h>
 #include <SDL/SDL_image.h>
+#include <SDL/SDL_mixer.h>
 
 #include "common.h"
 #include "ResourceMgr.h"
@@ -63,6 +64,10 @@ void ResourceMgr::_Delete(void *ptr, ResourceType rt)
             SDL_FreeSurface((SDL_Surface*)ptr);
             break;
 
+        case RESTYPE_MIX_CHUNK:
+            Mix_FreeChunk((Mix_Chunk*)ptr);
+            break;
+
         default:
             ASSERT(false);
     }
@@ -108,6 +113,27 @@ Anim *ResourceMgr::LoadAnim(char *name, bool count /* = false */)
     return ani;
 }
 
+Mix_Music *ResourceMgr::LoadMusic(char *name, bool count /* = false */)
+{
+    std::string fn("music/");
+    fn += name;
+
+    bool loaded = false;
+    Mix_Music *music = (Mix_Music*)_GetPtr(fn);
+    if(!music)
+    {
+        music = Mix_LoadMUS((char*)fn.c_str());
+        loaded = true;
+    }
+    if(count || loaded)
+    {
+        _SetPtr(fn, (void*)music);
+        _IncRef((void*)music, RESTYPE_MIX_CHUNK);
+    }
+    return music;
+}
+
+
 memblock *ResourceMgr::LoadFile(char *name, bool count /* = false */)
 {
     std::string fn(name);
@@ -141,5 +167,5 @@ memblock *ResourceMgr::LoadFile(char *name, bool count /* = false */)
 }
 
 
-// extern, global (since we arent using singletons here)
+// extern, global (since we aren't using singletons here)
 ResourceMgr resMgr;

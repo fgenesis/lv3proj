@@ -18,8 +18,8 @@
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory="$(SolutionDir)temp\$(ConfigurationName)"
-			IntermediateDirectory="$(SolutionDir)temp\$(ConfigurationName)"
+			OutputDirectory="$(SolutionDir)temp\$(ConfigurationName)\$(ProjectName)"
+			IntermediateDirectory="$(SolutionDir)temp\$(ConfigurationName)\$(ProjectName)"
 			ConfigurationType="4"
 			CharacterSet="2"
 			>
@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="include"
+				AdditionalIncludeDirectories="include;libpng"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -83,8 +83,8 @@
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="$(SolutionDir)temp\$(ConfigurationName)"
-			IntermediateDirectory="$(SolutionDir)temp\$(ConfigurationName)"
+			OutputDirectory="$(SolutionDir)temp\$(ConfigurationName)\$(ProjectName)"
+			IntermediateDirectory="$(SolutionDir)temp\$(ConfigurationName)\$(ProjectName)"
 			ConfigurationType="4"
 			CharacterSet="2"
 			WholeProgramOptimization="1"
@@ -110,7 +110,7 @@
 				InlineFunctionExpansion="2"
 				EnableIntrinsicFunctions="true"
 				FavorSizeOrSpeed="1"
-				AdditionalIncludeDirectories="include"
+				AdditionalIncludeDirectories="include;libpng"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
 				StringPooling="true"
 				RuntimeLibrary="2"
@@ -179,6 +179,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\shared\AsciiLevelParser.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\shared\AsciiLevelParser.h"
+				>
+			</File>
+			<File
 				RelativePath=".\shared\common.h"
 				>
 			</File>
@@ -191,11 +199,23 @@
 				>
 			</File>
 			<File
+				RelativePath=".\shared\IMG_savepng.c"
+				>
+			</File>
+			<File
+				RelativePath=".\shared\IMG_savepng.h"
+				>
+			</File>
+			<File
 				RelativePath=".\shared\log.cpp"
 				>
 			</File>
 			<File
 				RelativePath=".\shared\log.h"
+				>
+			</File>
+			<File
+				RelativePath=".\shared\MD5Hash.h"
 				>
 			</File>
 			<File
@@ -208,6 +228,14 @@
 			</File>
 			<File
 				RelativePath=".\shared\ResourceMgr.h"
+				>
+			</File>
+			<File
+				RelativePath=".\shared\SoundCore.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\shared\SoundCore.h"
 				>
 			</File>
 			<File

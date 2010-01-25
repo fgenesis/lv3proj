@@ -18,7 +18,6 @@ enum SurfaceLayer
 };
 */
 
-
 struct Point
 {
     Point() : x(0), y(0) {}
@@ -49,6 +48,7 @@ public:
     inline SDL_Surface *GetSurface(void) { return _screen; }
     void SetTitle(char *title);
     inline uint32 GetFPS(void) { return _fps; }
+    inline static uint32 GetCurFrameTime(void) { return s_curFrameTime; }
     inline void SetSleepTime(uint32 t) { _sleeptime = t; }
     void Run(void);
 
@@ -63,6 +63,7 @@ private:
 
     std::string _wintitle;
     SDL_Surface *_screen;
+    static volatile uint32 s_curFrameTime;
     uint32 _winsizex;
     uint32 _winsizey;
     uint32 _fps;

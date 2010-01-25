@@ -10,11 +10,12 @@ struct AnimatedTile
 {
     AnimatedTile() : surface(NULL) {}
     AnimatedTile(char *afile);
+    AnimatedTile(Anim *a);
     Anim *ani;
     AnimFrame *curFrame;
     AnimFrameStore *curFrameStore;
     SDL_Surface *surface; // currently active surface
-    uint32 timeleft; // the time until this tile will change its texture
+    uint32 nextupdate; // the time when this tile will change its texture (Engine::GetCurrentFrameTime() + X)
 
     void SetupDefaults(void)
     {
@@ -27,7 +28,6 @@ struct AnimatedTile
         }
         curFrameStore = &(am->second);
         curFrame = &((*curFrameStore)[0]);
-        timeleft = curFrame->frametime;
     }
 };
 

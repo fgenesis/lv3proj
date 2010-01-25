@@ -1,0 +1,15 @@
+[stand]
+1: sprites/enx1.png 130 2
+2: sprites/enx2.png 130 3
+3: sprites/enx3.png 130 4
+4: sprites/enx4.png 130 5
+5: sprites/enx5.png 130 1
+
+[spawn]
+1: sprites/enx1.png 1 stand
+
+[death]
+1: sprites/enx3.png 400 0
+
+[inactive]
+1: sprites/empty16.png 0 0

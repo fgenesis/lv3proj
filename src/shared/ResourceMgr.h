@@ -2,6 +2,7 @@
 #define RESOURCEMGR_H
 
 #include <map>
+#include <SDL/SDL_mixer.h>
 
 
 struct Anim;
@@ -14,7 +15,8 @@ class ResourceMgr
     {
         RESTYPE_GENERIC,
         RESTYPE_ANIM,
-        RESTYPE_SDL_SURFACE
+        RESTYPE_SDL_SURFACE,
+        RESTYPE_MIX_CHUNK
     };
 
     struct ResStruct
@@ -33,9 +35,10 @@ public:
 
     template <class T> inline bool Drop(T *ptr) { _DecRef((void*)ptr); }
 
-    SDL_Surface *LoadImage(char *fn, bool count = false);
-    Anim *LoadAnim(char *fn, bool count = false);
-    memblock *LoadFile(char *fn, bool count = false);
+    SDL_Surface *LoadImage(char *name, bool count = false);
+    Anim *LoadAnim(char *name, bool count = false);
+    Mix_Music *LoadMusic(char *name, bool count = false);
+    memblock *LoadFile(char *name, bool count = false);
 
 private:
     inline void *_GetPtr(std::string& fn)
