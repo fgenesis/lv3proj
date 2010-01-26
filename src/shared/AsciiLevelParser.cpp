@@ -91,7 +91,9 @@ AsciiLevel *LoadAsciiLevel(char *fn)
     rewind(fh);
 
     char *buf = new char[size];
-    fread(buf, 1, size, fh);
+    uint32 bytes = fread(buf, 1, size, fh);
+    ASSERT(bytes <= size);
+    buf[bytes] = 0;
     fclose(fh);
 
     AsciiLevel *level = ParseAsciiLevel(buf);

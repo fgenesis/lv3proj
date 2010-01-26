@@ -243,6 +243,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\shared\Tile.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\shared\Tile.h"
 				>
 			</File>

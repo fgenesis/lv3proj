@@ -56,10 +56,15 @@ Anim *ParseAnimData(char *strbuf)
             switch(column)
             {
                 case 0: // index - integer
-                idx = atoi(it->c_str()) - 1; // note the -1 here !!
-                if(frames.size() < idx + 1)
-                    frames.resize(idx + 1); // make space if needed
-                frames[idx].index = idx + 1;
+                {
+                    uint32 x = atoi(it->c_str());
+                    if(!x)
+                        continue; // bullshit line, continue
+                    idx = x - 1; // note the -1 here !!
+                    if(frames.size() < idx + 1)
+                        frames.resize(idx + 1); // make space if needed
+                    frames[idx].index = idx + 1;
+                }
                 break;
 
                 case 1: // filename - string
@@ -105,12 +110,16 @@ Anim *LoadAnimFile(char* fn)
         return NULL;
     }
 
+    logdebug("LoadAnimFile: '%s'", fn);
+
     fseek(fh, 0, SEEK_END);
     uint32 size = ftell(fh);
     rewind(fh);
 
     char *buf = new char[size];
-    fread(buf, 1, size, fh);
+    uint32 bytes = fread(buf, 1, size, fh);
+    ASSERT(bytes <= size);
+    buf[bytes] = 0;
     fclose(fh);
 
     Anim *ani = ParseAnimData(buf);
