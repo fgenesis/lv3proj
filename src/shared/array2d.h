@@ -16,37 +16,37 @@ public:
             data[i] = val;
     }
 
-    inline void resize(uint32 dim)
+    inline void resize(uint32 dim, T fillval)
     {
         uint32 req = 0;
-        uint32 n = dim >> 1;
-        while(n)
+        uint32 newsize = 1;
+
+        // find out how often we have to shift to reach the desired capacity capacity
+        while(newsize < dim)
         {
-            n >>= 1;
+            newsize <<= 1;
             ++req;
         }
-        if((uint32(1) << req) < dim)
-            req++;
 
-        bool mustcopy = _size || data;
+        // save old size and data field for later copy
+        uint32 oldsize = _size;
+        T* olddata = data;
 
-        _size = 1 << req;
-        if(dim % _size)
-            req++;
-        
+        // alloc new space
+        _size = newsize;
+        data = new T[_size * _size];
 
-        T *newdata = new T[_size * _size];
+        // fill it up to prevent uninitialized memory
+        fill(fillval);
 
-        if(mustcopy)
+        // if there was content, copy it
+        if(olddata)
         {
-            uint32 maxdim = std::max(_size, dim);
-            for(uint32 x = 0; x < maxdim; ++x)
-                for(uint32 y = 0; y < maxdim; ++y)
-                    newdata[(y << req) | x] = data[(y << _shift) | x];
-            delete data;
+            for(uint32 x = 0; x < oldsize; ++x)
+                for(uint32 y = 0; y < oldsize; ++y)
+                    data[(y << req) | x] = olddata[(y << _shift) | x];
+            delete olddata;
         }
-
-        data = newdata;
 
         _shift = req;
     }

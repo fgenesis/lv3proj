@@ -56,15 +56,14 @@ AsciiLevel *ParseAsciiLevel(char *strbuf)
           maxdim = std::max((uint32)line.length(), lineNum);
           if(level->tiles.size1d() < maxdim)
           {
-              level->tiles.resize(maxdim);
-              level->tiles.fill(0);
+              level->tiles.resize(maxdim, 0);
           }
         }
-
-        if(line.length() > maxdim)
-            line.erase(maxdim - 1, line.length() - maxdim);
-
-
+        if(level->tiles.size1d() < lineNum || level->tiles.size1d() < line.length())
+        {
+            logerror("AsciiLevelParser: array2d too small, or level too large!");
+            break;
+        }
 
         for(uint32 i = 0; i < line.length(); ++i)
         {
@@ -79,6 +78,7 @@ AsciiLevel *ParseAsciiLevel(char *strbuf)
 
 AsciiLevel *LoadAsciiLevel(char *fn)
 {
+    logdebug("LoadAsciiLevel: '%s'", fn);
     FILE *fh = fopen(fn, "r");
     if(!fh)
     {

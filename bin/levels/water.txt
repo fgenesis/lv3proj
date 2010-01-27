@@ -1,0 +1,46 @@
+  water/bg.png
+# ship/block1.png
+1 water/bg.png water_test.anim::sink
+2 water/bg.png water_test.anim::wait1
+3 water/bg.png water_test.anim::wait2
+4 water/bg.png water_test.anim::wait3
+5 water/bg.png water_test.anim::wait4
+6 water/bg.png water_test.anim::wait5
+7 water/bg.png water_test.anim::wait5_newtop
+W water/bg.png water_test.anim::full
+q water/bg.png water_test.anim::raise
+w water/bg.png water_test.anim::rw1
+e water/bg.png water_test.anim::rw2
+r water/bg.png water_test.anim::rw3
+t water/bg.png water_test.anim::rw4
+z water/bg.png water_test.anim::rw5_newtop
+$$
+###                ###
+###                ###
+###1111111111111111###
+###2222222222222222###
+###3333333333333333###
+###4444444444444444###
+###5555555555555555###
+###6666666666666666666
+###7777777777777777###
+###WWWWWWWWWWWWWWWW###
+###WWWWWWWWWWWWWWWW###
+######################
+                
+##     ##     ##
+##     ##     ##
+##11111##     ##
+##22222##     ##
+##33333##     ##
+##44444##     ##
+##55555##     ##
+##66666##     ##
+##77777##zzzzz##
+##WWWWW##ttttt##
+##WWWWW##rrrrr##
+##WWWWW##eeeee##
+##WWWWW##wwwww##
+##WWWWW##qqqqq##
+##WWWWWWWWWWWW##
+################

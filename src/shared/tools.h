@@ -30,14 +30,15 @@ uint64 fastintpow64(uint64 base, uint32 power);
 std::string GetTimeString(void);
 std::string GetDateString(void);
 
-template <class T> void StrSplit(const std::string &src, const std::string &sep, T& container)
+template <class T> void StrSplit(const std::string &src, const std::string &sep, T& container, bool keepEmpty = false)
 {
     std::string s;
     for (std::string::const_iterator i = src.begin(); i != src.end(); i++)
     {
         if (sep.find(*i) != std::string::npos)
         {
-            if (s.length()) container.push_back(s);
+            if (keepEmpty || s.length())
+                container.push_back(s);
             s = "";
         }
         else
@@ -45,7 +46,8 @@ template <class T> void StrSplit(const std::string &src, const std::string &sep,
             s += *i;
         }
     }
-    if (s.length()) container.push_back(s);
+    if (keepEmpty || s.length())
+        container.push_back(s);
 }
 
 #endif

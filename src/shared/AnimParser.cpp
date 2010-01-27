@@ -110,8 +110,6 @@ Anim *LoadAnimFile(char* fn)
         return NULL;
     }
 
-    logdebug("LoadAnimFile: '%s'", fn);
-
     fseek(fh, 0, SEEK_END);
     uint32 size = ftell(fh);
     rewind(fh);

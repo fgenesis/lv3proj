@@ -4,31 +4,12 @@
 #include "AsciiLevelParser.h"
 #include "TileMgr.h"
 
-AnimatedTile::AnimatedTile(char *afile)
-: surface(NULL)
-{
-    ani = resMgr.LoadAnim(afile, false);
-    ASSERT(ani);
-    SetupDefaults();
-    nextupdate = Engine::GetCurFrameTime() + curFrame->frametime;
-}
-
-AnimatedTile::AnimatedTile(Anim *a)
-: surface(NULL)
-{
-    ani = a;
-    ASSERT(ani);
-    SetupDefaults();
-    nextupdate = Engine::GetCurFrameTime() + curFrame->frametime;
-}
 
 TileMgr::TileMgr(Engine* e)
 : engine(e), _staticSurfaceNeedsUpdate(false), _staticSurface(NULL)
 {
-    staticTiles.resize(128); // TODO: TEMP VALUE
-    staticTiles.fill(NULL);
-    animTiles.resize(128); // TODO: TEMP VALUE
-    animTiles.fill(NULL);
+    staticTiles.resize(128, NULL); // TODO: TEMP VALUE
+    animTiles.resize(128, NULL); // TODO: TEMP VALUE
 }
 
 void TileMgr::InitStaticSurface(void)
@@ -143,40 +124,41 @@ bool TileMgr::LoadAsciiLevel(AsciiLevel *level)
 {
     std::map<std::string, AnimatedTile*> atmap; // stores already allocated animated tiles
     std::map<std::string, AnimatedTile*>::iterator it;
+    std::string realFileName, startAnim;
+    uint32 startIdx = 0;
     for(uint32 y = 0; y < level->tiles.size1d(); ++y)
     {
         for(uint32 x = 0; x < level->tiles.size1d(); ++x)
         {
             std::vector<std::string>& filevect = level->tiledata[level->tiles(x,y)];
-            if(filevect.size())
+            for(uint32 i = 0; i < filevect.size(); ++i)
             {
-                for(uint32 i = 0; i < filevect.size(); ++i)
+                std::string& f = filevect[i];
+                AnimatedTile::SplitFilenameToProps(f.c_str(), &realFileName, &startIdx, &startAnim);
+                if(realFileName.size() >= 4 && realFileName.substr(realFileName.size() - 4, 4) == ".png")
                 {
-                    std::string& f = filevect[i];
-                    if(f.size() >= 4 && f.substr(f.size() - 4, 4) == ".png")
+                    SetStaticTileSurface(x,y,resMgr.LoadImage((char*)realFileName.c_str()));
+                }
+                else if(realFileName.size() >= 5 && realFileName.substr(realFileName.size() - 5, 5) == ".anim")
+                {
+                    it = atmap.find(f);
+                    AnimatedTile *atile = NULL;
+                    if(it == atmap.end())
                     {
-                        SetStaticTileSurface(x,y,resMgr.LoadImage((char*)f.c_str()));
-                    }
-                    else if(f.size() >= 5 && f.substr(f.size() - 5, 5) == ".anim")
-                    {
-                        it = atmap.find(f);
-                        AnimatedTile *atile = NULL;
-                        if(it == atmap.end())
+                        Anim *ani = resMgr.LoadAnim((char*)realFileName.c_str());
+                        if(ani)
                         {
-                            Anim *ani = resMgr.LoadAnim((char*)f.c_str());
-                            if(ani)
-                            {
-                                atile = new AnimatedTile(ani);
-                                atmap[f] = atile;
-                            }
-                            else
-                                logerror("TileMgr::LoadAsciiLevel: Error loading '%s'", f.c_str());
+                            atile = new AnimatedTile(ani, startIdx, startAnim.c_str());
+                            atile->Init(Engine::GetCurFrameTime());
+                            atmap[f] = atile;
                         }
                         else
-                            atile = it->second;
-                            
-                        SetAnimatedTileSurface(x,y,atile);
+                            logerror("TileMgr::LoadAsciiLevel: Error loading '%s'", realFileName.c_str());
                     }
+                    else
+                        atile = it->second;
+                        
+                    SetAnimatedTileSurface(x,y,atile);
                 }
             }
         }

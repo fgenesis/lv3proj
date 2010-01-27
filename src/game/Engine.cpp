@@ -106,19 +106,6 @@ void Engine::_CalcFPS(void)
 
 bool Engine::Setup(void)
 {
-    // load all *.anim files, and all additional files referenced in them
-    std::deque<std::string> files = GetFileList("gfx");
-    for(std::deque<std::string>::iterator it = files.begin(); it != files.end(); it++)
-    {
-        if(!memicmp(it->c_str() + (it->size() - 5), ".anim", 5))
-        {
-            if(Anim *ani = resMgr.LoadAnim((char*)it->c_str(), true))
-                for(AnimMap::iterator am = ani->anims.begin(); am != ani->anims.end(); am++)
-                    for(AnimFrameStore::iterator af = am->second.begin(); af != am->second.end(); af++)
-                        af->surface = resMgr.LoadImage((char*)af->filename.c_str(), true); // get all images referenced
-        }
-    }
-
     AsciiLevel *level = LoadAsciiLevel("levels/testlevel.txt");
     _tilemgr->LoadAsciiLevel(level);
     delete level;

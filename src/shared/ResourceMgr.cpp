@@ -82,7 +82,13 @@ SDL_Surface *ResourceMgr::LoadImage(char *name, bool count /* = false*/)
     SDL_Surface *img = (SDL_Surface*)_GetPtr(fn);
     if(!img)
     {
+        logdebug("LoadImage: '%s'", fn.c_str());
         img = IMG_Load(fn.c_str());
+        if(!img)
+        {
+            logerror("LoadImage failed: '%s'", fn.c_str());
+            return NULL;
+        }
         loaded = true;
     }
     if(count || loaded)
@@ -102,7 +108,21 @@ Anim *ResourceMgr::LoadAnim(char *name, bool count /* = false */)
     Anim *ani = (Anim*)_GetPtr(fn);
     if(!ani)
     {
+        logdebug("LoadAnim: '%s'", fn.c_str());
         ani = LoadAnimFile((char*)fn.c_str());
+        if(ani)
+        {
+            // load all additional files referenced in this .anim file
+            for(AnimMap::iterator am = ani->anims.begin(); am != ani->anims.end(); am++)
+                for(AnimFrameStore::iterator af = am->second.begin(); af != am->second.end(); af++)
+                    af->surface = resMgr.LoadImage((char*)af->filename.c_str(), true); // get all images referenced
+
+        }
+        else
+        {
+            logerror("LoadAnim failed: '%s'", fn.c_str());
+            return NULL;
+        }
         loaded = true;
     }
     if(count || loaded)
@@ -122,7 +142,13 @@ Mix_Music *ResourceMgr::LoadMusic(char *name, bool count /* = false */)
     Mix_Music *music = (Mix_Music*)_GetPtr(fn);
     if(!music)
     {
+        logdebug("LoadMusic: '%s'", fn.c_str());
         music = Mix_LoadMUS((char*)fn.c_str());
+        if(!music)
+        {
+            logerror("LoadMusic failed: '%s'", fn.c_str());
+            return NULL;
+        }
         loaded = true;
     }
     if(count || loaded)
@@ -141,9 +167,13 @@ memblock *ResourceMgr::LoadFile(char *name, bool count /* = false */)
     bool loaded = false;
     if(!mb)
     {
+        logdebug("LoadFile: '%s'", name);
         FILE *fh = fopen(name, "r");
         if(!fh)
+        {
+            logerror("LoadFile failed: '%s'", name);
             return NULL;
+        }
 
         fseek(fh, 0, SEEK_END);
         uint32 size = ftell(fh);
