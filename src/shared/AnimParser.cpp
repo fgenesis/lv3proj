@@ -1,15 +1,6 @@
 #include "common.h"
 #include "AnimParser.h"
 
-/*
-bool IsOnlyWhitespaceOrComment(char *str)
-{
-    for( ; *str && (*str == ' ' || *str == '\t' || *str == 10 || *str == 13); str++)
-        if(*str == '#')
-            return true; // everything that comes after # is a comment
-    return false;
-}
-*/
 
 Anim *ParseAnimData(char *strbuf)
 {

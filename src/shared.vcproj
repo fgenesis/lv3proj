@@ -195,6 +195,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\shared\Engine.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\shared\Engine.h"
+				>
+			</File>
+			<File
 				RelativePath=".\shared\Errors.h"
 				>
 			</File>
@@ -204,6 +212,14 @@
 			</File>
 			<File
 				RelativePath=".\shared\IMG_savepng.h"
+				>
+			</File>
+			<File
+				RelativePath=".\shared\LayerMgr.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\shared\LayerMgr.h"
 				>
 			</File>
 			<File
@@ -248,6 +264,14 @@
 			</File>
 			<File
 				RelativePath=".\shared\Tile.h"
+				>
+			</File>
+			<File
+				RelativePath=".\shared\TileLayer.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\shared\TileLayer.h"
 				>
 			</File>
 			<File

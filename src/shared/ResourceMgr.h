@@ -2,12 +2,11 @@
 #define RESOURCEMGR_H
 
 #include <map>
+#include <SDL/SDL.h>
 #include <SDL/SDL_mixer.h>
 
 
 struct Anim;
-struct SDL_Surface;
-
 
 class ResourceMgr
 {
@@ -38,7 +37,7 @@ public:
     SDL_Surface *LoadImage(char *name, bool count = false);
     Anim *LoadAnim(char *name, bool count = false);
     Mix_Music *LoadMusic(char *name, bool count = false);
-    memblock *LoadFile(char *name, bool count = false);
+    memblock *LoadFile(char *name, char *mode = "r", bool count = false);
 
 private:
     inline void *_GetPtr(std::string& fn)
@@ -55,7 +54,6 @@ private:
     void _Delete(void *ptr, ResourceType rt);
     PtrCountMap _ptrmap;
     FileRefMap _frmap;
-    
 };
 
 

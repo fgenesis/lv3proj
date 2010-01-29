@@ -89,6 +89,14 @@ SDL_Surface *ResourceMgr::LoadImage(char *name, bool count /* = false*/)
             logerror("LoadImage failed: '%s'", fn.c_str());
             return NULL;
         }
+        // convert loaded images into currently used color format.
+        // this allows faster blitting because the color formats dont have to be converted
+        SDL_Surface *newimg = SDL_DisplayFormatAlpha(img);
+        if(newimg && img != newimg)
+        {
+            SDL_FreeSurface(img);
+            img = newimg;
+        }
         loaded = true;
     }
     if(count || loaded)
@@ -160,7 +168,7 @@ Mix_Music *ResourceMgr::LoadMusic(char *name, bool count /* = false */)
 }
 
 
-memblock *ResourceMgr::LoadFile(char *name, bool count /* = false */)
+memblock *ResourceMgr::LoadFile(char *name, char *mode /* = "r" */, bool count /* = false */)
 {
     std::string fn(name);
     memblock *mb = (memblock*)_GetPtr(fn);
@@ -168,10 +176,10 @@ memblock *ResourceMgr::LoadFile(char *name, bool count /* = false */)
     if(!mb)
     {
         logdebug("LoadFile: '%s'", name);
-        FILE *fh = fopen(name, "r");
+        FILE *fh = fopen(name, mode);
         if(!fh)
         {
-            logerror("LoadFile failed: '%s'", name);
+            logerror("LoadFile failed: '%s', mode '%s'", name, mode);
             return NULL;
         }
 

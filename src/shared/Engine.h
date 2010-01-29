@@ -4,19 +4,9 @@
 #include <SDL/SDL.h>
 #include <SDL/SDL_image.h>
 
-#include "TileMgr.h"
 
-/* // -- not used, maybe later?
-enum SurfaceLayer
-{
-    LAYER_BACKGROUND = 0, // background, can be animated (spaceship, for example)
-    LAYER_STATICTILES,    // foreground, static tiles (to be drawn on a singe surface and only updated if needed)
-    LAYER_DYNAMICTILES,   // animated tiles, to be drawn on every frame
-    LAYER_SPRITES,        // sprite layer (monsters, items, switches, vikings, effects, etc)
+class LayerMgr;
 
-    LAYER_MAX             // do not use
-};
-*/
 
 struct Point
 {
@@ -46,6 +36,7 @@ public:
     inline uint8 GetBPP(void) { return _screen->format->BitsPerPixel; }
     inline Point GetCameraPos(void) { return _cameraPos; }
     inline SDL_Surface *GetSurface(void) { return _screen; }
+    SDL_Rect *GetVisibleBlockRect(void);
     void SetTitle(char *title);
     inline uint32 GetFPS(void) { return _fps; }
     inline static uint32 GetCurFrameTime(void) { return s_curFrameTime; }
@@ -54,7 +45,7 @@ public:
 
 private:
 
-    TileMgr *_tilemgr;
+    LayerMgr *_layermgr;
 
     void _ProcessEvents(void);
     void _CalcFPS(void);
@@ -64,6 +55,7 @@ private:
     std::string _wintitle;
     SDL_Surface *_screen;
     static volatile uint32 s_curFrameTime;
+    SDL_Rect _visibleBlockRect;
     uint32 _winsizex;
     uint32 _winsizey;
     uint32 _fps;

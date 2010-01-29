@@ -15,10 +15,9 @@ int main(int argc, char **argv)
 
     Engine game;
 
-    game.Setup();
     game.InitScreen(1000,600);
     game.SetTitle("Lost Vikings 3 Project");
-
+    game.Setup();
     game.Run();
 
     return 0;

@@ -1,6 +1,7 @@
 #include "common.h"
 #include "Animparser.h"
 #include "ResourceMgr.h"
+#include "LayerMgr.h"
 #include "SoundCore.h"
 #include "AsciiLevelParser.h"
 #include "Engine.h"
@@ -11,7 +12,7 @@ volatile uint32 Engine::s_curFrameTime;
 Engine::Engine()
 : _screen(NULL), _fps(0), _sleeptime(0), _quit(false), _framecounter(0)
 {
-    _tilemgr = new TileMgr(this);
+    _layermgr = new LayerMgr(this);
     _fpsclock = s_curFrameTime = clock();
 }
 
@@ -34,10 +35,6 @@ void Engine::InitScreen(uint32 sizex, uint32 sizey, uint8 bpp /* = 0 */, bool fu
     if(fullscreen)
         flags |= SDL_FULLSCREEN;
     _screen = SDL_SetVideoMode(sizex, sizey, bpp, flags);
-
-    // the tile mgr uses an additional surface to pre-render static objects to save CPU,
-    // which copies information from the screen surface and must be created after it
-    _tilemgr->InitStaticSurface();
 }
 
 void Engine::Run(void)
@@ -107,7 +104,7 @@ void Engine::_CalcFPS(void)
 bool Engine::Setup(void)
 {
     AsciiLevel *level = LoadAsciiLevel("levels/testlevel.txt");
-    _tilemgr->LoadAsciiLevel(level);
+    _layermgr->LoadAsciiLevel(level);
     delete level;
 
     sndCore.PlayMusic("lv1_snes_ship.ogg");
@@ -117,7 +114,7 @@ bool Engine::Setup(void)
 
 void Engine::_Process(uint32 ms)
 {
-    _tilemgr->HandleAnimation();
+    _layermgr->Update(GetCurFrameTime());
 }
 
 void Engine::OnWindowEvent(bool active)
@@ -147,9 +144,18 @@ void Engine::OnKeyUp(SDLKey key, SDLMod mod)
 
 void Engine::_Render(void)
 {
-    //_tilemgr->RenderBackground();
-    _tilemgr->RenderStaticTiles();
-    _tilemgr->RenderAnimatedTiles();
+    //RenderBackground();
+    _layermgr->Render();
     // TODO: render sprites
     SDL_Flip(_screen);
+}
+
+// returns the boundaries of the currently visible 16x16 pixel blocks
+SDL_Rect *Engine::GetVisibleBlockRect(void)
+{
+    _visibleBlockRect.x = GetCameraPos().x >> 4; // (x / 16) (16 = block size in pixels)
+    _visibleBlockRect.y = GetCameraPos().y >> 4;
+    _visibleBlockRect.w = (GetResX() >> 4) + 1;
+    _visibleBlockRect.h = (GetResY() >> 4) + 1;
+    return &_visibleBlockRect;
 }

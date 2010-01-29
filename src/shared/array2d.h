@@ -2,7 +2,8 @@
 #define ARRAY2D_H
 
 
-
+// fast 2D array avoiding multiplication to access array indexes
+// the size has to be a power of 2, if not, it will automatically align
 template <class T> class array2d
 {
 public:
@@ -21,7 +22,8 @@ public:
         uint32 req = 0;
         uint32 newsize = 1;
 
-        // find out how often we have to shift to reach the desired capacity capacity
+        // find out how often we have to shift to reach the desired capacity
+        // this will set the size to the nearest power of 2 required (if dim is 50 the final size will be 64, for example)
         while(newsize < dim)
         {
             newsize <<= 1;

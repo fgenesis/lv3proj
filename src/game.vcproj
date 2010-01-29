@@ -184,23 +184,7 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\game\Engine.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\game\Engine.h"
-				>
-			</File>
-			<File
 				RelativePath=".\game\main.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\game\TileMgr.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\game\TileMgr.h"
 				>
 			</File>
 		</Filter>
