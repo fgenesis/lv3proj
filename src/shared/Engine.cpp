@@ -81,19 +81,19 @@ void Engine::_CalcFPS(void)
 {
     ++_framecounter;
     uint32 ms = clock();
-    if(ms - _fpsclock >= CLOCKS_PER_SEC)
+    if(ms - _fpsclock >= CLOCKS_PER_SEC >> 1)
     {
         char buf[100];
         _fpsclock = ms;
-        _fps = _framecounter;
+        _fps = _framecounter << 1;
         _framecounter = 0;
-        sprintf(buf, "%s - %u FPS", _wintitle.c_str(), _fps);
+        sprintf(buf, "%s - %u FPS - %u sleep", _wintitle.c_str(), _fps, _sleeptime);
         SDL_WM_SetCaption((const char*)buf, NULL);
-        if(_fps > 80)
+        if(_fps > 70)
         {
             ++_sleeptime;
         }
-        else if(_sleeptime)
+        else if(_sleeptime && _fps < 60)
         {
             --_sleeptime;
         }
