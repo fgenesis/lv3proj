@@ -103,6 +103,9 @@ void Engine::_CalcFPS(void)
 
 bool Engine::Setup(void)
 {
+    resMgr.LoadPropsInDir("music");
+
+
     AsciiLevel *level = LoadAsciiLevel("levels/testlevel.txt");
     _layermgr->LoadAsciiLevel(level);
     delete level;

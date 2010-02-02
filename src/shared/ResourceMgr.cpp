@@ -5,6 +5,7 @@
 #include "common.h"
 #include "ResourceMgr.h"
 #include "AnimParser.h"
+#include "PropParser.h"
 
 ResourceMgr::~ResourceMgr()
 {
@@ -203,6 +204,41 @@ memblock *ResourceMgr::LoadFile(char *name, char *mode /* = "r" */, bool count /
 
     return mb;
 }
+
+std::string ResourceMgr::GetPropForFile(char *fn, char *prop)
+{
+    PropMap::iterator pi = _fprops.find(fn);
+    if(pi != _fprops.end())
+    {
+        std::map<std::string,std::string>::iterator it = pi->second.find(prop);
+        if(it != pi->second.end())
+            return it->second;
+    }
+    
+    return std::string();
+}
+
+void ResourceMgr::SetPropForFile(char *fn, char *prop, char *what)
+{
+    std::map<std::string,std::string>& fprop = _fprops[fn];
+    std::map<std::string,std::string>::iterator it = fprop.find(prop);
+    if(it != fprop.end())
+        fprop.erase(it);
+    fprop[prop] = what;
+}
+
+void ResourceMgr::LoadPropsInDir(char *dn)
+{
+    std::deque<std::string>& fl = GetFileList(dn);
+    for(std::deque<std::string>::iterator it = fl.begin(); it != fl.end(); it++)
+    {
+        if(it->size() > 5 && !strcmp(it->c_str() + it->size() - 5, ".prop"))
+            LoadPropFile((char*)it->c_str(), dn);
+    }
+}
+
+
+
 
 
 // extern, global (since we aren't using singletons here)

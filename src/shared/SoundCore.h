@@ -29,9 +29,12 @@ public:
     void SetMusicVolume(uint8 vol);
 
     inline Mix_Music *_GetMusicPtr(void) { return _music; }
+    inline void SetLoopPoint(double msec) { _looppoint = msec; }
+    inline double GetLoopPoint(void) { return _looppoint; }
 
 private:
     Mix_Music *_music;
+    double _looppoint;
 
 };
 

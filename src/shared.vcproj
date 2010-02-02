@@ -231,11 +231,15 @@
 				>
 			</File>
 			<File
-				RelativePath=".\shared\MD5Hash.h"
+				RelativePath=".\shared\MemoryLeaks.h"
 				>
 			</File>
 			<File
-				RelativePath=".\shared\MemoryLeaks.h"
+				RelativePath=".\shared\PropParser.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\shared\PropParser.h"
 				>
 			</File>
 			<File
