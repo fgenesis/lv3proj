@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9,00"
-	Name="game"
-	ProjectGUID="{04622C6D-C7CD-4511-A00E-005949256FBA}"
-	RootNamespace="game"
+	Name="editor"
+	ProjectGUID="{20B99344-E067-436D-B0EB-5293ED6E67E3}"
+	RootNamespace="editor"
 	Keyword="Win32Proj"
 	TargetFrameworkVersion="196613"
 	>
@@ -47,7 +47,7 @@
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
 				UsePrecompiledHeader="0"
-				ProgramDataBaseFileName="$(IntDir)\game.pdb"
+				ProgramDataBaseFileName="$(IntDir)\editor.pdb"
 				WarningLevel="3"
 				DebugInformationFormat="4"
 			/>
@@ -62,7 +62,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				OutputFile="$(OutDir)\lv3proj_debug.exe"
+				OutputFile="$(OutDir)\lv3edit_debug.exe"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories=""
 				GenerateDebugInformation="true"
@@ -128,7 +128,7 @@
 				EnableFunctionLevelLinking="true"
 				EnableEnhancedInstructionSet="2"
 				UsePrecompiledHeader="0"
-				ProgramDataBaseFileName="$(IntDir)\game.pdb"
+				ProgramDataBaseFileName="$(IntDir)\editor.pdb"
 				WarningLevel="3"
 				DebugInformationFormat="3"
 			/>
@@ -143,7 +143,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				OutputFile="$(OutDir)\lv3proj.exe"
+				OutputFile="$(OutDir)\lv3edit.exe"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories=""
 				GenerateDebugInformation="true"
@@ -184,15 +184,19 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\game\GameEngine.cpp"
+				RelativePath=".\editor\EditorEngine.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\game\GameEngine.h"
+				RelativePath=".\editor\EditorEngine.h"
 				>
 			</File>
 			<File
-				RelativePath=".\game\main.cpp"
+				RelativePath=".\editor\main.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\editor\main.h"
 				>
 			</File>
 		</Filter>

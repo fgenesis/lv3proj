@@ -27,11 +27,11 @@ void Engine::SetTitle(char *title)
     _wintitle = title;
 }
 
-void Engine::InitScreen(uint32 sizex, uint32 sizey, uint8 bpp /* = 0 */, bool fullscreen /* = false */)
+void Engine::InitScreen(uint32 sizex, uint32 sizey, uint8 bpp /* = 0 */, bool fullscreen /* = false */, uint32 extraflags /* = 0 */)
 {
     _winsizex = sizex;
     _winsizey = sizey;
-    uint32 flags = SDL_HWSURFACE | SDL_DOUBLEBUF | SDL_ANYFORMAT | SDL_HWACCEL;
+    uint32 flags = SDL_HWSURFACE | SDL_DOUBLEBUF | SDL_ANYFORMAT | SDL_HWACCEL | extraflags;
     if(fullscreen)
         flags |= SDL_FULLSCREEN;
     _screen = SDL_SetVideoMode(sizex, sizey, bpp, flags);
@@ -57,6 +57,10 @@ void Engine::_ProcessEvents(void)
 {
     SDL_Event evt;
     SDL_PollEvent(&evt);
+
+    if(!OnRawEvent(evt))
+        return;
+
     switch(evt.type)
     {
         case SDL_KEYDOWN:
@@ -69,6 +73,10 @@ void Engine::_ProcessEvents(void)
 
         case SDL_ACTIVEEVENT:
             OnWindowEvent(evt.active.gain);
+            break;
+
+        case SDL_VIDEORESIZE:
+            OnWindowResize(evt.resize.w, evt.resize.h);
             break;
 
         case SDL_QUIT:
@@ -103,21 +111,19 @@ void Engine::_CalcFPS(void)
 
 bool Engine::Setup(void)
 {
-    resMgr.LoadPropsInDir("music");
-
-
-    AsciiLevel *level = LoadAsciiLevel("levels/testlevel.txt");
-    _layermgr->LoadAsciiLevel(level);
-    delete level;
-
-    sndCore.PlayMusic("lv1_snes_ship.ogg");
-
     return true;
 }
 
 void Engine::_Process(uint32 ms)
 {
     _layermgr->Update(GetCurFrameTime());
+}
+
+// Handle a raw SDL_Event before anything else. return true for further processing,
+// false to drop the event and NOT pass it to other On..Event functions
+bool Engine::OnRawEvent(SDL_Event& evt)
+{
+    return true;
 }
 
 void Engine::OnWindowEvent(bool active)
@@ -143,6 +149,15 @@ void Engine::OnKeyDown(SDLKey key, SDLMod mod)
 
 void Engine::OnKeyUp(SDLKey key, SDLMod mod)
 {
+}
+
+void Engine::OnMouseEvent(uint32 button, uint32 x, uint32 y, int32 rx, uint32 ry)
+{
+}
+
+void Engine::OnWindowResize(uint32 newx, uint32 newy)
+{
+    SDL_SetVideoMode(newx,newy,GetBPP(), GetSurface()->flags);
 }
 
 void Engine::_Render(void)

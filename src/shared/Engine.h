@@ -20,15 +20,17 @@ class Engine
 {
 public:
     Engine();
-    ~Engine();
+    virtual ~Engine();
 
-    void InitScreen(uint32 sizex, uint32 sizey, uint8 bpp = 0, bool fullscreen = false);
-    bool Setup(void);
+    virtual void InitScreen(uint32 sizex, uint32 sizey, uint8 bpp = 0, bool fullscreen = false, uint32 extraflags = 0);
+    virtual bool Setup(void);
 
-    void OnMouseEvent(uint32 button, uint32 x, uint32 y, int32 rx, uint32 ry);
-    void OnKeyDown(SDLKey key, SDLMod mod);
-    void OnKeyUp(SDLKey key, SDLMod mod);
-    void OnWindowEvent(bool active);
+    virtual void OnMouseEvent(uint32 button, uint32 x, uint32 y, int32 rx, uint32 ry);
+    virtual void OnKeyDown(SDLKey key, SDLMod mod);
+    virtual void OnKeyUp(SDLKey key, SDLMod mod);
+    virtual void OnWindowEvent(bool active);
+    virtual void OnWindowResize(uint32 newx, uint32 newy);
+    virtual bool OnRawEvent(SDL_Event& evt);
 
 
     inline uint32 GetResX(void) { return _screen->w; }
@@ -37,20 +39,20 @@ public:
     inline Point GetCameraPos(void) { return _cameraPos; }
     inline SDL_Surface *GetSurface(void) { return _screen; }
     SDL_Rect *GetVisibleBlockRect(void);
-    void SetTitle(char *title);
+    virtual void SetTitle(char *title);
     inline uint32 GetFPS(void) { return _fps; }
     inline static uint32 GetCurFrameTime(void) { return s_curFrameTime; }
     inline void SetSleepTime(uint32 t) { _sleeptime = t; }
-    void Run(void);
+    virtual void Run(void);
 
-private:
+protected:
 
     LayerMgr *_layermgr;
 
-    void _ProcessEvents(void);
-    void _CalcFPS(void);
-    void _Render(void);
-    void _Process(uint32 ms);
+    virtual void _ProcessEvents(void);
+    virtual void _CalcFPS(void);
+    virtual void _Render(void);
+    virtual void _Process(uint32 ms);
 
     std::string _wintitle;
     SDL_Surface *_screen;
