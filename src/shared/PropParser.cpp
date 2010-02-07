@@ -31,7 +31,7 @@ void ParsePropData(char *strbuf, char *dn)
             uint32 alen = file_name.length();
             if(file_name[alen - 1] == ']') // remove trailing ']'
                 file_name.erase(alen - 1);
-            file_name = std::string(dn) + file_name;
+            file_name = AddPathIfNecessary(file_name, dn);
             continue;
         }
 
@@ -47,6 +47,7 @@ void ParsePropData(char *strbuf, char *dn)
 // loads a .prop file and assigns its content to the ResourceMgr
 void LoadPropFile(char* fn, char *dn)
 {
+    // TODO: clean this mess up a little
     uint32 dn_len = dn ? strlen(dn) : 0;
     bool endslash = dn[dn_len - 1] == '/';
     std::string fixdn(dn);

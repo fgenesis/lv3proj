@@ -252,6 +252,29 @@ std::string _PathToFileName(std::string str)
     return str;
 }
 
+// extracts the file name from a given path
+std::string FileGetExtension(std::string str, bool withDot /* = true */)
+{
+    uint32 dot = str.rfind('.');
+    if(dot != std::string::npos)
+    {
+        return str.substr(dot + (withDot ? 0 : 1));
+    }
+    return "";
+}
+
+
+// strips a file name from a given path, or the last folder if the path doesnt end with '/' or '\'
+std::string _PathStripLast(std::string str)
+{
+    uint32 pathend = str.find_last_of("/\\");
+    if(pathend != std::string::npos)
+    {
+        return str.substr(0, pathend + 1);
+    }
+    return str;
+}
+
 std::string NormalizeFilename(std::string s)
 {
     uint32 p;
@@ -265,6 +288,23 @@ std::string NormalizeFilename(std::string s)
     }
     std::transform(s.begin(), s.end(), s.begin(), tolower);
     return s;
+}
+
+std::string AddPathIfNecessary(std::string fn, std::string path)
+{
+    // if a '/' or '\' is found as first char, treat the path as absolute (or relative to working dir or whatever)
+    // otherwise, fix path if necessary and append file name
+    if(fn.length() && (fn[0] == '\\' || fn[0] =='/'))
+        return fn;
+
+    uint32 pathlen = path.length();
+    bool endslash = path[pathlen - 1] == '/';
+    std::string fixpath(path);
+    if(!endslash)
+        fixpath += '/';
+    std::string fullfn(fixpath);
+    fullfn += fn;
+    return fullfn;
 }
 
 uint32 HexStrToInt(const char *str)

@@ -16,7 +16,7 @@ int main(int argc, char **argv)
 
     GameEngine game;
 
-    game.InitScreen(1000,600);
+    game.InitScreen(1000,600,0,SDL_RESIZABLE);
     game.SetTitle("Lost Vikings 3 Project");
     game.Setup();
     game.Run();

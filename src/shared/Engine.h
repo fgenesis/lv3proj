@@ -22,7 +22,7 @@ public:
     Engine();
     virtual ~Engine();
 
-    virtual void InitScreen(uint32 sizex, uint32 sizey, uint8 bpp = 0, bool fullscreen = false, uint32 extraflags = 0);
+    virtual void InitScreen(uint32 sizex, uint32 sizey, uint8 bpp = 0, uint32 extraflags = 0);
     virtual bool Setup(void);
 
     virtual void OnMouseEvent(uint32 button, uint32 x, uint32 y, int32 rx, uint32 ry);
@@ -56,6 +56,7 @@ protected:
 
     std::string _wintitle;
     SDL_Surface *_screen;
+    uint32 _screenFlags; // stores surface flags set on screen creation
     static volatile uint32 s_curFrameTime;
     SDL_Rect _visibleBlockRect;
     uint32 _winsizex;

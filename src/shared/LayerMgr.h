@@ -28,7 +28,7 @@ public:
 
 
     inline TileLayerBase *GetLayer(uint32 z) { return _layers[z]; }
-    TileLayerBase *CreateLayer(LayerType ty, bool collision);
+    TileLayerBase *CreateLayer(LayerType ty, bool collision, uint32 xoffs = 0, uint32 yoffs = 0);
     inline void SetLayer(TileLayerBase *layer, LayerDepth depth)
     {
         _layers[depth + LAYER_FOREMOST_OVERLAY] = layer;

@@ -111,6 +111,8 @@ SDL_Surface *ResourceMgr::LoadImage(char *name, bool count /* = false*/)
 Anim *ResourceMgr::LoadAnim(char *name, bool count /* = false */)
 {
     std::string fn("gfx/");
+    std::string relpath(_PathStripLast(name));
+    std::string loadpath;
     fn += name;
 
     bool loaded = false;
@@ -122,9 +124,13 @@ Anim *ResourceMgr::LoadAnim(char *name, bool count /* = false */)
         if(ani)
         {
             // load all additional files referenced in this .anim file
+            // pay attention to relative paths in the file, respect the .anim file's directory for this
             for(AnimMap::iterator am = ani->anims.begin(); am != ani->anims.end(); am++)
                 for(AnimFrameStore::iterator af = am->second.begin(); af != am->second.end(); af++)
-                    af->surface = resMgr.LoadImage((char*)af->filename.c_str(), true); // get all images referenced
+                {
+                    loadpath = AddPathIfNecessary(af->filename,relpath);
+                    af->surface = resMgr.LoadImage((char*)loadpath.c_str(), true); // get all images referenced
+                }
 
         }
         else
@@ -232,7 +238,7 @@ void ResourceMgr::LoadPropsInDir(char *dn)
     std::deque<std::string>& fl = GetFileList(dn);
     for(std::deque<std::string>::iterator it = fl.begin(); it != fl.end(); it++)
     {
-        if(it->size() > 5 && !strcmp(it->c_str() + it->size() - 5, ".prop"))
+        if(FileGetExtension(*it) == ".prop")
             LoadPropFile((char*)it->c_str(), dn);
     }
 }

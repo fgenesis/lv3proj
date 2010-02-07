@@ -6,19 +6,19 @@
 2 ship/laddertop2.png
 3 ship/ladder1.png
 4 ship/ladder2.png
-5 ship/ladder1.png en.anim
-6 ship/ladder2.png en.anim
+5 ship/ladder1.png sprites/en.anim
+6 ship/ladder2.png sprites/en.anim
 < sprites/outlet1.png
 > sprites/outlet2.png
 ^ sprites/outlet3.png
 v sprites/outlet4.png
-= enx.anim
-- en.anim
+= sprites/enx.anim
+- sprites/en.anim
 * sprites/target.png
 B sprites/bomb.png
 + sprites/greyblock.png
 b sprites/button.png
-| en_v.anim
+| sprites/en_v.anim
 a sprites/keyred.png
 A sprites/lockred.png
 e sprites/exit1.png
@@ -30,12 +30,12 @@ E sprites/exit2.png
 { sprites/door1.png
 \ sprites/door2.png
 } sprites/door3.png
-W water_test.anim::full
-~ water_test.anim::top
-; ship/ladder1.png water_test.anim::top
-: ship/ladder2.png water_test.anim::top
-7 ship/ladder1.png water_test.anim::full
-8 ship/ladder2.png water_test.anim::full
+W water/water_test.anim::full
+~ water/water_test.anim::top
+; ship/ladder1.png water/water_test.anim::top
+: ship/ladder2.png water/water_test.anim::top
+7 ship/ladder1.png water/water_test.anim::full
+8 ship/ladder2.png water/water_test.anim::full
 $$
 ###############################################################
 ############################################^##################

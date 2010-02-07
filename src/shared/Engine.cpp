@@ -27,14 +27,13 @@ void Engine::SetTitle(char *title)
     _wintitle = title;
 }
 
-void Engine::InitScreen(uint32 sizex, uint32 sizey, uint8 bpp /* = 0 */, bool fullscreen /* = false */, uint32 extraflags /* = 0 */)
+void Engine::InitScreen(uint32 sizex, uint32 sizey, uint8 bpp /* = 0 */, uint32 extraflags /* = 0 */)
 {
     _winsizex = sizex;
     _winsizey = sizey;
-    uint32 flags = SDL_HWSURFACE | SDL_DOUBLEBUF | SDL_ANYFORMAT | SDL_HWACCEL | extraflags;
-    if(fullscreen)
-        flags |= SDL_FULLSCREEN;
-    _screen = SDL_SetVideoMode(sizex, sizey, bpp, flags);
+    _screenFlags = SDL_HWSURFACE | SDL_DOUBLEBUF | SDL_ANYFORMAT | SDL_HWACCEL | extraflags;
+    _screen = SDL_SetVideoMode(sizex, sizey, bpp, _screenFlags);
+    _screenFlags &= ~SDL_FULLSCREEN; // this depends on current setting and should not be stored
 }
 
 void Engine::Run(void)
@@ -140,9 +139,17 @@ void Engine::OnKeyDown(SDLKey key, SDLMod mod)
         uint32 x = GetResX();
         uint32 y = GetResY();
         uint8 bpp = GetBPP();
-        bool fullscreen = _screen->flags & SDL_FULLSCREEN;
+        uint32 flags = _screen->flags | _screenFlags;
+
         SDL_FreeSurface(_screen);
-        InitScreen(x,y,bpp, !fullscreen);
+
+        // toggle between fullscreen, preserving other flags
+        if(flags & SDL_FULLSCREEN)
+            flags &= ~SDL_FULLSCREEN; // remove fullscreen flag
+        else
+            flags |= SDL_FULLSCREEN; // add fullscreen flag
+
+        InitScreen(x, y, bpp, flags);
     }
 
 }

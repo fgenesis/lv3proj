@@ -3,17 +3,31 @@
 
 #include "Anim.h"
 
-
-// there is no need for a "normal" tile, we just use a SDL_Surface instead
-
-struct AnimatedTile
+enum TileType
 {
-    AnimatedTile() : surface(NULL) {}
+    TILETYPE_STATIC,
+    TILETYPE_ANIMATED
+};
+
+
+// the basic tile. static by default, but can be overloaded to support animation
+struct BasicTile
+{
+public:
+    BasicTile() : surface(NULL), type(TILETYPE_STATIC) {}
+    SDL_Surface *surface; // surface to be drawn
+    uint8 type; // read-only!!
+};
+
+
+struct AnimatedTile : BasicTile
+{
+public:
+    AnimatedTile();
     AnimatedTile(Anim *a, uint32 idx = 0, const char *startwith = NULL);
     Anim *ani;
     AnimFrame *curFrame;
     AnimFrameStore *curFrameStore;
-    SDL_Surface *surface; // currently active surface
     uint32 nextupdate; // the time when this tile will change its texture (Engine::GetCurrentFrameTime() + X)
 
     void SetupDefaults(uint32 idx = 0, const char *startwith = NULL);

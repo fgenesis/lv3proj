@@ -1,9 +1,17 @@
 #include "common.h"
 #include "Tile.h"
 
-AnimatedTile::AnimatedTile(Anim *a, uint32 idx /* = 0*/, const char *startwith /* = NULL*/)
-: surface(NULL), nextupdate(0)
+AnimatedTile::AnimatedTile()
 {
+     surface = NULL;
+     type = TILETYPE_ANIMATED;
+}
+
+AnimatedTile::AnimatedTile(Anim *a, uint32 idx /* = 0*/, const char *startwith /* = NULL*/)
+: nextupdate(0)
+{
+    surface = NULL;
+    type = TILETYPE_ANIMATED;
     ani = a;
     ASSERT(ani);
     SetupDefaults(idx, startwith);

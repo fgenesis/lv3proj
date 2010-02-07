@@ -1,0 +1,85 @@
+[default]
+1: waterfull.png 100 top
+
+[full]
+1: waterfull.png 9999 1
+
+[empty]
+1: /sprites/empty16.png 9999 1
+
+[top]
+1: watertop.png 150 2
+2: watertop2.png 150 3
+3: watertop3.png 150 4
+4: watertop4.png 150 1
+
+[sink]
+1: watertop.png 150 2
+2: watersink1.png 150 3
+3: watersink2.png 150 4
+4: watersink3.png 150 5
+5: watersink4.png 150 6
+6: watersink5.png 150 7
+7: watersink6.png 150 8
+8: watersink7.png 150 empty
+
+[wait5_newtop]
+1: waterfull.png 7200 top
+
+[wait1]
+1: waterfull.png 1200 sink
+
+[wait2]
+1: waterfull.png 1200 wait1
+
+[wait3]
+1: waterfull.png 1200 wait2
+
+[wait4]
+1: waterfull.png 1200 wait3
+
+[wait5]
+1: waterfull.png 1200 wait4
+
+
+[raise]
+1: watersink7.png 150 2
+2: watersink6.png 150 3
+3: watersink5.png 150 4
+4: watersink4.png 150 5
+5: watersink3.png 150 6
+6: watersink2.png 150 7
+7: watersink1.png 150 8
+8: watertop.png 150 full
+
+[rw5_newtop]
+1: /sprites/empty16.png 6000 raise_high
+
+[rw1]
+1: /sprites/empty16.png 1200 raise
+
+[rw2]
+1: /sprites/empty16.png 1200 rw1
+
+[rw3]
+1: /sprites/empty16.png 1200 rw2
+
+[rw4]
+1: /sprites/empty16.png 1200 rw3
+
+[rw5]
+1: /sprites/empty16.png 1200 rw4
+
+[raise_high]
+1: watersink7.png 150 2
+2: watersink6.png 150 3
+3: watersink5.png 150 4
+4: watersink4.png 150 5
+5: watersink3.png 150 6
+6: watersink2.png 150 7
+7: watersink1.png 150 8
+8: watertop.png 150 top
+
+
+
+

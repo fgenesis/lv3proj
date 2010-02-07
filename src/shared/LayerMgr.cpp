@@ -12,7 +12,7 @@ LayerMgr::LayerMgr(Engine* e)
         _layers[i] = NULL;
 }
 
-TileLayerBase *LayerMgr::CreateLayer(LayerType ty, bool collision)
+TileLayerBase *LayerMgr::CreateLayer(LayerType ty, bool collision, uint32 xoffs /* = 0 */, uint32 yoffs /* = 0 */)
 {
     ASSERT(_maxdim); // sanity check
 
@@ -40,6 +40,8 @@ TileLayerBase *LayerMgr::CreateLayer(LayerType ty, bool collision)
             ASSERT(false);
     };
 
+    ASSERT(layer);
+
     // create the surface where static tiles will be drawn to,
     // use the same resolution as the screen
     layer->surface = ty == LAYERTYPE_ANIMATED ? NULL :
@@ -48,6 +50,9 @@ TileLayerBase *LayerMgr::CreateLayer(LayerType ty, bool collision)
     layer->collision = collision;
     layer->target = engine->GetSurface();
     layer->visible_area = engine->GetVisibleBlockRect();
+    layer->visible = true;
+    layer->xoffs = xoffs;
+    layer->yoffs = yoffs;
 
     return layer;
 }
@@ -63,8 +68,6 @@ void LayerMgr::Clear(void)
     {
         if(_layers[i])
         {
-            SDL_FreeSurface(_layers[i]->surface);
-            // TODO: delete stuff from TileLayerArray2d::tilearray ?
             delete _layers[i];
         }
 
@@ -96,8 +99,8 @@ bool LayerMgr::LoadAsciiLevel(AsciiLevel *level)
     TileLayer *animLayer = (TileLayer*)CreateLayer(LAYERTYPE_ANIMATED, false);
     
     // load the tiles
-    std::map<std::string, AnimatedTile*> atmap; // stores already allocated animated tiles
-    std::map<std::string, AnimatedTile*>::iterator it;
+    std::map<std::string, BasicTile*> tmap; // stores already allocated animated tiles
+    std::map<std::string, BasicTile*>::iterator it;
     std::string realFileName, startAnim;
     uint32 startIdx = 0;
     for(uint32 y = 0; y < level->tiles.size1d(); ++y)
@@ -109,28 +112,39 @@ bool LayerMgr::LoadAsciiLevel(AsciiLevel *level)
             {
                 std::string& f = filevect[i];
                 AnimatedTile::SplitFilenameToProps(f.c_str(), &realFileName, &startIdx, &startAnim);
-                if(realFileName.size() >= 4 && realFileName.substr(realFileName.size() - 4, 4) == ".png")
+                if(FileGetExtension(realFileName) == ".png")
                 {
-                    baseLayer->SetTile(x,y,resMgr.LoadImage((char*)realFileName.c_str()));
+                    it = tmap.find(f);
+                    BasicTile *staTile = NULL;
+                    if(it == tmap.end())
+                    {
+                        staTile = new BasicTile;
+                        staTile->surface = resMgr.LoadImage((char*)realFileName.c_str());
+                        tmap[f] = staTile;
+                    }
+                    else
+                        staTile = it->second;
+
+                    baseLayer->SetTile(x,y,staTile); // this will just copy the surface
                 }
-                else if(realFileName.size() >= 5 && realFileName.substr(realFileName.size() - 5, 5) == ".anim")
+                else if(FileGetExtension(realFileName) == ".anim")
                 {
-                    it = atmap.find(f);
+                    it = tmap.find(f);
                     AnimatedTile *atile = NULL;
-                    if(it == atmap.end())
+                    if(it == tmap.end())
                     {
                         Anim *ani = resMgr.LoadAnim((char*)realFileName.c_str());
                         if(ani)
                         {
                             atile = new AnimatedTile(ani, startIdx, startAnim.c_str());
                             atile->Init(Engine::GetCurFrameTime());
-                            atmap[f] = atile;
+                            tmap[f] = atile;
                         }
                         else
                             logerror("LayerMgr::LoadAsciiLevel: Error loading '%s'", realFileName.c_str());
                     }
                     else
-                        atile = it->second;
+                        atile = (AnimatedTile*)it->second;
                         
                     animLayer->SetTile(x,y,atile);
                 }

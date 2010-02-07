@@ -19,7 +19,7 @@ int main(int argc, char *argv[])
 
     EditorEngine editor;
 
-    editor.InitScreen(1000,600,0,false,SDL_RESIZABLE);
+    editor.InitScreen(1000,600,0,SDL_RESIZABLE);
     editor.SetTitle("Lost Vikings 3 Project - Level Editor");
     editor.Setup();
     editor.Run();
