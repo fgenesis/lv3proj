@@ -109,6 +109,13 @@ namespace gcn
 
         if (mClipStack.empty())
         {
+            // FG: restore fullscreen clip when clip stack is empty
+            SDL_Rect rect;
+            rect.x = 0;
+            rect.y = 0;
+            rect.w = mTarget->w;
+            rect.h = mTarget->h;
+            SDL_SetClipRect(mTarget, &rect);
             return;
         }
 
