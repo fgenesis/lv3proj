@@ -11,11 +11,13 @@ struct AsciiLevel;
 
 enum LayerDepth
 {
-    LAYER_REARMOST_BACKGROUND = -10,
-    LAYER_SPRITES = 0,
-    LAYER_FOREMOST_OVERLAY = 10,
+    LAYER_REARMOST_BACKGROUND = 0,
+    LAYER_DEFAULT_ENV = 6, // where most walls and basic stuff should be put. the editor will start with this layer.
+    LAYER_SPRITES = 15, // the default sprite layer. should not contain
+                        // anything else than sprites, because these have to be treated specially
+    LAYER_FOREMOST_OVERLAY = 31,
 
-    LAYER_MAX = LAYER_FOREMOST_OVERLAY - LAYER_REARMOST_BACKGROUND
+    LAYER_MAX = 32
 };
 
 
@@ -27,11 +29,11 @@ public:
     ~LayerMgr();
 
 
-    inline TileLayerBase *GetLayer(uint32 z) { return _layers[z]; }
+    inline TileLayerBase *GetLayer(uint32 depth) { return _layers[depth]; }
     TileLayerBase *CreateLayer(LayerType ty, bool collision, uint32 xoffs = 0, uint32 yoffs = 0);
-    inline void SetLayer(TileLayerBase *layer, LayerDepth depth)
+    inline void SetLayer(TileLayerBase *layer, uint32 depth)
     {
-        _layers[depth + LAYER_FOREMOST_OVERLAY] = layer;
+        _layers[depth] = layer;
     }
 
     void Update(uint32 curtime);

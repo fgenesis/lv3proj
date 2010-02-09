@@ -48,7 +48,6 @@ class TileLayerArray2d : public TileLayerBase
     friend class LayerMgr;
 
 public:
-    ~TileLayerArray2d();
     virtual void Update(uint32 curtime) {}
     virtual void Render(void);
     virtual void SetTile(uint32 x, uint32 y, BasicTile *tile);

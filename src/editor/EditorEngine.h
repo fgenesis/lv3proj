@@ -28,6 +28,7 @@ protected:
     virtual void mouseReleased(gcn::MouseEvent& mouseEvent);
     virtual void mouseMoved(gcn::MouseEvent& mouseEvent);
     virtual void mouseExited(gcn::MouseEvent& mouseEvent);
+    virtual void mouseClicked(gcn::MouseEvent& mouseEvent);
 
 
 public:
@@ -46,16 +47,24 @@ public:
     void ClearWidgets(void);
     void SetupInterface(void);
     void SetupInterfaceLayers(void);
+    void SetupEditorLayers(void);
     void ToggleVisible(gcn::Widget *w);
     void ToggleTilebox(void);
     void ToggleTileWnd(void);
     void ToggleSelPreviewLayer(void);
+    void ToggleLayerPanel(void);
+    void ToggleLayerVisible(uint32 layerId);
+    void UpdateLayerButtonColors(void);
+
+    void SetActiveLayer(uint32 layerId);
+
+    void SetLeftMainDistance(uint32 dist);
 
     // note that rsrc height and width are expected to be bottom right x and y!
     gcn::Rectangle Get16pxAlignedFrame(gcn::Rectangle rsrc);
     void UpdateSelectionFrame(gcn::Widget *src, int x, int y);
     void UpdateSelection(gcn::Widget *src);
-
+    gcn::Rectangle GetTargetableLayerTiles(uint32 baseX, uint32 baseY, uint32 addX, uint32 addY, uint32 maxwidth, uint32 maxheight);
 
     gcn::Widget *RegWidget(gcn::Widget *w);
     gcn::Widget *AddWidgetTop(gcn::Widget *w);
@@ -68,6 +77,8 @@ protected:
 
     void _DrawSelOverlay(void);
 
+    TileLayer *_GetActiveLayerForWidget(gcn::Widget *src);
+
     std::set<gcn::Widget*> _widgets;
 
     gcn::Gui *_gcnGui;
@@ -79,14 +90,16 @@ protected:
     gcn::Font *_gcnFont;
 
     // mouse selection related
-    gcn::Rectangle _selOverlayRect;
-    gcn::Rectangle _selOverlayClip;
+    gcn::Rectangle _selOverlayRect; // relative to _selOverlayClip
+    gcn::Rectangle _selCurrentSelRect;
+    gcn::Rectangle _selOverlayClip; // clipping area in which _selOverlayRect is drawn
     bool _selOverlayShow;
     bool _selOverlayHighlight;
     int _mouseStartX;
     int _mouseStartY;
 
     // GUI elements - main gui
+    gcn::Panel *panMain;
     gcn::Panel *panTilebox; // right panel
     gcn::Panel *panBottom; // bottom panel with all the buttons
     gcn::Button *btnQuit;
@@ -96,6 +109,7 @@ protected:
     gcn::Button *btnLoad;
     gcn::Button *btnData;
     gcn::Button *btnTiles;
+    gcn::Button *btnToggleLayers;
     gcn::Window *wndTiles; // large tile window
     TileLayer *panTileboxLayer;
 
@@ -105,10 +119,19 @@ protected:
     gcn::Button *btnTWPrev;
     TileLayer *wndTilesLayer; // the layer where all the tiles for selection will be put
 
-    // tiling and layers, main surface
+    // tiling and layers, main surface, preview box
     TileLayer *_selLayer;
     bool _selLayerShow;
-    gcn::Rectangle _selLayerBorderRect;
+    gcn::Rectangle _selLayerBorderRect; // this defines where the selection preview box is drawn
+
+    // tiling and layers, main surface, draw area
+    uint32 _activeLayer;
+    uint32 _visibleLayerMask;
+
+    // layer settings
+    gcn::Panel *panLayers;
+    gcn::Button *btnLayers[LAYER_MAX];
+    gcn::CheckBox *cbLayerVisible;
 
 
 };

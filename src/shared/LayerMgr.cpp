@@ -45,7 +45,7 @@ TileLayerBase *LayerMgr::CreateLayer(LayerType ty, bool collision, uint32 xoffs 
     // create the surface where static tiles will be drawn to,
     // use the same resolution as the screen
     layer->surface = ty == LAYERTYPE_ANIMATED ? NULL :
-            SDL_CreateRGBSurface(/*SDL_HWSURFACE | SDL_HWACCEL*/ 0, engine->GetResX(), engine->GetResY(), engine->GetBPP(), 0, 0, 0, 0);
+            SDL_CreateRGBSurface(SDL_SWSURFACE, engine->GetResX(), engine->GetResY(), engine->GetBPP(), 0, 0, 0, 0);
 
     layer->collision = collision;
     layer->target = engine->GetSurface();

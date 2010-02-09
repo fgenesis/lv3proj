@@ -22,18 +22,6 @@ TileLayerBase::~TileLayerBase()
         SDL_FreeSurface(surface);
 }
 
-TileLayerArray2d::~TileLayerArray2d()
-{
-    // need to store the pointers in a set because one pointer is probably used multiple times in the tilearray
-    // every pointer has to be deleted only ONCE, obviously.
-    // TODO: be sure a pointer is not used in multiple layers...
-    std::set<BasicTile*> tmp;
-    for (uint32 i = 0; i < tilearray.size2d(); i++)
-        tmp.insert(tilearray[i]);
-    for(std::set<BasicTile*>::iterator it = tmp.begin(); it != tmp.end(); it++)
-        delete *it;
-}
-
 // Puts a tile to location (x,y). Set tile to NULL to remove current tile.
 void TileLayerArray2d::SetTile(uint32 x, uint32 y, BasicTile *s)
 {
@@ -84,6 +72,9 @@ void TileLayerArray2d::Render(void)
 // Puts a tile to location (x,y). Set tile to NULL to remove current tile.
 void TileLayer::SetTile(uint32 x, uint32 y, BasicTile *ani) // we expect ani to be an animated tile, but it does not have to
 {
+    if(x >= tilearray.size1d() || y >= tilearray.size1d())
+        return;
+
     BasicTile *& tileref = tilearray(x,y);
     if(tileref == ani)
         return;

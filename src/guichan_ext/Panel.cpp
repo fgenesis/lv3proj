@@ -47,8 +47,9 @@ void gcn::Panel::add(gcn::Widget *widget)
 {
     // width of current widget exceeds remaining space, go down 1 row
     int dimx = _nextx + _spacingX + widget->getDimension().width;
-    while(dimx > getChildrenArea().width && _slotsx > 0 && _usedx > _slotsx && _usedy <= _slotsy)
+    if(dimx > getChildrenArea().width || (_slotsx > 0 && _usedx >= _slotsx))
     {
+        _usedx = 0;
         _nextx = _spacingX;
         _usedy++;
         _nexty += (_maxheight + _spacingY);
@@ -57,7 +58,7 @@ void gcn::Panel::add(gcn::Widget *widget)
 
     // height of current widget exceeds remaining space, whoops
     int dimy = _nexty + _spacingY + widget->getDimension().height;
-    if(dimy > getChildrenArea().height && _slotsy > 0 && _usedy > _slotsy)
+    if(dimy > getChildrenArea().height && _slotsy >= 0 && _usedy >= _slotsy)
     {
         throw GCN_EXCEPTION("height exceeded, can't add more widgets");
     }

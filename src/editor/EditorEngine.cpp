@@ -19,6 +19,10 @@ EditorEngine::EditorEngine()
     _selOverlayShow = false;
     _selLayerShow = true;
     _selOverlayHighlight = false;
+    panTileboxLayer = NULL;
+    wndTilesLayer = NULL;
+    _selLayer = NULL;
+    _activeLayer = 0;
 }
 
 EditorEngine::~EditorEngine()
@@ -49,7 +53,10 @@ bool EditorEngine::Setup(void)
     _gcnFont = new gcn::ImageFont("gfx/fixedfont.png", " abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789");
     gcn::Widget::setGlobalFont(_gcnFont);
 
+    _layermgr->Clear();
+
     SetupInterface();
+    SetupEditorLayers();
 
 
     return true;
@@ -74,11 +81,23 @@ void EditorEngine::OnKeyDown(SDLKey key, SDLMod mod)
             ToggleTilebox();
             break;
 
+        case SDLK_p:
+            ToggleSelPreviewLayer();
+            break;
+
+        case SDLK_l:
+            ToggleLayerPanel();
+            break;
+
 
         default:
             handled = false;
     }
-    Engine::OnKeyDown(key, mod);
+
+    if(!handled)
+    {
+        Engine::OnKeyDown(key, mod);
+    }
 }
 
 void EditorEngine::OnKeyUp(SDLKey key, SDLMod mod)
@@ -109,20 +128,47 @@ void EditorEngine::_Process(uint32 ms)
 
 void EditorEngine::_Render(void)
 {
-    _layermgr->Render();
+    SDL_FillRect(GetSurface(), NULL, 0); // blank the whole screen
+
+    // draw the layer manager, which is responsible to display the tiles on the main panel
+    // do not draw if there is a fullscren overlay.
+    if(!wndTiles->isVisible())
+        _layermgr->Render();
+
+    // draw everything related to guichan
     _gcnGui->draw();
 
+    // if the tile window is visible, draw its layer. the visibility check is performed inside Render();
+    // the layer's visibility is controlled by ToggleTileWnd()
     wndTilesLayer->Render();
-    panTileboxLayer->Render();
+
+    // darw the tilebox layer, unless there is a fullscreen overlay
+    if(!wndTiles->isVisible())
+        panTileboxLayer->Render();
+
+    // this draws the grey/white selection box (check performed inside function)
     _DrawSelOverlay();
-    if(_selLayerShow)
+
+    // the max. 4x4 preview box showing the currently selected tiles
+    if(_selLayerShow && _selLayer->visible)
     {
+        // limit the preview box area so that it can not fill the whole screen
+        // draw it always in the top-left corner of the main panel
+        gcn::Rectangle clip(_selLayerBorderRect.x,
+                            _selLayerBorderRect.y,
+                            std::min(_selLayerBorderRect.width, PREVIEWLAYER_MAX_SIZE * 16),
+                            std::min(_selLayerBorderRect.height, PREVIEWLAYER_MAX_SIZE * 16));
+        _gcnGfx->pushClipArea(clip);
         _selLayer->Render();
         _gcnGfx->setColor(gcn::Color(255,0,255,150));
-        _gcnGfx->pushClipArea(_selLayerBorderRect);
-        _gcnGfx->drawRectangle(_selLayerBorderRect);
+
+        // this will put the rect into the right position
+        clip.x = 0;
+        clip.y = 0;
+        _gcnGfx->drawRectangle(clip);
         _gcnGfx->popClipArea();
     }
+
     SDL_Flip(_screen);
 }
 
@@ -162,16 +208,166 @@ gcn::Widget *EditorEngine::AddWidgetTop(gcn::Widget *w)
     return RegWidget(w);
 }
 
+// place widgets based on resolution.
+// to be called on each resize event
+void EditorEngine::SetupInterface(void)
+{
+    ClearWidgets();
+    _topWidget->setDimension(gcn::Rectangle(0, 0, GetResX(), GetResY()));
+    _topWidget->setOpaque(false);
+    _topWidget->setBaseColor(gcn::Color(0,0,0,255));
+
+    gcn::Panel *panel;
+    gcn::Button *btn;
+    gcn::Color fgcol;
+    gcn::Color bgcol;
+
+    // -- bottom panel start --
+    panBottom = panel = new gcn::Panel(4,4);
+    btnQuit = btn = new gcn::Button("Quit"); // we create this button earlier so the max height of the panel can be determined
+    fgcol = gcn::Color(200,200,200,255);
+    bgcol = gcn::Color(80,0,0,100);
+    panel->setForegroundColor(fgcol);
+    panel->setBackgroundColor(bgcol);
+    panel->setSize(GetResX(), btn->getHeight() + panel->GetSpacingY() * 2);
+    panel->SetMaxSlots(-1, 1);
+
+    btn->addActionListener(this);
+    panel->add(RegWidget(btn));
+
+    btnNew = btn = new gcn::Button(" New ");
+    btn->addActionListener(this);
+    panel->add(RegWidget(btn));
+
+    btnLoad = btn = new gcn::Button(" Load ");
+    btn->addActionListener(this);
+    panel->add(RegWidget(btn));
+
+    btnSaveAs = btn = new gcn::Button(" Save as ");
+    btn->addActionListener(this);
+    panel->add(RegWidget(btn));
+
+    btnData = btn = new gcn::Button(" Data ");
+    btn->addActionListener(this);
+    panel->add(RegWidget(btn));
+
+    btnTiles = btn = new gcn::Button(" Tiles ");
+    btn->addActionListener(this);
+    panel->add(RegWidget(btn));
+
+    btnToggleLayers = btn = new gcn::Button(" Layers ");
+    btn->addActionListener(this);
+    panel->add(RegWidget(btn));
+
+    // this stuff is supposed to be added to the left edge of the panel
+    btnToggleTilebox = btn = new gcn::Button("Toggle Tilebox");
+    panel->InsertSpace(GetResX() - panel->GetNextX() - btn->getDimension().width - panel->GetSpacingX(), 0);
+    btn->addActionListener(this);
+    panel->add(RegWidget(btn));
+
+    // add panel to top widget
+    AddWidgetTop(panel)->setPosition(0, GetResY() - panel->getHeight());
+    uint32 freeHeight = GetResY() - panel->getHeight();
+    // -- bottom panel end --
+
+
+    // -- right panel start --
+    panTilebox = panel = new gcn::Panel(0,0);
+    fgcol = gcn::Color(200,200,200,255);
+    bgcol = gcn::Color(50,50,50,100);
+    panel->setForegroundColor(fgcol);
+    panel->setBackgroundColor(bgcol);
+    panel->setSize(4 * 16, freeHeight);
+    panel->SetMaxSlots(4, -1);
+    panel->addMouseListener(this);
+
+    // the right tilebox panel must be added AFTER the main panel!
+
+    // -- right panel end --
+
+    // -- left layer panel start --
+    panLayers = panel = new gcn::Panel(4,4);
+    panel->setBackgroundColor(gcn::Color(0,75,0,255));
+    panel->setForegroundColor(gcn::Color(0,200,0,255));
+    panel->setSize(100, GetResY() - panBottom->getHeight());
+    panel->setVisible(false);
+    panel->SetMaxSlots(2, -1);
+    for(uint32 i = 0; i < LAYER_MAX; i++)
+    {
+        char numstr[8];
+        sprintf(numstr," %s%u ", i <= 9 ? " " : "", i);
+        btnLayers[i] = btn = new gcn::Button(numstr);
+        btn->addMouseListener(this);
+        panel->add(RegWidget(btn));
+    }
+
+    // add panel to top widget
+    AddWidgetTop(panel)->setPosition(0, 0);
+
+    // -- left layer panel end --
+
+    // -- main panel start --
+    panMain = panel = new gcn::Panel(0,0);
+    panel->setForegroundColor(gcn::Color(255,255,255,255));
+    panel->setBackgroundColor(gcn::Color(0,0,0,0));
+    panel->setSize(GetResX(), GetResY() - panBottom->getHeight());
+    //panel->moveToBottom(panTilebox);
+    panel->SetMaxSlots(-1,-1);
+    panel->addMouseListener(this);
+
+    // add panel to top widget
+    AddWidgetTop(panel)->setPosition(0, 0);
+    // -- main panel end --
+
+    // time to add the right tilebox panel
+    AddWidgetTop(panTilebox)->setPosition(GetResX() - panTilebox->getWidth(), 0);
+
+
+    // -- tile window start --
+    wndTiles = new gcn::Window("Tiles");
+    wndTiles->setSize(GetResX(), GetResY() - panBottom->getHeight());
+    wndTiles->setOpaque(true);
+    wndTiles->setBaseColor(gcn::Color(0, 0, 0, 255));
+    wndTiles->setFrameSize(0);
+    wndTiles->setMovable(false);
+    wndTiles->setVisible(false);
+    wndTiles->setTitleBarHeight(0);
+    wndTiles->setFrameSize(0);
+    btnTWPrev = btn = new gcn::Button("  Prev  ");
+    btn->addActionListener(this);
+    panel = new gcn::Panel(4,4);
+    panel->setBackgroundColor(gcn::Color(0x99B0FF));
+    panel->setForegroundColor(gcn::Color(255,255,255,255));
+    panel->SetMaxSlots(-1, 1);
+    panel->setSize(GetResX(), btn->getHeight() + panel->GetSpacingY() * 2);
+    panel->add(RegWidget(btn));
+    btnTWNext = btn = new gcn::Button("  Next  ");
+    btn->addActionListener(this);
+    panel->add(RegWidget(btn));
+    panel->InsertSpace(15,0);
+    laTWCurFolder = new gcn::Label("Current directory");
+    panel->add(RegWidget(laTWCurFolder));
+    wndTiles->add(RegWidget(panel), 0, wndTiles->getHeight() - panel->getHeight());
+    wndTiles->addMouseListener(this);
+    AddWidgetTop(wndTiles);
+    // -- tile window end --
+
+
+    SetupInterfaceLayers();
+}
+
 void EditorEngine::SetupInterfaceLayers(void)
 {
-    // _layermgr already created in Engine::Engine()
-    _layermgr->Clear();
-
-    _layermgr->SetMaxDim(PREVIEWLAYER_MAX_SIZE);
-    _selLayer = (TileLayer*)_layermgr->CreateLayer(LAYERTYPE_ANIMATED, false, 0, 0); // this is explicitly created in the upper left corner
+    if(_selLayer)
+        delete _selLayer;
+    if(panTileboxLayer)
+        delete panTileboxLayer;
+    if(wndTilesLayer)
+        delete wndTilesLayer;
 
     uint32 resmax = std::max(GetResX(), GetResY());
     _layermgr->SetMaxDim(resmax / 16); // TODO: this should be done less hacklike, maybe...
+    _selLayer = (TileLayer*)_layermgr->CreateLayer(LAYERTYPE_ANIMATED, false, 0, 0); // this is explicitly created in the upper left corner
 
     int xo, yo;
     panTilebox->getAbsolutePosition(xo,yo);
@@ -219,112 +415,32 @@ void EditorEngine::SetupInterfaceLayers(void)
     // ### end debug stuff ###
 }
 
-
-// place widgets based on resolution.
-// to be called on each resize event
-void EditorEngine::SetupInterface(void)
+void EditorEngine::SetupEditorLayers(void)
 {
-    ClearWidgets();
-    _topWidget->setDimension(gcn::Rectangle(0, 0, GetResX(), GetResY()));
-    _topWidget->setOpaque(true);
-    _topWidget->setBaseColor(gcn::Color(0,0,0,255));
+    _layermgr->Clear();
+    _layermgr->SetMaxDim(128); // TODO: make this changeable later
 
-    gcn::Panel *panel;
-    gcn::Button *btn;
-    gcn::Color fgcol;
-    gcn::Color bgcol;
+    for(uint32 i = LAYER_REARMOST_BACKGROUND; i < LAYER_MAX; i++)
+    {
+        _layermgr->SetLayer(_layermgr->CreateLayer(LAYERTYPE_ANIMATED, false, 0, 0), i);
 
-    // -- bottom panel start --
-    panBottom = panel = new gcn::Panel(4,4);
-    btnQuit = btn = new gcn::Button("Quit"); // we create this button earlier so the max height of the panel can be determined
-    fgcol = gcn::Color(200,200,200,255);
-    bgcol = gcn::Color(80,0,0,100);
-    panel->setForegroundColor(fgcol);
-    panel->setBackgroundColor(bgcol);
-    panel->setSize(GetResX(), btn->getHeight() + panel->GetSpacingY() * 2);
-    panel->SetMaxSlots(-1, 1);
-
-    btn->addActionListener(this);
-    panel->add(RegWidget(btn));
-
-    btnNew = btn = new gcn::Button(" New ");
-    btn->addActionListener(this);
-    panel->add(RegWidget(btn));
-
-    btnLoad = btn = new gcn::Button(" Load ");
-    btn->addActionListener(this);
-    panel->add(RegWidget(btn));
-
-    btnSaveAs = btn = new gcn::Button(" Save as ");
-    btn->addActionListener(this);
-    panel->add(RegWidget(btn));
-
-    btnData = btn = new gcn::Button(" Data ");
-    btn->addActionListener(this);
-    panel->add(RegWidget(btn));
-
-    btnTiles = btn = new gcn::Button(" Tiles ");
-    btn->addActionListener(this);
-    panel->add(RegWidget(btn));
-
-    // this stuff is supposed to be added to the left edge of the panel
-    btnToggleTilebox = btn = new gcn::Button("Toggle Tilebox");
-    panel->InsertSpace(GetResX() - panel->GetNextX() - btn->getDimension().width - panel->GetSpacingX(), 0);
-    btn->addActionListener(this);
-    panel->add(RegWidget(btn));
-
-    // add panel to top widget
-    AddWidgetTop(panel)->setPosition(0, GetResY() - panel->getHeight());
-    uint32 freeHeight = GetResY() - panel->getHeight();
-    // -- bottom panel end --
-
-
-    // -- right panel start --
-    panTilebox = panel = new gcn::Panel(0,0);
-    fgcol = gcn::Color(200,200,200,255);
-    bgcol = gcn::Color(50,50,50,100);
-    panel->setForegroundColor(fgcol);
-    panel->setBackgroundColor(bgcol);
-    panel->setSize(4 * 16, freeHeight);
-    panel->SetMaxSlots(4, -1);
-    panel->addMouseListener(this);
-
-    // add panel to top widget
-    AddWidgetTop(panel)->setPosition(GetResX() - panel->getWidth(), 0);
-    // -- right panel end --
-
-    // -- tile window start --
-    wndTiles = new gcn::Window("Tiles");
-    wndTiles->setSize(GetResX() - panTilebox->getWidth(), GetResY() - panBottom->getHeight());
-    wndTiles->setOpaque(true);
-    wndTiles->setBaseColor(gcn::Color(0, 0, 0, 255));
-    wndTiles->setFrameSize(0);
-    wndTiles->setMovable(false);
-    wndTiles->setVisible(false);
-    wndTiles->setTitleBarHeight(0);
-    wndTiles->setFrameSize(0);
-    btnTWPrev = btn = new gcn::Button("  Prev  ");
-    btn->addActionListener(this);
-    panel = new gcn::Panel(4,4);
-    panel->setBackgroundColor(gcn::Color(0x99B0FF));
-    panel->setForegroundColor(gcn::Color(255,255,255,255));
-    panel->SetMaxSlots(-1, 1);
-    panel->setSize(GetResX(), btn->getHeight() + panel->GetSpacingY() * 2);
-    panel->add(RegWidget(btn));
-    btnTWNext = btn = new gcn::Button("  Next  ");
-    btn->addActionListener(this);
-    panel->add(RegWidget(btn));
-    panel->InsertSpace(15,0);
-    laTWCurFolder = new gcn::Label("Current directory");
-    panel->add(RegWidget(laTWCurFolder));
-    wndTiles->add(RegWidget(panel), 0, wndTiles->getHeight() - panel->getHeight());
-    wndTiles->addMouseListener(this);
-    AddWidgetTop(wndTiles);
-    // -- tile window end --
-
-
-    SetupInterfaceLayers();
+    }
+    SetActiveLayer(LAYER_DEFAULT_ENV);
 }
+
+void EditorEngine::SetLeftMainDistance(uint32 dist)
+{
+    panMain->setX(dist);
+    panMain->setWidth(GetResX() - dist);
+    for(uint32 i = 0; i < LAYER_MAX; i++)
+    {
+        if(TileLayerBase *layer = _layermgr->GetLayer(i))
+            layer->xoffs = dist;
+    }
+    _selLayer->xoffs = dist;
+    _selLayerBorderRect.x = dist;
+}
+
 
 void EditorEngine::action(const gcn::ActionEvent& actionEvent)
 {
@@ -336,6 +452,10 @@ void EditorEngine::action(const gcn::ActionEvent& actionEvent)
     else if(src == btnTiles)
     {
         ToggleTileWnd();
+    }
+    else if(src == btnToggleLayers)
+    {
+        ToggleLayerPanel();
     }
     else if(src == btnQuit)
     {
@@ -370,36 +490,100 @@ void EditorEngine::ToggleVisible(gcn::Widget *w)
     w->setVisible(!w->isVisible());
 }
 
+TileLayer *EditorEngine::_GetActiveLayerForWidget(gcn::Widget *src)
+{
+    if(src == wndTiles)
+        return wndTilesLayer;
+    else if(src == panTilebox)
+        return panTileboxLayer;
+    // TODO: add support for more source layers if required
+    // TODO: especially support for the different panMain layers!
+    else if(src == panMain)
+        return (TileLayer*)_layermgr->GetLayer(_activeLayer);
+
+    return NULL;
+}
+
+
 void EditorEngine::mousePressed(gcn::MouseEvent& mouseEvent)
 {
     gcn::Widget *src = mouseEvent.getSource();
-    _mouseStartX = mouseEvent.getX() - (mouseEvent.getX() % 16);
-    _mouseStartY = mouseEvent.getY() - (mouseEvent.getY() % 16);
-    _selOverlayHighlight = true;
+    if(mouseEvent.getButton() == gcn::MouseEvent::LEFT)
+    {
+        if(src == panTilebox || src == wndTiles)
+        {
+            _mouseStartX = mouseEvent.getX() - (mouseEvent.getX() % 16);
+            _mouseStartY = mouseEvent.getY() - (mouseEvent.getY() % 16);
+            _selOverlayHighlight = true;
+        }
+    }
+
+    if( (src == panTilebox && mouseEvent.getButton() == gcn::MouseEvent::RIGHT)
+     || (src == panMain && mouseEvent.getButton() == gcn::MouseEvent::LEFT))
+    {
+        TileLayer *target = _GetActiveLayerForWidget(src);
+        gcn::Rectangle rect = GetTargetableLayerTiles(mouseEvent.getX(), mouseEvent.getY(),
+            _selLayerBorderRect.width, _selLayerBorderRect.height,
+            _selLayer->GetArraySize(), _selLayer->GetArraySize());
+        for(uint32 y = 0; y < uint32(rect.height); y++)
+        {
+            for(uint32 x = 0; x < uint32(rect.width); x++)
+            {
+                BasicTile *tile = _selLayer->GetTile(x,y);
+                target->SetTile(x + rect.x, y + rect.y, tile);
+            }
+        }
+    }
 }
 
 void EditorEngine::mouseReleased(gcn::MouseEvent& mouseEvent)
 {
-    _selOverlayHighlight = false;
-    _mouseStartX = mouseEvent.getX() - (mouseEvent.getX() % 16);
-    _mouseStartY = mouseEvent.getY() - (mouseEvent.getY() % 16);
-    UpdateSelection(mouseEvent.getSource());
-    UpdateSelectionFrame(mouseEvent.getSource(), mouseEvent.getX(), mouseEvent.getY());
+    gcn::Widget *src = mouseEvent.getSource();
+    if(mouseEvent.getButton() == gcn::MouseEvent::LEFT)
+    {
+        _selOverlayHighlight = false;
+        if(src == panTilebox || src == wndTiles)
+        {
+            _mouseStartX = mouseEvent.getX() - (mouseEvent.getX() % 16);
+            _mouseStartY = mouseEvent.getY() - (mouseEvent.getY() % 16);
+            UpdateSelection(mouseEvent.getSource());
+            UpdateSelectionFrame(mouseEvent.getSource(), mouseEvent.getX(), mouseEvent.getY());
+        }
+    }
 }
 
 void EditorEngine::mouseExited(gcn::MouseEvent& mouseEvent)
 {
     gcn::Widget *src = mouseEvent.getSource();
-    if(src == wndTiles || src == panTilebox)
+    if(src == wndTiles || src == panTilebox || src == panMain)
     {
         _selOverlayShow = false;
     }
 }
 
+void EditorEngine::mouseClicked(gcn::MouseEvent& mouseEvent)
+{
+    gcn::Widget *src = mouseEvent.getSource();
+    // poll the buttons for a click
+    for(uint32 i = 0; i < LAYER_MAX; i++)
+    {
+        if(src == btnLayers[i])
+        {
+            if(mouseEvent.getButton() == gcn::MouseEvent::LEFT)
+                SetActiveLayer(i);
+            else if(mouseEvent.getButton() == gcn::MouseEvent::RIGHT)
+                ToggleLayerVisible(i);
+
+            return;
+        }
+    }
+    
+}
+
 void EditorEngine::mouseMoved(gcn::MouseEvent& mouseEvent)
 {
     gcn::Widget *src = mouseEvent.getSource();
-    if(src == wndTiles || src == panTilebox)
+    if(src == wndTiles || src == panTilebox || src == panMain)
     {
         _mouseStartX = mouseEvent.getX();
         _mouseStartY = mouseEvent.getY();
@@ -412,22 +596,73 @@ void EditorEngine::mouseMoved(gcn::MouseEvent& mouseEvent)
 void EditorEngine::mouseDragged(gcn::MouseEvent& mouseEvent)
 {
     gcn::Widget *src = mouseEvent.getSource();
-    if(src == wndTiles || src == panTilebox)
+    if(mouseEvent.getButton() == gcn::MouseEvent::LEFT)
     {
-        UpdateSelectionFrame(src, mouseEvent.getX(), mouseEvent.getY());
+        if(src == wndTiles || src == panTilebox || src == panMain)
+        {
+            UpdateSelectionFrame(src, mouseEvent.getX(), mouseEvent.getY());
+        }
+    }
+
+    if(src == panMain && mouseEvent.getButton() == gcn::MouseEvent::LEFT)
+    {
+        TileLayer *target = _GetActiveLayerForWidget(src);
+        gcn::Rectangle rect = GetTargetableLayerTiles(mouseEvent.getX(), mouseEvent.getY(),
+            _selLayerBorderRect.width, _selLayerBorderRect.height,
+            _selLayer->GetArraySize(), _selLayer->GetArraySize());
+        for(uint32 y = 0; y < uint32(rect.height); y++)
+        {
+            for(uint32 x = 0; x < uint32(rect.width); x++)
+            {
+                BasicTile *tile = _selLayer->GetTile(x,y);
+                target->SetTile(x + rect.x, y + rect.y, tile);
+            }
+        }
     }
 }
 
 void EditorEngine::UpdateSelectionFrame(gcn::Widget *src, int x, int y)
 {
-    gcn::Rectangle rect(std::min(_mouseStartX, x),
-                        std::min(_mouseStartY, y),
-                        std::max(_mouseStartX, x),
-                        std::max(_mouseStartY, y));
+    if(src == panMain)
+    {
+        if(_selCurrentSelRect.width < 16 && _selCurrentSelRect.height < 16)
+            return;
+
+        // dont call Get16pxAlignedFrame() here, because this would also change width,
+        // height and other stuff, thats not supposed to happen here
+        _selOverlayRect = gcn::Rectangle(x - (x % 16), y - (y % 16), _selCurrentSelRect.width, _selCurrentSelRect.height);
+    }
+    else
+    {
+        gcn::Rectangle rect(std::min(_mouseStartX, x),
+                            std::min(_mouseStartY, y),
+                            std::max(_mouseStartX, x),
+                            std::max(_mouseStartY, y));
+        _selOverlayRect = Get16pxAlignedFrame(rect);
+    }
     
-    _selOverlayRect = Get16pxAlignedFrame(rect);
     _selOverlayClip = src->getDimension();
     _selOverlayShow = true;
+}
+
+// returns a rect defining the targetable tile indexes of a TileLayer.
+// addX, addY are passed as relative coords from baseXY.
+// baseXY must be the positions of the upper left start point.
+// aligning by 16 will be done inside the function.
+// maxwidth, maxheight is the max. amount of tiles in each direction that may be treated selectable. -1 for infinite.
+gcn::Rectangle EditorEngine::GetTargetableLayerTiles(uint32 baseX, uint32 baseY, uint32 addX, uint32 addY, uint32 maxwidth, uint32 maxheight)
+{
+    uint32 w = addX / 16;
+    uint32 h = addY / 16;
+
+    // + 1 because there is at least 1 tile to target, the one we are pointing to
+    // subtract the space 
+    uint32 maxDimX = std::min(w, maxwidth);
+    uint32 maxDimY = std::min(h, maxheight);
+
+    gcn::Rectangle rect(baseX / 16, baseY / 16, maxDimX, maxDimY);
+
+    return rect;
 }
 
 void EditorEngine::UpdateSelection(gcn::Widget *src)
@@ -439,13 +674,7 @@ void EditorEngine::UpdateSelection(gcn::Widget *src)
     _selLayerBorderRect.width = maxX * 16;
     _selLayerBorderRect.height = maxY * 16;
 
-    TileLayer *srcLayer = NULL;
-
-    // TODO: add support for more source layers if required
-    if(src == wndTiles)
-        srcLayer = wndTilesLayer;
-    else if(src == panTilebox)
-        srcLayer = panTileboxLayer;
+    TileLayer *srcLayer = _GetActiveLayerForWidget(src);
 
     if(srcLayer)
     {
@@ -468,6 +697,9 @@ void EditorEngine::UpdateSelection(gcn::Widget *src)
                 _selLayer->SetTile(ix, iy, tile);
             }
         }
+
+        // store the current selection size, it is needed to preview on the main surface where the new tiles will be put
+        _selCurrentSelRect = _selOverlayRect;
     }
 }
 
@@ -488,3 +720,43 @@ void EditorEngine::ToggleTileWnd(void)
     wndTilesLayer->visible = wndTiles->isVisible();
     _selLayerShow = !wndTilesLayer->visible;
 }
+
+void EditorEngine::ToggleLayerPanel(void)
+{
+    ToggleVisible(panLayers);
+    if(panLayers->isVisible())
+        SetLeftMainDistance(panLayers->getWidth());
+    else
+        SetLeftMainDistance(0);
+}
+
+void EditorEngine::SetActiveLayer(uint32 layerId)
+{
+    _activeLayer = layerId;
+    UpdateLayerButtonColors();
+}
+
+void EditorEngine::ToggleLayerVisible(uint32 layerId)
+{
+    TileLayerBase *layer = _layermgr->GetLayer(layerId);
+    layer->visible = !layer->visible;
+    UpdateLayerButtonColors();
+}
+
+void EditorEngine::UpdateLayerButtonColors(void)
+{
+    for(uint32 i = 0; i < LAYER_MAX; i++)
+    {
+        TileLayerBase *layer = _layermgr->GetLayer(i);
+        uint8 alpha = layer->visible ? 255 : 150;
+        if(i == _activeLayer)
+        {
+            btnLayers[i]->setBaseColor(gcn::Color(180,255,180,alpha));
+        }
+        else
+        {
+            btnLayers[i]->setBaseColor(gcn::Color(128,128,144,alpha));
+        }
+    }
+}
+
