@@ -367,13 +367,13 @@ void EditorEngine::SetupInterfaceLayers(void)
 
     uint32 resmax = std::max(GetResX(), GetResY());
     _layermgr->SetMaxDim(resmax / 16); // TODO: this should be done less hacklike, maybe...
-    _selLayer = (TileLayer*)_layermgr->CreateLayer(LAYERTYPE_ANIMATED, false, 0, 0); // this is explicitly created in the upper left corner
+    _selLayer = (TileLayer*)_layermgr->CreateLayer(false); // this is explicitly created in the upper left corner
 
     int xo, yo;
     panTilebox->getAbsolutePosition(xo,yo);
-    panTileboxLayer = (TileLayer*)_layermgr->CreateLayer(LAYERTYPE_ANIMATED, false, xo, yo);
+    panTileboxLayer = (TileLayer*)_layermgr->CreateLayer(false, xo, yo);
 
-    wndTilesLayer = (TileLayer*)_layermgr->CreateLayer(LAYERTYPE_ANIMATED, false);
+    wndTilesLayer = (TileLayer*)_layermgr->CreateLayer(false);
     wndTilesLayer->visible = false;
 
     // ##### TEMP TEST DEBUG STUFF ####
@@ -422,7 +422,7 @@ void EditorEngine::SetupEditorLayers(void)
 
     for(uint32 i = LAYER_REARMOST_BACKGROUND; i < LAYER_MAX; i++)
     {
-        _layermgr->SetLayer(_layermgr->CreateLayer(LAYERTYPE_ANIMATED, false, 0, 0), i);
+        _layermgr->SetLayer(_layermgr->CreateLayer(false, 0, 0), i);
 
     }
     SetActiveLayer(LAYER_DEFAULT_ENV);
@@ -434,7 +434,7 @@ void EditorEngine::SetLeftMainDistance(uint32 dist)
     panMain->setWidth(GetResX() - dist);
     for(uint32 i = 0; i < LAYER_MAX; i++)
     {
-        if(TileLayerBase *layer = _layermgr->GetLayer(i))
+        if(TileLayer *layer = _layermgr->GetLayer(i))
             layer->xoffs = dist;
     }
     _selLayer->xoffs = dist;
@@ -738,7 +738,7 @@ void EditorEngine::SetActiveLayer(uint32 layerId)
 
 void EditorEngine::ToggleLayerVisible(uint32 layerId)
 {
-    TileLayerBase *layer = _layermgr->GetLayer(layerId);
+    TileLayer *layer = _layermgr->GetLayer(layerId);
     layer->visible = !layer->visible;
     UpdateLayerButtonColors();
 }
@@ -747,7 +747,7 @@ void EditorEngine::UpdateLayerButtonColors(void)
 {
     for(uint32 i = 0; i < LAYER_MAX; i++)
     {
-        TileLayerBase *layer = _layermgr->GetLayer(i);
+        TileLayer *layer = _layermgr->GetLayer(i);
         uint8 alpha = layer->visible ? 255 : 150;
         if(i == _activeLayer)
         {

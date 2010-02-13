@@ -45,6 +45,8 @@ public:
     inline void SetSleepTime(uint32 t) { _sleeptime = t; }
     virtual void Run(void);
 
+    inline LayerMgr *_GetLayerMgr(void) const { return _layermgr; }
+
 protected:
 
     LayerMgr *_layermgr;

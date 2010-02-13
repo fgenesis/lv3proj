@@ -29,9 +29,9 @@ public:
     ~LayerMgr();
 
 
-    inline TileLayerBase *GetLayer(uint32 depth) { return _layers[depth]; }
-    TileLayerBase *CreateLayer(LayerType ty, bool collision, uint32 xoffs = 0, uint32 yoffs = 0);
-    inline void SetLayer(TileLayerBase *layer, uint32 depth)
+    inline TileLayer *GetLayer(uint32 depth) { return _layers[depth]; }
+    TileLayer *CreateLayer(bool collision = false, uint32 xoffs = 0, uint32 yoffs = 0);
+    inline void SetLayer(TileLayer *layer, uint32 depth)
     {
         _layers[depth] = layer;
     }
@@ -48,7 +48,7 @@ public:
 
 private:
     Engine *engine;
-    TileLayerBase *_layers[LAYER_MAX];
+    TileLayer *_layers[LAYER_MAX];
     uint32 _maxdim; // max dimension for all created layers
 
 };

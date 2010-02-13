@@ -12,40 +12,12 @@ LayerMgr::LayerMgr(Engine* e)
         _layers[i] = NULL;
 }
 
-TileLayerBase *LayerMgr::CreateLayer(LayerType ty, bool collision, uint32 xoffs /* = 0 */, uint32 yoffs /* = 0 */)
+TileLayer *LayerMgr::CreateLayer(bool collision, uint32 xoffs /* = 0 */, uint32 yoffs /* = 0 */)
 {
     ASSERT(_maxdim); // sanity check
 
-    TileLayerBase *layer;
-    switch(ty)
-    {
-        case LAYERTYPE_BASE:
-            layer = new TileLayerBase;
-            layer->ty = LAYERTYPE_BASE;
-            break;
-
-        case LAYERTYPE_TILED:
-            layer = new TileLayerArray2d;
-            layer->ty = LAYERTYPE_TILED;
-            ((TileLayerArray2d*)layer)->tilearray.resize(_maxdim, NULL);
-            break;
-
-        case LAYERTYPE_ANIMATED:
-            layer = new TileLayer;
-            layer->ty = LAYERTYPE_ANIMATED;
-            ((TileLayer*)layer)->tilearray.resize(_maxdim, NULL);
-            break;
-
-        default:
-            ASSERT(false);
-    };
-
-    ASSERT(layer);
-
-    // create the surface where static tiles will be drawn to,
-    // use the same resolution as the screen
-    layer->surface = ty == LAYERTYPE_ANIMATED ? NULL :
-            SDL_CreateRGBSurface(SDL_SWSURFACE, engine->GetResX(), engine->GetResY(), engine->GetBPP(), 0, 0, 0, 0);
+    TileLayer *layer = new TileLayer;
+    layer->tilearray.resize(_maxdim, NULL);
 
     layer->collision = collision;
     layer->target = engine->GetSurface();
@@ -95,8 +67,8 @@ bool LayerMgr::LoadAsciiLevel(AsciiLevel *level)
     SetMaxDim(level->tiles.size1d());
 
     // create the layers
-    TileLayerArray2d *baseLayer = (TileLayerArray2d*)CreateLayer(LAYERTYPE_TILED, false);
-    TileLayer *animLayer = (TileLayer*)CreateLayer(LAYERTYPE_ANIMATED, false);
+    TileLayer *baseLayer = CreateLayer();
+    TileLayer *animLayer = CreateLayer();
     
     // load the tiles
     std::map<std::string, BasicTile*> tmap; // stores already allocated animated tiles
