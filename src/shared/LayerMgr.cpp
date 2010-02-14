@@ -92,6 +92,7 @@ bool LayerMgr::LoadAsciiLevel(AsciiLevel *level)
                     {
                         staTile = new BasicTile;
                         staTile->surface = resMgr.LoadImage((char*)realFileName.c_str());
+                        staTile->filename = realFileName;
                         tmap[f] = staTile;
                     }
                     else
@@ -110,6 +111,7 @@ bool LayerMgr::LoadAsciiLevel(AsciiLevel *level)
                         {
                             atile = new AnimatedTile(ani, startIdx, startAnim.c_str());
                             atile->Init(Engine::GetCurFrameTime());
+                            atile->filename = realFileName;
                             tmap[f] = atile;
                         }
                         else
@@ -124,8 +126,8 @@ bool LayerMgr::LoadAsciiLevel(AsciiLevel *level)
         }
     }
 
-    SetLayer(baseLayer, LAYER_SPRITES);
-    SetLayer(animLayer, LayerDepth(LAYER_SPRITES + 1));
+    SetLayer(baseLayer, LAYER_DEFAULT_ENV);
+    SetLayer(animLayer, LAYER_DEFAULT_ENV + 1);
 
     return true;
 }

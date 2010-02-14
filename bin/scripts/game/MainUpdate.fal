@@ -1,0 +1,7 @@
+function GameUpdate(ms)
+
+>> "\rUpdate difftime: ", ms, "    "
+
+end
+
+export GameUpdate

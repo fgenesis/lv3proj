@@ -396,11 +396,13 @@ void EditorEngine::SetupInterfaceLayers(void)
             }
             else if(FileGetExtension(*fi) == ".png")
             {
-                SDL_Surface *img = resMgr.LoadImage((char*)AddPathIfNecessary(*fi,*idir).c_str());
+                std::string fn = AddPathIfNecessary(*fi,*idir);
+                SDL_Surface *img = resMgr.LoadImage((char*)fn.c_str());
                 if(img)
                 {
                     tile = new BasicTile;
                     tile->surface = img;
+                    tile->filename = fn;
                 }
             }
 

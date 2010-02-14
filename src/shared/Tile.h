@@ -15,6 +15,7 @@ struct BasicTile
 {
 public:
     BasicTile() : surface(NULL), type(TILETYPE_STATIC) {}
+    std::string filename;
     SDL_Surface *surface; // surface to be drawn
     uint8 type; // read-only!!
 };
@@ -31,6 +32,10 @@ public:
     uint32 nextupdate; // the time when this tile will change its texture (Engine::GetCurrentFrameTime() + X)
 
     void SetupDefaults(uint32 idx = 0, const char *startwith = NULL);
+    void SetName(char *name);
+    void SetFrame(uint32 frame);
+    const char *GetName(void) { return curFrameStore->name.c_str(); }
+    uint32 GetFrame(void) { return curFrame->index; }
     void Init(uint32 t); // current system clock
     static void SplitFilenameToProps(const char *in, std::string *fn, uint32 *idx, std::string *str);
 };

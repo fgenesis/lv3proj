@@ -17,12 +17,12 @@ class TileLayer
     friend class LayerMgr;
 
 public:
-    virtual void Update(uint32 curtime);
-    virtual void Render(void);
-    virtual void SetTile(uint32 x, uint32 y, BasicTile *tile);
-    virtual BasicTile *GetTile(uint32 x, uint32 y);
-    virtual uint32 GetArraySize(void) { return tilearray.size1d(); }
-    virtual uint32 GetPixelSize(void) { return GetArraySize() * 16; }
+    void Update(uint32 curtime);
+    void Render(void);
+    void SetTile(uint32 x, uint32 y, BasicTile *tile);
+    inline BasicTile *GetTile(uint32 x, uint32 y) { return tilearray(x,y); }
+    inline uint32 GetArraySize(void) { return tilearray.size1d(); }
+    inline uint32 GetPixelSize(void) { return GetArraySize() * 16; }
 
     bool visible;
     bool collision; // do collision checking against this layer for non-transparent areas

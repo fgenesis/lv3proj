@@ -195,6 +195,26 @@
 				RelativePath=".\game\main.cpp"
 				>
 			</File>
+			<Filter
+				Name="falcon"
+				>
+				<File
+					RelativePath=".\game\AppFalconGame.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\game\AppFalconGame.h"
+					>
+				</File>
+				<File
+					RelativePath=".\game\FalconGameModule.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\game\FalconGameModule.h"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="Header Files"

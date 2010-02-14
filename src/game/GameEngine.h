@@ -3,6 +3,9 @@
 
 #include "Engine.h"
 
+class AppFalconGame;
+class ObjectMgr;
+
 
 class GameEngine : public Engine
 {
@@ -16,6 +19,17 @@ public:
     //virtual void OnWindowEvent(bool active);
 
     virtual bool Setup(void);
+
+
+    ObjectMgr *objmgr;
+
+
+protected:
+
+    virtual void _Process(uint32 ms);
+    virtual void _Render(void);
+
+    AppFalconGame *falcon;
 
 };
 

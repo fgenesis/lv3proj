@@ -17,6 +17,18 @@ AnimatedTile::AnimatedTile(Anim *a, uint32 idx /* = 0*/, const char *startwith /
     SetupDefaults(idx, startwith);
 }
 
+void AnimatedTile::SetFrame(uint32 frame)
+{
+    curFrame = &(curFrameStore->store[frame % curFrameStore->store.size()]);
+}
+
+void AnimatedTile::SetName(char *name)
+{
+    AnimMap::iterator am = ani->anims.find(name);
+    if(am != ani->anims.end())
+        curFrameStore = &(am->second);
+}
+
 void AnimatedTile::SetupDefaults(uint32 idx /* = 0*/, const char *startwith /* = NULL*/)
 {
     AnimMap::iterator am = ani->anims.find(startwith ? startwith : "default");
@@ -27,7 +39,7 @@ void AnimatedTile::SetupDefaults(uint32 idx /* = 0*/, const char *startwith /* =
             am = ani->anims.begin(); // FALLBACK // TODO: is this necessary?
     }
     curFrameStore = &(am->second);
-    curFrame = &((*curFrameStore)[idx]);
+    curFrame = &(curFrameStore->store[idx]);
 }
 
 void AnimatedTile::Init(uint32 t)

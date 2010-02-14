@@ -1,0 +1,10 @@
+class Erik from Player
+
+    function OnUpdate(ms)
+        > ms, " - Erik Updated!"
+    end
+
+
+end
+
+export Erik

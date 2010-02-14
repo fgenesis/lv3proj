@@ -1,0 +1,95 @@
+> "*** Falcon Init start ***"
+
+script_dirs = .[
+    // note that the paths are always relative to the exe position
+    "scripts/util"
+    "scripts/game"
+    "scripts/sprites"
+]
+
+
+// Load all scripts from 'path', resolving dependencies between scripts
+// If there are multiple scripts depending on each other, it will repeatedly try to load what it can until there are no more errors,
+// or it has loaded everything it could. 
+// Note: This does not resolve circular dependencies! (A depends on B depends on A, for example),
+//       and can not resolve conflicts between files that reside in different directories
+function LoadScriptsFromDir(path)
+    try
+        scriptdir = Directory(path)
+    catch in err
+        > "Can't load anything from '" + path + "', directory does not exist."
+        return
+    end
+    files = List()
+    ftype = "fal"
+    while(fn = scriptdir.read())
+        ext = strSplit(fn,".")[-1] // last array element is the extension
+        if(strLower(ext) == ftype and len(fn) > 4)
+            files.push(fn)
+        end
+    end
+    scriptdir.close()
+    done_count = 0
+    collect_errors = false
+    errors = [ => ]
+    loop
+        startlen = files.len()
+        // > "LoadScriptsFromDir(" + path + ") starting with " + startlen + " scripts"
+        for fn in files
+            sc = path + "/" + fn
+            // > "Falcon:Init: Loading script '" + sc + "'"
+            try
+                include(fn,"",path) // will raise an error if loading failed (be it unresolved symbols or something else)
+                > "** Falcon script '" + sc + "' loaded"
+                done_count++
+                continue dropping // when we reached this point loading the file was sucessful, remove it from the list
+            catch in err
+                if(collect_errors)
+                    errors[sc] = err
+                else
+                    //> "... failed, trying next one"
+                end
+            end
+        end
+        endlen = files.len()
+        
+        if(startlen == 0)
+            if(done_count > 0)
+                > "All " + done_count + " scripts from '" + path + "' loaded successfully"
+            else
+                > "Nothing to do in '" + path + "', directory is empty"
+            end
+            break
+        elif(startlen == endlen) // no file could be loaded in this run, there are dependencies we cant resolve or just files with syntax error
+            if(collect_errors)
+                // >  "Falcon: " + done_count + " out of " + (done_count + endlen) + " scripts loaded."
+                > "Unable to load all scripts from '" + path + "'. Files:"
+                for sc, err in errors
+                    > "[ " + sc + " ]"
+                end
+                > ""
+                > "----= Errors =----------------------------------------"
+                for sc, err in errors
+                    > err
+                    > ""
+                end
+                break           
+            else
+                collect_errors = true
+                // > "LoadScriptsFromDir(" + path + ") -- error collect in next loop"
+            end
+            
+        end
+        // > "LoadScriptsFromDir(" + path + ") loop finished with " + endlen + " scripts")
+    end
+end
+
+for d in script_dirs
+    LoadScriptsFromDir(d)
+end
+
+> "*** Falcon Init done ***"
+
+
+export LoadScriptsFromDir
+

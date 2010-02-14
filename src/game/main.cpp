@@ -1,6 +1,8 @@
 #include "common.h"
 #include "GameEngine.h"
 
+GameEngine g_engine;
+
 
 int main(int argc, char **argv)
 {
@@ -14,12 +16,10 @@ int main(int argc, char **argv)
 
     mtRandSeed(time(NULL));
 
-    GameEngine game;
-
-    game.InitScreen(1000,600,0,SDL_RESIZABLE);
-    game.SetTitle("Lost Vikings 3 Project");
-    game.Setup();
-    game.Run();
+    g_engine.InitScreen(1000,600,0,SDL_RESIZABLE);
+    g_engine.SetTitle("Lost Vikings 3 Project");
+    g_engine.Setup();
+    g_engine.Run();
 
     return 0;
 }

@@ -17,7 +17,14 @@ struct AnimFrame
     SDL_Surface *surface;
 };
 
-typedef std::vector<AnimFrame> AnimFrameStore;
+typedef std::vector<AnimFrame> AnimFrameVector;
+
+struct AnimFrameStore
+{
+    std::string name;
+    AnimFrameVector store;
+};
+
 typedef std::map<std::string, AnimFrameStore> AnimMap;
 
 struct Anim

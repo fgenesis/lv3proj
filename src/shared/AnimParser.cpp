@@ -38,6 +38,7 @@ Anim *ParseAnimData(char *strbuf)
         uint32 idx;
         fields.clear();
         AnimFrameStore& frames = ani->anims[anim_name];
+        frames.name = anim_name;
         StrSplit(lin->c_str(), " \t", fields);
         for(std::vector<std::string>::iterator it = fields.begin(); it != fields.end(); it++)
         {
@@ -52,23 +53,23 @@ Anim *ParseAnimData(char *strbuf)
                     if(!x)
                         continue; // bullshit line, continue
                     idx = x - 1; // note the -1 here !!
-                    if(frames.size() < idx + 1)
-                        frames.resize(idx + 1); // make space if needed
-                    frames[idx].index = idx + 1;
+                    if(frames.store.size() < idx + 1)
+                        frames.store.resize(idx + 1); // make space if needed
+                    frames.store[idx].index = idx + 1;
                 }
                 break;
 
                 case 1: // filename - string
-                frames[idx].filename = *it;
+                frames.store[idx].filename = *it;
                 break;
 
                 case 2: // frametime - integer
-                frames[idx].frametime = atoi(it->c_str());
+                frames.store[idx].frametime = atoi(it->c_str());
                 break;
 
                 case 3: // nextframe - integer, OR nextanim - string
-                if( !(frames[idx].nextframe = atoi(it->c_str())) )
-                    frames[idx].nextanim = it->c_str();
+                if( !(frames.store[idx].nextframe = atoi(it->c_str())) )
+                    frames.store[idx].nextanim = it->c_str();
                 break;
             }
             ++column;

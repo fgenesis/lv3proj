@@ -235,6 +235,22 @@
 				>
 			</File>
 			<File
+				RelativePath=".\shared\ObjectMgr.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\shared\ObjectMgr.h"
+				>
+			</File>
+			<File
+				RelativePath=".\shared\Objects.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\shared\Objects.h"
+				>
+			</File>
+			<File
 				RelativePath=".\shared\PropParser.cpp"
 				>
 			</File>
@@ -286,6 +302,18 @@
 				RelativePath=".\shared\tools.h"
 				>
 			</File>
+			<Filter
+				Name="falcon"
+				>
+				<File
+					RelativePath=".\shared\AppFalcon.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\AppFalcon.h"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="Header Files"

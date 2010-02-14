@@ -40,6 +40,7 @@ public:
     Anim *LoadAnim(char *name, bool count = false);
     Mix_Music *LoadMusic(char *name, bool count = false);
     memblock *LoadFile(char *name, char *mode = "r", bool count = false);
+    char *LoadTextFile(char *name, char *mode = "r", bool count = false);
     void SetPropForFile(char *fn, char *prop, char *what);
     std::string GetPropForFile(char *fn, char *prop);
     std::string GetPropForMusic(char *fn, char *prop) { return GetPropForFile((char*)(std::string("music/") + fn).c_str(), prop); }

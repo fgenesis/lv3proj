@@ -126,7 +126,7 @@ Anim *ResourceMgr::LoadAnim(char *name, bool count /* = false */)
             // load all additional files referenced in this .anim file
             // pay attention to relative paths in the file, respect the .anim file's directory for this
             for(AnimMap::iterator am = ani->anims.begin(); am != ani->anims.end(); am++)
-                for(AnimFrameStore::iterator af = am->second.begin(); af != am->second.end(); af++)
+                for(AnimFrameVector::iterator af = am->second.store.begin(); af != am->second.store.end(); af++)
                 {
                     loadpath = AddPathIfNecessary(af->filename,relpath);
                     af->surface = resMgr.LoadImage((char*)loadpath.c_str(), true); // get all images referenced
@@ -209,6 +209,18 @@ memblock *ResourceMgr::LoadFile(char *name, char *mode /* = "r" */, bool count /
     }
 
     return mb;
+}
+
+char *ResourceMgr::LoadTextFile(char *name, char *mode /* =  */, bool count /* = false */)
+{
+    memblock *mb = LoadFile(name,mode,count);
+    if(mb)
+    {
+        mb->ptr[mb->size] = 0;
+        return (char*)mb->ptr;
+    }
+
+    return NULL;
 }
 
 std::string ResourceMgr::GetPropForFile(char *fn, char *prop)

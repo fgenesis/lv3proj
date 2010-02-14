@@ -37,13 +37,13 @@ void TileLayer::Update(uint32 curtime)
         {
             if(tile->curFrame->nextframe)
             {
-                tile->curFrame = &((*tile->curFrameStore)[tile->curFrame->nextframe - 1]);
+                tile->curFrame = &(tile->curFrameStore->store[tile->curFrame->nextframe - 1]);
                 tile->surface = tile->curFrame->surface;
             }
             else if(tile->curFrame->nextanim.length())
             {
                 tile->curFrameStore = &(tile->ani->anims[tile->curFrame->nextanim]); // <-- TODO: this call could be precalculated, maybe (eats CPU)
-                tile->curFrame = &((*tile->curFrameStore)[0]);
+                tile->curFrame = &(tile->curFrameStore->store[0]);
                 tile->surface = tile->curFrame->surface;
             }
             tile->nextupdate = curtime + tile->curFrame->frametime;

@@ -37,4 +37,10 @@ void _log_resetcolor(bool);
 
 const int Color_count = int(WHITE)+1;
 
+#ifdef _DEBUG
+#  define DEBUG_LOG logdebug
+#else
+#  define DEBUG_LOG
+#endif
+
 #endif
