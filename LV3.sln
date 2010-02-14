@@ -4,11 +4,13 @@ Microsoft Visual Studio Solution File, Format Version 10.00
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "game", "src\game.vcproj", "{04622C6D-C7CD-4511-A00E-005949256FBA}"
 	ProjectSection(ProjectDependencies) = postProject
 		{AF213C17-7765-4FEA-8EDF-B266BAECF14B} = {AF213C17-7765-4FEA-8EDF-B266BAECF14B}
+		{91245151-4CC8-481A-AC7B-CFE1CB864F65} = {91245151-4CC8-481A-AC7B-CFE1CB864F65}
 		{4CA929A3-1073-4120-AE68-BD7E111F82A3} = {4CA929A3-1073-4120-AE68-BD7E111F82A3}
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "shared", "src\shared.vcproj", "{4CA929A3-1073-4120-AE68-BD7E111F82A3}"
 	ProjectSection(ProjectDependencies) = postProject
+		{91245151-4CC8-481A-AC7B-CFE1CB864F65} = {91245151-4CC8-481A-AC7B-CFE1CB864F65}
 		{36BCB3AB-6233-404D-9409-0E31FFE49932} = {36BCB3AB-6233-404D-9409-0E31FFE49932}
 	EndProjectSection
 EndProject
@@ -36,6 +38,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "guichan_ext", "src\guichan_
 	ProjectSection(ProjectDependencies) = postProject
 		{AF213C17-7765-4FEA-8EDF-B266BAECF14B} = {AF213C17-7765-4FEA-8EDF-B266BAECF14B}
 	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "falcon", "src\falcon.vcproj", "{91245151-4CC8-481A-AC7B-CFE1CB864F65}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -71,6 +75,10 @@ Global
 		{4BFC1E80-2428-45B4-9722-EB4169C44B68}.Debug|Win32.Build.0 = Debug|Win32
 		{4BFC1E80-2428-45B4-9722-EB4169C44B68}.Release|Win32.ActiveCfg = Release|Win32
 		{4BFC1E80-2428-45B4-9722-EB4169C44B68}.Release|Win32.Build.0 = Release|Win32
+		{91245151-4CC8-481A-AC7B-CFE1CB864F65}.Debug|Win32.ActiveCfg = Debug|Win32
+		{91245151-4CC8-481A-AC7B-CFE1CB864F65}.Debug|Win32.Build.0 = Debug|Win32
+		{91245151-4CC8-481A-AC7B-CFE1CB864F65}.Release|Win32.ActiveCfg = Release|Win32
+		{91245151-4CC8-481A-AC7B-CFE1CB864F65}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
