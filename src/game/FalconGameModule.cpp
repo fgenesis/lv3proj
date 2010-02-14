@@ -21,11 +21,15 @@ extern GameEngine g_engine;
 
 FalconProxyObject::~FalconProxyObject()
 {
+    // remove cross-references
     self()->_falObj = NULL;
     self()->_obj = NULL;
+
+    // allow the garbage collector to cleanup the remains (the fal_ObjectCarrier)
     delete gclock;
 }
 
+// Do NOT use other argument types than Falcon::Item
 void FalconProxyObject::CallMethod(char *m, uint32 args /* = 0 */, ...)
 {
     Falcon::Item method;
@@ -39,6 +43,66 @@ void FalconProxyObject::CallMethod(char *m, uint32 args /* = 0 */, ...)
         vm->callItem(method, args);
     }
 }
+
+void fal_ObjectCarrier::init(Falcon::VMachine *vm)
+{
+    fal_ObjectCarrier *self = Falcon::dyncast<fal_ObjectCarrier*>( vm->self().asObject() );
+    FalconProxyObject *fobj = self->GetFalObj();
+    BaseObject *obj = self->GetObj();
+    fobj->vm = vm;
+    fobj->gclock = new Falcon::GarbageLock(Falcon::Item(self));
+    obj->Init(); // correctly set type of object
+    obj->_falObj = fobj;
+    g_engine.objmgr->Add(obj);
+}
+
+Falcon::CoreObject* fal_ObjectCarrier::factory( const Falcon::CoreClass *cls, void *user_data, bool )
+{
+    Falcon::String classname = cls->symbol()->name();
+
+    // do not allow direct instantiation of the base classes, except Rect
+    // with rect, it is good to replace member functions such as: rect.OnEnter = some_func
+    if(classname == "Player" || classname == "Unit"
+    || classname == "Item" || classname == "Object")
+    {
+        throw new Falcon::AccessError( Falcon::ErrorParam( Falcon::e_noninst_cls ) );
+    }
+
+    Falcon::ClassDef *clsdef = cls->symbol()->getClassDef();
+    BaseObject *obj = NULL;
+
+    if(clsdef->inheritsFrom("Player"))
+    {
+        obj = new Player;
+    }
+    else if(clsdef->inheritsFrom("Unit"))
+    {
+        obj = new Unit;
+    }
+    else if(clsdef->inheritsFrom("Item"))
+    {
+        obj = new Item;
+    }
+    else if(clsdef->inheritsFrom("Object"))
+    {
+        obj = new Object;
+    }
+    else if(clsdef->inheritsFrom("Rect") || classname == "Rect")
+    {
+        obj = new Rect;
+    }
+
+    if(!obj)
+    {
+        Falcon::AutoCString cclsname(classname);
+        logerror("ObjectCarrier factory: Unable to instanciate an object of class '%s'", cclsname.c_str());
+        throw new Falcon::AccessError( Falcon::ErrorParam( Falcon::e_noninst_cls ) );
+    }
+
+    FalconProxyObject *fobj = new FalconProxyObject(obj);
+    return new fal_ObjectCarrier(cls, fobj);
+}
+
 
 
 bool fal_ObjectCarrier::setProperty( const Falcon::String &prop, const Falcon::Item &value )
@@ -70,11 +134,19 @@ bool fal_ObjectCarrier::getProperty( const Falcon::String &prop, Falcon::Item &r
     }
 }
 
+// unbind the BaseObject from Falcon
+// the FalconProxyObject destructor will do all the work required
+// note that this does NOT delete the object itself!
 void BaseObject::unbind(void)
 {
     delete _falObj;
     _falObj = NULL;
 }
+
+// -- object proxy calls start --
+
+// these are called from C++ like regular overloaded member functions, and proxy the call to be handled inside falcon
+// on the correct member overloads.
 
 void Rect::OnEnter(uint8 side, Object *who)
 {
@@ -106,6 +178,10 @@ void Item::OnUse(Object *who)
     _falObj->CallMethod("OnUse", 1, Falcon::Item(who->_falObj->self()));
 }
 
+// -- end object proxy calls --
+
+
+// correctly remove an object from the Mgr, clean up its Falcon bindings, and delete it
 FALCON_FUNC fal_BaseObject_Remove(Falcon::VMachine *vm)
 {
     fal_ObjectCarrier *self = Falcon::dyncast<fal_ObjectCarrier*>( vm->self().asObject() );
@@ -410,6 +486,10 @@ FALCON_FUNC fal_NullFunc(Falcon::VMachine *vm)
     DEBUG_LOG("fal_NullFunc from "PTRFMT " '%s'", &(vm->self()), str.c_str());
 }
 
+/*
+// this function is deprecated. left in the source for reference.
+// called in falcon via: Game.CreateObject("Erik") for example
+
 FALCON_FUNC fal_Game_CreateObject(Falcon::VMachine *vm)
 {
     FALCON_REQUIRE_PARAMS(1);
@@ -459,8 +539,7 @@ FALCON_FUNC fal_Game_CreateObject(Falcon::VMachine *vm)
 
     obj->Init(); // correctly set type of object
 
-    FalconProxyObject *fobj = new FalconProxyObject;
-    fobj->obj = obj;
+    FalconProxyObject *fobj = new FalconProxyObject(obj);
     obj->_falObj = fobj;
 
     fal_ObjectCarrier *carrier = new fal_ObjectCarrier(cls, fobj);
@@ -469,10 +548,9 @@ FALCON_FUNC fal_Game_CreateObject(Falcon::VMachine *vm)
 
     g_engine.objmgr->Add(obj);
 
-    // TODO: register with global object mgr
-
     vm->retval(carrier);
 }
+*/
 
 FALCON_FUNC fal_Game_GetObject(Falcon::VMachine *vm)
 {
@@ -486,6 +564,11 @@ FALCON_FUNC fal_Game_GetObject(Falcon::VMachine *vm)
     {
         vm->retnil();
     }
+}
+
+void forbidden_init(Falcon::VMachine *vm)
+{
+    throw new Falcon::AccessError( Falcon::ErrorParam( Falcon::e_noninst_cls ) );
 }
 
 
@@ -503,9 +586,9 @@ Falcon::Module *FalconGameModule_create(void)
     Falcon::Symbol *clsGame = symGame->getInstance();
     m->addClassMethod(clsGame, "LoadTile", fal_Game_LoadTile);
     m->addClassMethod(clsGame, "GetTime", fal_Game_GetTime);
-    m->addClassMethod(clsGame, "CreateObject", fal_Game_CreateObject);
+    //m->addClassMethod(clsGame, "CreateObject", fal_Game_CreateObject); // DEPRECATED - kept for reference
 
-    Falcon::Symbol *clsTileLayer = m->addClass("TileLayer");
+    Falcon::Symbol *clsTileLayer = m->addClass("TileLayer", &forbidden_init);
     clsTileLayer->setWKS(true);
     m->addClassMethod(clsTileLayer, "IsVisible", &fal_TileLayer_IsVisible);
     m->addClassMethod(clsTileLayer, "SetVisible", &fal_TileLayer_SetVisible);
@@ -513,7 +596,7 @@ Falcon::Module *FalconGameModule_create(void)
     m->addClassMethod(clsTileLayer, "GetTile", &fal_TileLayer_GetTile);
     m->addClassMethod(clsTileLayer, "GetArraySize", &fal_TileLayer_GetArraySize);
     
-    Falcon::Symbol *clsTile = m->addClass("Tile");
+    Falcon::Symbol *clsTile = m->addClass("Tile", &forbidden_init);
     clsTile->setWKS(true);
     m->addClassProperty(clsTile, "type");
     m->addClassProperty(clsTile, "frame");
@@ -522,9 +605,10 @@ Falcon::Module *FalconGameModule_create(void)
     m->addConstant("TILETYPE_STATIC", (Falcon::int64)TILETYPE_STATIC, true);
     m->addConstant("TILETYPE_ANIMATED", (Falcon::int64)TILETYPE_ANIMATED, true);
 
-    Falcon::Symbol *clsBaseObject = m->addClass("BaseObject");
+    Falcon::Symbol *clsBaseObject = m->addClass("BaseObject", &forbidden_init);
     Falcon::InheritDef *inhBaseObject = new Falcon::InheritDef(clsBaseObject); // there are other classes that inherit from BaseObject
     // this is NOT a WKS
+    clsBaseObject->getClassDef()->factory(&fal_ObjectCarrier::factory);
     m->addClassProperty(clsBaseObject, "id");
     m->addClassProperty(clsBaseObject, "type");
     m->addClassMethod(clsBaseObject, "remove", fal_BaseObject_Remove);
@@ -534,7 +618,7 @@ Falcon::Module *FalconGameModule_create(void)
     m->addConstant("OBJTYPE_UNIT", (Falcon::int64)OBJTYPE_UNIT, true);
     m->addConstant("OBJTYPE_PLAYER", (Falcon::int64)OBJTYPE_PLAYER, true);
 
-    Falcon::Symbol *clsRect = m->addClass("Rect");
+    Falcon::Symbol *clsRect = m->addClass("Rect", &fal_ObjectCarrier::init);
     clsRect->getClassDef()->addInheritance(inhBaseObject);
     Falcon::InheritDef *inhRect = new Falcon::InheritDef(clsRect); // there are other classes that inherit from Rect
     clsRect->setWKS(true);
@@ -543,24 +627,24 @@ Falcon::Module *FalconGameModule_create(void)
     m->addClassMethod(clsRect, "OnLeave", fal_NullFunc);
     m->addClassMethod(clsRect, "OnTouch", fal_NullFunc);
 
-    Falcon::Symbol *clsObject = m->addClass("Object");
+    Falcon::Symbol *clsObject = m->addClass("Object", &fal_ObjectCarrier::init);
     clsObject->getClassDef()->addInheritance(inhRect);
     Falcon::InheritDef *inhObject = new Falcon::InheritDef(clsObject); // there are other classes that inherit from Object
     clsObject->setWKS(true);
     m->addClassMethod(clsObject, "OnUpdate", fal_NullFunc);
 
-    Falcon::Symbol *clsItem = m->addClass("Item");
+    Falcon::Symbol *clsItem = m->addClass("Item", &fal_ObjectCarrier::init);
     clsItem->getClassDef()->addInheritance(inhRect);
     clsItem->getClassDef()->addInheritance(inhObject);
     clsItem->setWKS(true);
     m->addClassMethod(clsItem, "OnUse", fal_NullFunc);
 
-    Falcon::Symbol *clsUnit = m->addClass("Unit");
+    Falcon::Symbol *clsUnit = m->addClass("Unit", &fal_ObjectCarrier::init);
     Falcon::InheritDef *inhUnit = new Falcon::InheritDef(clsUnit);
     clsUnit->getClassDef()->addInheritance(inhObject);
     clsUnit->setWKS(true);
 
-    Falcon::Symbol *clsPlayer = m->addClass("Player");
+    Falcon::Symbol *clsPlayer = m->addClass("Player", &fal_ObjectCarrier::init);
     clsPlayer->getClassDef()->addInheritance(inhUnit);
     clsPlayer->setWKS(true);
 

@@ -75,6 +75,7 @@ bool LayerMgr::LoadAsciiLevel(AsciiLevel *level)
     std::map<std::string, BasicTile*>::iterator it;
     std::string realFileName, startAnim;
     uint32 startIdx = 0;
+    std::string startIdxStr;
     for(uint32 y = 0; y < level->tiles.size1d(); ++y)
     {
         for(uint32 x = 0; x < level->tiles.size1d(); ++x)
@@ -83,7 +84,10 @@ bool LayerMgr::LoadAsciiLevel(AsciiLevel *level)
             for(uint32 i = 0; i < filevect.size(); ++i)
             {
                 std::string& f = filevect[i];
-                AnimatedTile::SplitFilenameToProps(f.c_str(), &realFileName, &startIdx, &startAnim);
+                startIdxStr = "";
+                startAnim = "";
+                SplitFilenameToProps(f.c_str(), &realFileName, &startIdxStr, &startAnim);
+                startIdx = atoi(startIdxStr.c_str());
                 if(FileGetExtension(realFileName) == ".png")
                 {
                     it = tmap.find(f);
@@ -91,7 +95,7 @@ bool LayerMgr::LoadAsciiLevel(AsciiLevel *level)
                     if(it == tmap.end())
                     {
                         staTile = new BasicTile;
-                        staTile->surface = resMgr.LoadImage((char*)realFileName.c_str());
+                        staTile->surface = resMgr.LoadImage((char*)f.c_str());
                         staTile->filename = realFileName;
                         tmap[f] = staTile;
                     }

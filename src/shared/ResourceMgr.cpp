@@ -76,18 +76,47 @@ void ResourceMgr::_Delete(void *ptr, ResourceType rt)
 
 SDL_Surface *ResourceMgr::LoadImage(char *name, bool count /* = false*/)
 {
-    std::string fn("gfx/");
-    fn += name;
+    // there may be a recursive call - adding this twice would be not a good idea!
+    std::string origfn(name);
+    if(origfn.substr(0,4) != "gfx/")
+        origfn = "gfx/" + origfn;
+
+    std::string fn,s1,s2,s3,s4;
+    SplitFilenameToProps(origfn.c_str(), &fn, &s1, &s2, &s3, &s4);
 
     bool loaded = false;
-    SDL_Surface *img = (SDL_Surface*)_GetPtr(fn);
+    SDL_Surface *img = (SDL_Surface*)_GetPtr(origfn);
     if(!img)
     {
-        logdebug("LoadImage: '%s'", fn.c_str());
-        img = IMG_Load(fn.c_str());
+        logdebug("LoadImage: '%s'", origfn.c_str());
+        // we got additional properties
+        if(fn != origfn)
+        {
+            SDL_Surface *origin = LoadImage((char*)fn.c_str());
+            if(origin)
+            {
+                SDL_Rect rect;
+                rect.x = atoi(s1.c_str());
+                rect.y = atoi(s2.c_str());
+                rect.w = atoi(s3.c_str());
+                rect.h = atoi(s4.c_str());
+                if(!rect.w)
+                    rect.w = origin->w - rect.x;
+                if(!rect.h)
+                    rect.h = origin->h - rect.y;
+
+                SDL_Surface *section = SDL_CreateRGBSurface(origin->flags, rect.w, rect.h, origin->format->BitsPerPixel, 0,0,0,0);
+                SDL_BlitSurface(origin, &rect, section, NULL);
+                img = section;
+            }
+        }
+        else // nothing special, just load image normally
+        {
+            img = IMG_Load(fn.c_str());
+        }
         if(!img)
         {
-            logerror("LoadImage failed: '%s'", fn.c_str());
+            logerror("LoadImage failed: '%s'", origfn.c_str());
             return NULL;
         }
         // convert loaded images into currently used color format.
@@ -102,9 +131,10 @@ SDL_Surface *ResourceMgr::LoadImage(char *name, bool count /* = false*/)
     }
     if(count || loaded)
     {
-        _SetPtr(fn, (void*)img);
+        _SetPtr(origfn, (void*)img);
         _IncRef((void*)img, RESTYPE_SDL_SURFACE);
     }
+
     return img;
 }
 

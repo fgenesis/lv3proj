@@ -33,6 +33,9 @@ uint64 fastintpow64(uint64 base, uint32 power);
 std::string GetTimeString(void);
 std::string GetDateString(void);
 
+void SplitFilenameToProps(const char *in, std::string *fn = NULL, std::string *s1 = NULL, 
+                                 std::string *s2 = NULL,  std::string *s3 = NULL,  std::string *s4 = NULL);
+
 template <class T> void StrSplit(const std::string &src, const std::string &sep, T& container, bool keepEmpty = false)
 {
     std::string s;

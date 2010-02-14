@@ -365,3 +365,21 @@ std::string GetTimeString(void)
     sprintf(str,"%02d:%02d:%02d", aTm->tm_hour,aTm->tm_min,aTm->tm_sec);
     return std::string(str);
 }
+
+// splits string like "filename.anim:4:default" or "image.png:32:32:16:16". leaves unused args unchanged!
+void SplitFilenameToProps(const char *in, std::string *fn, std::string *s1 /* = NULL */,
+                                     std::string *s2 /* = NULL */, std::string *s3 /* = NULL */, std::string *s4 /* = NULL */)
+{
+    std::vector<std::string> fields;
+    StrSplit(in, ":", fields, true);
+    if(fields.size() >= 1 && fn)
+        *fn = fields[0];
+    if(fields.size() >= 2 && s1)
+        *s1 = fields[1];
+    if(fields.size() >= 3 && s2)
+        *s2 = fields[2];
+    if(fields.size() >= 4 && s3)
+        *s3 = fields[3];
+    if(fields.size() >= 5 && s4)
+        *s4 = fields[4];
+}

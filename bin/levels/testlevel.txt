@@ -1,4 +1,3 @@
-  sprites/empty16.png
 # ship/block1.png
 , ship/girder1.png
 . ship/girder2.png

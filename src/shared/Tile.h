@@ -18,6 +18,7 @@ public:
     std::string filename;
     SDL_Surface *surface; // surface to be drawn
     uint8 type; // read-only!!
+
 };
 
 
@@ -37,7 +38,7 @@ public:
     const char *GetName(void) { return curFrameStore->name.c_str(); }
     uint32 GetFrame(void) { return curFrame->index; }
     void Init(uint32 t); // current system clock
-    static void SplitFilenameToProps(const char *in, std::string *fn, uint32 *idx, std::string *str);
+
 };
 
 #endif
