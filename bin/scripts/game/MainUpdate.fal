@@ -1,6 +1,9 @@
+// called by the core on every loop
+
 function GameUpdate(ms)
 
->> "\rUpdate difftime: ", ms, "    "
+// process events that were registeres with CallScheduler.Schedule
+CallScheduler.CallDue()
 
 end
 

@@ -480,10 +480,6 @@ FALCON_FUNC fal_Game_GetTime(Falcon::VMachine *vm)
 // this does absolutely nothing.
 FALCON_FUNC fal_NullFunc(Falcon::VMachine *vm)
 {
-    Falcon::String cs;
-    vm->self().toString(cs);
-    Falcon::AutoCString str(cs);
-    DEBUG_LOG("fal_NullFunc from "PTRFMT " '%s'", &(vm->self()), str.c_str());
 }
 
 /*
@@ -565,6 +561,8 @@ FALCON_FUNC fal_Game_GetObject(Falcon::VMachine *vm)
         vm->retnil();
     }
 }
+
+
 
 void forbidden_init(Falcon::VMachine *vm)
 {

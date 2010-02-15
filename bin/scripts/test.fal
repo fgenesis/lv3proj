@@ -1,0 +1,81 @@
+
+// some test stuff to see what the falcon bindings can do
+
+// replace all blue energy lines with green ones
+dim = Screen.GetLayer(6).GetArraySize()
+enx = Game.LoadTile("sprites/enx.anim")
+for ly in [Screen.GetLayer(6), Screen.GetLayer(7)]
+    for y = 0 to dim - 1
+        for x = 0 to dim - 1
+            t = ly.GetTile(x,y)
+            if(t)        
+                if(t.filename == "sprites/en.anim")
+                    ly.SetTile(x,y,enx)
+                end
+            end
+        end
+    end
+end
+
+// fill screen after 4 secs have passed
+CallScheduler.Schedule( FillScreenWithWater, 4000)
+
+function FillScreenWithWater()
+    layer = Screen.GetLayer(8)
+    tile = Game.LoadTile("water/waterfull.png")
+    if(layer and tile)
+        for y = 0 to dim - 1
+            for x = 0 to dim - 1
+                layer.SetTile(x,y,tile)
+            end
+            CallScheduler.Schedule( [DrainWaterRow, y], y * 1200)
+        end
+    end
+end
+
+// completely delete the transparent tiles after the water was drained, row-wise
+function DeleteWaterRow(y)
+    layer = Screen.GetLayer(8)
+    dim = layer.GetArraySize()
+    for x = 0 to dim - 1
+        layer.SetTile(x,y,nil)
+    end
+end
+
+function DrainWaterRow(y)
+    tile = Game.LoadTile("water/water_test.anim")
+    if(tile.type == TILETYPE_ANIMATED) // just to be sure
+        tile.name = "sink" // toggle animation
+        tile.frame = 0 // and start it
+    end
+    layer = Screen.GetLayer(8)
+    dim = layer.GetArraySize()
+    // place the tile along the whole row
+    for x = 0 to dim - 1
+        layer.SetTile(x,y,tile)
+    end
+    // cleanup after the row was drained
+    CallScheduler.Schedule( [DeleteWaterRow, y], 1200)
+end
+    
+
+
+
+/*class Erik from Player
+    function OnUpdate(ms)
+        > ms, " - Erik Updated!"
+    end
+    
+end
+
+obj = Game.CreateObject("Erik")
+
+inspect(obj)
+obj.OnUpdate()
+> obj.id, " ", obj.type
+obj.remove()
+//obj.OnUpdate()
+//> obj.id, " ", obj.type
+
+export MyRect, Erik
+*/

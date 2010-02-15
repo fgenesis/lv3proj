@@ -132,6 +132,7 @@ bool LayerMgr::LoadAsciiLevel(AsciiLevel *level)
 
     SetLayer(baseLayer, LAYER_DEFAULT_ENV);
     SetLayer(animLayer, LAYER_DEFAULT_ENV + 1);
+    SetLayer(CreateLayer(), LAYER_DEFAULT_ENV + 2); // for testing
 
     return true;
 }

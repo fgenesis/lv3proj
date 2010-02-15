@@ -2,6 +2,7 @@ class Erik from Player
 
     function OnUpdate(ms)
         > ms, " - Erik Updated!"
+        self.Player.OnUpdate(ms)
     end
 
 

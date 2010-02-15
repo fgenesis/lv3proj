@@ -1,0 +1,17 @@
+
+function GarbageCheck()
+    > "GC: items: ", GC.items
+end
+
+function GarbageCheckPeriodic()
+    GarbageCheck()
+    CallScheduler.Schedule(GarbageCheckPeriodic, 5000)
+end
+
+GC.adjust(GC.ADJ_STRICT)
+> "Garbage collection policy: ", GC.adjust()
+
+// DEBUG: turn on GC logging to keep track of allocated items
+GarbageCheckPeriodic()
+
+export

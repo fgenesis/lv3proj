@@ -39,6 +39,9 @@ bool GameEngine::Setup(void)
     AsciiLevel *level = LoadAsciiLevel("levels/testlevel.txt");
     _layermgr->LoadAsciiLevel(level);
     delete level;
+
+    char *testscript = resMgr.LoadTextFile("scripts/test.fal", "rb");
+    falcon->EmbedStringAsModule(testscript, "testscript");
     
     sndCore.PlayMusic("lv1_snes_ship.ogg");
 
@@ -64,7 +67,8 @@ void GameEngine::_Render(void)
 void GameEngine::_Process(uint32 ms)
 {
     // TODO: cache this on init and call then without invoking findGlobalItem() all the time
-    if(Falcon::Item *item = falcon->GetVM()->findGlobalItem("GameUpdate"))
+    Falcon::Item *item = falcon->GetVM()->findGlobalItem("GameUpdate");
+    if(item && item->isCallable())
     {
         falcon->GetVM()->pushParam(Falcon::int64(ms));
         falcon->GetVM()->callItem(*item, 1);
