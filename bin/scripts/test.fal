@@ -1,27 +1,35 @@
 
 // some test stuff to see what the falcon bindings can do
 
+// replace energy streams after 3 secs
+CallScheduler.Schedule( ReplaceEnergyStreams, 3000)
+
+// fill screen after 6 secs have passed
+CallScheduler.Schedule( FillScreenWithWater, 6000)
+
 // replace all blue energy lines with green ones
-dim = Screen.GetLayer(6).GetArraySize()
-enx = Game.LoadTile("sprites/enx.anim")
-for ly in [Screen.GetLayer(6), Screen.GetLayer(7)]
-    for y = 0 to dim - 1
-        for x = 0 to dim - 1
-            t = ly.GetTile(x,y)
-            if(t)        
-                if(t.filename == "sprites/en.anim")
-                    ly.SetTile(x,y,enx)
+function ReplaceEnergyStreams()
+    dim = Screen.GetLayer(6).GetArraySize()
+    enx = Game.LoadTile("sprites/enx.anim")
+    for ly in [Screen.GetLayer(6), Screen.GetLayer(7)]
+        for y = 0 to dim - 1
+            for x = 0 to dim - 1
+                t = ly.GetTile(x,y)
+                if(t)        
+                    if(t.filename == "sprites/en.anim")
+                        ly.SetTile(x,y,enx)
+                    end
                 end
             end
         end
     end
 end
 
-// fill screen after 4 secs have passed
-CallScheduler.Schedule( FillScreenWithWater, 4000)
+
 
 function FillScreenWithWater()
     layer = Screen.GetLayer(8)
+    dim = layer.GetArraySize()
     tile = Game.LoadTile("water/waterfull.png")
     if(layer and tile)
         for y = 0 to dim - 1
@@ -57,25 +65,4 @@ function DrainWaterRow(y)
     // cleanup after the row was drained
     CallScheduler.Schedule( [DeleteWaterRow, y], 1200)
 end
-    
 
-
-
-/*class Erik from Player
-    function OnUpdate(ms)
-        > ms, " - Erik Updated!"
-    end
-    
-end
-
-obj = Game.CreateObject("Erik")
-
-inspect(obj)
-obj.OnUpdate()
-> obj.id, " ", obj.type
-obj.remove()
-//obj.OnUpdate()
-//> obj.id, " ", obj.type
-
-export MyRect, Erik
-*/
