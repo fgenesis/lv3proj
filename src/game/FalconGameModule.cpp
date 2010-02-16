@@ -227,6 +227,45 @@ public:
     {
     }
 
+    static Falcon::CoreObject* factory( const Falcon::CoreClass *cls, void *user_data, bool )
+    {
+        return new fal_Tile(cls, NULL);
+    }
+
+    static void init(Falcon::VMachine *vm)
+    {
+        FALCON_REQUIRE_PARAMS_EXTRA(1, "S filename");
+        Falcon::AutoCString file(vm->param(0)->asString());
+        fal_Tile *self = Falcon::dyncast<fal_Tile*>( vm->self().asObject() );
+        BasicTile *tile = NULL;
+
+        std::string ext(FileGetExtension(file.c_str()));
+
+        if(ext == ".anim")
+        {
+            if(Anim *ani = resMgr.LoadAnim((char*)file.c_str()))
+            {
+                tile = new AnimatedTile(ani);
+                tile->filename = file;   
+                ((AnimatedTile*)tile)->Init(Engine::GetCurFrameTime());
+            }
+        }
+        else
+        {
+            if(SDL_Surface *img = resMgr.LoadImage((char*)file.c_str()))
+            {
+                tile = new BasicTile;
+                tile->surface = img;
+                tile->filename = file;   
+            }
+        }
+
+        if(tile)
+            self->_tile = tile;
+        else
+            vm->self().setNil();
+    }
+
     Falcon::CoreObject *clone() const
     {
         return NULL; // not cloneable
@@ -434,13 +473,15 @@ FALCON_FUNC fal_TileLayer_GetArraySize(Falcon::VMachine *vm)
     vm->retval((Falcon::int32)self->GetLayer()->GetArraySize());
 }
 
+/*
+// this function is deprecated. left in the source for reference.
+// called in falcon via: Game.LoadTile("sprites/en.anim") for example
+
 FALCON_FUNC fal_Game_LoadTile(Falcon::VMachine *vm)
 {
     FALCON_REQUIRE_PARAMS_EXTRA(1, "S filename");
     Falcon::AutoCString file(vm->param(0)->asString());
     BasicTile *tile = NULL;
-
-    // support direct string-in and auto-convert to a tile
 
     std::string ext(FileGetExtension(file.c_str()));
 
@@ -459,7 +500,7 @@ FALCON_FUNC fal_Game_LoadTile(Falcon::VMachine *vm)
         {
             tile = new BasicTile;
             tile->surface = img;
-            tile->filename = file;   
+            tile->filename = file;
         }
     }
     
@@ -471,6 +512,7 @@ FALCON_FUNC fal_Game_LoadTile(Falcon::VMachine *vm)
     else
         vm->retnil();
 }
+*/
 
 FALCON_FUNC fal_Game_GetTime(Falcon::VMachine *vm)
 {
@@ -582,7 +624,7 @@ Falcon::Module *FalconGameModule_create(void)
 
     Falcon::Symbol *symGame = m->addSingleton("Game");
     Falcon::Symbol *clsGame = symGame->getInstance();
-    m->addClassMethod(clsGame, "LoadTile", fal_Game_LoadTile);
+    //m->addClassMethod(clsGame, "LoadTile", fal_Game_LoadTile); // DEPRECATED - kept for reference
     m->addClassMethod(clsGame, "GetTime", fal_Game_GetTime);
     //m->addClassMethod(clsGame, "CreateObject", fal_Game_CreateObject); // DEPRECATED - kept for reference
 
@@ -594,8 +636,9 @@ Falcon::Module *FalconGameModule_create(void)
     m->addClassMethod(clsTileLayer, "GetTile", &fal_TileLayer_GetTile);
     m->addClassMethod(clsTileLayer, "GetArraySize", &fal_TileLayer_GetArraySize);
     
-    Falcon::Symbol *clsTile = m->addClass("Tile", &forbidden_init);
+    Falcon::Symbol *clsTile = m->addClass("Tile", &fal_Tile::init);
     clsTile->setWKS(true);
+    clsTile->getClassDef()->factory(&fal_Tile::factory);
     m->addClassProperty(clsTile, "type");
     m->addClassProperty(clsTile, "frame");
     m->addClassProperty(clsTile, "name");

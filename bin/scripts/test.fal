@@ -10,7 +10,8 @@ CallScheduler.Schedule( FillScreenWithWater, 6000)
 // replace all blue energy lines with green ones
 function ReplaceEnergyStreams()
     dim = Screen.GetLayer(6).GetArraySize()
-    enx = Game.LoadTile("sprites/enx.anim")
+    enx = Tile("sprites/enx.anim")
+    en  = Tile("sprites/en.anim")
     for ly in [Screen.GetLayer(6), Screen.GetLayer(7)]
         for y = 0 to dim - 1
             for x = 0 to dim - 1
@@ -18,6 +19,8 @@ function ReplaceEnergyStreams()
                 if(t)        
                     if(t.filename == "sprites/en.anim")
                         ly.SetTile(x,y,enx)
+                    elif(t.filename == "sprites/enx.anim")
+                        ly.SetTile(x,y,en)
                     end
                 end
             end
@@ -30,7 +33,7 @@ end
 function FillScreenWithWater()
     layer = Screen.GetLayer(8)
     dim = layer.GetArraySize()
-    tile = Game.LoadTile("water/waterfull.png")
+    tile = Tile("water/waterfull.png")
     if(layer and tile)
         for y = 0 to dim - 1
             for x = 0 to dim - 1
@@ -51,7 +54,7 @@ function DeleteWaterRow(y)
 end
 
 function DrainWaterRow(y)
-    tile = Game.LoadTile("water/water_test.anim")
+    tile = Tile("water/water_test.anim")
     if(tile.type == TILETYPE_ANIMATED) // just to be sure
         tile.name = "sink" // toggle animation
         tile.frame = 0 // and start it
