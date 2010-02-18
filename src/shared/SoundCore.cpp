@@ -69,6 +69,11 @@ void SoundCore::SetMusicVolume(uint8 vol)
     Mix_VolumeMusic(vol);
 }
 
+uint32 SoundCore::GetMusicVolume(void)
+{
+    return Mix_VolumeMusic(-1);
+}
+
 
 // extern, global (since we aren't using singletons here)
 SoundCore sndCore;

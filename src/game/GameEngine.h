@@ -19,6 +19,13 @@ public:
     //virtual void OnWindowEvent(bool active);
 
     virtual bool Setup(void);
+    virtual void Quit(void);
+    
+    inline uint32 GetPlayerCount(void) { return _playerCount; }
+    inline void SetPlayerCount(uint32 c) { _playerCount = c; }
+
+
+
 
 
     ObjectMgr *objmgr;
@@ -30,6 +37,8 @@ protected:
     virtual void _Render(void);
 
     AppFalconGame *falcon;
+
+    uint32 _playerCount;
 
 };
 

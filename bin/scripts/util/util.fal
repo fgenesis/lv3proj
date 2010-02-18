@@ -1,0 +1,12 @@
+
+function climit(cur, lower, upper)
+    if(cur < lower)
+        cur = upper
+    elif(cur > upper)
+        cur = lower
+    end
+    
+    return cur
+end
+
+export

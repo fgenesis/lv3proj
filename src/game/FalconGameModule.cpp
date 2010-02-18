@@ -11,6 +11,7 @@
 #include "LayerMgr.h"
 #include "Objects.h"
 #include "ObjectMgr.h"
+#include "SoundCore.h"
 
 #include "FalconGameModule.h"
 
@@ -604,6 +605,49 @@ FALCON_FUNC fal_Game_GetObject(Falcon::VMachine *vm)
     }
 }
 
+FALCON_FUNC fal_Game_GetSoundVolume(Falcon::VMachine *vm)
+{
+    vm->retval(Falcon::int32(255)); // TODO: implement this!
+}
+
+FALCON_FUNC fal_Game_SetSoundVolume(Falcon::VMachine *vm)
+{
+    // TODO: implement this!
+}
+
+FALCON_FUNC fal_Game_GetMusicVolume(Falcon::VMachine *vm)
+{
+    vm->retval(Falcon::int32(sndCore.GetMusicVolume()));
+}
+
+FALCON_FUNC fal_Game_SetMusicVolume(Falcon::VMachine *vm)
+{
+    FALCON_REQUIRE_PARAMS_EXTRA(1, "Int volume");
+    sndCore.SetMusicVolume(vm->param(0)->forceInteger());
+}
+
+FALCON_FUNC fal_Game_GetPlayerCount(Falcon::VMachine *vm)
+{
+    vm->retval(Falcon::int32(g_engine.GetPlayerCount()));
+}
+
+FALCON_FUNC fal_Game_SetPlayerCount(Falcon::VMachine *vm)
+{
+    FALCON_REQUIRE_PARAMS(1);
+    uint32 p = vm->param(0)->forceInteger();
+    g_engine.SetPlayerCount(p);
+}
+
+FALCON_FUNC fal_Game_LoadLevel(Falcon::VMachine *vm)
+{
+    // TODO: implement this!
+}
+
+FALCON_FUNC fal_Game_Exit(Falcon::VMachine *vm)
+{
+    g_engine.Quit();
+}
+
 
 
 void forbidden_init(Falcon::VMachine *vm)
@@ -627,6 +671,15 @@ Falcon::Module *FalconGameModule_create(void)
     //m->addClassMethod(clsGame, "LoadTile", fal_Game_LoadTile); // DEPRECATED - kept for reference
     m->addClassMethod(clsGame, "GetTime", fal_Game_GetTime);
     //m->addClassMethod(clsGame, "CreateObject", fal_Game_CreateObject); // DEPRECATED - kept for reference
+    m->addClassMethod(clsGame, "SetSoundVolume", fal_Game_SetSoundVolume);
+    m->addClassMethod(clsGame, "GetSoundVolume", fal_Game_GetSoundVolume);
+    m->addClassMethod(clsGame, "SetMusicVolume", fal_Game_SetMusicVolume);
+    m->addClassMethod(clsGame, "GetMusicVolume", fal_Game_GetMusicVolume);
+    m->addClassMethod(clsGame, "GetPlayerCount", fal_Game_GetPlayerCount);
+    m->addClassMethod(clsGame, "SetPlayerCount", fal_Game_SetPlayerCount);
+    m->addClassMethod(clsGame, "LoadLevel", fal_Game_LoadLevel);
+    m->addClassMethod(clsGame, "Exit", fal_Game_Exit);
+    m->addConstant("MAX_VOLUME", Falcon::int64(MIX_MAX_VOLUME));
 
     Falcon::Symbol *clsTileLayer = m->addClass("TileLayer", &forbidden_init);
     clsTileLayer->setWKS(true);
@@ -689,9 +742,15 @@ Falcon::Module *FalconGameModule_create(void)
     clsPlayer->getClassDef()->addInheritance(inhUnit);
     clsPlayer->setWKS(true);
 
+
+    m->addConstant("EVENT_TYPE_KEYBOARD", Falcon::int64(EVENT_TYPE_KEYBOARD));
+    m->addConstant("EVENT_TYPE_JOYSTICK_BUTTON", Falcon::int64(EVENT_TYPE_JOYSTICK_BUTTON));
+    m->addConstant("EVENT_TYPE_JOYSTICK_AXIS", Falcon::int64(EVENT_TYPE_JOYSTICK_AXIS));
+    m->addConstant("EVENT_TYPE_JOYSTICK_HAT", Falcon::int64(EVENT_TYPE_JOYSTICK_HAT));
+
+
     // the SDL key bindings
-    Falcon::Symbol *c_sdlkSingleton = m->addSingleton( "SDLK" );
-    Falcon::Symbol *c_sdlk = c_sdlkSingleton->getInstance();
+    Falcon::Symbol *c_sdlk = m->addClass( "SDLK", &forbidden_init);
     m->addClassProperty( c_sdlk, "BACKSPACE" ).setInteger( SDLK_BACKSPACE );
     m->addClassProperty( c_sdlk, "TAB" ).setInteger( SDLK_TAB );
     m->addClassProperty( c_sdlk, "CLEAR" ).setInteger( SDLK_CLEAR );

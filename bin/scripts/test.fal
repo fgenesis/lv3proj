@@ -1,6 +1,10 @@
 
 // some test stuff to see what the falcon bindings can do
 
+// open a menu. so far only controllable via console.
+// this is just here to check IF something works
+OpenMenu(MainMenu)
+
 // replace energy streams after 3 secs
 CallScheduler.Schedule( ReplaceEnergyStreams, 3000)
 

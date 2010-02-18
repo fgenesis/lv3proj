@@ -1,0 +1,33 @@
+
+class KeyMap
+
+    static binds = nil
+    
+    init
+        raise "This class should not be instanced."
+    end
+
+    function Bind(ty, src, which, vkey, player)
+        self.binds[ .[ty src which] ] = .[vkey player]
+    end
+    
+    function Unbind(ty, src, which)
+        self.binds -= .[ty src which]
+    end
+    
+    function Translate(ty, src, which, value)
+        if(iter = dictFind(self.binds, .[ty src which] ))
+            vkey, player = iter.value()
+            // TODO: translate joystick axis movement to button pressed / not pressed here!!
+            retval = .[vkey player value]
+            return retval
+        end
+        return nil
+    end
+
+end
+
+KeyMap.binds = [ => ]
+
+
+export

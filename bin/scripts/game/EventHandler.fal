@@ -1,0 +1,89 @@
+
+_rawhooks = [ => ]
+_hooks = [ => ]
+
+// called by core whenever input occurs
+function EventHandler(e)
+    global _hooks
+    global _rawhooks
+
+    // ty: type (keyboard, joystick button, joystick axis)
+    // src: device #nr (joystick). keyboard is always 0.
+    // which: key, button, axis or hat #id
+    // value: pressed(1) or released(0) for keyboard, 0-255 for joystick axis
+    ty, src, which, value = e
+    
+    //> @ "EVENT DEBUG: ty:$ty, src:$src, which:$which, value:$value"
+    
+    // TODO: support joystick axis + hat. output stuff for testing.
+    if(ty == EVENT_TYPE_JOYSTICK_AXIS or ty == EVENT_TYPE_JOYSTICK_HAT)
+        > @ "EVENT: event type $ty not supported! (src:$src, which:$which, value:$value)"
+        return
+    end
+    
+    for who,func in _rawhooks
+        if(func(e) == true): return // as soon as a raw input handler returns true, drop the event
+    end
+    
+    for who,func in _hooks
+        key = KeyMap.Translate(ty, src, which, value)
+        select key
+            case NilType
+                // do nothing
+            default
+                func(key)
+        end
+    end
+end
+
+
+function RegisterInputHook(who,func)
+    global _hooks
+    _hooks[who] = func
+end
+
+function UnregisterInputHook(who)
+    global _hooks
+    _hooks -= who
+end
+
+function GetInputHook(who)
+    global _hooks
+    iter = dictFind(_hooks, who)
+    if iter: return iter.value()
+    return nil
+end
+
+function ClearInputHooks()
+    global _hooks
+    _hooks.clear()
+end
+
+
+
+function RegisterRawInputHook(who,func)
+    global _rawhooks
+    _rawhooks[who] = func
+end
+
+function UnregisterRawInputHook(who)
+    global _rawhooks
+    _rawhooks -= who
+end
+
+function GetRawInputHook(who)
+    global _rawhooks
+    iter = dictFind(_rawhooks, who)
+    if iter: return iter.value()
+    return nil
+end
+
+function ClearRawInputHooks()
+    global _rawhooks
+    _rawhooks.clear()
+end
+
+
+export EventHandler
+export RegisterInputHook, UnregisterInputHook, GetInputHook, ClearInputHooks
+export RegisterRawInputHook, UnregisterRawInputHook, GetRawInputHook, ClearRawInputHooks

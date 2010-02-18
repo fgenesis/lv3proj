@@ -27,6 +27,7 @@ public:
     void PlayMusic(char *fn, double repeat_pos = 0.0);
     void StopMusic();
     void SetMusicVolume(uint8 vol);
+    uint32 GetMusicVolume(void);
 
     inline Mix_Music *_GetMusicPtr(void) { return _music; }
     inline void SetLoopPoint(double msec) { _looppoint = msec; }

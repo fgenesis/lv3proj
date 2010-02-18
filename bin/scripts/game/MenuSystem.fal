@@ -1,0 +1,171 @@
+
+_currentMenu = nil
+
+
+class Menu
+
+    items = [] // stores all menu entries
+    selector = nil // the sprite used to display current choice
+    sel = 0 // currently selected menu entry
+    accept_esc = true // accept esc key to go back 1 menu?
+    
+    init
+        selector = MenuSelector()
+        ClearInputHooks()
+        ClearRawInputHooks()
+        RegisterInputHook(self, self.OnInput)
+        RegisterRawInputHook(self, self.OnRawInput)
+    end
+    
+    function Setup()
+    end
+    
+    function Update()
+    end
+    
+    function Clear()
+        self.items = []
+    end
+    
+    function Add(call)
+        arrayAdd(self.items, .["<missing>" call] )
+    end
+    
+    function Text(i, str)
+        //self.items[i][0] = str
+        crap, call = self.items[i]
+        self.items[i] = .[str call]
+    end
+    
+    function SetSelector(sel)
+        self.selector = self.sel
+    end
+    
+    function OnKeyLeft()
+    end
+    
+    function OnKeyRight()
+    end
+    
+    function OnGoBack()
+    end
+    
+    function OnInput(key)
+        global _currentMenu
+        if not _currentMenu == self: return
+        key, state = key
+        if not state: return // do nothing if button was released
+        switch key
+            case KeyLEFT
+                self.OnKeyLeft()
+            case KeyRIGHT
+                self.OnKeyRight()
+            case KeyUP
+                if(self.sel <= 0)
+                    self.sel = len(self.items) - 1  
+                else
+                    --self.sel
+                end
+            case KeyDOWN
+                > "A DOWN! - sel:", self.sel, ", items:", len(self.items)
+                > self.toString()
+                if(not len(self.items)): > "ERROR! KeyDOWN - no items!"
+                ++self.sel
+                self.sel %= len(self.items)
+                > "B DOWN! - sel:", self.sel, ", items:", len(self.items)
+            case KeyB
+                str, call = self.items[self.sel]
+                call()
+            case KeyY
+                self.OnGoBack()
+        end
+        UpdateCurrentMenu()
+    end
+    
+    // raw key translation
+    // raw input has always a higher priority then "tanslated" keys
+    // this is done so that the menu is always useable and does not
+    // require keyboard hammering to get to know the keys
+    function OnRawInput(e)
+        global _currentMenu
+        if not _currentMenu == self: return false
+        ty, src, which, value = e
+        if(ty == EVENT_TYPE_KEYBOARD and value != 0)
+            /* // temp. disabled, falcon has problems with this!
+            switch(which)
+                case SDLK.RETURN
+                    OnInput(KeyB)
+                    return true
+                case SDLK.ESCAPE
+                    // need special condition here because of key unbinding in main menu
+                    if(not accept_esc): return false
+                    OnInput(KeyY)
+                    return true
+                case SDLK.UP
+                    OnInput(KeyUP)
+                    return true
+                case SDLK.DOWN
+                    OnInput(KeyDOWN)
+                    return true
+                case SDLK.LEFT
+                    OnInput(KeyLEFT)
+                    return true
+                case SDLK.RIGHT
+                    OnInput(KeyRIGHT)
+                    return true
+            end
+            */
+            if(which == SDLK.RETURN)
+                self.OnInput( .[KeyB 1] )
+                return true
+            elif(which == SDLK.ESCAPE)
+                // need special condition here because of key unbinding in main menu
+                if(not self.accept_esc): return false
+                self.OnInput( .[KeyY 1] )
+                return true
+            elif(which == SDLK.UP)
+                self.OnInput( .[KeyUP 1] )
+                return true
+            elif(which == SDLK.DOWN)
+                self.OnInput( .[KeyDOWN 1])
+                return true
+            elif(which == SDLK.LEFT)
+                self.OnInput( .[KeyLEFT 1])
+                return true
+            elif(which == SDLK.RIGHT)
+                self.OnInput( .[KeyRIGHT 1] )
+                return true
+            end
+        end
+    end
+    
+end
+
+
+function OpenMenu(mcons)
+    global _currentMenu
+    > "#OpenMenu: create: ", mcons.toString()
+    _currentMenu = mcons()
+    _currentMenu.Setup()
+    > "#OpenMenu: done:   ", _currentMenu.toString() 
+    UpdateCurrentMenu()
+end
+
+function UpdateCurrentMenu()
+    global _currentMenu
+    if(_currentMenu)
+        _currentMenu.Update()
+        // debug code for now
+        > "--- ", _currentMenu.toString()
+        //inspect(_currentMenu)
+        entry = _currentMenu.items[_currentMenu.sel]
+        str, call = entry
+        > "sel: ", _currentMenu.sel, " == ", str, " => ", call
+    end
+end
+
+function DrawCurrentMenu()
+    // TODO when falcon can draw stuff to screen
+end
+
+export Menu, OpenMenu, UpdateCurrentMenu, DrawCurrentMenu

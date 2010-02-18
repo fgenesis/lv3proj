@@ -6,6 +6,14 @@
 
 Falcon::Module *FalconGameModule_create(void);
 
+enum CoreEventTypes
+{
+    EVENT_TYPE_KEYBOARD = 0,
+    EVENT_TYPE_JOYSTICK_BUTTON = 1,
+    EVENT_TYPE_JOYSTICK_AXIS = 2,
+    EVENT_TYPE_JOYSTICK_HAT = 3
+};
+
 class fal_ObjectCarrier;
 
 // a proxy object to easily forward calls to the VM and destruction simplification
