@@ -169,14 +169,6 @@
 				RelativePath=".\guichan_ext\Panel.h"
 				>
 			</File>
-			<File
-				RelativePath=".\guichan_ext\TileWidget.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\guichan_ext\TileWidget.h"
-				>
-			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
