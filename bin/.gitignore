@@ -1,0 +1,10 @@
+# Exclude DLLs & more compiler output
+# they are supposed to be stored in src/lib or compiled
+*.dll
+*.lib
+*.exe
+
+
+# Compiled falcon scripts
+*.fam
+
