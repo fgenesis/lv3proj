@@ -7,7 +7,7 @@ BaseObject::BaseObject()
     _id = 0;
 }
 
-void Rect::Init(void)
+void ActiveRect::Init(void)
 {
     type = OBJTYPE_RECT;
 }

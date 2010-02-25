@@ -61,7 +61,7 @@ Falcon::CoreObject* fal_ObjectCarrier::factory( const Falcon::CoreClass *cls, vo
 {
     Falcon::String classname = cls->symbol()->name();
 
-    // do not allow direct instantiation of the base classes, except Rect
+    // do not allow direct instantiation of the base classes, except ActiveRect
     // with rect, it is good to replace member functions such as: rect.OnEnter = some_func
     if(classname == "Player" || classname == "Unit"
     || classname == "Item" || classname == "Object")
@@ -88,9 +88,9 @@ Falcon::CoreObject* fal_ObjectCarrier::factory( const Falcon::CoreClass *cls, vo
     {
         obj = new Object;
     }
-    else if(clsdef->inheritsFrom("Rect") || classname == "Rect")
+    else if(clsdef->inheritsFrom("ActiveRect") || classname == "ActiveRect")
     {
-        obj = new Rect;
+        obj = new ActiveRect;
     }
 
     if(!obj)
@@ -149,19 +149,19 @@ void BaseObject::unbind(void)
 // these are called from C++ like regular overloaded member functions, and proxy the call to be handled inside falcon
 // on the correct member overloads.
 
-void Rect::OnEnter(uint8 side, Object *who)
+void ActiveRect::OnEnter(uint8 side, Object *who)
 {
     DEBUG_ASSERT_RETURN_VOID(_falObj);
     _falObj->CallMethod("OnEnter", 2, Falcon::Item(Falcon::int32(side)), Falcon::Item(who->_falObj->self()));
 }
 
-void Rect::OnLeave(uint8 side, Object *who)
+void ActiveRect::OnLeave(uint8 side, Object *who)
 {
     DEBUG_ASSERT_RETURN_VOID(_falObj);
     _falObj->CallMethod("OnLeave", 2, Falcon::Item(Falcon::int32(side)), Falcon::Item(who->_falObj->self()));
 }
 
-void Rect::OnTouch(uint8 side, Object *who)
+void ActiveRect::OnTouch(uint8 side, Object *who)
 {
     DEBUG_ASSERT_RETURN_VOID(_falObj);
     _falObj->CallMethod("OnTouch", 2, Falcon::Item(Falcon::int32(side)), Falcon::Item(who->_falObj->self()));
@@ -565,9 +565,9 @@ FALCON_FUNC fal_Game_CreateObject(Falcon::VMachine *vm)
     {
         obj = new Object;
     }
-    else if(clsdef->inheritsFrom("Rect") || vm->param(0)->asString()->compare("Rect") == 0)
+    else if(clsdef->inheritsFrom("ActiveRect") || vm->param(0)->asString()->compare("ActiveRect") == 0)
     {
-        obj = new Rect;
+        obj = new ActiveRect;
     }
 
     if(!obj)
@@ -712,9 +712,9 @@ Falcon::Module *FalconGameModule_create(void)
     m->addConstant("OBJTYPE_UNIT", (Falcon::int64)OBJTYPE_UNIT, true);
     m->addConstant("OBJTYPE_PLAYER", (Falcon::int64)OBJTYPE_PLAYER, true);
 
-    Falcon::Symbol *clsRect = m->addClass("Rect", &fal_ObjectCarrier::init);
+    Falcon::Symbol *clsRect = m->addClass("ActiveRect", &fal_ObjectCarrier::init);
     clsRect->getClassDef()->addInheritance(inhBaseObject);
-    Falcon::InheritDef *inhRect = new Falcon::InheritDef(clsRect); // there are other classes that inherit from Rect
+    Falcon::InheritDef *inhRect = new Falcon::InheritDef(clsRect); // there are other classes that inherit from ActiveRect
     clsRect->setWKS(true);
     
     m->addClassMethod(clsRect, "OnEnter", fal_NullFunc);

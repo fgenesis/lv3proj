@@ -21,7 +21,6 @@ enum ObjectType
     OBJTYPE_PLAYER  = 4
 };
 
-
 class BaseObject
 {
     friend class ObjectMgr;
@@ -40,7 +39,7 @@ protected:
 };
 
 // the base of everything
-class Rect : public BaseObject
+class ActiveRect : public BaseObject
 {
 public:
     virtual void Init(void);
@@ -51,12 +50,12 @@ public:
 
     int x, y, w, h;
 
-    /*Rect( int nx=0, int ny=0, int nw=0, int nh=0 ):
+    /*ActiveRect( int nx=0, int ny=0, int nw=0, int nh=0 ):
     x(nx), y(ny), w(nw), h(nh)
     {}*/
 
     // a Copy constructor
-    /*Rect( const Rect& r ):
+    /*ActiveRect( const ActiveRect& r ):
     x(r.x), y(r.y), w(r.w), h(r.h)
     {}*/
 
@@ -69,7 +68,7 @@ public:
 
 
 // a normal "Sprite" object
-class Object : public Rect
+class Object : public ActiveRect
 {
 public:
     virtual void Init(void);
