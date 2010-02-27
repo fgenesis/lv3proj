@@ -11,23 +11,28 @@ Anim *ParseAnimData(char *strbuf)
     StrSplit(strbuf, "\n", lines);
     for(std::vector<std::string>::iterator lin = lines.begin(); lin != lines.end(); lin++)
     {
-        if(lin->length() < 3)
+        std::string line = *lin;
+        if(line.length() < 3)
             continue;
 
         // strip comments if there are any
-        if( (cpos = lin->find('#')) != std::string::npos)
+        if( (cpos = line.find('#')) != std::string::npos)
         {
-            (*lin)[cpos] = '\0';
+            line = line.substr(0, cpos);
         }
 
-        // strip whitespace at end of line
-        while(lin->find_last_of(" \t") == lin->length()) // length() will never return npos so this check is fine
-            (*lin)[lin->length()] = '\0';
+        // strip whitespace at end of line. this could be a little more efficient too
+        while(line.find_last_of(" \t") == line.length()) // length() will never return npos so this check is fine
+            line = line.substr(0, line.length() - 1);
+
+        // anything left? no - line was comment only, continue with next
+        if(!line.length())
+            continue;
 
         // check if its the animation name line - [string]
-        if((*lin)[0] == '[')
+        if(line[0] == '[')
         {
-            anim_name = lin->c_str() + 1; // skip '['
+            anim_name = line.c_str() + 1; // skip '['
             uint32 alen = anim_name.length();
             if(anim_name[alen - 1] == ']') // remove trailing ']'
                 anim_name.erase(alen - 1);
@@ -39,7 +44,7 @@ Anim *ParseAnimData(char *strbuf)
         fields.clear();
         AnimFrameStore& frames = ani->anims[anim_name];
         frames.name = anim_name;
-        StrSplit(lin->c_str(), " \t", fields);
+        StrSplit(line.c_str(), " \t", fields);
         for(std::vector<std::string>::iterator it = fields.begin(); it != fields.end(); it++)
         {
             if(!it->length())
@@ -77,12 +82,12 @@ Anim *ParseAnimData(char *strbuf)
 
         if(column < 4)
         {
-            logerror("AnimParser: '%s' - MISSING DATA", lin->c_str()); // this is BAD!
+            logerror("AnimParser: '%s' - MISSING DATA", line.c_str()); // this is BAD!
             delete ani;
             return NULL;
         }
         else if(column > 4)
-            logerror("AnimParser: '%s' - unused data left", lin->c_str()); // this is not too bad.
+            logerror("AnimParser: '%s' - unused data left", line.c_str()); // this is not too bad.
 
     }
 
