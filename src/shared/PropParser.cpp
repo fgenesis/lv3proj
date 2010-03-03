@@ -62,6 +62,7 @@ void LoadPropFile(char* fn, char *dn)
         logerror("LoadPropFile: Failed to open '%s'", fn);
         return;
     }
+    logdebug("LoadPropFile: '%s' (%s)", fn, dn);
 
     fseek(fh, 0, SEEK_END);
     uint32 size = ftell(fh);

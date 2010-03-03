@@ -1,5 +1,6 @@
 
 // some test stuff to see what the falcon bindings can do
+> "-- ACTIVATING TEST --" // this line actually fixes a crash, dont ask me why... must be related to falcon, but was unable to catch anything *useful* in debugger
 
 // open a menu. so far only controllable via console.
 // this is just here to check IF something works

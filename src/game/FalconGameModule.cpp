@@ -648,6 +648,13 @@ FALCON_FUNC fal_Game_Exit(Falcon::VMachine *vm)
     g_engine.Quit();
 }
 
+FALCON_FUNC fal_Game_LoadPropsInDir(Falcon::VMachine *vm)
+{
+    FALCON_REQUIRE_PARAMS_EXTRA(1, "S path");
+    Falcon::AutoCString cstr(vm->param(0)->asString());
+    resMgr.LoadPropsInDir((char*)cstr.c_str());
+}
+
 
 
 void forbidden_init(Falcon::VMachine *vm)
@@ -679,6 +686,7 @@ Falcon::Module *FalconGameModule_create(void)
     m->addClassMethod(clsGame, "SetPlayerCount", fal_Game_SetPlayerCount);
     m->addClassMethod(clsGame, "LoadLevel", fal_Game_LoadLevel);
     m->addClassMethod(clsGame, "Exit", fal_Game_Exit);
+    m->addClassMethod(clsGame, "LoadPropsInDir", fal_Game_LoadPropsInDir);
     m->addConstant("MAX_VOLUME", Falcon::int64(MIX_MAX_VOLUME));
 
     Falcon::Symbol *clsTileLayer = m->addClass("TileLayer", &forbidden_init);
