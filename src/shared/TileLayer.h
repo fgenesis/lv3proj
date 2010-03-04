@@ -19,7 +19,7 @@ class TileLayer
 public:
     void Update(uint32 curtime);
     void Render(void);
-    void SetTile(uint32 x, uint32 y, BasicTile *tile);
+    void SetTile(uint32 x, uint32 y, BasicTile *tile, bool updateCollision = true);
     inline BasicTile *GetTile(uint32 x, uint32 y) { return tilearray(x,y); }
     inline uint32 GetArraySize(void) { return tilearray.size1d(); }
     inline uint32 GetPixelSize(void) { return GetArraySize() * 16; }
@@ -34,6 +34,8 @@ protected:
     SDL_Rect *visible_area; // what to render - Engine::GetVisibleBlockRect()
     array2d<BasicTile*> tilearray;
     AnimTileSet tileset;
+    uint32 used; // amount of used tiles - if 0 Update() and Render() are skipped. Counted in SetTile()
+    LayerMgr *mgr; // ptr to layer mgr - this is needed for collision map (re-)calculation
 };
 
 

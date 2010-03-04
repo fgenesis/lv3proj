@@ -383,7 +383,7 @@ FALCON_FUNC fal_TileLayer_SetVisible(Falcon::VMachine *vm)
 {
     FALCON_REQUIRE_PARAMS(1);
     fal_TileLayer *self = Falcon::dyncast<fal_TileLayer*>( vm->self().asObject() );
-    self->GetLayer()->visible = (bool)vm->param(0)->forceInteger();
+    self->GetLayer()->visible = (bool)vm->param(0)->asBoolean();
 }
 
 FALCON_FUNC fal_TileLayer_IsVisible(Falcon::VMachine *vm)
@@ -394,10 +394,11 @@ FALCON_FUNC fal_TileLayer_IsVisible(Falcon::VMachine *vm)
 
 FALCON_FUNC fal_TileLayer_SetTile(Falcon::VMachine *vm)
 {
-    FALCON_REQUIRE_PARAMS_EXTRA(3, "u32 x, u32 y, S filename");
+    FALCON_REQUIRE_PARAMS_EXTRA(3, "u32 x, u32 y, S filename / tile-ref [, bool updateCollision = true]");
     fal_TileLayer *self = Falcon::dyncast<fal_TileLayer*>( vm->self().asObject() );
     uint32 x = vm->param(0)->forceInteger();
     uint32 y = vm->param(1)->forceInteger();
+
 
     if(x >= self->GetLayer()->GetArraySize() || x >= self->GetLayer()->GetArraySize())
     {
@@ -406,6 +407,9 @@ FALCON_FUNC fal_TileLayer_SetTile(Falcon::VMachine *vm)
     }
 
     Falcon::Item *tileArg = vm->param(2);
+    bool updateCollision = true; // true by default in LayerMgr::SetTile()
+    if(vm->paramCount() > 3)
+        updateCollision = vm->param(3)->asBoolean();
 
     BasicTile *tile = NULL;
 
@@ -440,13 +444,13 @@ FALCON_FUNC fal_TileLayer_SetTile(Falcon::VMachine *vm)
     }
     else if(tileArg->isNil())
     {
-        self->GetLayer()->SetTile(x,y,NULL);
+        self->GetLayer()->SetTile(x,y,NULL,updateCollision);
         vm->retval(true);
     }
 
     if(tile)
     {
-        self->GetLayer()->SetTile(x,y,tile);
+        self->GetLayer()->SetTile(x,y,tile,updateCollision);
         vm->retval(true);
     }
     else

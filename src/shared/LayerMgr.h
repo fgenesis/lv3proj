@@ -2,6 +2,7 @@
 #define LAYERMGR_H
 
 #include "array2d.h"
+#include "BitSet2d.h"
 #include "Tile.h"
 #include "TileLayer.h"
 
@@ -42,13 +43,16 @@ public:
 
     inline void SetMaxDim(uint32 dim) { _maxdim = dim; }
 
-
+    void CreateCollisionMap(void); // create new collision map (and delete old if exists)
+    void UpdateCollisionMap(uint32 x, uint32 y); // recalculates the collision map at a specific tile
+    void UpdateCollisionMap(void); // recalculates the *whole* collision map - use rarely!
     bool LoadAsciiLevel(AsciiLevel *level);
 
 
 private:
     Engine *engine;
     TileLayer *_layers[LAYER_MAX];
+    BitSet2d *_collisionMap;
     uint32 _maxdim; // max dimension for all created layers
 
 };
