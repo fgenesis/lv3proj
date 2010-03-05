@@ -55,41 +55,42 @@ void Engine::Run(void)
 void Engine::_ProcessEvents(void)
 {
     SDL_Event evt;
-    SDL_PollEvent(&evt);
-
-    if(!OnRawEvent(evt))
-        return;
-
-    switch(evt.type)
+    while(SDL_PollEvent(&evt))
     {
-        case SDL_KEYDOWN:
-            OnKeyDown(evt.key.keysym.sym, evt.key.keysym.mod);
-            break;
+        if(!OnRawEvent(evt))
+            continue;
 
-        case SDL_KEYUP:
-            OnKeyUp(evt.key.keysym.sym, evt.key.keysym.mod);
-            break;
+        switch(evt.type)
+        {
+            case SDL_KEYDOWN:
+                OnKeyDown(evt.key.keysym.sym, evt.key.keysym.mod);
+                break;
 
-        case SDL_ACTIVEEVENT:
-            OnWindowEvent(evt.active.gain);
-            break;
+            case SDL_KEYUP:
+                OnKeyUp(evt.key.keysym.sym, evt.key.keysym.mod);
+                break;
 
-        case SDL_VIDEORESIZE:
-            OnWindowResize(evt.resize.w, evt.resize.h);
-            break;
+            case SDL_ACTIVEEVENT:
+                OnWindowEvent(evt.active.gain);
+                break;
 
-        case SDL_MOUSEMOTION:
-            OnMouseEvent(evt.motion.state, evt.motion.x, evt.motion.y, evt.motion.xrel, evt.motion.yrel);
-            break;
+            case SDL_VIDEORESIZE:
+                OnWindowResize(evt.resize.w, evt.resize.h);
+                break;
 
-        case SDL_MOUSEBUTTONDOWN:
-        case SDL_MOUSEBUTTONUP:
-            OnMouseEvent(evt.button.state, evt.button.x, evt.button.y, 0, 0);
-            break;
+            case SDL_MOUSEMOTION:
+                OnMouseEvent(evt.motion.state, evt.motion.x, evt.motion.y, evt.motion.xrel, evt.motion.yrel);
+                break;
 
-        case SDL_QUIT:
-            _quit = true;
-            break;
+            case SDL_MOUSEBUTTONDOWN:
+            case SDL_MOUSEBUTTONUP:
+                OnMouseEvent(evt.button.state, evt.button.x, evt.button.y, 0, 0);
+                break;
+
+            case SDL_QUIT:
+                _quit = true;
+                break;
+        }
     }
 }
 
