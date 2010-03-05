@@ -5,10 +5,12 @@
 #include "BitSet2d.h"
 #include "Tile.h"
 #include "TileLayer.h"
+#include "SharedStructs.h"
 
 class Engine;
 struct SDL_Surface;
 struct AsciiLevel;
+class ActiveRect;
 
 enum LayerDepth
 {
@@ -46,6 +48,10 @@ public:
     void CreateCollisionMap(void); // create new collision map (and delete old if exists)
     void UpdateCollisionMap(uint32 x, uint32 y); // recalculates the collision map at a specific tile
     void UpdateCollisionMap(void); // recalculates the *whole* collision map - use rarely!
+    bool CollisionWith(ActiveRect *rect, int32 skip = 4); // check if an ActiveRect overlaps with at least one solid pixel in our collision map.
+    // when calling this function, we assume there is NO collision yet (check new position with CollisionWith() before!)
+    Point GetClosestNonCollidingPoint(ActiveRect *rect, uint8 direction, int32 skip = 1);
+    bool CanFallDown(Point anchor, uint32 arealen);
     bool LoadAsciiLevel(AsciiLevel *level);
 
 

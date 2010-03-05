@@ -74,7 +74,7 @@ void ResourceMgr::_Delete(void *ptr, ResourceType rt)
     }
 }
 
-SDL_Surface *ResourceMgr::LoadImage(char *name, bool count /* = false*/)
+SDL_Surface *ResourceMgr::LoadImg(char *name, bool count /* = false*/)
 {
     // there may be a recursive call - adding this twice would be not a good idea!
     std::string origfn(name);
@@ -88,11 +88,11 @@ SDL_Surface *ResourceMgr::LoadImage(char *name, bool count /* = false*/)
     SDL_Surface *img = (SDL_Surface*)_GetPtr(origfn);
     if(!img)
     {
-        logdebug("LoadImage: '%s'", origfn.c_str());
+        logdebug("LoadImg: '%s'", origfn.c_str());
         // we got additional properties
         if(fn != origfn)
         {
-            SDL_Surface *origin = LoadImage((char*)fn.c_str());
+            SDL_Surface *origin = LoadImg((char*)fn.c_str());
             if(origin)
             {
                 SDL_Rect rect;
@@ -116,7 +116,7 @@ SDL_Surface *ResourceMgr::LoadImage(char *name, bool count /* = false*/)
         }
         if(!img)
         {
-            logerror("LoadImage failed: '%s'", origfn.c_str());
+            logerror("LoadImg failed: '%s'", origfn.c_str());
             return NULL;
         }
         // convert loaded images into currently used color format.
@@ -159,7 +159,7 @@ Anim *ResourceMgr::LoadAnim(char *name, bool count /* = false */)
                 for(AnimFrameVector::iterator af = am->second.store.begin(); af != am->second.store.end(); af++)
                 {
                     loadpath = AddPathIfNecessary(af->filename,relpath);
-                    af->surface = resMgr.LoadImage((char*)loadpath.c_str(), true); // get all images referenced
+                    af->surface = resMgr.LoadImg((char*)loadpath.c_str(), true); // get all images referenced
                 }
 
         }

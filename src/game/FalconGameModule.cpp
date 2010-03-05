@@ -3,8 +3,6 @@
 #include "common.h"
 #include "AppFalconGame.h"
 
-#undef LoadImage // this is due to some crappy win32 define included by windows.h included by falcon...
-
 #include "GameEngine.h"
 #include "TileLayer.h"
 #include "ResourceMgr.h"
@@ -253,7 +251,7 @@ public:
         }
         else
         {
-            if(SDL_Surface *img = resMgr.LoadImage((char*)file.c_str()))
+            if(SDL_Surface *img = resMgr.LoadImg((char*)file.c_str()))
             {
                 tile = new BasicTile;
                 tile->surface = img;
@@ -430,7 +428,7 @@ FALCON_FUNC fal_TileLayer_SetTile(Falcon::VMachine *vm)
         }
         else
         {
-            if(SDL_Surface *img = resMgr.LoadImage((char*)file.c_str()))
+            if(SDL_Surface *img = resMgr.LoadImg((char*)file.c_str()))
             {
                 tile = new BasicTile;
                 tile->surface = img;
@@ -501,7 +499,7 @@ FALCON_FUNC fal_Game_LoadTile(Falcon::VMachine *vm)
     }
     else
     {
-        if(SDL_Surface *img = resMgr.LoadImage((char*)file.c_str()))
+        if(SDL_Surface *img = resMgr.LoadImg((char*)file.c_str()))
         {
             tile = new BasicTile;
             tile->surface = img;

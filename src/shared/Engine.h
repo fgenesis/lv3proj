@@ -3,18 +3,11 @@
 
 #include <SDL/SDL.h>
 #include <SDL/SDL_image.h>
+#include "SharedStructs.h"
 
 
 class LayerMgr;
 
-
-struct Point
-{
-    Point() : x(0), y(0) {}
-    Point(uint32 x_, uint32 y_) : x(x_), y(y_) {}
-    uint32 x;
-    uint32 y;
-};
 
 class Engine
 {
@@ -25,7 +18,7 @@ public:
     virtual void InitScreen(uint32 sizex, uint32 sizey, uint8 bpp = 0, uint32 extraflags = 0);
     virtual bool Setup(void);
 
-    virtual void OnMouseEvent(uint32 button, uint32 x, uint32 y, int32 rx, uint32 ry);
+    virtual void OnMouseEvent(uint32 button, uint32 x, uint32 y, int32 rx, int32 ry);
     virtual void OnKeyDown(SDLKey key, SDLMod mod);
     virtual void OnKeyUp(SDLKey key, SDLMod mod);
     virtual void OnWindowEvent(bool active);

@@ -31,13 +31,17 @@ public:
     // cant return an L-value here since we are fiddling with bits...
     inline bool operator () (uint32 x, uint32 y)
     {
-        DEBUG(ASSERT(y < _ysize && x < _store[y].size()));
-        return _store[y][x];
+        return at(x,y);
     }
     inline void set(uint32 x, uint32 y, bool b)
     {
         DEBUG(ASSERT(y < _ysize && x < _store[y].size()));
         _store[y][x] = b;
+    }
+    inline bool at(uint32 x, uint32 y)
+    {
+        DEBUG(ASSERT(y < _ysize && x < _store[y].size()));
+        return _store[y][x];
     }
 
 private:

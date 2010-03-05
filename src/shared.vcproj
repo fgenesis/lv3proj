@@ -106,7 +106,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				Optimization="3"
+				Optimization="0"
 				InlineFunctionExpansion="2"
 				EnableIntrinsicFunctions="true"
 				FavorSizeOrSpeed="1"
@@ -276,6 +276,14 @@
 			</File>
 			<File
 				RelativePath=".\shared\SDL_func.h"
+				>
+			</File>
+			<File
+				RelativePath=".\shared\SharedDefines.h"
+				>
+			</File>
+			<File
+				RelativePath=".\shared\SharedStructs.h"
 				>
 			</File>
 			<File

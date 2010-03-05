@@ -36,7 +36,7 @@ public:
 
     template <class T> inline bool Drop(T *ptr) { _DecRef((void*)ptr); }
 
-    SDL_Surface *LoadImage(char *name, bool count = false);
+    SDL_Surface *LoadImg(char *name, bool count = false);
     Anim *LoadAnim(char *name, bool count = false);
     Mix_Music *LoadMusic(char *name, bool count = false);
     memblock *LoadFile(char *name, char *mode = "r", bool count = false);

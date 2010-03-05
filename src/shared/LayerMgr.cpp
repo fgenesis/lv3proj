@@ -6,6 +6,8 @@
 #include "ResourceMgr.h"
 #include "AsciiLevelParser.h"
 #include "LayerMgr.h"
+#include "Objects.h"
+#include "SharedDefines.h"
 
 
 LayerMgr::LayerMgr(Engine* e)
@@ -151,13 +153,105 @@ void LayerMgr::UpdateCollisionMap(uint32 x, uint32 y) // this x and y are tile p
     }
 }
 
+bool LayerMgr::CollisionWith(ActiveRect *rect, int32 skip /* = 4 */)
+{
+    int32 x, y;
+    for(y = rect->y; y < rect->y2(); y += skip)
+        for(x = rect->x; x < rect->x2(); x += skip)
+            if(_collisionMap->at(x,y))
+                return true;
+
+    // always check bottom edge of the rect, if missed due to skipping
+    if(rect->y2() % skip)
+        for(x = rect->x; x < rect->x2(); x += skip)
+            if(_collisionMap->at(x, rect->y2() - 1))
+                return true;
+
+    // always check right edge of the rect, if missed due to skipping
+    if(rect->x2() % skip)
+        for(y = rect->y; y < rect->y2(); y += skip)
+            if(_collisionMap->at(rect->x2() - 1, y))
+                return true;
+
+    // always check bottom right pixel of the rect (if missed due to skipping, but we skip the check for that)
+    if(_collisionMap->at(rect->x2() - 1, rect->y2() - 1))
+        return true;
+
+    return false;
+}
+
+/* this check goes like this (assuming we start from the bottom-right corner):
+ * ...8642
+ * ...8642
+ * 9998642
+ * 7777642
+ * 5555542
+ * 3333332
+ * 1111111
+*/
+
+Point LayerMgr::GetClosestNonCollidingPoint(ActiveRect *rect, uint8 direction, int32 skip /* = 1 */)
+{
+    // could be done with a few ifs but this is just much more compact...
+    int32 xstart = (direction & DIRECTION_LEFT) ? rect->x2() : rect->x;
+    int32 ystart = (direction & DIRECTION_UP)   ? rect->y2() : rect->y;
+    int32 xend   = (direction & DIRECTION_LEFT) ? rect->x    : rect->x2();
+    int32 yend   = (direction & DIRECTION_UP)   ? rect->y    : rect->y2();
+    int32 xstep  = (direction & DIRECTION_LEFT) ? -skip      : skip;
+    int32 ystep  = (direction & DIRECTION_UP)   ? -skip      : skip;
+    int32 x = xstart, y = ystart;
+    bool c;
+
+    while(xstart != xend && ystart != yend)
+    {
+        for(x = xstart ; x < xend; x += xstep)
+        {
+            if(_collisionMap->at(x,ystart))
+            {
+                c = true;
+                break;
+            }
+        }
+        if(!c)
+        {
+            for(y = ystart ; y < yend; y += ystep)
+            {
+                if(_collisionMap->at(xstart,y))
+                {
+                    c = true;
+                    break;
+                }
+            }
+        }
+
+        if(c)
+        {
+            return Point(x,y);
+        }
+
+        xstart += xstep;
+        ystart += ystep;
+    }
+    return Point(-1,-1); // nothing found
+}
+
+bool LayerMgr::CanFallDown(Point anchor, uint32 arealen)
+{
+    // this check goes like this: 123412341234... (usually faster than linear search)
+    for(uint32 align = 0; align < 4; ++align)
+        for(uint32 x = anchor.x - arealen + align; x < anchor.x + arealen; x += 4)
+            if(_collisionMap->at(x, anchor.y + 1))
+                return false;
+    return true;
+}
+
 bool LayerMgr::LoadAsciiLevel(AsciiLevel *level)
 {
     // reserve space
     SetMaxDim(level->tiles.size1d());
 
     // for the sake of loading speed in debug mode, this is not enabled for now
-    //CreateCollisionMap();
+    CreateCollisionMap();
 
     // create the layers
     TileLayer *baseLayer = CreateLayer(true);
@@ -188,7 +282,7 @@ bool LayerMgr::LoadAsciiLevel(AsciiLevel *level)
                     if(it == tmap.end())
                     {
                         staTile = new BasicTile;
-                        staTile->surface = resMgr.LoadImage((char*)f.c_str());
+                        staTile->surface = resMgr.LoadImg((char*)f.c_str());
                         staTile->filename = realFileName;
                         tmap[f] = staTile;
                     }
@@ -227,10 +321,10 @@ bool LayerMgr::LoadAsciiLevel(AsciiLevel *level)
     SetLayer(animLayer, LAYER_DEFAULT_ENV + 1);
     SetLayer(CreateLayer(), LAYER_DEFAULT_ENV + 2); // for testing
 
-    /* // for the sake of loading speed in debug mode, this is not enabled for now
+    // for the sake of loading speed in debug mode, this is not enabled for now
     logdebug("Calculating collision map...");
     UpdateCollisionMap();
-    */
+    
 
     logdetail("ASCII Level loaded.");
 

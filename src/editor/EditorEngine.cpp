@@ -397,7 +397,7 @@ void EditorEngine::SetupInterfaceLayers(void)
             else if(FileGetExtension(*fi) == ".png")
             {
                 std::string fn = AddPathIfNecessary(*fi,*idir);
-                SDL_Surface *img = resMgr.LoadImage((char*)fn.c_str());
+                SDL_Surface *img = resMgr.LoadImg((char*)fn.c_str());
                 if(img)
                 {
                     tile = new BasicTile;

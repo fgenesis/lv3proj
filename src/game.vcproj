@@ -116,10 +116,11 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				Optimization="3"
+				Optimization="0"
 				InlineFunctionExpansion="2"
 				EnableIntrinsicFunctions="true"
 				FavorSizeOrSpeed="1"
+				WholeProgramOptimization="true"
 				AdditionalIncludeDirectories="include;shared"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
 				StringPooling="true"
@@ -193,6 +194,14 @@
 			</File>
 			<File
 				RelativePath=".\game\main.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\game\PhysicsSystem.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\game\PhysicsSystem.h"
 				>
 			</File>
 			<Filter

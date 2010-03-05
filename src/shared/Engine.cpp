@@ -78,6 +78,15 @@ void Engine::_ProcessEvents(void)
             OnWindowResize(evt.resize.w, evt.resize.h);
             break;
 
+        case SDL_MOUSEMOTION:
+            OnMouseEvent(evt.motion.state, evt.motion.x, evt.motion.y, evt.motion.xrel, evt.motion.yrel);
+            break;
+
+        case SDL_MOUSEBUTTONDOWN:
+        case SDL_MOUSEBUTTONUP:
+            OnMouseEvent(evt.button.state, evt.button.x, evt.button.y, 0, 0);
+            break;
+
         case SDL_QUIT:
             _quit = true;
             break;
@@ -130,6 +139,10 @@ void Engine::OnWindowEvent(bool active)
     // TODO: pause if lost focus?
 }
 
+void Engine::OnMouseEvent(uint32 button, uint32 x, uint32 y, int32 rx, int32 ry)
+{
+}
+
 void Engine::OnKeyDown(SDLKey key, SDLMod mod)
 {
     if(key == SDLK_F4 && (mod & KMOD_LALT))
@@ -155,10 +168,6 @@ void Engine::OnKeyDown(SDLKey key, SDLMod mod)
 }
 
 void Engine::OnKeyUp(SDLKey key, SDLMod mod)
-{
-}
-
-void Engine::OnMouseEvent(uint32 button, uint32 x, uint32 y, int32 rx, uint32 ry)
 {
 }
 

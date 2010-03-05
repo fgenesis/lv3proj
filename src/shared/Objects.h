@@ -1,7 +1,9 @@
 #ifndef OBJECTS_H
 #define OBJECTS_H
 
+#include <SDL/SDL.h>
 #include <falcon/engine.h>
+#include "SharedStructs.h"
 
 /*
  * NOTE: The OnEnter(), OnLeave(), OnWhatever() functions are defined in FalconGameModule.cpp !!
@@ -60,9 +62,19 @@ public:
     {}*/
 
     // Method to calculate the second X corner
-    int x2() const { return x+w; }
+    inline int x2() const { return x+w; }
     // Method to calculate the second Y corner
-    int y2() const { return y+h; }
+    inline int y2() const { return y+h; }
+
+    inline SDL_Rect AsSDLRect(void)
+    {
+        SDL_Rect rect;
+        rect.x = x;
+        rect.y = y;
+        rect.w = w;
+        rect.h = h;
+        return rect;
+    }
 
 };
 
@@ -72,6 +84,7 @@ class Object : public ActiveRect
 {
 public:
     virtual void Init(void);
+    virtual void SetBBox(uint32 x, uint32 y, uint32 w, uint32 h);
 
     virtual void OnUpdate(uint32 ms);
 
@@ -91,6 +104,10 @@ class Unit : public Object
 {
 public:
     virtual void Init(void);
+    virtual void SetBBox(uint32 x, uint32 y, uint32 w, uint32 h);
+
+protected:
+    Point anchor; // where this unit stands on the ground (center of object)
 
 };
 

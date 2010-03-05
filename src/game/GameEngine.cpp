@@ -17,6 +17,11 @@ GameEngine::GameEngine()
     objmgr = new ObjectMgr;
     falcon = new AppFalconGame;
     _playerCount = 1;
+
+    // test
+    mouseRect.w = 32;
+    mouseRect.h = 32;
+    mouseCollision = 0;
 }
 
 GameEngine::~GameEngine()
@@ -109,10 +114,40 @@ void GameEngine::OnKeyUp(SDLKey key, SDLMod mod)
     }
 }
 
+void GameEngine::OnMouseEvent(uint32 button, uint32 x, uint32 y, int32 rx, int32 ry)
+{
+    if(x >= uint32(mouseRect.w / 2) && y >= uint32(mouseRect.h / 2))
+    {
+        mouseRect.x = x - mouseRect.w / 2;
+        mouseRect.y = y - mouseRect.h / 2;
+        mouseCollision = _layermgr->CollisionWith(&mouseRect) ? 2 : 0;
+        if(!mouseCollision)
+        {
+            if(!_layermgr->CanFallDown(Point(x, y + (mouseRect.h / 2) - 1), 12))
+                mouseCollision = 1;
+        }
+    }
+}
+
 void GameEngine::_Render(void)
 {
+    // blank screen
     SDL_FillRect(GetSurface(), NULL, 0); // TODO: remove this as soon as backgrounds are implemented!! (eats CPU)
-    Engine::_Render();
+    //RenderBackground();
+
+    // render the layers
+    _layermgr->Render();
+
+    // TEST/DEBUG
+    if(mouseCollision == 2) // collision
+        SDL_FillRect(GetSurface(), &mouseRect.AsSDLRect(), SDL_MapRGB(GetSurface()->format,0xFF,0,0));
+    else if(mouseCollision == 1) // can stand
+        SDL_FillRect(GetSurface(), &mouseRect.AsSDLRect(), SDL_MapRGB(GetSurface()->format,0xFF,0xFF,0));
+    else if(mouseCollision == 0) // floating
+        SDL_FillRect(GetSurface(), &mouseRect.AsSDLRect(), SDL_MapRGB(GetSurface()->format,0,0xFF,0));
+    // -end-
+
+    SDL_Flip(_screen);
 }
 
 void GameEngine::_Process(uint32 ms)
