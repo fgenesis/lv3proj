@@ -14,8 +14,15 @@
 GameEngine::GameEngine()
 : Engine()
 {
-    objmgr = new ObjectMgr;
     falcon = new AppFalconGame;
+    physmgr = new PhysicsMgr;
+    physmgr->SetLayerMgr(_layermgr);
+    objmgr = new ObjectMgr;
+    objmgr->SetLayerMgr(_layermgr);
+    objmgr->SetPhysicsMgr(physmgr);
+    objmgr->SetFalconBindings(falcon);
+
+
     _playerCount = 1;
 
     // test
@@ -29,6 +36,7 @@ GameEngine::~GameEngine()
     objmgr->RemoveAll(true, &BaseObject::unbind);
     delete objmgr;
     delete falcon;
+    delete physmgr;
 }
 
 bool GameEngine::Setup(void)
@@ -139,12 +147,17 @@ void GameEngine::_Render(void)
     _layermgr->Render();
 
     // TEST/DEBUG
+    SDL_Rect mrect;
+    mrect.x = mouseRect.x;
+    mrect.y = mouseRect.y;
+    mrect.w = mouseRect.w;
+    mrect.h = mouseRect.h;
     if(mouseCollision == 2) // collision
-        SDL_FillRect(GetSurface(), &mouseRect.AsSDLRect(), SDL_MapRGB(GetSurface()->format,0xFF,0,0));
+        SDL_FillRect(GetSurface(), &mrect, SDL_MapRGB(GetSurface()->format,0xFF,0,0));
     else if(mouseCollision == 1) // can stand
-        SDL_FillRect(GetSurface(), &mouseRect.AsSDLRect(), SDL_MapRGB(GetSurface()->format,0xFF,0xFF,0));
+        SDL_FillRect(GetSurface(), &mrect, SDL_MapRGB(GetSurface()->format,0xFF,0xFF,0));
     else if(mouseCollision == 0) // floating
-        SDL_FillRect(GetSurface(), &mouseRect.AsSDLRect(), SDL_MapRGB(GetSurface()->format,0,0xFF,0));
+        SDL_FillRect(GetSurface(), &mrect, SDL_MapRGB(GetSurface()->format,0,0xFF,0));
     // -end-
 
     SDL_Flip(_screen);
@@ -169,6 +182,9 @@ void GameEngine::_Process(uint32 ms)
         }
 
     }
+
+    // process object updates, do physics and collision
+    objmgr->Update();
     
     Engine::_Process(ms);
 }

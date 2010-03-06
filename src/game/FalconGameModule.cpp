@@ -29,7 +29,7 @@ FalconProxyObject::~FalconProxyObject()
 }
 
 // Do NOT use other argument types than Falcon::Item
-void FalconProxyObject::CallMethod(char *m, uint32 args /* = 0 */, ...)
+Falcon::Item *FalconProxyObject::CallMethod(char *m, uint32 args /* = 0 */, ...)
 {
     Falcon::Item method;
     if(self()->getMethod(m, method))
@@ -40,7 +40,9 @@ void FalconProxyObject::CallMethod(char *m, uint32 args /* = 0 */, ...)
         va_end(ap);
 
         vm->callItem(method, args);
+        return &(vm->regA());
     }
+    return NULL;
 }
 
 void fal_ObjectCarrier::init(Falcon::VMachine *vm)
@@ -147,22 +149,23 @@ void BaseObject::unbind(void)
 // these are called from C++ like regular overloaded member functions, and proxy the call to be handled inside falcon
 // on the correct member overloads.
 
-void ActiveRect::OnEnter(uint8 side, Object *who)
+void ActiveRect::OnEnter(uint8 side, ActiveRect *who)
 {
     DEBUG_ASSERT_RETURN_VOID(_falObj);
     _falObj->CallMethod("OnEnter", 2, Falcon::Item(Falcon::int32(side)), Falcon::Item(who->_falObj->self()));
 }
 
-void ActiveRect::OnLeave(uint8 side, Object *who)
+void ActiveRect::OnLeave(uint8 side, ActiveRect *who)
 {
     DEBUG_ASSERT_RETURN_VOID(_falObj);
     _falObj->CallMethod("OnLeave", 2, Falcon::Item(Falcon::int32(side)), Falcon::Item(who->_falObj->self()));
 }
 
-void ActiveRect::OnTouch(uint8 side, Object *who)
+bool ActiveRect::OnTouch(uint8 side, ActiveRect *who)
 {
     DEBUG_ASSERT_RETURN_VOID(_falObj);
-    _falObj->CallMethod("OnTouch", 2, Falcon::Item(Falcon::int32(side)), Falcon::Item(who->_falObj->self()));
+    Falcon::Item *result = _falObj->CallMethod("OnTouch", 2, Falcon::Item(Falcon::int32(side)), Falcon::Item(who->_falObj->self()));
+    return result ? result->asBoolean() : false;
 }
 
 void Object::OnUpdate(uint32 ms)
@@ -171,10 +174,11 @@ void Object::OnUpdate(uint32 ms)
     _falObj->CallMethod("OnUpdate", 1, Falcon::Item(Falcon::int64(ms)));
 }
 
-void Item::OnUse(Object *who)
+bool Item::OnUse(Object *who)
 {
     DEBUG_ASSERT_RETURN_VOID(_falObj);
-    _falObj->CallMethod("OnUse", 1, Falcon::Item(who->_falObj->self()));
+    Falcon::Item *result = _falObj->CallMethod("OnUse", 1, Falcon::Item(who->_falObj->self()));
+    return result ? result->asBoolean() : false;
 }
 
 // -- end object proxy calls --

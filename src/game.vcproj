@@ -196,14 +196,6 @@
 				RelativePath=".\game\main.cpp"
 				>
 			</File>
-			<File
-				RelativePath=".\game\PhysicsSystem.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\game\PhysicsSystem.h"
-				>
-			</File>
 			<Filter
 				Name="falcon"
 				>

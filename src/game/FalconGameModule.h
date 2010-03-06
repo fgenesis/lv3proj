@@ -24,7 +24,7 @@ class FalconProxyObject
 public:
     FalconProxyObject(BaseObject *base) : obj(base) {}
     ~FalconProxyObject();
-    void CallMethod(char *m, uint32 args = 0, ...);
+    Falcon::Item *CallMethod(char *m, uint32 args = 0, ...);
     inline fal_ObjectCarrier *self(void) { return (fal_ObjectCarrier*)gclock->item().asObject(); }
 
     Falcon::GarbageLock *gclock; // to prevent deletion of the fal_ObjectCarrier when a script drops the reference

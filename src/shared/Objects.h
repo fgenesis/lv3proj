@@ -1,9 +1,9 @@
 #ifndef OBJECTS_H
 #define OBJECTS_H
 
-#include <SDL/SDL.h>
 #include <falcon/engine.h>
 #include "SharedStructs.h"
+#include "PhysicsSystem.h"
 
 /*
  * NOTE: The OnEnter(), OnLeave(), OnWhatever() functions are defined in FalconGameModule.cpp !!
@@ -46,36 +46,20 @@ class ActiveRect : public BaseObject
 public:
     virtual void Init(void);
 
-    virtual void OnEnter(uint8 side, Object *who);
-    virtual void OnLeave(uint8 side, Object *who);
-    virtual void OnTouch(uint8 side, Object *who);
+    // see SharedDefines.h for the sides enum
+    virtual void OnEnter(uint8 side, ActiveRect *who);
+    virtual void OnLeave(uint8 side, ActiveRect *who);
+    virtual bool OnTouch(uint8 side, ActiveRect *who);
 
     int x, y, w, h;
 
-    /*ActiveRect( int nx=0, int ny=0, int nw=0, int nh=0 ):
-    x(nx), y(ny), w(nw), h(nh)
-    {}*/
-
-    // a Copy constructor
-    /*ActiveRect( const ActiveRect& r ):
-    x(r.x), y(r.y), w(r.w), h(r.h)
-    {}*/
+    uint8 CollisionWith(ActiveRect *other); // returns side where the collision occurred
+    void AlignToSideOf(ActiveRect *other, uint8 side);
 
     // Method to calculate the second X corner
     inline int x2() const { return x+w; }
     // Method to calculate the second Y corner
     inline int y2() const { return y+h; }
-
-    inline SDL_Rect AsSDLRect(void)
-    {
-        SDL_Rect rect;
-        rect.x = x;
-        rect.y = y;
-        rect.w = w;
-        rect.h = h;
-        return rect;
-    }
-
 };
 
 
@@ -88,6 +72,16 @@ public:
 
     virtual void OnUpdate(uint32 ms);
 
+    inline void SetAffectedByPhysics(bool b) { _physicsAffected = b; }
+    inline bool IsAffectedByPhysics(void) { return _physicsAffected; }
+
+    PhysProps phys;
+
+protected:
+    bool _physicsAffected;
+    bool _moved;
+
+
 };
 
 // an item a player carries around in the inventory
@@ -96,7 +90,7 @@ class Item : public Object
 public:
     virtual void Init(void);
 
-    virtual void OnUse(Object *who);
+    virtual bool OnUse(Object *who);
 };
 
 // unit, most likely some NPC, enemy, or player

@@ -23,7 +23,7 @@ public:
     virtual void OnKeyUp(SDLKey key, SDLMod mod);
     virtual void OnWindowEvent(bool active);
     virtual void OnWindowResize(uint32 newx, uint32 newy);
-    virtual bool OnRawEvent(SDL_Event& evt);
+    virtual bool OnRawEvent(SDL_Event& evt); // return true to pass this event to the following internal event handlers, false to proceed with next event
 
 
     inline uint32 GetResX(void) { return _screen->w; }

@@ -255,6 +255,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\shared\PhysicsSystem.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\shared\PhysicsSystem.h"
+				>
+			</File>
+			<File
 				RelativePath=".\shared\PropParser.cpp"
 				>
 			</File>

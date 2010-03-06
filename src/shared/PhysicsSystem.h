@@ -1,10 +1,14 @@
 #ifndef PHYSICSSYSTEM_H
 #define PHYSICSSYSTEM_H
 
+class LayerMgr;
+class Object;
+
 
 // an object can have certain physical properties.
 // we put them into an extra struct for the sake of clearer code
 // and to make integration with falcon easier.
+// TODO: create constructor to initialize it with *useful* values?
 struct PhysProps
 {
     float weight; // in kg
@@ -22,8 +26,19 @@ struct EnvPhysProps
 {
     float airFriction;
     float gravity;
+};
 
+class PhysicsMgr
+{
+public:
+    void UpdatePhysics(Object *obj);
 
+    EnvPhysProps envPhys;
+    
+    inline void SetLayerMgr(LayerMgr *layers) { _layerMgr = layers; }
+private:
+
+    LayerMgr *_layerMgr;
 };
 
 

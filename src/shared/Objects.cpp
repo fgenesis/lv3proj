@@ -12,9 +12,20 @@ void ActiveRect::Init(void)
     type = OBJTYPE_RECT;
 }
 
+uint8 ActiveRect::CollisionWith(ActiveRect *other)
+{
+    return false;
+}
+
+void ActiveRect::AlignToSideOf(ActiveRect *other, uint8 side)
+{
+}
+
 void Object::Init(void)
 {
     type = OBJTYPE_OBJECT;
+    memset(&phys, 0, sizeof(PhysProps)); // TODO: apply some useful default values
+    _physicsAffected = false;
 }
 
 void Object::SetBBox(uint32 x_, uint32 y_, uint32 w_, uint32 h_)

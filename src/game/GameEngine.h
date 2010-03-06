@@ -6,6 +6,7 @@
 
 class AppFalconGame;
 class ObjectMgr;
+class PhysicsMgr;
 
 
 class GameEngine : public Engine
@@ -25,12 +26,8 @@ public:
     inline uint32 GetPlayerCount(void) { return _playerCount; }
     inline void SetPlayerCount(uint32 c) { _playerCount = c; }
 
-
-
-
-
     ObjectMgr *objmgr;
-
+    PhysicsMgr *physmgr;
 
 protected:
 
