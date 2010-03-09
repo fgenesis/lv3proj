@@ -5,6 +5,8 @@
 #include "SoundCore.h"
 #include "AsciiLevelParser.h"
 #include "Engine.h"
+#include "PhysicsSystem.h"
+#include "ObjectMgr.h"
 
 
 volatile uint32 Engine::s_curFrameTime;
@@ -14,6 +16,12 @@ Engine::Engine()
 {
     _layermgr = new LayerMgr(this);
     _fpsclock = s_curFrameTime = clock();
+
+    physmgr = new PhysicsMgr;
+    physmgr->SetLayerMgr(_layermgr);
+    objmgr = new ObjectMgr(this);
+    objmgr->SetLayerMgr(_layermgr);
+    objmgr->SetPhysicsMgr(physmgr);
 }
 
 Engine::~Engine()
@@ -79,12 +87,12 @@ void Engine::_ProcessEvents(void)
                 break;
 
             case SDL_MOUSEMOTION:
-                OnMouseEvent(evt.motion.state, evt.motion.x, evt.motion.y, evt.motion.xrel, evt.motion.yrel);
+                OnMouseEvent(evt.type, evt.motion.state, evt.motion.x, evt.motion.y, evt.motion.xrel, evt.motion.yrel);
                 break;
 
             case SDL_MOUSEBUTTONDOWN:
             case SDL_MOUSEBUTTONUP:
-                OnMouseEvent(evt.button.state, evt.button.x, evt.button.y, 0, 0);
+                OnMouseEvent(evt.type, evt.button.state, evt.button.x, evt.button.y, 0, 0);
                 break;
 
             case SDL_QUIT:
@@ -126,6 +134,7 @@ bool Engine::Setup(void)
 void Engine::_Process(uint32 ms)
 {
     _layermgr->Update(GetCurFrameTime());
+    objmgr->Update(ms);
 }
 
 // Handle a raw SDL_Event before anything else. return true for further processing,
@@ -140,7 +149,7 @@ void Engine::OnWindowEvent(bool active)
     // TODO: pause if lost focus?
 }
 
-void Engine::OnMouseEvent(uint32 button, uint32 x, uint32 y, int32 rx, int32 ry)
+void Engine::OnMouseEvent(uint32 type, uint32 button, uint32 x, uint32 y, int32 rx, int32 ry)
 {
 }
 

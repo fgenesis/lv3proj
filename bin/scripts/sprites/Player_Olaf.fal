@@ -1,0 +1,12 @@
+class Olaf from Player
+
+    sprite = "sprites/olaf1.anim"
+
+    /*function OnUpdate(ms)
+        > ms, " - Olaf Updated!"
+    end*/
+
+
+end
+
+export Olaf

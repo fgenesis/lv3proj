@@ -10,18 +10,12 @@
 #include "GameEngine.h"
 #include <falcon/engine.h>
 #include "FalconGameModule.h"
+#include "SharedDefines.h"
 
 GameEngine::GameEngine()
 : Engine()
 {
     falcon = new AppFalconGame;
-    physmgr = new PhysicsMgr;
-    physmgr->SetLayerMgr(_layermgr);
-    objmgr = new ObjectMgr;
-    objmgr->SetLayerMgr(_layermgr);
-    objmgr->SetPhysicsMgr(physmgr);
-    objmgr->SetFalconBindings(falcon);
-
 
     _playerCount = 1;
 
@@ -29,6 +23,10 @@ GameEngine::GameEngine()
     mouseRect.w = 32;
     mouseRect.h = 32;
     mouseCollision = 0;
+    bigRect.x = 150;
+    bigRect.y = 450;
+    bigRect.w = 100;
+    bigRect.h = 100;
 }
 
 GameEngine::~GameEngine()
@@ -122,8 +120,9 @@ void GameEngine::OnKeyUp(SDLKey key, SDLMod mod)
     }
 }
 
-void GameEngine::OnMouseEvent(uint32 button, uint32 x, uint32 y, int32 rx, int32 ry)
+void GameEngine::OnMouseEvent(uint32 type, uint32 button, uint32 x, uint32 y, int32 rx, int32 ry)
 {
+    // - TEST - this is all test stuff and will be removed later
     if(x >= uint32(mouseRect.w / 2) && y >= uint32(mouseRect.h / 2))
     {
         mouseRect.x = x - mouseRect.w / 2;
@@ -135,6 +134,23 @@ void GameEngine::OnMouseEvent(uint32 button, uint32 x, uint32 y, int32 rx, int32
                 mouseCollision = 1;
         }
     }
+    // on mouseclick, text for intersection with the big white rect
+    if(type == SDL_MOUSEBUTTONDOWN)
+    {
+        uint8 side = mouseRect.CollisionWith(&bigRect);
+        char *sidestr;
+        switch(side)
+        {
+            case SIDE_TOP: sidestr = "top"; break;
+            case SIDE_BOTTOM: sidestr = "bottom"; break;
+            case SIDE_LEFT: sidestr = "left"; break;
+            case SIDE_RIGHT: sidestr = "right"; break;
+            default: sidestr = "none"; break;
+        }
+        logerror("COLLISION: %s (%u)", sidestr, side);
+    }
+
+
 }
 
 void GameEngine::_Render(void)
@@ -147,6 +163,16 @@ void GameEngine::_Render(void)
     _layermgr->Render();
 
     // TEST/DEBUG
+
+    // part 1 - draw a huge rect, centered
+    SDL_Rect bigone;
+    bigone.x = bigRect.x;
+    bigone.y = bigRect.y;
+    bigone.w = bigRect.w;
+    bigone.h = bigRect.h;
+    SDL_FillRect(GetSurface(), &bigone, 0xFFFFFFFF);
+
+    // part 2 - draw the small rect that follows the mouse cursor
     SDL_Rect mrect;
     mrect.x = mouseRect.x;
     mrect.y = mouseRect.y;
@@ -182,9 +208,6 @@ void GameEngine::_Process(uint32 ms)
         }
 
     }
-
-    // process object updates, do physics and collision
-    objmgr->Update();
     
     Engine::_Process(ms);
 }

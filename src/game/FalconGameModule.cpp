@@ -36,10 +36,24 @@ Falcon::Item *FalconProxyObject::CallMethod(char *m, uint32 args /* = 0 */, ...)
     {
         va_list ap;
         va_start(ap, args);
-        vm->pushParam(va_arg(ap, Falcon::Item));
+        for(uint32 i = 0; i < args; ++i)
+        {
+            Falcon::Item& itm = va_arg(ap, Falcon::Item);
+            vm->pushParam(itm);
+        }
         va_end(ap);
 
-        vm->callItem(method, args);
+        try
+        {
+            vm->callItem(method, args);
+        }
+        catch(Falcon::Error *err)
+        {
+            Falcon::AutoCString edesc( err->toString() );
+            logerror("FalconProxyObject::CallMethod(%s): %s", m, edesc.c_str());
+            err->decref();
+            return NULL;
+        }
         return &(vm->regA());
     }
     return NULL;
@@ -68,6 +82,9 @@ Falcon::CoreObject* fal_ObjectCarrier::factory( const Falcon::CoreClass *cls, vo
     {
         throw new Falcon::AccessError( Falcon::ErrorParam( Falcon::e_noninst_cls ) );
     }
+
+    // TODO: automatic class selection does NOT work for chain inheritance (no idea why):
+    // e.g. Olaf from PlayerEx from Player
 
     Falcon::ClassDef *clsdef = cls->symbol()->getClassDef();
     BaseObject *obj = NULL;
@@ -163,7 +180,7 @@ void ActiveRect::OnLeave(uint8 side, ActiveRect *who)
 
 bool ActiveRect::OnTouch(uint8 side, ActiveRect *who)
 {
-    DEBUG_ASSERT_RETURN_VOID(_falObj);
+    DEBUG_ASSERT_RETURN(_falObj, true); // no further processing
     Falcon::Item *result = _falObj->CallMethod("OnTouch", 2, Falcon::Item(Falcon::int32(side)), Falcon::Item(who->_falObj->self()));
     return result ? result->asBoolean() : false;
 }
@@ -176,7 +193,7 @@ void Object::OnUpdate(uint32 ms)
 
 bool Item::OnUse(Object *who)
 {
-    DEBUG_ASSERT_RETURN_VOID(_falObj);
+    DEBUG_ASSERT_RETURN(_falObj, false); // no further processing
     Falcon::Item *result = _falObj->CallMethod("OnUse", 1, Falcon::Item(who->_falObj->self()));
     return result ? result->asBoolean() : false;
 }

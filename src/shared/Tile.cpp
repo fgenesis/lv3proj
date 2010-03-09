@@ -42,11 +42,28 @@ void AnimatedTile::SetupDefaults(uint32 idx /* = 0*/, const char *startwith /* =
     curFrame = &(curFrameStore->store[idx]);
 }
 
-void AnimatedTile::Init(uint32 t)
+void AnimatedTile::Init(uint32 curtime)
 {
-     nextupdate = t + curFrame->frametime;
+     nextupdate = curtime + curFrame->frametime;
      surface = curFrame->surface;
 }
 
-
-
+// TODO: smoothen animation, compensate lost frames
+void AnimatedTile::Update(uint32 curtime)
+{
+    if(nextupdate < curtime)
+    {
+        if(curFrame->nextframe)
+        {
+            curFrame = &(curFrameStore->store[curFrame->nextframe - 1]);
+            surface = curFrame->surface;
+        }
+        else if(curFrame->nextanim.length())
+        {
+            curFrameStore = &(ani->anims[curFrame->nextanim]); // <-- TODO: this call could be precalculated, maybe (eats CPU)
+            curFrame = &(curFrameStore->store[0]);
+            surface = curFrame->surface;
+        }
+        nextupdate = curtime + curFrame->frametime;
+    }
+}

@@ -1,11 +1,14 @@
 #include "common.h"
+#include "Engine.h"
 #include "Objects.h"
 #include "ObjectMgr.h"
 #include "LayerMgr.h"
+#include "Tile.h"
 
-ObjectMgr::ObjectMgr()
+ObjectMgr::ObjectMgr(Engine *e)
 : _curId(0)
 {
+    _engine = e;
 }
 
 ObjectMgr::~ObjectMgr()
@@ -22,6 +25,9 @@ void ObjectMgr::RemoveAll(bool del, cleanfunc f)
         if(del)
             delete it->second;
     }
+    for(uint32 i = 0; i < LAYER_MAX; ++i)
+        _renderLayers[i].clear();
+
     _store.clear();
     _curId = 0;
 }
@@ -30,6 +36,10 @@ uint32 ObjectMgr::Add(BaseObject *obj)
 {
     obj->_id = ++_curId;
     _store[_curId] = obj;
+    if(obj->GetType() >= OBJTYPE_OBJECT)
+    {
+        _renderLayers[((Object*)obj)->GetLayer()].insert((Object*)obj);
+    }
     return _curId;
 }
 
@@ -44,27 +54,46 @@ BaseObject *ObjectMgr::Get(uint32 id)
 
 void ObjectMgr::Remove(uint32 id)
 {
+    BaseObject *obj = Get(id);
     _store.erase(id);
+    if(obj->GetType() >= OBJTYPE_OBJECT)
+    {
+        _renderLayers[((Object*)obj)->GetLayer()].erase((Object*)obj);
+    }
 }
 
-void ObjectMgr::Update(void)
+void ObjectMgr::Update(uint32 ms)
 {
     for(ObjectMap::iterator it = _store.begin(); it != _store.end(); it++)
     {
         ActiveRect *base = (ActiveRect*)it->second;
 
-        // physics
-        if(base->GetType() >= OBJTYPE_OBJECT && ((Object*)base)->IsAffectedByPhysics())
+        if(base->GetType() >= OBJTYPE_OBJECT)
         {
-            _physMgr->UpdatePhysics((Object*)base); // the collision with walls is handled in here
+            Object *obj = (Object*)base;
+            // physics
+            if(obj->IsAffectedByPhysics())
+                _physMgr->UpdatePhysics(obj); // the collision with walls is handled in here. also sets HasMoved() to true if required.
+            // update layer sets if changed
+            if(obj->_NeedsLayerUpdate())
+            {
+                _renderLayers[obj->GetOldLayer()].erase(obj);
+                _renderLayers[obj->GetLayer()].insert(obj);
+                obj->_SetLayerUpdated();
+            }
+            // update gfx if required
+            if(obj->GetSprite() && obj->GetSprite()->type == TILETYPE_ANIMATED)
+                ((AnimatedTile*)(obj->GetSprite()))->Update(ms);
+
+            obj->OnUpdate(ms);
         }
         // collision detection (object vs object)
         // i guess this will be very slow for MANY objects in the game... have to see how this works out
         for(ObjectMap::iterator jt = _store.begin(); jt != _store.end(); jt++)
         {
             ActiveRect *other = (ActiveRect*)jt->second;
-            // never calculate collision with self
-            if(base == other)
+            // never calculate collision with self; and only calc if at least one of both objects has moved 
+            if(base == other || !(base->HasMoved() || other->HasMoved()))
                 continue;
 
             if(uint8 side = base->CollisionWith(other))
@@ -75,7 +104,7 @@ void ObjectMgr::Update(void)
                     // we should only move objects around, since rects are considered static unless manually moved
                     if(base->GetType() >= OBJTYPE_OBJECT)
                     {
-                        int32 xold = base->x, yold = base->y;
+                        int32 xold = base->x, yold = base->y; // TODO: need width and height too?
                         base->AlignToSideOf(other, side);
                         if(_layerMgr->CollisionWith(base))
                         {
@@ -95,9 +124,24 @@ void ObjectMgr::Update(void)
                 }
             }
         }
+        base->SetMoved(false); // collision detection and everything done. next movement may be done in next cycle.
     }
 }
 
-
-
+void ObjectMgr::RenderLayer(uint32 id)
+{
+    for(ObjectSet::iterator it = _renderLayers[id].begin(); it != _renderLayers[id].end(); it++)
+    {
+        Object *obj = *it;
+        if(obj->GetSprite())
+        {
+            SDL_Rect dst;
+            dst.x = obj->x;
+            dst.y = obj->y;
+            dst.w = obj->w;
+            dst.h = obj->h;
+            SDL_BlitSurface(obj->GetSprite()->surface, NULL, _engine->GetSurface(), &dst);
+        }
+    }
+}
 

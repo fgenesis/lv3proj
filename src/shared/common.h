@@ -36,14 +36,6 @@
 #define M_PI       3.14159265358979323846
 #endif
 
-#ifdef min
-#undef min
-#endif
-
-#ifdef max
-#undef max
-#endif
-
 struct memblock
 {
     memblock() : ptr(NULL), size(0) {}
@@ -51,6 +43,8 @@ struct memblock
     uint8 *ptr;
     uint32 size;
 };
+
+#include "UndefUselessCrap.h"
 
 
 #endif

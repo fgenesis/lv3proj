@@ -7,6 +7,8 @@
 
 
 class LayerMgr;
+class ObjectMgr;
+class PhysicsMgr;
 
 
 class Engine
@@ -18,7 +20,7 @@ public:
     virtual void InitScreen(uint32 sizex, uint32 sizey, uint8 bpp = 0, uint32 extraflags = 0);
     virtual bool Setup(void);
 
-    virtual void OnMouseEvent(uint32 button, uint32 x, uint32 y, int32 rx, int32 ry);
+    virtual void OnMouseEvent(uint32 type, uint32 button, uint32 x, uint32 y, int32 rx, int32 ry);
     virtual void OnKeyDown(SDLKey key, SDLMod mod);
     virtual void OnKeyUp(SDLKey key, SDLMod mod);
     virtual void OnWindowEvent(bool active);
@@ -39,6 +41,9 @@ public:
     virtual void Run(void);
 
     inline LayerMgr *_GetLayerMgr(void) const { return _layermgr; }
+
+    ObjectMgr *objmgr;
+    PhysicsMgr *physmgr;
 
 protected:
 

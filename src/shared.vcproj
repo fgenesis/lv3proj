@@ -114,8 +114,8 @@
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
 				StringPooling="true"
 				RuntimeLibrary="2"
-				BufferSecurityCheck="false"
-				EnableFunctionLevelLinking="true"
+				BufferSecurityCheck="true"
+				EnableFunctionLevelLinking="false"
 				EnableEnhancedInstructionSet="2"
 				UsePrecompiledHeader="0"
 				ProgramDataBaseFileName="$(IntDir)\shared.pdb"
@@ -328,6 +328,10 @@
 			</File>
 			<File
 				RelativePath=".\shared\tools.h"
+				>
+			</File>
+			<File
+				RelativePath=".\shared\UndefUselessCrap.h"
 				>
 			</File>
 			<Filter

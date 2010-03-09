@@ -7,6 +7,7 @@
 #include "AsciiLevelParser.h"
 #include "LayerMgr.h"
 #include "Objects.h"
+#include "ObjectMgr.h"
 #include "SharedDefines.h"
 
 
@@ -59,8 +60,14 @@ void LayerMgr::Clear(void)
 void LayerMgr::Render(void)
 {
     for(uint32 i = 0; i < LAYER_MAX; ++i)
+    {
+        // render map tiles
         if(_layers[i])
             _layers[i]->Render();
+
+        // render objects/sprites
+        engine->objmgr->RenderLayer(i);
+    }
 }
 
 void LayerMgr::Update(uint32 curtime)

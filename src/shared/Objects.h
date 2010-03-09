@@ -13,6 +13,7 @@ class Object;
 class ObjectMgr;
 class BaseObject;
 class FalconProxyObject;
+struct BasicTile;
 
 enum ObjectType
 {
@@ -46,12 +47,16 @@ class ActiveRect : public BaseObject
 public:
     virtual void Init(void);
 
+    virtual void SetBBox(int32 x, int32 y, uint32 w, uint32 h);
+    virtual void SetPos(int32 x, int32 y);
+
     // see SharedDefines.h for the sides enum
     virtual void OnEnter(uint8 side, ActiveRect *who);
     virtual void OnLeave(uint8 side, ActiveRect *who);
     virtual bool OnTouch(uint8 side, ActiveRect *who);
 
-    int x, y, w, h;
+    int32 x, y;
+    uint32 w, h;
 
     uint8 CollisionWith(ActiveRect *other); // returns side where the collision occurred
     void AlignToSideOf(ActiveRect *other, uint8 side);
@@ -60,6 +65,13 @@ public:
     inline int x2() const { return x+w; }
     // Method to calculate the second Y corner
     inline int y2() const { return y+h; }
+
+    inline bool HasMoved(void) { return _moved; }
+    inline void SetMoved(bool moved = true) { _moved = moved; }
+
+protected:
+
+    bool _moved; // do collision detection if one of the involved objects moved
 };
 
 
@@ -68,18 +80,31 @@ class Object : public ActiveRect
 {
 public:
     virtual void Init(void);
-    virtual void SetBBox(uint32 x, uint32 y, uint32 w, uint32 h);
 
     virtual void OnUpdate(uint32 ms);
 
     inline void SetAffectedByPhysics(bool b) { _physicsAffected = b; }
     inline bool IsAffectedByPhysics(void) { return _physicsAffected; }
+    inline bool _NeedsLayerUpdate(void) { return _layerId != _oldLayerId; }
+    inline void _SetLayerUpdated(void) { _oldLayerId = _layerId; }
+    inline void SetLayer(uint32 newLayer) { _layerId = newLayer; } // will be updated in next cycle, before rendering
+    inline uint32 GetLayer(void) { return _layerId; }
+    inline uint32 GetOldLayer(void) { return _oldLayerId; }
+    inline void SetSprite(BasicTile *tile)
+    {
+        // TODO: properly cleanup old gfx
+        _gfx = tile;
+    }
+    inline BasicTile *GetSprite(void) { return _gfx; }
 
     PhysProps phys;
 
 protected:
+    void _GenericInit(void);
     bool _physicsAffected;
-    bool _moved;
+    uint32 _layerId; // layer ID where this sprite is drawn on
+    uint32 _oldLayerId; // prev. layer id, if theres a difference between both, ObjectMgr::Update() has to correct the layer set assignment
+    BasicTile *_gfx;
 
 
 };
@@ -98,7 +123,13 @@ class Unit : public Object
 {
 public:
     virtual void Init(void);
-    virtual void SetBBox(uint32 x, uint32 y, uint32 w, uint32 h);
+    virtual void SetBBox(int32 x, int32 y, uint32 w, uint32 h);
+    virtual void SetPos(int32 x, int32 y);
+    inline void UpdateAnchor(void)
+    {
+        anchor.x = (x + w) >> 1; // (x + w) / 2
+        anchor.y = y + h;
+    }
 
 protected:
     Point anchor; // where this unit stands on the ground (center of object)

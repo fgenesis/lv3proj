@@ -37,7 +37,8 @@ public:
     void SetFrame(uint32 frame);
     const char *GetName(void) { return curFrameStore->name.c_str(); }
     uint32 GetFrame(void) { return curFrame->index; }
-    void Init(uint32 t); // current system clock
+    void Init(uint32 curtime); // current system clock
+    void Update(uint32 curtime);
 
 };
 
