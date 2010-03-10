@@ -1311,6 +1311,19 @@ bool VMachine::linkSubClass( LiveModule *lmod, const Symbol *clssym,
                 .origin( e_orig_vm )
                 .extra( clssym->name() ) );
 
+         // --- fg EDIT START ---
+         // --- update the inheritance lists if they contain still undefined symbols,
+         //     while we already know the resolved ones
+         if(parent->isClass())
+         {
+             // this could be done a lot better probably, didnt yet find out how...
+             InheritDef *newDef = new InheritDef((Symbol*)parent);
+             cd->inheritance().insertAfter(from_iter, newDef);
+             from_iter = cd->inheritance().erase(from_iter);
+             delete def;
+         }
+         // --- fg EDIT END ---
+
          LiveModule *parmod = findModule( parent->module()->name() );
          if ( ! linkSubClass( parmod, parent, props, states, &subFactory ) )
             return false;
