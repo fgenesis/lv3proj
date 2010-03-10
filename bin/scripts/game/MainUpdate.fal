@@ -2,7 +2,7 @@
 
 function GameUpdate(ms)
 
-// process events that were registeres with CallScheduler.Schedule
+// process events that were registered with CallScheduler.Schedule
 CallScheduler.CallDue()
 
 end

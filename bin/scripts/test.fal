@@ -8,7 +8,7 @@ olaf = Olaf()
 
 // open a menu. so far only controllable via console.
 // this is just here to check IF something works
-OpenMenu(MainMenu)
+//OpenMenu(MainMenu)
 
 // replace energy streams after 3 secs
 CallScheduler.Schedule( ReplaceEnergyStreams, 3000)

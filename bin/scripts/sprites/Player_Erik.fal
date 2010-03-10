@@ -1,4 +1,4 @@
-class Erik from Player
+class Erik from PlayerEx
 
     function OnUpdate(ms)
         > ms, " - Erik Updated!"

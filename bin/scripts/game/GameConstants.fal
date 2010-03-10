@@ -1,18 +1,18 @@
 
 // an enum didnt work here... hmm wtf
 //enum GameVirtualKeys
- KeyUP     = 0
- KeyDOWN   = 1
- KeyLEFT   = 2
- KeyRIGHT  = 3
- KeyA      = 4
- KeyB      = 5
- KeyX      = 6
- KeyY      = 7
- KeyL      = 8
- KeyR      = 9
- KeySTART  = 10
- KeySELECT = 11
+ KeyUP     = 1
+ KeyDOWN   = 2
+ KeyLEFT   = 3
+ KeyRIGHT  = 4
+ KeyA      = 5
+ KeyB      = 6
+ KeyX      = 7
+ KeyY      = 8
+ KeyL      = 9
+ KeyR      = 10
+ KeySTART  = 11
+ KeySELECT = 12
 //end
 
 

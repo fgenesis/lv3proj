@@ -8,6 +8,7 @@ script_dirs = .[
 ]
 
 
+
 // Load all scripts from 'path', resolving dependencies between scripts
 // If there are multiple scripts depending on each other, it will repeatedly try to load what it can until there are no more errors,
 // or it has loaded everything it could. 
@@ -36,6 +37,7 @@ function GetScriptsFromDir(path)
 end
 
 function LoadScriptsFromList(files)
+    global _cmpl
     done_count = 0
     collect_errors = false
     errors = [ => ]
@@ -46,7 +48,7 @@ function LoadScriptsFromList(files)
             sc = path + "/" + fn
             // > "Falcon:Init: Loading script '" + sc + "'"
             try
-                include(fn, "", path) // will raise an error if loading failed (be it unresolved symbols or something else)
+                include_ex(fn, "", path) // will raise an error if loading failed (be it unresolved symbols or something else)
                 > "** Falcon script '" + sc + "' loaded"
                 done_count++
                 continue dropping // when we reached this point loading the file was sucessful, remove it from the list

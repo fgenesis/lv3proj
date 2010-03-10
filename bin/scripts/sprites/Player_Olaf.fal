@@ -1,11 +1,12 @@
-class Olaf from Player
+//load Player_PlayerEx
+
+class Olaf from PlayerEx
 
     sprite = "sprites/olaf1.anim"
 
-    /*function OnUpdate(ms)
+    function OnUpdate(ms)
         > ms, " - Olaf Updated!"
-    end*/
-
+    end
 
 end
 

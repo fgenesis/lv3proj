@@ -1,0 +1,18 @@
+class PlayerEx from Player
+
+    dummy = nil
+    
+    init
+        if (self provides sprite) and self.sprite
+            //SetSprite(sprite) // TODO: implement this - support direct string-in
+        end
+    end
+    
+    function do_nothing()
+        > "nothing done."
+    end
+    
+end
+
+
+export PlayerEx
