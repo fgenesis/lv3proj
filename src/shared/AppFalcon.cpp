@@ -1,15 +1,8 @@
 #include "common.h"
 #include "AppFalcon.h"
 
-/*
-Falcon::Module *AppBaseModule_create(void)
-{
-    Falcon::Module *module = new Falcon::Module;
-    module->name( "AppBaseModule" );
-    module->addConstant("LOADED_FROM_SOURCE", Falcon::int64(have_source ? 1 : 0));
-    return module;
-}
-*/
+// defined in falcon/compiler_module/compiler.cpp
+Falcon::Module *falcon_compiler_module_init(void);
 
 
 AppFalcon::AppFalcon()
@@ -42,6 +35,7 @@ void AppFalcon::Init(void)
 void AppFalcon::_LoadModules(void)
 {
     vm->link( Falcon::core_module_init() );  // add the core module
+    vm->link( falcon_compiler_module_init() );
 }
 
 /*

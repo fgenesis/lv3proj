@@ -486,6 +486,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\falcon\src_parser.yy"
+				>
+			</File>
+			<File
 				RelativePath=".\falcon\stackframe.cpp"
 				>
 			</File>
