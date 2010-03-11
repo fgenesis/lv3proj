@@ -18,7 +18,8 @@ struct PhysProps
     float ymaxspeed;
     float xaccel; // current x-axis acceleration. negative means left, positive means right
     float yaccel; // current y-axis acceleration. negative means up, positive means down
-    float inertia; //
+    float xfriction; // friction gets subtracted from the abs current speed, until speed is 0
+    float yfriction;
 };
 
 // and the environment can have certain physical properties too

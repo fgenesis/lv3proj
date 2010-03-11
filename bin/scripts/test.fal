@@ -4,6 +4,7 @@
 
 // create olaf character for testing
 olaf = Olaf()
+inspect(olaf)
 // TODO: set position, etc
 
 // open a menu. so far only controllable via console.

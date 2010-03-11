@@ -1,8 +1,7 @@
 class Erik from PlayerEx
 
     function OnUpdate(ms)
-        > ms, " - Erik Updated!"
-        self.Player.OnUpdate(ms)
+        //> ms, " - Erik Updated!"
     end
 
 

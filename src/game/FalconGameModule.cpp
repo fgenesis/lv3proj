@@ -10,6 +10,7 @@
 #include "Objects.h"
 #include "ObjectMgr.h"
 #include "SoundCore.h"
+#include "PhysicsSystem.h"
 
 #include "FalconGameModule.h"
 
@@ -58,6 +59,93 @@ Falcon::Item *FalconProxyObject::CallMethod(char *m, uint32 args /* = 0 */, ...)
     }
     return NULL;
 }
+
+class fal_PhysProps : public Falcon::CoreObject
+{
+public:
+
+    fal_PhysProps( const Falcon::CoreClass* generator, PhysProps& prop, bool asRef)
+        : Falcon::CoreObject( generator ), _referenced(asRef)
+    {
+        if(asRef)
+            _phys = &prop; // just pass ptr
+        else
+        {
+            _phys = new PhysProps;
+            *_phys = prop; // clone
+        }
+    }
+
+    fal_PhysProps(const fal_PhysProps& other, bool asRef)
+        : Falcon::CoreObject(other), _referenced(asRef)
+    {
+        if(asRef)
+            _phys = other._phys; // just pass ptr
+        else
+        {
+            _phys = new PhysProps;
+            *_phys = *(other._phys); // clone
+        }
+    }
+
+    Falcon::CoreObject *clone(void) const
+    {
+        fal_PhysProps *p = new fal_PhysProps(*this, false);
+        return p;
+    }
+
+    bool finalize(void)
+    {
+        if(!_referenced)
+            delete _phys;
+        return false;
+    }
+
+    virtual bool setProperty( const Falcon::String &prop, const Falcon::Item &value )
+    {
+        if(prop == "weight")      { _phys->weight      = value.forceNumeric(); return true; }
+        if(prop == "xspeed")      { _phys->xspeed      = value.forceNumeric(); return true; }
+        if(prop == "yspeed")      { _phys->yspeed      = value.forceNumeric(); return true; }
+        if(prop == "xmaxspeed")   { _phys->xmaxspeed   = value.forceNumeric(); return true; }
+        if(prop == "ymaxspeed")   { _phys->ymaxspeed   = value.forceNumeric(); return true; }
+        if(prop == "xaccel")      { _phys->xaccel      = value.forceNumeric(); return true; }
+        if(prop == "yaccel")      { _phys->yaccel      = value.forceNumeric(); return true; }
+        if(prop == "xfriction")   { _phys->xfriction   = value.forceNumeric(); return true; }
+        if(prop == "yfriction")   { _phys->yfriction   = value.forceNumeric(); return true; }
+
+        if(prop == "isRef")
+            throw new Falcon::AccessError( Falcon::ErrorParam( Falcon::e_prop_ro ).
+                extra( prop ) );
+
+        return false;
+    }
+
+    virtual bool getProperty( const Falcon::String &prop, Falcon::Item &ret ) const
+    {
+        if(prop == "weight")      { ret.setNumeric(_phys->weight);      return true; }
+        if(prop == "xspeed")      { ret.setNumeric(_phys->xspeed);      return true; }
+        if(prop == "yspeed")      { ret.setNumeric(_phys->yspeed);      return true; }
+        if(prop == "xmaxspeed")   { ret.setNumeric(_phys->xmaxspeed);   return true; }
+        if(prop == "ymaxspeed")   { ret.setNumeric(_phys->ymaxspeed);   return true; }
+        if(prop == "xaccel")      { ret.setNumeric(_phys->xaccel);      return true; }
+        if(prop == "yaccel")      { ret.setNumeric(_phys->yaccel);      return true; }
+        if(prop == "xfriction")   { ret.setNumeric(_phys->xfriction);   return true; }
+        if(prop == "yfriction")   { ret.setNumeric(_phys->yfriction);   return true; }
+        if(prop == "isRef")       { ret.setBoolean(_referenced);        return true; }
+
+        return defaultProperty( prop, ret); // property not found
+    }
+
+    inline PhysProps *GetPhysProps(void) { return _phys; }
+
+
+    bool _referenced;
+
+private:
+    PhysProps *_phys;
+
+
+};
 
 void fal_ObjectCarrier::init(Falcon::VMachine *vm)
 {
@@ -125,6 +213,28 @@ Falcon::CoreObject* fal_ObjectCarrier::factory( const Falcon::CoreClass *cls, vo
 
 bool fal_ObjectCarrier::setProperty( const Falcon::String &prop, const Falcon::Item &value )
 {
+    if(!_obj)
+    {
+        throw new Falcon::AccessError( Falcon::ErrorParam( Falcon::e_invop_unb ).
+            extra( "Object was already deleted!" ) );   
+    }
+
+    if(prop == "phys")
+    {
+        if(!value.isOfClass("PhysProps"))
+        {
+            throw new Falcon::AccessError( Falcon::ErrorParam( Falcon::e_param_type ).
+                extra( "Object.phys can only be of type 'PhysProps'" ) );   
+        }
+
+        if(_obj->GetType() >= OBJTYPE_OBJECT)
+        {
+            ((Object*)_obj)->phys = *((fal_PhysProps*)value.asObject())->GetPhysProps(); // clone phys
+        }
+
+        return true; // if trying to assign phys to an ActiveRect, simply nothing will happen
+    }
+
     return false;
 }
 
@@ -144,6 +254,18 @@ bool fal_ObjectCarrier::getProperty( const Falcon::String &prop, Falcon::Item &r
     else if(prop == "type")
     {
         ret = Falcon::int32(_obj->GetType());
+        return true;
+    }
+    else if(prop == "phys")
+    {
+        if(_obj->GetType() < OBJTYPE_OBJECT)
+            ret.setNil();
+        else
+        {
+            Falcon::CoreClass *cls = _falObj->vm->findWKI("PhysProps")->asClass();
+            fal_PhysProps *p = new fal_PhysProps(cls, ((Object*)_obj)->phys, true); // as reference
+            ret.setObject(p);
+        }
         return true;
     }
     else
@@ -849,6 +971,7 @@ Falcon::Module *FalconGameModule_create(void)
     Falcon::InheritDef *inhObject = new Falcon::InheritDef(clsObject); // there are other classes that inherit from Object
     clsObject->setWKS(true);
     m->addClassMethod(clsObject, "OnUpdate", fal_NullFunc);
+    m->addClassProperty(clsObject, "phys");
 
     Falcon::Symbol *clsItem = m->addClass("Item", &fal_ObjectCarrier::init);
     clsItem->getClassDef()->addInheritance(inhRect);
@@ -864,6 +987,19 @@ Falcon::Module *FalconGameModule_create(void)
     Falcon::Symbol *clsPlayer = m->addClass("Player", &fal_ObjectCarrier::init);
     clsPlayer->getClassDef()->addInheritance(inhUnit);
     clsPlayer->setWKS(true);
+
+    Falcon::Symbol *clsPhysProps = m->addClass("PhysProps");
+    clsPhysProps->setWKS(true);
+    m->addClassProperty(clsPhysProps, "isRef");
+    m->addClassProperty(clsPhysProps, "weight");
+    m->addClassProperty(clsPhysProps, "xspeed");
+    m->addClassProperty(clsPhysProps, "yspeed");
+    m->addClassProperty(clsPhysProps, "xmaxspeed");
+    m->addClassProperty(clsPhysProps, "ymaxspeed");
+    m->addClassProperty(clsPhysProps, "xaccel");
+    m->addClassProperty(clsPhysProps, "yaccel");
+    m->addClassProperty(clsPhysProps, "xfriction");
+    m->addClassProperty(clsPhysProps, "yfriction");
 
 
     m->addConstant("EVENT_TYPE_KEYBOARD", Falcon::int64(EVENT_TYPE_KEYBOARD));

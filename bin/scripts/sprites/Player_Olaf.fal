@@ -5,7 +5,7 @@ class Olaf from PlayerEx
     sprite = "sprites/olaf1.anim"
 
     function OnUpdate(ms)
-        > ms, " - Olaf Updated!"
+        //> ms, " - Olaf Updated!"
     end
 
 end
