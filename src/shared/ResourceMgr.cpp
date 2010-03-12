@@ -105,8 +105,16 @@ SDL_Surface *ResourceMgr::LoadImg(char *name, bool count /* = false*/)
                 if(!rect.h)
                     rect.h = origin->h - rect.y;
 
-                SDL_Surface *section = SDL_CreateRGBSurface(origin->flags, rect.w, rect.h, origin->format->BitsPerPixel, 0,0,0,0);
+                SDL_Surface *section = SDL_CreateRGBSurface(origin->flags, rect.w, rect.h, origin->format->BitsPerPixel, 0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000);
+                
+                // properly blit alpha values, save original flags + alpha before blitting, and restore after
+                uint8 oalpha = origin->format->alpha;
+                uint8 oflags = origin->flags;
+                SDL_SetAlpha(origin, 0, 0); 
                 SDL_BlitSurface(origin, &rect, section, NULL);
+                origin->format->alpha = oalpha;
+                origin->flags = oflags;
+
                 img = section;
             }
         }
@@ -161,7 +169,6 @@ Anim *ResourceMgr::LoadAnim(char *name, bool count /* = false */)
                     loadpath = AddPathIfNecessary(af->filename,relpath);
                     af->surface = resMgr.LoadImg((char*)loadpath.c_str(), true); // get all images referenced
                 }
-
         }
         else
         {
@@ -277,7 +284,7 @@ void ResourceMgr::SetPropForFile(char *fn, char *prop, char *what)
 
 void ResourceMgr::LoadPropsInDir(char *dn)
 {
-    std::deque<std::string>& fl = GetFileList(dn);
+    std::deque<std::string> fl = GetFileList(dn);
     for(std::deque<std::string>::iterator it = fl.begin(); it != fl.end(); it++)
     {
         if(FileGetExtension(*it) == ".prop")
