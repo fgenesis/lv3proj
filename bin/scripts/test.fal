@@ -1,0 +1,92 @@
+
+// some test stuff to see what the falcon bindings can do
+> "-- ACTIVATING TEST --" // this line actually fixes a crash, dont ask me why... must be related to falcon, but was unable to catch anything *useful* in debugger
+
+// create olaf character for testing
+olaf = Olaf()
+olaf.SetPos(64,48)
+olaf.GetSprite().name = "walkR"
+olaf.GetSprite().frame = 1
+inspect(olaf)
+
+function PosLimitTest(who)
+    if(who.x > 380): who.x = 64
+    CallScheduler.Schedule( .[PosLimitTest who], 1000)
+end
+ 
+CallScheduler.Schedule( .[PosLimitTest olaf], 1000)
+ 
+// TODO: set position, etc
+
+// open a menu. so far only controllable via console.
+// this is just here to check IF something works
+//OpenMenu(MainMenu)
+
+// replace energy streams after 3 secs
+CallScheduler.Schedule( ReplaceEnergyStreams, 3000)
+
+// fill screen after 6 secs have passed
+CallScheduler.Schedule( FillScreenWithWater, 6000)
+
+// replace all blue energy lines with green ones
+function ReplaceEnergyStreams()
+    dim = Screen.GetLayer(6).GetArraySize()
+    enx = Tile("sprites/enx.anim")
+    en  = Tile("sprites/en.anim")
+    for ly in [Screen.GetLayer(6), Screen.GetLayer(7)]
+        for y = 0 to dim - 1
+            for x = 0 to dim - 1
+                t = ly.GetTile(x,y)
+                if(t)        
+                    if(t.filename == "sprites/en.anim")
+                        ly.SetTile(x,y,enx)
+                    elif(t.filename == "sprites/enx.anim")
+                        ly.SetTile(x,y,en)
+                    end
+                end
+            end
+        end
+    end
+end
+
+
+
+function FillScreenWithWater()
+    layer = Screen.GetLayer(8)
+    dim = layer.GetArraySize()
+    tile = Tile("water/waterfull.png")
+    if(layer and tile)
+        for y = 0 to dim - 1
+            for x = 0 to dim - 1
+                layer.SetTile(x,y,tile)
+            end
+            CallScheduler.Schedule( [DrainWaterRow, y], y * 1200)
+        end
+    end
+end
+
+// completely delete the transparent tiles after the water was drained, row-wise
+function DeleteWaterRow(y)
+    layer = Screen.GetLayer(8)
+    dim = layer.GetArraySize()
+    for x = 0 to dim - 1
+        layer.SetTile(x,y,nil)
+    end
+end
+
+function DrainWaterRow(y)
+    tile = Tile("water/water_test.anim")
+    if(tile.type == TILETYPE_ANIMATED) // just to be sure
+        tile.name = "sink" // toggle animation
+        tile.frame = 0 // and start it
+    end
+    layer = Screen.GetLayer(8)
+    dim = layer.GetArraySize()
+    // place the tile along the whole row
+    for x = 0 to dim - 1
+        layer.SetTile(x,y,tile)
+    end
+    // cleanup after the row was drained
+    CallScheduler.Schedule( [DeleteWaterRow, y], 1200)
+end
+
