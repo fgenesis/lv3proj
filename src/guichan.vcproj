@@ -117,6 +117,7 @@
 				BufferSecurityCheck="true"
 				EnableFunctionLevelLinking="false"
 				EnableEnhancedInstructionSet="2"
+				RuntimeTypeInfo="false"
 				UsePrecompiledHeader="0"
 				ObjectFile="$(IntDir)\"
 				ProgramDataBaseFileName="$(IntDir)\guichan.pdb"

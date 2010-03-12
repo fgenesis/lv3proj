@@ -133,7 +133,6 @@ bool AppFalcon::EmbedStringAsModule(char *str, char *modName)
         return false;
     }
 
-
     return true;
 }
 

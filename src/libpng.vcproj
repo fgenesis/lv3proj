@@ -116,6 +116,7 @@
 				BufferSecurityCheck="false"
 				EnableFunctionLevelLinking="true"
 				EnableEnhancedInstructionSet="2"
+				RuntimeTypeInfo="false"
 				UsePrecompiledHeader="0"
 				ProgramDataBaseFileName="$(IntDir)\libpng.pdb"
 				WarningLevel="3"

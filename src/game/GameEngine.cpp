@@ -43,14 +43,14 @@ bool GameEngine::Setup(void)
     falcon->Init();
 
     // load the initialization script
-    char *initscript = resMgr.LoadTextFile("scripts/init.fal", "rb");
+    char *initscript = resMgr.LoadTextFile("scripts/init.fal", "r");
     falcon->EmbedStringAsModule(initscript, "initscript");
 
     AsciiLevel *level = LoadAsciiLevel("levels/testlevel.txt");
     _layermgr->LoadAsciiLevel(level);
     delete level;
 
-    char *testscript = resMgr.LoadTextFile("scripts/test.fal", "rb");
+    char *testscript = resMgr.LoadTextFile("scripts/test.fal", "r");
     falcon->EmbedStringAsModule(testscript, "testscript");
     
     sndCore.PlayMusic("lv1_snes_ship.ogg");

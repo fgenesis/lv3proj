@@ -116,7 +116,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				Optimization="0"
+				Optimization="3"
 				InlineFunctionExpansion="2"
 				EnableIntrinsicFunctions="true"
 				FavorSizeOrSpeed="1"
@@ -128,6 +128,7 @@
 				BufferSecurityCheck="true"
 				EnableFunctionLevelLinking="false"
 				EnableEnhancedInstructionSet="2"
+				RuntimeTypeInfo="false"
 				UsePrecompiledHeader="0"
 				ProgramDataBaseFileName="$(IntDir)\game.pdb"
 				WarningLevel="3"

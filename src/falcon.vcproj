@@ -123,7 +123,7 @@
 				BufferSecurityCheck="true"
 				EnableFunctionLevelLinking="false"
 				EnableEnhancedInstructionSet="2"
-				RuntimeTypeInfo="true"
+				RuntimeTypeInfo="false"
 				UsePrecompiledHeader="0"
 				ProgramDataBaseFileName="$(IntDir)\falcon.pdb"
 				WarningLevel="3"
@@ -140,6 +140,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				LinkIncremental="1"
 				GenerateDebugInformation="true"
 			/>
 			<Tool
