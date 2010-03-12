@@ -2,10 +2,14 @@
 
 class Olaf from PlayerEx
 
-    sprite = "sprites/olaf1.anim"
+    gfx = "sprites/olaf1.anim"
 
     function OnUpdate(ms)
         //> ms, " - Olaf Updated!"
+        multi = ms * 0.001
+        mv = (64 * multi)
+        //> "move by:", mv
+        self.x += mv
     end
 
 end

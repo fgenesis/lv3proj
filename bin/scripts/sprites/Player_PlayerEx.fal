@@ -1,15 +1,12 @@
 class PlayerEx from Player
-
-    dummy = nil
+    
+    gfx = nil
     
     init
-        if (self provides sprite) and self.sprite
-            //SetSprite(sprite) // TODO: implement this - support direct string-in
+        self.SetBBox(0,0,32,32)
+        if self.gfx
+            self.SetSprite(self.gfx)
         end
-    end
-    
-    function do_nothing()
-        > "nothing done."
     end
     
 end

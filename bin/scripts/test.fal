@@ -4,7 +4,18 @@
 
 // create olaf character for testing
 olaf = Olaf()
+olaf.SetPos(64,48)
+olaf.GetSprite().name = "walkR"
+olaf.GetSprite().frame = 1
 inspect(olaf)
+
+function PosLimitTest(who)
+    if(who.x > 380): who.x = 64
+    CallScheduler.Schedule( .[PosLimitTest who], 1000)
+end
+ 
+CallScheduler.Schedule( .[PosLimitTest olaf], 1000)
+ 
 // TODO: set position, etc
 
 // open a menu. so far only controllable via console.

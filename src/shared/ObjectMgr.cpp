@@ -83,7 +83,7 @@ void ObjectMgr::Update(uint32 ms)
             }
             // update gfx if required
             if(obj->GetSprite() && obj->GetSprite()->type == TILETYPE_ANIMATED)
-                ((AnimatedTile*)(obj->GetSprite()))->Update(ms);
+                ((AnimatedTile*)(obj->GetSprite()))->Update(Engine::GetCurFrameTime());
 
             obj->OnUpdate(ms);
         }

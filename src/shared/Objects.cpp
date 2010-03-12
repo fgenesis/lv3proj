@@ -8,6 +8,7 @@
 BaseObject::BaseObject()
 {
     _falObj = NULL;
+    _layermgr = NULL;
     _id = 0;
 }
 

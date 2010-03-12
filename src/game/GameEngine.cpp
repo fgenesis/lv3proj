@@ -1,5 +1,5 @@
 #include "common.h"
-#include "Animparser.h"
+#include "AnimParser.h"
 #include "ResourceMgr.h"
 #include "LayerMgr.h"
 #include "SoundCore.h"

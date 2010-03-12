@@ -36,9 +36,13 @@ public:
     inline uint32 GetId(void) { return _id; }
     inline uint8 GetType(void) { return type; }
 
+    inline void SetLayerMgr(LayerMgr *mgr) { _layermgr = mgr; }
+
 protected:
     uint32 _id;
     uint8 type;
+
+    LayerMgr *_layermgr; // required for collision checks
 };
 
 // the base of everything

@@ -8,6 +8,7 @@ struct SDL_Surface;
 struct SDL_Rect;
 struct AnimatedTile;
 struct BasicTile;
+class LayerMgr;
 
 typedef std::set<AnimatedTile*> AnimTileSet;
 

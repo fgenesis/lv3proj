@@ -20,13 +20,17 @@ AnimatedTile::AnimatedTile(Anim *a, uint32 idx /* = 0*/, const char *startwith /
 void AnimatedTile::SetFrame(uint32 frame)
 {
     curFrame = &(curFrameStore->store[frame % curFrameStore->store.size()]);
+    nextupdate = 0; // TODO: THIS IS A DIRTY HACK!!! (forces immediate update, but skips a frame
 }
 
 void AnimatedTile::SetName(char *name)
 {
     AnimMap::iterator am = ani->anims.find(name);
     if(am != ani->anims.end())
+    {
         curFrameStore = &(am->second);
+        SetFrame(0);
+    }
 }
 
 void AnimatedTile::SetupDefaults(uint32 idx /* = 0*/, const char *startwith /* = NULL*/)

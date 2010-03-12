@@ -154,6 +154,7 @@ void fal_ObjectCarrier::init(Falcon::VMachine *vm)
     BaseObject *obj = self->GetObj();
     fobj->vm = vm;
     fobj->gclock = new Falcon::GarbageLock(Falcon::Item(self));
+    obj->SetLayerMgr(g_engine._GetLayerMgr());
     obj->Init(); // correctly set type of object
     obj->_falObj = fobj;
     g_engine.objmgr->Add(obj);
@@ -219,6 +220,16 @@ bool fal_ObjectCarrier::setProperty( const Falcon::String &prop, const Falcon::I
             extra( "Object was already deleted!" ) );   
     }
 
+    if(prop == "x") { ((ActiveRect*)_obj)->x = value.forceInteger(); if(_obj->GetType() >= OBJTYPE_UNIT) ((Unit*)_obj)->UpdateAnchor(); return true; }
+    if(prop == "y") { ((ActiveRect*)_obj)->y = value.forceInteger(); if(_obj->GetType() >= OBJTYPE_UNIT) ((Unit*)_obj)->UpdateAnchor(); return true; }
+    if(prop == "w") { ((ActiveRect*)_obj)->w = value.forceInteger(); if(_obj->GetType() >= OBJTYPE_UNIT) ((Unit*)_obj)->UpdateAnchor(); return true; }
+    if(prop == "h") { ((ActiveRect*)_obj)->h = value.forceInteger(); if(_obj->GetType() >= OBJTYPE_UNIT) ((Unit*)_obj)->UpdateAnchor(); return true; }
+    if(prop == "x2" || prop == "y2")
+    {
+        throw new Falcon::AccessError( Falcon::ErrorParam( Falcon::e_prop_ro ).
+            extra( prop ) );   
+    }
+
     if(prop == "phys")
     {
         if(!value.isOfClass("PhysProps"))
@@ -246,17 +257,15 @@ bool fal_ObjectCarrier::getProperty( const Falcon::String &prop, Falcon::Item &r
             extra( "Object was already deleted!" ) );   
     }
 
-    if(prop == "id")
-    {
-        ret = Falcon::int32(_obj->GetId());
-        return true;
-    }
-    else if(prop == "type")
-    {
-        ret = Falcon::int32(_obj->GetType());
-        return true;
-    }
-    else if(prop == "phys")
+    if(prop == "id") { ret = Falcon::int32(_obj->GetId()); return true; }
+    if(prop == "type") { ret = Falcon::int32(_obj->GetType()); return true; }
+    if(prop == "x") { ret = Falcon::int32(((ActiveRect*)_obj)->x); return true; }
+    if(prop == "y") { ret = Falcon::int32(((ActiveRect*)_obj)->y); return true; }
+    if(prop == "w") { ret = Falcon::int32(((ActiveRect*)_obj)->w); return true; }
+    if(prop == "h") { ret = Falcon::int32(((ActiveRect*)_obj)->h); return true; }
+    if(prop == "x2") { ret = Falcon::int32(((ActiveRect*)_obj)->x2()); return true; }
+    if(prop == "y2") { ret = Falcon::int32(((ActiveRect*)_obj)->y2()); return true; }
+    if(prop == "phys")
     {
         if(_obj->GetType() < OBJTYPE_OBJECT)
             ret.setNil();
@@ -268,10 +277,8 @@ bool fal_ObjectCarrier::getProperty( const Falcon::String &prop, Falcon::Item &r
         }
         return true;
     }
-    else
-    {
-        return defaultProperty( prop, ret); // property not found
-    }
+
+    return defaultProperty( prop, ret); // property not found
 }
 
 // unbind the BaseObject from Falcon
@@ -333,6 +340,32 @@ FALCON_FUNC fal_BaseObject_Remove(Falcon::VMachine *vm)
     delete obj;
 }
 
+FALCON_FUNC fal_ActiveRect_SetBBox(Falcon::VMachine *vm)
+{
+    FALCON_REQUIRE_PARAMS_EXTRA(4, "Int x, Int y, Uint width, Uint height");
+    int32 x = vm->param(0)->forceInteger();
+    int32 y = vm->param(1)->forceInteger();
+    uint32 w = vm->param(2)->forceInteger();
+    uint32 h = vm->param(3)->forceInteger();
+    fal_ObjectCarrier *self = Falcon::dyncast<fal_ObjectCarrier*>( vm->self().asObject() );
+    ActiveRect *obj = (ActiveRect*)self->GetObj();
+    obj->SetBBox(x,y,w,h);
+    if(obj->GetType() >= OBJTYPE_UNIT)
+        ((Unit*)obj)->UpdateAnchor();
+}
+
+FALCON_FUNC fal_ActiveRect_SetPos(Falcon::VMachine *vm)
+{
+    FALCON_REQUIRE_PARAMS_EXTRA(2, "Int x, Int y");
+    int32 x = vm->param(0)->forceInteger();
+    int32 y = vm->param(1)->forceInteger();
+    fal_ObjectCarrier *self = Falcon::dyncast<fal_ObjectCarrier*>( vm->self().asObject() );
+    ActiveRect *obj = (ActiveRect*)self->GetObj();
+    obj->SetPos(x,y);
+    if(obj->GetType() >= OBJTYPE_UNIT)
+        ((Unit*)obj)->UpdateAnchor();
+}
+
 class fal_TileLayer : public Falcon::CoreObject
 {
 public:
@@ -351,7 +384,7 @@ public:
         return defaultProperty( prop, ret); // property not found
     }
 
-    Falcon::CoreObject *fal_TileLayer::clone() const
+    Falcon::CoreObject *clone() const
     {
         return NULL; // not cloneable
     }
@@ -496,6 +529,64 @@ public:
 private:
     BasicTile *_tile;
 };
+
+FALCON_FUNC fal_Object_SetSprite(Falcon::VMachine *vm)
+{
+    FALCON_REQUIRE_PARAMS_EXTRA(1, "S filename / Tile / AnimatedTile");
+    Falcon::Item *param = vm->param(0);
+    fal_ObjectCarrier *self = Falcon::dyncast<fal_ObjectCarrier*>( vm->self().asObject() );
+    if(param->isString())
+    {
+        Falcon::AutoCString file(vm->param(0)->asString());
+        BasicTile *tile = NULL;
+
+        std::string ext(FileGetExtension(file.c_str()));
+
+        if(ext == ".anim")
+        {
+            if(Anim *ani = resMgr.LoadAnim((char*)file.c_str()))
+            {
+                tile = new AnimatedTile(ani);
+                tile->filename = file;   
+                ((AnimatedTile*)tile)->Init(Engine::GetCurFrameTime());
+            }
+        }
+        else
+        {
+            if(SDL_Surface *img = resMgr.LoadImg((char*)file.c_str()))
+            {
+                tile = new BasicTile;
+                tile->surface = img;
+                tile->filename = file;   
+            }
+        }
+        if(tile)
+        {
+            ((Object*)self->GetObj())->SetSprite(tile);
+            vm->retval(tile);
+        }
+        else
+            vm->retnil();
+    }
+    else if(param->isOfClass("Tile"))
+    {
+        fal_Tile *ftile = Falcon::dyncast<fal_Tile*>(param->asObject());
+        ((Object*)self->GetObj())->SetSprite(ftile->GetTile());
+        vm->retval(ftile);
+    }
+    else
+    {
+        throw new Falcon::AccessError( Falcon::ErrorParam( Falcon::e_param_type ).
+            extra( "Expected: S filename / Tile / AnimatedTile" ) );
+    }
+}
+
+FALCON_FUNC fal_Object_GetSprite(Falcon::VMachine *vm)
+{
+    fal_ObjectCarrier *self = Falcon::dyncast<fal_ObjectCarrier*>( vm->self().asObject() );
+    Falcon::CoreClass *cls = vm->findWKI("Tile")->asClass();
+    vm->retval(new fal_Tile(cls, ((Object*)self->GetObj())->GetSprite()));
+}
 
 
 FALCON_FUNC fal_Screen_GetLayer(Falcon::VMachine *vm)
@@ -965,12 +1056,22 @@ Falcon::Module *FalconGameModule_create(void)
     m->addClassMethod(clsRect, "OnEnter", fal_NullFunc);
     m->addClassMethod(clsRect, "OnLeave", fal_NullFunc);
     m->addClassMethod(clsRect, "OnTouch", fal_NullFunc);
+    m->addClassMethod(clsRect, "SetBBox", fal_ActiveRect_SetBBox);
+    m->addClassMethod(clsRect, "SetPos", fal_ActiveRect_SetPos);
+    m->addClassProperty(clsRect, "x");
+    m->addClassProperty(clsRect, "y");
+    m->addClassProperty(clsRect, "w");
+    m->addClassProperty(clsRect, "h");
+    m->addClassProperty(clsRect, "x2");
+    m->addClassProperty(clsRect, "y2");
 
     Falcon::Symbol *clsObject = m->addClass("Object", &fal_ObjectCarrier::init);
     clsObject->getClassDef()->addInheritance(inhRect);
     Falcon::InheritDef *inhObject = new Falcon::InheritDef(clsObject); // there are other classes that inherit from Object
     clsObject->setWKS(true);
     m->addClassMethod(clsObject, "OnUpdate", fal_NullFunc);
+    m->addClassMethod(clsObject, "SetSprite", fal_Object_SetSprite);
+    m->addClassMethod(clsObject, "GetSprite", fal_Object_GetSprite);
     m->addClassProperty(clsObject, "phys");
 
     Falcon::Symbol *clsItem = m->addClass("Item", &fal_ObjectCarrier::init);
