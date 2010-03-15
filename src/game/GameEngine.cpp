@@ -31,26 +31,34 @@ GameEngine::GameEngine()
 
 GameEngine::~GameEngine()
 {
-    objmgr->RemoveAll(true, &BaseObject::unbind);
     delete objmgr;
-    delete falcon;
     delete physmgr;
+}
+
+void GameEngine::Shutdown(void)
+{
+    objmgr->RemoveAll(true, &BaseObject::unbind); // unbind all objects BEFORE dropping falcon
+    delete falcon;
+    Falcon::Engine::PerformGC();
+    Falcon::Engine::Shutdown();
+    Engine::Shutdown();
 }
 
 bool GameEngine::Setup(void)
 {
     // initialize the falcon scripting engine & VM
+    Falcon::Engine::Init();
     falcon->Init();
 
     // load the initialization script
-    char *initscript = resMgr.LoadTextFile("scripts/init.fal", "r");
+    char *initscript = resMgr.LoadTextFile("scripts/init.fal");
     falcon->EmbedStringAsModule(initscript, "initscript");
 
     AsciiLevel *level = LoadAsciiLevel("levels/testlevel.txt");
     _layermgr->LoadAsciiLevel(level);
     delete level;
 
-    char *testscript = resMgr.LoadTextFile("scripts/test.fal", "r");
+    char *testscript = resMgr.LoadTextFile("scripts/test.fal");
     falcon->EmbedStringAsModule(testscript, "testscript");
     
     sndCore.PlayMusic("lv1_snes_ship.ogg");

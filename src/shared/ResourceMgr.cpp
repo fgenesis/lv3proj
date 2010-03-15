@@ -212,7 +212,7 @@ Mix_Music *ResourceMgr::LoadMusic(char *name, bool count /* = false */)
 }
 
 
-memblock *ResourceMgr::LoadFile(char *name, char *mode /* = "r" */, bool count /* = false */)
+memblock *ResourceMgr::LoadFile(char *name, bool count /* = false */)
 {
     std::string fn(name);
     memblock *mb = (memblock*)_GetPtr(fn);
@@ -220,10 +220,10 @@ memblock *ResourceMgr::LoadFile(char *name, char *mode /* = "r" */, bool count /
     if(!mb)
     {
         logdebug("LoadFile: '%s'", name);
-        FILE *fh = fopen(name, mode);
+        FILE *fh = fopen(name, "rb");
         if(!fh)
         {
-            logerror("LoadFile failed: '%s', mode '%s'", name, mode);
+            logerror("LoadFile failed: '%s'", name);
             return NULL;
         }
 
@@ -248,16 +248,50 @@ memblock *ResourceMgr::LoadFile(char *name, char *mode /* = "r" */, bool count /
     return mb;
 }
 
-char *ResourceMgr::LoadTextFile(char *name, char *mode /* =  */, bool count /* = false */)
+char *ResourceMgr::LoadTextFile(char *name, bool count /* = false */)
 {
-    memblock *mb = LoadFile(name,mode,count);
-    if(mb)
+    std::string fn(name);
+    memblock *mb = (memblock*)_GetPtr(fn);
+    bool loaded = false;
+    if(!mb)
     {
-        mb->ptr[mb->size] = 0;
-        return (char*)mb->ptr;
+        logdebug("LoadTextFile: '%s'", name);
+        FILE *fh = fopen(name, "r");
+        if(!fh)
+        {
+            logerror("LoadTextFile failed: '%s'", name);
+            return NULL;
+        }
+
+        fseek(fh, 0, SEEK_END);
+        uint32 size = ftell(fh);
+        rewind(fh);
+
+        if(!size)
+            return NULL;
+
+        mb = new memblock(new uint8[size], size);
+        uint8 *writeptr = mb->ptr;
+        uint32 realsize = 0;
+        while(!feof(fh))
+        {
+            int bytes = fread(writeptr, 1, 0x800, fh);
+            writeptr += bytes;
+            realsize += bytes;
+        }
+        memset(writeptr, 0, mb->size - realsize); // zero out remaining space
+        mb->size = realsize;
+
+        fclose(fh);
+        loaded = true;
+    }
+    if(count || loaded)
+    {
+        _SetPtr(fn, (void*)mb);
+        _IncRef((void*)mb, RESTYPE_GENERIC);
     }
 
-    return NULL;
+    return (char*)mb->ptr;
 }
 
 std::string ResourceMgr::GetPropForFile(char *fn, char *prop)

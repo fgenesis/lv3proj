@@ -20,6 +20,7 @@ int main(int argc, char **argv)
     g_engine.SetTitle("Lost Vikings 3 Project");
     g_engine.Setup();
     g_engine.Run();
+    g_engine.Shutdown();
 
     return 0;
 }

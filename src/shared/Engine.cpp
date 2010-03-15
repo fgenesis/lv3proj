@@ -30,6 +30,10 @@ Engine::~Engine()
         SDL_FreeSurface(_screen);
 }
 
+void Engine::Shutdown(void)
+{
+}
+
 void Engine::SetTitle(char *title)
 {
     _wintitle = title;

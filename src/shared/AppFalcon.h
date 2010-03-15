@@ -13,15 +13,11 @@ public:
     inline Falcon::VMachine *GetVM(void) { return vm; }
     bool EmbedStringAsModule(char *str, char *modName);
 
-    std::string ExecuteString(char *line);
-
 protected:
     virtual void _LoadModules(void);
 
-    Falcon::Engine::AutoInit __autoinit__;
     std::string _modulePath;
     Falcon::ModuleLoader mloader;
-    Falcon::Runtime *rt;
     Falcon::VMachine *vm;
 };
 
