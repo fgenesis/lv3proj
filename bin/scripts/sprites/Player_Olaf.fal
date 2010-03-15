@@ -6,10 +6,6 @@ class Olaf from PlayerEx
 
     function OnUpdate(ms)
         //> ms, " - Olaf Updated!"
-        multi = ms * 0.001
-        mv = (48 * multi)
-        //> "move by:", mv
-        self.x += mv
     end
 
 end

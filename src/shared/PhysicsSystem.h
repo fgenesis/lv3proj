@@ -25,14 +25,14 @@ struct PhysProps
 // and the environment can have certain physical properties too
 struct EnvPhysProps
 {
-    float airFriction;
+    //float airFriction; // not used (yet)
     float gravity;
 };
 
 class PhysicsMgr
 {
 public:
-    void UpdatePhysics(Object *obj);
+    void UpdatePhysics(Object *obj, uint32 ms);
 
     EnvPhysProps envPhys;
     

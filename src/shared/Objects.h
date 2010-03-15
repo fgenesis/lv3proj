@@ -91,6 +91,8 @@ public:
     virtual void Init(void);
 
     virtual void OnUpdate(uint32 ms);
+    virtual void SetBBox(float x, float y, uint32 w, uint32 h);
+    virtual void SetPos(float x, float y);
 
     inline void SetAffectedByPhysics(bool b) { _physicsAffected = b; }
     inline bool IsAffectedByPhysics(void) { return _physicsAffected; }
@@ -106,6 +108,16 @@ public:
     }
     inline BasicTile *GetSprite(void) { return _gfx; }
 
+    bool CanFallDown(void);
+
+
+
+    inline void UpdateAnchor(void)
+    {
+        anchor.x = (int32(x) + w) / 2;
+        anchor.y = int32(y) + h;
+    }
+
     PhysProps phys;
 
 protected:
@@ -114,7 +126,7 @@ protected:
     uint32 _layerId; // layer ID where this sprite is drawn on
     uint32 _oldLayerId; // prev. layer id, if theres a difference between both, ObjectMgr::Update() has to correct the layer set assignment
     BasicTile *_gfx;
-
+    Point anchor; // where this object stands on the ground (center of object) - used for CanFallDown()
 
 };
 
@@ -132,17 +144,6 @@ class Unit : public Object
 {
 public:
     virtual void Init(void);
-    virtual void SetBBox(float x, float y, uint32 w, uint32 h);
-    virtual void SetPos(float x, float y);
-    inline void UpdateAnchor(void)
-    {
-        anchor.x = (int32(x) + w) / 2; // (x + w) / 2
-        anchor.y = int32(y) + h;
-    }
-
-protected:
-    Point anchor; // where this unit stands on the ground (center of object)
-
 };
 
 // the Player class, specialized for playable characters like these vikings this is all about

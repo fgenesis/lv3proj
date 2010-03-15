@@ -56,4 +56,26 @@ template <class T> void StrSplit(const std::string &src, const std::string &sep,
         container.push_back(s);
 }
 
+inline float fastabs(float f)
+{
+    int i = ((*(int*)&f) & 0x7fffffff);
+    return (*(float*)&i);
+}
+
+inline float fastneg(float f)
+{
+    int i = ((*(int*)&f) ^ 0x80000000);
+    return (*(float*)&i);
+}
+
+inline int fastsgn(float f)
+{
+    return 1 + (((*(int*)&f) >> 31) << 1);
+}
+
+inline bool fastsgncheck(float f)
+{
+    return (*(int*)&f) & 0x80000000;
+}
+
 #endif

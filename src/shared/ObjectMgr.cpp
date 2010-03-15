@@ -64,6 +64,11 @@ void ObjectMgr::Remove(uint32 id)
 
 void ObjectMgr::Update(uint32 ms)
 {
+    // if no time passed, do nothing
+    // TODO: this is *maybe* wrong, check how it works out
+    if(!ms)
+        return;
+
     for(ObjectMap::iterator it = _store.begin(); it != _store.end(); it++)
     {
         ActiveRect *base = (ActiveRect*)it->second;
@@ -73,7 +78,7 @@ void ObjectMgr::Update(uint32 ms)
             Object *obj = (Object*)base;
             // physics
             if(obj->IsAffectedByPhysics())
-                _physMgr->UpdatePhysics(obj); // the collision with walls is handled in here. also sets HasMoved() to true if required.
+                _physMgr->UpdatePhysics(obj, ms); // the collision with walls is handled in here. also sets HasMoved() to true if required.
             // update layer sets if changed
             if(obj->_NeedsLayerUpdate())
             {

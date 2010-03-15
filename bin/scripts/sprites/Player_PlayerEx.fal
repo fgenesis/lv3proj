@@ -7,6 +7,19 @@ class PlayerEx from Player
         if self.gfx
             self.SetSprite(self.gfx)
         end
+        
+        // init physics
+        p = self.phys // note that p is a reference automatically, and all fields initialized with 0
+        p.weight = 70 // to have some default value
+        p.xspeed = 0
+        p.yspeed = 0
+        p.xmaxspeed = 64
+        p.ymaxspeed = 96
+        p.xaccel = 0
+        p.yaccel = 0
+        p.xfriction = 0
+        p.yfriction = 0
+        self.SetAffectedByPhysics(true)
     end
     
 end

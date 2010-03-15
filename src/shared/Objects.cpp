@@ -23,12 +23,14 @@ void ActiveRect::SetBBox(float x_, float y_, uint32 w_, uint32 h_)
     this->y = y_;
     this->w = w_;
     this->h = h_;
+    HasMoved();
 }
 
 void ActiveRect::SetPos(float x_, float y_)
 {
     this->x = x_;
     this->y = y_;
+    HasMoved();
 }
 
 // returns the side on which we hit 'other'
@@ -133,6 +135,24 @@ void Object::_GenericInit(void)
     _moved = true; // do collision detection on spawn
 }
 
+void Object::SetBBox(float x_, float y_, uint32 w_, uint32 h_)
+{
+    ActiveRect::SetBBox(x_,y_,w_,h_);
+    UpdateAnchor();
+}
+
+void Object::SetPos(float x_, float y_)
+{
+    ActiveRect::SetPos(x_, y_);
+    UpdateAnchor();
+}
+
+// TODO: this needs correction!! maybe make this a falcon call, OR add another uint32 _standAreaSize...?
+bool Object::CanFallDown(void)
+{
+    return _layermgr->CanFallDown(anchor, w);
+}
+
 void Item::Init(void)
 {
     type = OBJTYPE_ITEM;
@@ -144,19 +164,6 @@ void Unit::Init(void)
     type = OBJTYPE_UNIT;
     _GenericInit();
 }
-
-void Unit::SetBBox(float x_, float y_, uint32 w_, uint32 h_)
-{
-    Object::SetBBox(x_,y_,w_,h_);
-    UpdateAnchor();
-}
-
-void Unit::SetPos(float x_, float y_)
-{
-    Object::SetPos(x_, y_);
-    UpdateAnchor();
-}
-
 
 void Player::Init(void)
 {

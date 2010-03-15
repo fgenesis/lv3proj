@@ -220,10 +220,19 @@ bool fal_ObjectCarrier::setProperty( const Falcon::String &prop, const Falcon::I
             extra( "Object was already deleted!" ) );   
     }
 
-    if(prop == "x") { ((ActiveRect*)_obj)->x = float(value.forceNumeric()); if(_obj->GetType() >= OBJTYPE_UNIT) ((Unit*)_obj)->UpdateAnchor(); return true; }
-    if(prop == "y") { ((ActiveRect*)_obj)->y = float(value.forceNumeric()); if(_obj->GetType() >= OBJTYPE_UNIT) ((Unit*)_obj)->UpdateAnchor(); return true; }
-    if(prop == "w") { ((ActiveRect*)_obj)->w = value.forceInteger(); if(_obj->GetType() >= OBJTYPE_UNIT) ((Unit*)_obj)->UpdateAnchor(); return true; }
-    if(prop == "h") { ((ActiveRect*)_obj)->h = value.forceInteger(); if(_obj->GetType() >= OBJTYPE_UNIT) ((Unit*)_obj)->UpdateAnchor(); return true; }
+    bool rectChanged = false;
+
+    if(prop == "x") { ((ActiveRect*)_obj)->x = float(value.forceNumeric()); rectChanged = true; }
+    if(prop == "y") { ((ActiveRect*)_obj)->y = float(value.forceNumeric()); rectChanged = true; }
+    if(prop == "w") { ((ActiveRect*)_obj)->w = value.forceInteger(); rectChanged = true; }
+    if(prop == "h") { ((ActiveRect*)_obj)->h = value.forceInteger(); rectChanged = true; }
+    if(rectChanged)
+    {
+        if(_obj->GetType() >= OBJTYPE_OBJECT)
+            ((Object*)_obj)->UpdateAnchor();
+        ((ActiveRect*)_obj)->HasMoved();
+        return true;
+    }
 
     // faster check for x2, y2, x2f, y2f
     if(prop.length() > 1 && prop.getCharAt(1) == '2' && (prop.getCharAt(0) == 'x' || prop.getCharAt('y')))
@@ -354,8 +363,9 @@ FALCON_FUNC fal_ActiveRect_SetBBox(Falcon::VMachine *vm)
     fal_ObjectCarrier *self = Falcon::dyncast<fal_ObjectCarrier*>( vm->self().asObject() );
     ActiveRect *obj = (ActiveRect*)self->GetObj();
     obj->SetBBox(x,y,w,h);
-    if(obj->GetType() >= OBJTYPE_UNIT)
-        ((Unit*)obj)->UpdateAnchor();
+    if(obj->GetType() >= OBJTYPE_OBJECT)
+        ((Object*)obj)->UpdateAnchor();
+    obj->HasMoved();
 }
 
 FALCON_FUNC fal_ActiveRect_SetPos(Falcon::VMachine *vm)
@@ -366,8 +376,31 @@ FALCON_FUNC fal_ActiveRect_SetPos(Falcon::VMachine *vm)
     fal_ObjectCarrier *self = Falcon::dyncast<fal_ObjectCarrier*>( vm->self().asObject() );
     ActiveRect *obj = (ActiveRect*)self->GetObj();
     obj->SetPos(x,y);
-    if(obj->GetType() >= OBJTYPE_UNIT)
-        ((Unit*)obj)->UpdateAnchor();
+    if(obj->GetType() >= OBJTYPE_OBJECT)
+        ((Object*)obj)->UpdateAnchor();
+    obj->HasMoved();
+}
+
+FALCON_FUNC fal_Object_SetAffectedByPhysics(Falcon::VMachine *vm)
+{
+    FALCON_REQUIRE_PARAMS(1);
+    fal_ObjectCarrier *self = Falcon::dyncast<fal_ObjectCarrier*>( vm->self().asObject() );
+    if(self->GetObj()->GetType() >= OBJTYPE_OBJECT)
+    {
+        Object *obj = (Object*)self->GetObj();
+        obj->SetAffectedByPhysics(vm->param(0)->asBoolean());
+    }
+}
+
+FALCON_FUNC fal_Object_IsAffectedByPhysics(Falcon::VMachine *vm)
+{
+    fal_ObjectCarrier *self = Falcon::dyncast<fal_ObjectCarrier*>( vm->self().asObject() );
+    if(self->GetObj()->GetType() >= OBJTYPE_OBJECT)
+    {
+        Object *obj = (Object*)self->GetObj();
+        vm->retval(obj->IsAffectedByPhysics());
+    }
+    vm->retval(false);
 }
 
 class fal_TileLayer : public Falcon::CoreObject
@@ -895,6 +928,16 @@ FALCON_FUNC fal_Game_LoadPropsInDir(Falcon::VMachine *vm)
     resMgr.LoadPropsInDir((char*)cstr.c_str());
 }
 
+FALCON_FUNC fal_Physics_SetGravity(Falcon::VMachine *vm)
+{
+    FALCON_REQUIRE_PARAMS(1);
+    g_engine.physmgr->envPhys.gravity = float(vm->param(0)->forceNumeric());
+}
+
+FALCON_FUNC fal_Physics_GetGravity(Falcon::VMachine *vm)
+{
+    vm->retval(g_engine.physmgr->envPhys.gravity);
+}
 
 
 void forbidden_init(Falcon::VMachine *vm)
@@ -1021,6 +1064,12 @@ Falcon::Module *FalconGameModule_create(void)
     m->addClassMethod(clsGame, "LoadPropsInDir", fal_Game_LoadPropsInDir);
     m->addConstant("MAX_VOLUME", Falcon::int64(MIX_MAX_VOLUME));
 
+    Falcon::Symbol *symPhysics = m->addSingleton("Physics");
+    Falcon::Symbol *clsPhysics = symPhysics->getInstance();
+    m->addClassMethod(clsPhysics, "SetGravity", fal_Physics_SetGravity);
+    m->addClassMethod(clsPhysics, "GetGravity", fal_Physics_GetGravity);
+
+
     Falcon::Symbol *clsTileLayer = m->addClass("TileLayer", &forbidden_init);
     clsTileLayer->setWKS(true);
     m->addClassMethod(clsTileLayer, "IsVisible", &fal_TileLayer_IsVisible);
@@ -1078,6 +1127,8 @@ Falcon::Module *FalconGameModule_create(void)
     m->addClassMethod(clsObject, "OnUpdate", fal_NullFunc);
     m->addClassMethod(clsObject, "SetSprite", fal_Object_SetSprite);
     m->addClassMethod(clsObject, "GetSprite", fal_Object_GetSprite);
+    m->addClassMethod(clsObject, "SetAffectedByPhysics", &fal_Object_SetAffectedByPhysics);
+    m->addClassMethod(clsObject, "IsAffectedByPhysics", &fal_Object_IsAffectedByPhysics);
     m->addClassProperty(clsObject, "phys");
 
     Falcon::Symbol *clsItem = m->addClass("Item", &fal_ObjectCarrier::init);
