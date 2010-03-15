@@ -8,26 +8,34 @@ Falcon::Module *falcon_compiler_module_init(void);
 AppFalcon::AppFalcon()
 : vm(NULL)
 {
+    mloader.compileTemplate(false);
+    mloader.compileInMemory(true);
+    mloader.alwaysRecomp(true);
+    mloader.saveModules(false);    
 }
 
 AppFalcon::~AppFalcon()
 {
-    if(vm)
-        vm->finalize();
+    DeleteVM();
 }
 
-void AppFalcon::Init(void)
+bool AppFalcon::Init(char *initscript /* = NULL */)
 {
+    DeleteVM();
     vm = new Falcon::VMachine();
-    mloader.compileTemplate(false);
-    mloader.compileInMemory(true);
-    mloader.alwaysRecomp(true);
-    mloader.saveModules(false);
     vm->launchAtLink(false);
     _LoadModules();
+    return initscript ? EmbedStringAsModule(initscript, "initscript") : true;
 }
 
-
+void AppFalcon::DeleteVM(void)
+{
+    if(vm)
+    {
+        vm->finalize();
+        vm = NULL;
+    }
+}
 
 void AppFalcon::_LoadModules(void)
 {

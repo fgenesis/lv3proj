@@ -48,11 +48,10 @@ bool GameEngine::Setup(void)
 {
     // initialize the falcon scripting engine & VM
     Falcon::Engine::Init();
-    falcon->Init();
 
     // load the initialization script
     char *initscript = resMgr.LoadTextFile("scripts/init.fal");
-    falcon->EmbedStringAsModule(initscript, "initscript");
+    falcon->Init(initscript);
 
     AsciiLevel *level = LoadAsciiLevel("levels/testlevel.txt");
     _layermgr->LoadAsciiLevel(level);

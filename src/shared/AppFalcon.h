@@ -8,7 +8,8 @@ class AppFalcon
 public:
     AppFalcon();
     ~AppFalcon();
-    void Init(void);
+    bool Init(char *initscript = NULL);
+    void DeleteVM(void);
     void SetModulePath(char *dir) { _modulePath = dir; }
     inline Falcon::VMachine *GetVM(void) { return vm; }
     bool EmbedStringAsModule(char *str, char *modName);
