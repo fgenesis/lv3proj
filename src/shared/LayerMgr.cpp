@@ -163,25 +163,27 @@ void LayerMgr::UpdateCollisionMap(uint32 x, uint32 y) // this x and y are tile p
 bool LayerMgr::CollisionWith(ActiveRect *rect, int32 skip /* = 4 */)
 {
     int32 x, y;
-    for(y = rect->y; y < rect->y2(); y += skip)
-        for(x = rect->x; x < rect->x2(); x += skip)
+    int32 x2 = rect->x2();
+    int32 y2 = rect->y2();
+    for(y = int32(rect->y); y < y2; y += skip)
+        for(x = int32(rect->x); x < x2; x += skip)
             if(_collisionMap->at(x,y))
                 return true;
 
     // always check bottom edge of the rect, if missed due to skipping
-    if(rect->y2() % skip)
-        for(x = rect->x; x < rect->x2(); x += skip)
-            if(_collisionMap->at(x, rect->y2() - 1))
+    if(y2 % skip)
+        for(x = int32(rect->x); x < x2; x += skip)
+            if(_collisionMap->at(x, y2 - 1))
                 return true;
 
     // always check right edge of the rect, if missed due to skipping
-    if(rect->x2() % skip)
-        for(y = rect->y; y < rect->y2(); y += skip)
-            if(_collisionMap->at(rect->x2() - 1, y))
+    if(x2 % skip)
+        for(y = int32(rect->y); y < y2; y += skip)
+            if(_collisionMap->at(x2 - 1, y))
                 return true;
 
     // always check bottom right pixel of the rect (if missed due to skipping, but we skip the check for that)
-    if(_collisionMap->at(rect->x2() - 1, rect->y2() - 1))
+    if(_collisionMap->at(x2 - 1, y2 - 1))
         return true;
 
     return false;
@@ -200,12 +202,12 @@ bool LayerMgr::CollisionWith(ActiveRect *rect, int32 skip /* = 4 */)
 Point LayerMgr::GetClosestNonCollidingPoint(ActiveRect *rect, uint8 direction, int32 skip /* = 1 */)
 {
     // could be done with a few ifs but this is just much more compact...
-    int32 xstart = (direction & DIRECTION_LEFT) ? rect->x2() : rect->x;
-    int32 ystart = (direction & DIRECTION_UP)   ? rect->y2() : rect->y;
-    int32 xend   = (direction & DIRECTION_LEFT) ? rect->x    : rect->x2();
-    int32 yend   = (direction & DIRECTION_UP)   ? rect->y    : rect->y2();
-    int32 xstep  = (direction & DIRECTION_LEFT) ? -skip      : skip;
-    int32 ystep  = (direction & DIRECTION_UP)   ? -skip      : skip;
+    int32 xstart = (direction & DIRECTION_LEFT) ? rect->x2()        : int32(rect->x);
+    int32 ystart = (direction & DIRECTION_UP)   ? rect->y2()        : int32(rect->y);
+    int32 xend   = (direction & DIRECTION_LEFT) ? int32(rect->x)    : rect->x2();
+    int32 yend   = (direction & DIRECTION_UP)   ? int32(rect->y)    : rect->y2();
+    int32 xstep  = (direction & DIRECTION_LEFT) ? -skip             : skip;
+    int32 ystep  = (direction & DIRECTION_UP)   ? -skip             : skip;
     int32 x = xstart, y = ystart;
     bool c;
 

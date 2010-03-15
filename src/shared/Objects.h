@@ -51,24 +51,29 @@ class ActiveRect : public BaseObject
 public:
     virtual void Init(void);
 
-    virtual void SetBBox(int32 x, int32 y, uint32 w, uint32 h);
-    virtual void SetPos(int32 x, int32 y);
+    virtual void SetBBox(float x, float y, uint32 w, uint32 h);
+    virtual void SetPos(float x, float y);
 
     // see SharedDefines.h for the sides enum
     virtual void OnEnter(uint8 side, ActiveRect *who);
     virtual void OnLeave(uint8 side, ActiveRect *who);
     virtual bool OnTouch(uint8 side, ActiveRect *who);
 
-    int32 x, y;
+    float x, y; // we have to use floats for correct movement, so that rounding does not make fuss with movements < 1 pixel per step.
     uint32 w, h;
 
     uint8 CollisionWith(ActiveRect *other); // returns side where the collision occurred
     void AlignToSideOf(ActiveRect *other, uint8 side);
 
     // Method to calculate the second X corner
-    inline int x2() const { return x+w; }
+    inline int x2(void) const { return int32(x) + w; }
     // Method to calculate the second Y corner
-    inline int y2() const { return y+h; }
+    inline int y2(void) const { return int32(y) + h; }
+
+    // Method to calculate the second X corner (float)
+    inline float x2f(void) const { return x + float(w); }
+    // Method to calculate the second Y corner (float)
+    inline float y2f(void) const { return y + float(h); }
 
     inline bool HasMoved(void) { return _moved; }
     inline void SetMoved(bool moved = true) { _moved = moved; }
@@ -127,12 +132,12 @@ class Unit : public Object
 {
 public:
     virtual void Init(void);
-    virtual void SetBBox(int32 x, int32 y, uint32 w, uint32 h);
-    virtual void SetPos(int32 x, int32 y);
+    virtual void SetBBox(float x, float y, uint32 w, uint32 h);
+    virtual void SetPos(float x, float y);
     inline void UpdateAnchor(void)
     {
-        anchor.x = (x + w) >> 1; // (x + w) / 2
-        anchor.y = y + h;
+        anchor.x = (int32(x) + w) / 2; // (x + w) / 2
+        anchor.y = int32(y) + h;
     }
 
 protected:

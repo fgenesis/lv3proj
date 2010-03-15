@@ -220,11 +220,13 @@ bool fal_ObjectCarrier::setProperty( const Falcon::String &prop, const Falcon::I
             extra( "Object was already deleted!" ) );   
     }
 
-    if(prop == "x") { ((ActiveRect*)_obj)->x = value.forceInteger(); if(_obj->GetType() >= OBJTYPE_UNIT) ((Unit*)_obj)->UpdateAnchor(); return true; }
-    if(prop == "y") { ((ActiveRect*)_obj)->y = value.forceInteger(); if(_obj->GetType() >= OBJTYPE_UNIT) ((Unit*)_obj)->UpdateAnchor(); return true; }
+    if(prop == "x") { ((ActiveRect*)_obj)->x = float(value.forceNumeric()); if(_obj->GetType() >= OBJTYPE_UNIT) ((Unit*)_obj)->UpdateAnchor(); return true; }
+    if(prop == "y") { ((ActiveRect*)_obj)->y = float(value.forceNumeric()); if(_obj->GetType() >= OBJTYPE_UNIT) ((Unit*)_obj)->UpdateAnchor(); return true; }
     if(prop == "w") { ((ActiveRect*)_obj)->w = value.forceInteger(); if(_obj->GetType() >= OBJTYPE_UNIT) ((Unit*)_obj)->UpdateAnchor(); return true; }
     if(prop == "h") { ((ActiveRect*)_obj)->h = value.forceInteger(); if(_obj->GetType() >= OBJTYPE_UNIT) ((Unit*)_obj)->UpdateAnchor(); return true; }
-    if(prop == "x2" || prop == "y2")
+
+    // faster check for x2, y2, x2f, y2f
+    if(prop.length() > 1 && prop.getCharAt(1) == '2' && (prop.getCharAt(0) == 'x' || prop.getCharAt('y')))
     {
         throw new Falcon::AccessError( Falcon::ErrorParam( Falcon::e_prop_ro ).
             extra( prop ) );   
@@ -259,12 +261,14 @@ bool fal_ObjectCarrier::getProperty( const Falcon::String &prop, Falcon::Item &r
 
     if(prop == "id") { ret = Falcon::int32(_obj->GetId()); return true; }
     if(prop == "type") { ret = Falcon::int32(_obj->GetType()); return true; }
-    if(prop == "x") { ret = Falcon::int32(((ActiveRect*)_obj)->x); return true; }
-    if(prop == "y") { ret = Falcon::int32(((ActiveRect*)_obj)->y); return true; }
+    if(prop == "x") { ret = Falcon::numeric(((ActiveRect*)_obj)->x); return true; }
+    if(prop == "y") { ret = Falcon::numeric(((ActiveRect*)_obj)->y); return true; }
     if(prop == "w") { ret = Falcon::int32(((ActiveRect*)_obj)->w); return true; }
     if(prop == "h") { ret = Falcon::int32(((ActiveRect*)_obj)->h); return true; }
     if(prop == "x2") { ret = Falcon::int32(((ActiveRect*)_obj)->x2()); return true; }
     if(prop == "y2") { ret = Falcon::int32(((ActiveRect*)_obj)->y2()); return true; }
+    if(prop == "x2f") { ret = Falcon::numeric(((ActiveRect*)_obj)->x2f()); return true; }
+    if(prop == "y2f") { ret = Falcon::numeric(((ActiveRect*)_obj)->y2f()); return true; }
     if(prop == "phys")
     {
         if(_obj->GetType() < OBJTYPE_OBJECT)
@@ -1064,6 +1068,8 @@ Falcon::Module *FalconGameModule_create(void)
     m->addClassProperty(clsRect, "h");
     m->addClassProperty(clsRect, "x2");
     m->addClassProperty(clsRect, "y2");
+    m->addClassProperty(clsRect, "x2f");
+    m->addClassProperty(clsRect, "y2f");
 
     Falcon::Symbol *clsObject = m->addClass("Object", &fal_ObjectCarrier::init);
     clsObject->getClassDef()->addInheritance(inhRect);

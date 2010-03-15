@@ -136,8 +136,8 @@ void ObjectMgr::RenderLayer(uint32 id)
         if(obj->GetSprite())
         {
             SDL_Rect dst;
-            dst.x = obj->x;
-            dst.y = obj->y;
+            dst.x = int(obj->x);
+            dst.y = int(obj->y);
             dst.w = obj->w;
             dst.h = obj->h;
             SDL_BlitSurface(obj->GetSprite()->surface, NULL, _engine->GetSurface(), &dst);

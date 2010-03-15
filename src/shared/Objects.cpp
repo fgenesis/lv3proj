@@ -17,7 +17,7 @@ void ActiveRect::Init(void)
     type = OBJTYPE_RECT;
 }
 
-void ActiveRect::SetBBox(int32 x_, int32 y_, uint32 w_, uint32 h_)
+void ActiveRect::SetBBox(float x_, float y_, uint32 w_, uint32 h_)
 {
     this->x = x_;
     this->y = y_;
@@ -25,7 +25,7 @@ void ActiveRect::SetBBox(int32 x_, int32 y_, uint32 w_, uint32 h_)
     this->h = h_;
 }
 
-void ActiveRect::SetPos(int32 x_, int32 y_)
+void ActiveRect::SetPos(float x_, float y_)
 {
     this->x = x_;
     this->y = y_;
@@ -36,25 +36,29 @@ void ActiveRect::SetPos(int32 x_, int32 y_)
 // TODO: optimize this function! it should be possible to do this a lot simpler...
 uint8 ActiveRect::CollisionWith(ActiveRect *other)
 {
+    int32 ix = int32(x);
+    int32 iy = int32(y);
+    int32 oix = int32(other->x);
+    int32 oiy = int32(other->y);
 
     // self lower right corner
-    int32 ax1 = x + w - 1;
-    int32 ay1 = y + h - 1;
+    int32 ax1 = ix + w - 1;
+    int32 ay1 = iy + h - 1;
 
     // other lower right corner
-    int32 bx1 = other->x + other->w - 1;
-    int32 by1 = other->y + other->h - 1;
+    int32 bx1 = oix + other->w - 1;
+    int32 by1 = oiy + other->h - 1;
 
     //check if bounding boxes intersect
-    if((bx1 < x) || (ax1 < other->x))
+    if((bx1 < ix) || (ax1 < oix))
         return SIDE_NONE;
-    if((by1 < y) || (ay1 < other->y))
+    if((by1 < iy) || (ay1 < oiy))
         return SIDE_NONE;
 
-    int32 xstart = std::max(x,other->x);
+    int32 xstart = std::max(ix,oix);
     int32 xend = std::min(ax1,bx1);
 
-    int32 ystart = std::max(y,other->y);
+    int32 ystart = std::max(iy,oiy);
     int32 yend = std::min(ay1,by1);
 
     int32 width = xend - xstart;
@@ -64,13 +68,13 @@ uint8 ActiveRect::CollisionWith(ActiveRect *other)
     //       just noting this here in case this has to be corrected someday, but for now it seems that its not necessary
 
     // check if 'this' is completely contained in 'other'
-    if(x >= other->x && ax1 <= bx1 && y >= other->y && ay1 <= by1)
+    if(ix >= oix && ax1 <= bx1 && iy >= oiy && ay1 <= by1)
     {
         // calculate both centers and guess which side we came from
-        int32 xc = x + (width / 2);
-        int32 yc = y + (height / 2);
-        int32 other_xc = other->x + (other->w / 2);
-        int32 other_yc = other->y + (other->h / 2);
+        int32 xc = ix + (width / 2);
+        int32 yc = iy + (height / 2);
+        int32 other_xc = oix + (other->w / 2);
+        int32 other_yc = oiy + (other->h / 2);
         int32 xcd = abs(xc - other_xc);
         int32 ycd = abs(yc - other_yc);
         if(ycd >= xcd) // height diff is greater than width diff, so we came from top or bottom
@@ -91,14 +95,14 @@ uint8 ActiveRect::CollisionWith(ActiveRect *other)
 
     if(height >= width) // must be left or right
     {
-        if(xstart == other->x)
+        if(xstart == oix)
             return SIDE_LEFT;
         else
             return SIDE_RIGHT;
     }
     else // must be top or bottom
     {
-        if(ystart == other->y)
+        if(ystart == oiy)
             return SIDE_TOP;
         else
             return SIDE_BOTTOM;
@@ -141,13 +145,13 @@ void Unit::Init(void)
     _GenericInit();
 }
 
-void Unit::SetBBox(int32 x_, int32 y_, uint32 w_, uint32 h_)
+void Unit::SetBBox(float x_, float y_, uint32 w_, uint32 h_)
 {
     Object::SetBBox(x_,y_,w_,h_);
     UpdateAnchor();
 }
 
-void Unit::SetPos(int32 x_, int32 y_)
+void Unit::SetPos(float x_, float y_)
 {
     Object::SetPos(x_, y_);
     UpdateAnchor();
