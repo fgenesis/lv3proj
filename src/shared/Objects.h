@@ -114,7 +114,7 @@ public:
 
     inline void UpdateAnchor(void)
     {
-        anchor.x = (int32(x) + w) / 2;
+        anchor.x = int32(x) + (w / 2);
         anchor.y = int32(y) + h;
     }
 

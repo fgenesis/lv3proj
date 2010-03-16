@@ -150,7 +150,7 @@ void Object::SetPos(float x_, float y_)
 // TODO: this needs correction!! maybe make this a falcon call, OR add another uint32 _standAreaSize...?
 bool Object::CanFallDown(void)
 {
-    return _layermgr->CanFallDown(anchor, w);
+    return _layermgr->CanFallDown(anchor, w / 2);
 }
 
 void Item::Init(void)
