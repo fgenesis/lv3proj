@@ -600,7 +600,8 @@ FALCON_FUNC fal_Object_SetSprite(Falcon::VMachine *vm)
         if(tile)
         {
             ((Object*)self->GetObj())->SetSprite(tile);
-            vm->retval(tile);
+            Falcon::CoreClass *cls = vm->findWKI("Tile")->asClass();
+            vm->retval(new fal_Tile(cls,tile));
         }
         else
             vm->retnil();
