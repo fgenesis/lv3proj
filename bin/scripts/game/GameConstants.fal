@@ -1,5 +1,6 @@
 
 // an enum didnt work here... hmm wtf
+// these are the keys like the SNES uses them
 //enum GameVirtualKeys
  KeyUP     = 1
  KeyDOWN   = 2
@@ -13,6 +14,8 @@
  KeyR      = 10
  KeySTART  = 11
  KeySELECT = 12
+ 
+ KeyMAX    = 13 // for array size, don't use
 //end
 
 

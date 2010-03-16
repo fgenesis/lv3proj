@@ -60,7 +60,7 @@ bool GameEngine::Setup(void)
     char *testscript = resMgr.LoadTextFile("scripts/test.fal");
     falcon->EmbedStringAsModule(testscript, "testscript");
     
-    sndCore.PlayMusic("lv1_snes_ship.ogg");
+    //sndCore.PlayMusic("lv1_snes_ship.ogg");
 
     return true;
 }
@@ -154,7 +154,7 @@ void GameEngine::OnMouseEvent(uint32 type, uint32 button, uint32 x, uint32 y, in
             case SIDE_RIGHT: sidestr = "right"; break;
             default: sidestr = "none"; break;
         }
-        logerror("COLLISION: %s (%u)", sidestr, side);
+        logerror("(%d, %d) COLLISION: %s (%u)", int(mouseRect.x), int(mouseRect.y), sidestr, side);
     }
 
 

@@ -1,11 +1,17 @@
 class PlayerEx from Player
     
     gfx = nil
+    walkSpeed = 64
+    climbSpeed = 64
+    fallSpeed = 256
+    raiseSpeed = 32
+    //_keyState = nil
     
     init
         self.SetBBox(0,0,32,32)
         if self.gfx
-            self.SetSprite(self.gfx)
+            tile = self.SetSprite(self.gfx)
+            if tile: tile.name = "standR"
         end
         
         // init physics
@@ -13,13 +19,97 @@ class PlayerEx from Player
         p.weight = 70 // to have some default value
         p.xspeed = 0
         p.yspeed = 0
-        p.xmaxspeed = 64
-        p.ymaxspeed = 96
+        p.xmaxspeed = self.walkSpeed
+        p.ymaxspeed = self.fallSpeed
         p.xaccel = 0
         p.yaccel = 0
         p.xfriction = 0
         p.yfriction = 0
         self.SetAffectedByPhysics(true)
+        
+        // init pressed key map
+        //self._keyState = arrayBuffer(KeyMAX)
+        
+
+        
+    end
+    
+    function OnInput(vkey, val)
+        //self._keyState[vkey] = val
+        switch vkey
+            case KeyLEFT
+                self.OnKeyLeft(val)
+                
+            case KeyRIGHT
+                self.OnKeyRight(val)
+                
+            case KeyUP
+                self.OnKeyUp(val)
+                
+            case KeyDOWN
+                self.OnKeyDown(val)
+                
+            case KeyA
+                self.OnKeyA(val)
+                
+            case KeyB
+                self.OnKeyB(val)
+                
+            case KeyX
+                self.OnKeyX(val)
+                
+            case KeyY
+                self.OnKeyY(val)
+                
+            default
+                > "PlayerEx::OnInput(", vkey, ", ", val, ") for '", self, "' unhandled!"
+        end
+    end
+    
+    function OnKeyLeft(pressed)
+        p = self.phys
+        if pressed
+            self.GetSprite().name = "standR" // TODO: must be walkL
+            p.xspeed = -self.walkSpeed
+        else
+            if (p.xspeed < 0) // already moving in opposite direction?
+                p.xspeed = 0
+                self.GetSprite().name = "standR" // TODO: must be standL
+            end
+        end
+    end
+    
+    function OnKeyRight(pressed)
+        p = self.phys
+        if pressed
+            self.GetSprite().name = "walkR"
+            p.xspeed = self.walkSpeed
+        else
+            if (p.xspeed > 0) // already moving in opposite direction?
+                p.xspeed = 0
+                self.GetSprite().name = "standR"
+            end
+        end
+    end
+    
+    // --DEBUG JUMP--
+    function OnKeyUp(pressed)
+        if pressed: self.phys.yspeed = -128
+    end
+    
+    function OnKeyDown(pressed)
+    end
+    
+    function OnKeyA(pressed)
+    end
+    
+    function OnKeyB(pressed)
+    end
+    
+    function OnKeyX(pressed)
+    end
+    
+    function OnKeyY(pressed)
     end
     
 end

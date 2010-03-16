@@ -1,29 +1,45 @@
 
 // some test stuff to see what the falcon bindings can do
-> "-- ACTIVATING TEST --" // this line actually fixes a crash, dont ask me why... must be related to falcon, but was unable to catch anything *useful* in debugger
+> "-- ACTIVATING TEST --"
 
 // set game constants
-Physics.SetGravity(9.81)
+Physics.SetGravity(300)
 
 // create olaf character for testing
 olaf = Olaf()
 olaf.SetPos(64,48)
-olaf.GetSprite().name = "walkR"
-olaf.phys.xspeed = 64
-inspect(olaf)
+pcontrol = PlayerController()
+pcontrol.Add(olaf)
+pcontrol.Assign(1, olaf)
+pcontrol.register()
 
 function PosLimitTest(who)
-    if(who.x > 380): who.x = 64
+    if(who.y > 600)
+        olaf.SetPos(64,48)
+        olaf.phys.yspeed = 0
+        olaf.phys.yaccel = 0
+    end
     CallScheduler.Schedule( .[PosLimitTest who], 1000)
 end
  
-CallScheduler.Schedule( .[PosLimitTest olaf], 1000)
- 
-// TODO: set position, etc
+PosLimitTest(olaf)
+
+function DoSomeResets(who, inp)
+    vkey, pl, val = inp
+    if (vkey == KeySELECT) and val
+        olaf.SetPos(64,48)
+        GC.perform(true)
+    end
+end
+
+RegisterInputHook("DoSomeResets", .[DoSomeResets olaf] )
+
+
+
 
 // open a menu. so far only controllable via console.
 // this is just here to check IF something works
-//OpenMenu(MainMenu)
+//OpenMenu(MainMenu) // THIS CONFLICTS WITH OTHER KEYBOARD INPUT!!
 
 // replace energy streams after 3 secs
 CallScheduler.Schedule( ReplaceEnergyStreams, 3000)
