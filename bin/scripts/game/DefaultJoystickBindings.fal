@@ -1,0 +1,15 @@
+
+// right now, this reflects me own gamepad config -- fg
+// TODO: change this to some more probable values before release
+KeyMap.Bind(EVENT_TYPE_JOYSTICK_AXIS, 0, AxisUp(1) , KeyUP, 1)
+KeyMap.Bind(EVENT_TYPE_JOYSTICK_AXIS, 0, AxisDown(1), KeyDOWN, 1)
+KeyMap.Bind(EVENT_TYPE_JOYSTICK_AXIS, 0, AxisLeft(0), KeyLEFT, 1)
+KeyMap.Bind(EVENT_TYPE_JOYSTICK_AXIS, 0, AxisRight(0), KeyRIGHT, 1)
+KeyMap.Bind(EVENT_TYPE_JOYSTICK_BUTTON, 0, 4, KeyA, 1)
+KeyMap.Bind(EVENT_TYPE_JOYSTICK_BUTTON, 0, 2, KeyB, 1)
+KeyMap.Bind(EVENT_TYPE_JOYSTICK_BUTTON, 0, 5, KeyX, 1)
+KeyMap.Bind(EVENT_TYPE_JOYSTICK_BUTTON, 0, 3, KeyY, 1)
+KeyMap.Bind(EVENT_TYPE_JOYSTICK_BUTTON, 0, 6, KeyL, 1)
+KeyMap.Bind(EVENT_TYPE_JOYSTICK_BUTTON, 0, 8, KeyR, 1)
+KeyMap.Bind(EVENT_TYPE_JOYSTICK_BUTTON, 0, 11, KeySTART, 1)
+KeyMap.Bind(EVENT_TYPE_JOYSTICK_BUTTON, 0, 10, KeySELECT, 1)

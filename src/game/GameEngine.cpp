@@ -127,6 +127,57 @@ void GameEngine::OnKeyUp(SDLKey key, SDLMod mod)
     }
 }
 
+void GameEngine::OnJoystickEvent(uint32 type, uint32 device, uint32 id, int32 val)
+{
+    // Engine::OnJoystickEvent(type, device, id, val); // the default engine is not interested in joysticks, this call can be skipped
+
+    // pass joystick event to Falcon
+    // TODO: cache this on init and call then without invoking findGlobalItem() all the time
+    Falcon::Item *item = falcon->GetVM()->findGlobalItem("EventHandler");
+    if(item && item->isCallable())
+    {
+        uint32 evt;
+
+        // translate into custom enum values
+        switch(type)
+        {
+            case SDL_JOYBUTTONDOWN:
+            case SDL_JOYBUTTONUP:
+                evt = EVENT_TYPE_JOYSTICK_BUTTON;
+                break;
+
+            case SDL_JOYAXISMOTION:
+                evt = EVENT_TYPE_JOYSTICK_AXIS;
+                break;
+
+            case SDL_JOYHATMOTION:
+                evt = EVENT_TYPE_JOYSTICK_HAT;
+                break;
+
+            default:
+                logerror("GameEngine::OnJoystickEvent(): unprocessed type %u", type);
+                return;
+        }
+
+        try
+        {
+            Falcon::CoreArray *arr = new Falcon::CoreArray(4);
+            arr->append(Falcon::int32(evt));
+            arr->append(Falcon::int32(device));
+            arr->append(Falcon::int32(id)); // button, axis or hat id
+            arr->append(Falcon::int32(val)); // button/hat: 1=pressed, 0=released; axis: value in -(2^15)..+(2^15)
+            falcon->GetVM()->pushParam(arr);
+            falcon->GetVM()->callItem(*item, 1);
+        }
+        catch(Falcon::Error *err)
+        {
+            Falcon::AutoCString edesc( err->toString() );
+            logerror("GameEngine::OnJoystickEvent: %s", edesc.c_str());
+            err->decref();
+        }
+    }
+}
+
 void GameEngine::OnMouseEvent(uint32 type, uint32 button, uint32 x, uint32 y, int32 rx, int32 ry)
 {
     // - TEST - this is all test stuff and will be removed later

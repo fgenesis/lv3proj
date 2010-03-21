@@ -1,8 +1,7 @@
 #include "common.h"
 #include "GameEngine.h"
 
-GameEngine g_engine;
-
+GameEngine *g_engine_ptr;
 
 int main(int argc, char **argv)
 {
@@ -16,11 +15,16 @@ int main(int argc, char **argv)
 
     mtRandSeed(time(NULL));
 
-    g_engine.InitScreen(1000,600,0,SDL_RESIZABLE);
-    g_engine.SetTitle("Lost Vikings 3 Project");
-    g_engine.Setup();
-    g_engine.Run();
-    g_engine.Shutdown();
+    // the engine must be created *after* SDL is fully initialized!
+    GameEngine engine;
+    g_engine_ptr = &engine;
+
+
+    engine.InitScreen(1000,600,0,SDL_RESIZABLE);
+    engine.SetTitle("Lost Vikings 3 Project");
+    engine.Setup();
+    engine.Run();
+    engine.Shutdown();
 
     return 0;
 }

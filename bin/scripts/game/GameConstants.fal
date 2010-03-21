@@ -18,6 +18,10 @@
  KeyMAX    = 13 // for array size, don't use
 //end
 
+// info: joystick axis values min/max -- almost 0: centered, -32768: left/up, +32767: right
+// this value defines when an axis triggers a virtual button press - useful for analog joysticks/gamepads.
+// decrease for higher sensivity, increase for lower sensivity.
+JOSTICK_AXIS_THRESHOLD = 10000
 
 
 export

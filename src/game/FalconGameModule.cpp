@@ -3,6 +3,7 @@
 #include "common.h"
 #include "AppFalconGame.h"
 
+#include "main.h"
 #include "GameEngine.h"
 #include "TileLayer.h"
 #include "ResourceMgr.h"
@@ -13,10 +14,6 @@
 #include "PhysicsSystem.h"
 
 #include "FalconGameModule.h"
-
-
-// file-global defs
-extern GameEngine g_engine;
 
 
 FalconProxyObject::~FalconProxyObject()
@@ -154,10 +151,10 @@ void fal_ObjectCarrier::init(Falcon::VMachine *vm)
     BaseObject *obj = self->GetObj();
     fobj->vm = vm;
     fobj->gclock = new Falcon::GarbageLock(Falcon::Item(self));
-    obj->SetLayerMgr(g_engine._GetLayerMgr());
+    obj->SetLayerMgr(g_engine_ptr->_GetLayerMgr());
     obj->Init(); // correctly set type of object
     obj->_falObj = fobj;
-    g_engine.objmgr->Add(obj);
+    g_engine_ptr->objmgr->Add(obj);
 }
 
 Falcon::CoreObject* fal_ObjectCarrier::factory( const Falcon::CoreClass *cls, void *user_data, bool )
@@ -348,7 +345,7 @@ FALCON_FUNC fal_BaseObject_Remove(Falcon::VMachine *vm)
 {
     fal_ObjectCarrier *self = Falcon::dyncast<fal_ObjectCarrier*>( vm->self().asObject() );
     BaseObject *obj = self->GetObj();
-    g_engine.objmgr->Remove(obj->GetId());
+    g_engine_ptr->objmgr->Remove(obj->GetId());
     obj->unbind();
     delete obj;
 }
@@ -631,7 +628,7 @@ FALCON_FUNC fal_Screen_GetLayer(Falcon::VMachine *vm)
 {
     FALCON_REQUIRE_PARAMS(1);
     uint32 layerId = vm->param(0)->forceInteger();
-    TileLayer *layer = g_engine._GetLayerMgr()->GetLayer(layerId);
+    TileLayer *layer = g_engine_ptr->_GetLayerMgr()->GetLayer(layerId);
     if(layer)
     {
         Falcon::CoreClass *cls = vm->findWKI("TileLayer")->asClass();
@@ -644,8 +641,8 @@ FALCON_FUNC fal_Screen_GetLayer(Falcon::VMachine *vm)
 FALCON_FUNC fal_Screen_GetSize(Falcon::VMachine *vm)
 {
     Falcon::CoreArray *arr = new Falcon::CoreArray(2);
-    arr->append((Falcon::int32)g_engine.GetResX());
-    arr->append((Falcon::int32)g_engine.GetResY());
+    arr->append((Falcon::int32)g_engine_ptr->GetResX());
+    arr->append((Falcon::int32)g_engine_ptr->GetResY());
     vm->retval(arr);
 }
 
@@ -791,7 +788,7 @@ FALCON_FUNC fal_Game_LoadTile(Falcon::VMachine *vm)
 
 FALCON_FUNC fal_Game_GetTime(Falcon::VMachine *vm)
 {
-    vm->retval(Falcon::int64(g_engine.GetCurFrameTime()));
+    vm->retval(Falcon::int64(g_engine_ptr->GetCurFrameTime()));
 }
 
 // this does absolutely nothing.
@@ -859,7 +856,7 @@ FALCON_FUNC fal_Game_CreateObject(Falcon::VMachine *vm)
     fobj->vm = vm;
     fobj->gclock = new Falcon::GarbageLock(Falcon::Item(carrier));
 
-    g_engine.objmgr->Add(obj);
+    g_engine_ptr->objmgr->Add(obj);
 
     vm->retval(carrier);
 }
@@ -868,7 +865,7 @@ FALCON_FUNC fal_Game_CreateObject(Falcon::VMachine *vm)
 FALCON_FUNC fal_Game_GetObject(Falcon::VMachine *vm)
 {
     FALCON_REQUIRE_PARAMS_EXTRA(1, "N id");
-    BaseObject *obj = g_engine.objmgr->Get(vm->param(0)->forceInteger());
+    BaseObject *obj = g_engine_ptr->objmgr->Get(vm->param(0)->forceInteger());
     if(obj)
     {
         vm->retval(obj->_falObj->self());
@@ -902,14 +899,14 @@ FALCON_FUNC fal_Game_SetMusicVolume(Falcon::VMachine *vm)
 
 FALCON_FUNC fal_Game_GetPlayerCount(Falcon::VMachine *vm)
 {
-    vm->retval(Falcon::int32(g_engine.GetPlayerCount()));
+    vm->retval(Falcon::int32(g_engine_ptr->GetPlayerCount()));
 }
 
 FALCON_FUNC fal_Game_SetPlayerCount(Falcon::VMachine *vm)
 {
     FALCON_REQUIRE_PARAMS(1);
     uint32 p = vm->param(0)->forceInteger();
-    g_engine.SetPlayerCount(p);
+    g_engine_ptr->SetPlayerCount(p);
 }
 
 FALCON_FUNC fal_Game_LoadLevel(Falcon::VMachine *vm)
@@ -919,7 +916,7 @@ FALCON_FUNC fal_Game_LoadLevel(Falcon::VMachine *vm)
 
 FALCON_FUNC fal_Game_Exit(Falcon::VMachine *vm)
 {
-    g_engine.Quit();
+    g_engine_ptr->Quit();
 }
 
 FALCON_FUNC fal_Game_LoadPropsInDir(Falcon::VMachine *vm)
@@ -932,12 +929,12 @@ FALCON_FUNC fal_Game_LoadPropsInDir(Falcon::VMachine *vm)
 FALCON_FUNC fal_Physics_SetGravity(Falcon::VMachine *vm)
 {
     FALCON_REQUIRE_PARAMS(1);
-    g_engine.physmgr->envPhys.gravity = float(vm->param(0)->forceNumeric());
+    g_engine_ptr->physmgr->envPhys.gravity = float(vm->param(0)->forceNumeric());
 }
 
 FALCON_FUNC fal_Physics_GetGravity(Falcon::VMachine *vm)
 {
-    vm->retval(g_engine.physmgr->envPhys.gravity);
+    vm->retval(g_engine_ptr->physmgr->envPhys.gravity);
 }
 
 

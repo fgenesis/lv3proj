@@ -197,6 +197,10 @@
 				RelativePath=".\game\main.cpp"
 				>
 			</File>
+			<File
+				RelativePath=".\game\main.h"
+				>
+			</File>
 			<Filter
 				Name="falcon"
 				>

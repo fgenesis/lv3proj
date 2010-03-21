@@ -24,6 +24,7 @@ public:
     virtual void OnMouseEvent(uint32 type, uint32 button, uint32 x, uint32 y, int32 rx, int32 ry);
     virtual void OnKeyDown(SDLKey key, SDLMod mod);
     virtual void OnKeyUp(SDLKey key, SDLMod mod);
+    virtual void OnJoystickEvent(uint32 type, uint32 device, uint32 id, int32 val);
     virtual void OnWindowEvent(bool active);
     virtual void OnWindowResize(uint32 newx, uint32 newy);
     virtual bool OnRawEvent(SDL_Event& evt); // return true to pass this event to the following internal event handlers, false to proceed with next event
@@ -68,6 +69,10 @@ protected:
     uint32 _sleeptime;
     Point _cameraPos; // camera / "screen anchor" position in 2D-space, top-left corner (starts with (0,0) )
     bool _quit;
+
+private:
+    void _InitJoystick(void); // this does nothing if joystick support was not explicitly initialized in SDL_Init()
+    
 
 };
 

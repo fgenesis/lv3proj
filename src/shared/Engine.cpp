@@ -14,6 +14,7 @@ volatile uint32 Engine::s_curFrameTime;
 Engine::Engine()
 : _screen(NULL), _fps(0), _sleeptime(0), _quit(false), _framecounter(0)
 {
+    log("Game Engine start.");
     _layermgr = new LayerMgr(this);
     _fpsclock = s_curFrameTime = clock();
 
@@ -22,6 +23,7 @@ Engine::Engine()
     objmgr = new ObjectMgr(this);
     objmgr->SetLayerMgr(_layermgr);
     objmgr->SetPhysicsMgr(physmgr);
+    _InitJoystick();
 }
 
 Engine::~Engine()
@@ -46,6 +48,35 @@ void Engine::InitScreen(uint32 sizex, uint32 sizey, uint8 bpp /* = 0 */, uint32 
     _screenFlags = SDL_HWSURFACE | SDL_DOUBLEBUF | SDL_ANYFORMAT | SDL_HWACCEL | extraflags;
     _screen = SDL_SetVideoMode(sizex, sizey, bpp, _screenFlags);
     _screenFlags &= ~SDL_FULLSCREEN; // this depends on current setting and should not be stored
+}
+
+void Engine::_InitJoystick(void)
+{
+    uint32 num = SDL_NumJoysticks();
+    SDL_Joystick *jst = NULL;
+    if(num)
+    {
+        logdetail("Found %u joysticks, enumerating...", num);
+        SDL_JoystickEventState(SDL_ENABLE);
+        for(uint32 i = 0; i < num; ++i)
+        {
+            jst = SDL_JoystickOpen(i); // TODO: do opened joysticks have to be closed explicitly? my guess is that SDL does it during cleanup/shutdown...
+            if(jst)
+            {
+                log("Found joystick #%u (%s) with %u axes, %u buttons, %u hats, %u balls", i, SDL_JoystickName(i),
+                    SDL_JoystickNumAxes(jst), SDL_JoystickNumButtons(jst), SDL_JoystickNumHats(jst), SDL_JoystickNumBalls(jst));
+                SDL_JoystickEventState(SDL_ENABLE); // there is at least 1 active joystick, activate event mode
+            }
+            else
+            {
+                logerror("Found joystick #%u (%s), but failed to initialize!", i, SDL_JoystickName(i));
+            }
+        }
+    }
+    else
+    {
+        logdetail("No joysticks found.");
+    }
 }
 
 void Engine::Run(void)
@@ -80,6 +111,19 @@ void Engine::_ProcessEvents(void)
 
             case SDL_KEYUP:
                 OnKeyUp(evt.key.keysym.sym, evt.key.keysym.mod);
+                break;
+
+            case SDL_JOYAXISMOTION:
+                OnJoystickEvent(evt.jaxis.type, evt.jaxis.which, evt.jaxis.axis, evt.jaxis.value);
+                break;
+
+            case SDL_JOYBUTTONDOWN:
+            case SDL_JOYBUTTONUP:
+                OnJoystickEvent(evt.jbutton.type, evt.jbutton.which, evt.jbutton.which, evt.jbutton.state);
+                break;
+
+            case SDL_JOYHATMOTION:
+                OnJoystickEvent(evt.jhat.type, evt.jhat.which, evt.jhat.which, evt.jhat.value);
                 break;
 
             case SDL_ACTIVEEVENT:
@@ -154,6 +198,10 @@ void Engine::OnWindowEvent(bool active)
 }
 
 void Engine::OnMouseEvent(uint32 type, uint32 button, uint32 x, uint32 y, int32 rx, int32 ry)
+{
+}
+
+void Engine::OnJoystickEvent(uint32 type, uint32 device, uint32 id, int32 val)
 {
 }
 

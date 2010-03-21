@@ -15,23 +15,14 @@ function EventHandler(e)
     
     //> @ "EVENT DEBUG: ty:$ty, src:$src, which:$which, value:$value"
     
-    // TODO: support joystick axis + hat. output stuff for testing.
-    if(ty == EVENT_TYPE_JOYSTICK_AXIS or ty == EVENT_TYPE_JOYSTICK_HAT)
-        > @ "EVENT: event type $ty not supported! (src:$src, which:$which, value:$value)"
-        return
-    end
-    
     for who,func in _rawhooks
         if(func(e) == true): return // as soon as a raw input handler returns true, drop the event
     end
     
-    for who,func in _hooks
-        key = KeyMap.Translate(ty, src, which, value)
-        select key
-            case NilType
-                // do nothing
-            default
-                func(key)
+    key = KeyMap.Translate(ty, src, which, value)
+    if key
+        for who,func in _hooks
+            func(key)
         end
     end
 end
