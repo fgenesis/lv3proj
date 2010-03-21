@@ -55,8 +55,8 @@ class PlayerController
             > "ERROR: PlayerController::SwitchPlayer(): currently active player was not registered!"
             return
         end
-        pos = climit(pos + (direction ? -1 : 1), 0, len(self._playerReg))
-        self.AssignPlayer(self._playerReg[pos], playerNum)
+        pos = climit(pos + (direction ? -1 : 1), 0, len(self._playerReg) - 1)
+        self.Assign(self._playerReg[pos], playerNum)
     end
     
     function OnInput(inp)
