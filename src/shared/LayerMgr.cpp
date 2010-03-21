@@ -207,7 +207,7 @@ Point LayerMgr::GetClosestNonCollidingPoint(ActiveRect *rect, uint8 direction)
         if(xstart < 0) xstart = 0; else if(xstart > int32(GetMaxPixelDim())) xstart = int32(GetMaxPixelDim());
         xend = int32(GetMaxPixelDim()); // ... to the right of the screen
         xstep = 1;
-        xoffs = -(rect->w - 1);
+        xoffs = -(int32(rect->w) - 1);
         ++directionCtr;
     }
     else // not moving horizontally
@@ -232,7 +232,7 @@ Point LayerMgr::GetClosestNonCollidingPoint(ActiveRect *rect, uint8 direction)
         if(ystart < 0) ystart = 0; else if(ystart > int32(GetMaxPixelDim())) ystart = int32(GetMaxPixelDim());
         yend = int32(GetMaxPixelDim()); // ... down to the bottom of the screen
         ystep = 1;
-        yoffs = -(rect->h - 1);
+        yoffs = -(int32(rect->h) - 1);
         ++directionCtr;
     }
     else // not moving vertically
