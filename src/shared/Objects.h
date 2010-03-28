@@ -66,9 +66,9 @@ public:
     void AlignToSideOf(ActiveRect *other, uint8 side);
 
     // Method to calculate the second X corner
-    inline int x2(void) const { return int32(x) + w; }
+    inline int x2(void) const { return int32r(x) + w; }
     // Method to calculate the second Y corner
-    inline int y2(void) const { return int32(y) + h; }
+    inline int y2(void) const { return int32r(y) + h; }
 
     // Method to calculate the second X corner (float)
     inline float x2f(void) const { return x + float(w); }

@@ -195,7 +195,7 @@ Point LayerMgr::GetClosestNonCollidingPoint(ActiveRect *rect, uint8 direction)
     uint32 directionCtr = 0; // the amount of directions set must be in [1..2] after counting
     if(direction & DIRECTION_LEFT)
     {
-        xstart = rect->x2(); // rightmost position
+        xstart = int32r(rect->x); // leftmost position
         if(xstart < 0) xstart = 0; else if(xstart > int32(GetMaxPixelDim())) xstart = int32(GetMaxPixelDim());
         xend = 0;
         xstep = -1;
@@ -203,7 +203,7 @@ Point LayerMgr::GetClosestNonCollidingPoint(ActiveRect *rect, uint8 direction)
     }
     else if(direction & DIRECTION_RIGHT)
     {
-        xstart = int32(rect->x); // leftmost position
+        xstart = rect->x2(); // rightmost position
         if(xstart < 0) xstart = 0; else if(xstart > int32(GetMaxPixelDim())) xstart = int32(GetMaxPixelDim());
         xend = int32(GetMaxPixelDim()); // ... to the right of the screen
         xstep = 1;
@@ -212,7 +212,7 @@ Point LayerMgr::GetClosestNonCollidingPoint(ActiveRect *rect, uint8 direction)
     }
     else // not moving horizontally
     {
-        xstart = int32(rect->x); // left object position
+        xstart = int32r(rect->x); // left object position
         if(xstart < 0) xstart = 0; else if(xstart > int32(GetMaxPixelDim())) xstart = int32(GetMaxPixelDim());
         xend = rect->x2(); // right object position
         if(xend < 0) xend = 0; else if(xend > int32(GetMaxPixelDim())) xend = int32(GetMaxPixelDim());
@@ -220,7 +220,7 @@ Point LayerMgr::GetClosestNonCollidingPoint(ActiveRect *rect, uint8 direction)
     }
     if(direction & DIRECTION_UP)
     {
-        ystart = rect->y2(); // bottom-most position
+        ystart = int32r(rect->y); // topmost position
         if(ystart < 0) ystart = 0; else if(ystart > int32(GetMaxPixelDim())) ystart = int32(GetMaxPixelDim());
         yend = 0; // ... up to the top of the screen
         ystep = -1;
@@ -228,7 +228,7 @@ Point LayerMgr::GetClosestNonCollidingPoint(ActiveRect *rect, uint8 direction)
     }
     else if(direction & DIRECTION_DOWN)
     {
-        ystart = int32(rect->y); // topmost position
+        ystart = rect->y2(); // bottom-most position
         if(ystart < 0) ystart = 0; else if(ystart > int32(GetMaxPixelDim())) ystart = int32(GetMaxPixelDim());
         yend = int32(GetMaxPixelDim()); // ... down to the bottom of the screen
         ystep = 1;
@@ -237,7 +237,7 @@ Point LayerMgr::GetClosestNonCollidingPoint(ActiveRect *rect, uint8 direction)
     }
     else // not moving vertically
     {
-        ystart = int32(rect->y); // top object position
+        ystart = int32r(rect->y); // top object position
         if(ystart < 0) ystart = 0; else if(ystart > int32(GetMaxPixelDim())) ystart = int32(GetMaxPixelDim());
         yend = rect->y2(); // bottom object position
         if(yend < 0) yend = 0; else if(yend > int32(GetMaxPixelDim())) yend = int32(GetMaxPixelDim());
@@ -278,24 +278,49 @@ Point LayerMgr::GetClosestNonCollidingPoint(ActiveRect *rect, uint8 direction)
             }
         }
     }
-    // bleargh, unfinished code
-    // TODO: FIX ME ASAP! the current collision detection is REALLY crappy without this!!
-    /*else // special case: diagonal movement (2 axes)
+    else // special case: diagonal movement (2 axes)
     {
-        for(y = ystart ; (ystep > 0 ? y < yend : y > yend); y += ystep)
+        do 
         {
-            if(_collisionMap->at(xstart,y))
-                return Point(goodx, goody);
-            goody = y; // no collision so far, this point was ok
-        }
-            for(x = xstart ; (xstep > 0 ? x < xend : x > xend); x += xstep)
+            for(x = xstart; abs(x - xstart) < int32(rect->w); x -= xstep)
             {
-                
+                if(_collisionMap->at(x,ystart))
+                    return Point(goodx, goody);
+            }         
+            for(y = ystart; abs(y - ystart) < int32(rect->h); y -= ystep)
+            {
+                if(_collisionMap->at(xstart,y))
+                    return Point(goodx, goody);
             }
-            goody = y; // no collision so far, this point was ok
-            if(direction & (DIRECTION_LEFT | DIRECTION_RIGHT))
-                xstart += xstep;
-        }*/
+            xstart += xstep;
+            ystart += ystep;
+            goodx += xstep;
+            goody += ystep;
+
+            /*
+            // limit checking to max. width and height of the rect
+            int32 xstop = (xstep > 0 ? min(xstart + int32(rect->w), xend) : max(xstart - int32(rect->w), xend));
+            int32 ystop = (ystep > 0 ? min(ystart + int32(rect->h), yend) : max(ystart - int32(rect->h), yend));
+            goodx = rect->x;            
+            for(y = ystart ; (ystep > 0 ? y < ystop : y > ystop); y += ystep)
+            {
+                if(_collisionMap->at(xstart,y))
+                    return Point(goodx + xoffs, goody + yoffs);
+                goody = y; // no collision so far, this point was ok
+            }
+            goody = rect->y;
+            for(x = xstart ; (xstep > 0 ? x < xstop : x > xstop); x += xstep)
+            {
+                if(_collisionMap->at(x,ystart))
+                    return Point(goodx + xoffs, goody + yoffs);
+                goodx = x; // no collision so far, this point was ok
+            }
+            xstart += xstep;
+            ystart += ystep;
+            */
+        }
+        while( (ystep > 0 ? ystart < yend : ystart > yend) || (xstep > 0 ? xstart < xend : xstart > xend) );
+    }
 
     return Point(int32(rect->x),int32(rect->y)); // nothing found
 }

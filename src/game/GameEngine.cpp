@@ -27,6 +27,9 @@ GameEngine::GameEngine()
     bigRect.y = 450;
     bigRect.w = 100;
     bigRect.h = 100;
+    collRect.w = 32;
+    collRect.h = 32;
+    collRectGood = false;
 }
 
 GameEngine::~GameEngine()
@@ -191,6 +194,11 @@ void GameEngine::OnMouseEvent(uint32 type, uint32 button, uint32 x, uint32 y, in
             if(!_layermgr->CanFallDown(Point(x, y + (mouseRect.h / 2) - 1), 12))
                 mouseCollision = 1;
         }
+        Point p = _layermgr->GetClosestNonCollidingPoint(&mouseRect, DIRECTION_UPRIGHT);
+        collRect.x = p.x;
+        collRect.y = p.y;
+        collRectGood = !_layermgr->CollisionWith(&collRect);
+
     }
     // on mouseclick, text for intersection with the big white rect
     if(type == SDL_MOUSEBUTTONDOWN)
@@ -242,6 +250,13 @@ void GameEngine::_Render(void)
         SDL_FillRect(GetSurface(), &mrect, SDL_MapRGB(GetSurface()->format,0xFF,0xFF,0));
     else if(mouseCollision == 0) // floating
         SDL_FillRect(GetSurface(), &mrect, SDL_MapRGB(GetSurface()->format,0,0xFF,0));
+
+    SDL_Rect cdrect;
+    cdrect.x = collRect.x;
+    cdrect.y = collRect.y;
+    cdrect.w = collRect.w;
+    cdrect.h = collRect.h;
+    SDL_FillRect(GetSurface(), &cdrect, collRectGood ? 0xFF0000FF : 0xFFFF00CC);
     // -end-
 
     SDL_Flip(_screen);

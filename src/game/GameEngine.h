@@ -40,6 +40,8 @@ protected:
     // TEMP: for debugging/testing
     ActiveRect mouseRect;
     ActiveRect bigRect;
+    ActiveRect collRect;
+    bool collRectGood;
     uint8 mouseCollision; // 0: floating; 1: standing; 2: collision
 
 };

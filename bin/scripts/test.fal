@@ -15,9 +15,9 @@ pcontrol.register()
 
 function PosLimitTest(who)
     if(who.y > 600)
-        olaf.SetPos(64,48)
-        olaf.phys.yspeed = 0
-        olaf.phys.yaccel = 0
+        who.SetPos(64,48)
+        who.phys.yspeed = 0
+        who.phys.yaccel = 0
     end
     CallScheduler.Schedule( .[PosLimitTest who], 1000)
 end
@@ -42,10 +42,10 @@ RegisterInputHook("DoSomeResets", .[DoSomeResets olaf] )
 //OpenMenu(MainMenu) // THIS CONFLICTS WITH OTHER KEYBOARD INPUT!!
 
 // replace energy streams after 3 secs
-CallScheduler.Schedule( ReplaceEnergyStreams, 3000)
+//CallScheduler.Schedule( ReplaceEnergyStreams, 3000)
 
 // fill screen after 6 secs have passed
-CallScheduler.Schedule( FillScreenWithWater, 6000)
+//CallScheduler.Schedule( FillScreenWithWater, 6000)
 
 // replace all blue energy lines with green ones
 function ReplaceEnergyStreams()

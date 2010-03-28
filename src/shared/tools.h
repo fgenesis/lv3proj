@@ -78,4 +78,9 @@ inline bool fastsgncheck(float f)
     return (*(int*)&f) & 0x80000000;
 }
 
+inline int32 int32r(float f)
+{
+    return int32(f + 0.5f);
+}
+
 #endif

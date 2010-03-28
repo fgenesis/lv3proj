@@ -93,9 +93,11 @@ void PhysicsMgr::UpdatePhysics(Object *obj, uint32 ms)
             obj->y = float(np.y);
 
             // unable to change position, set speed to 0
-            if(direction & (DIRECTION_LEFT |DIRECTION_RIGHT) && np.x == oldx)
+            //if(direction & (DIRECTION_LEFT |DIRECTION_RIGHT) && np.x == oldx)
+            if( ((direction & DIRECTION_LEFT) && int32(oldx) <= np.x) || ((direction & DIRECTION_RIGHT) && int32(oldx) >= np.x) )
                 phys.xspeed = 0.0f;
-            if(direction & (DIRECTION_UP |DIRECTION_DOWN) && np.y == oldy)
+            //if(direction & (DIRECTION_UP |DIRECTION_DOWN) && np.y == oldy)
+            if( ((direction & DIRECTION_UP) && int32(oldy) <= np.y) || ((direction & DIRECTION_DOWN) && int32(oldy) >= np.y) )
                 phys.yspeed = 0.0f;
         }
 
