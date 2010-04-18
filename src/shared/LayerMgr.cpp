@@ -160,7 +160,7 @@ void LayerMgr::UpdateCollisionMap(uint32 x, uint32 y) // this x and y are tile p
     }
 }
 
-bool LayerMgr::CollisionWith(ActiveRect *rect, int32 skip /* = 4 */)
+bool LayerMgr::CollisionWith(BaseRect *rect, int32 skip /* = 4 */)
 {
     int32 x, y;
     int32 x2 = rect->x2();
@@ -189,140 +189,65 @@ bool LayerMgr::CollisionWith(ActiveRect *rect, int32 skip /* = 4 */)
     return false;
 }
 
-Point LayerMgr::GetClosestNonCollidingPoint(ActiveRect *rect, uint8 direction)
+uint32 LayerMgr::CanMoveToDirection(BaseRect *rect, uint8 direction, uint32 pixels /* = 1 */ )
 {
-    int32 xstart, ystart, xend, yend, xstep = 0, ystep = 0, xoffs = 0, yoffs = 0;
-    uint32 directionCtr = 0; // the amount of directions set must be in [1..2] after counting
-    if(direction & DIRECTION_LEFT)
-    {
-        xstart = int32r(rect->x); // leftmost position
-        if(xstart < 0) xstart = 0; else if(xstart > int32(GetMaxPixelDim())) xstart = int32(GetMaxPixelDim());
-        xend = 0;
-        xstep = -1;
-        ++directionCtr;
-    }
-    else if(direction & DIRECTION_RIGHT)
-    {
-        xstart = rect->x2(); // rightmost position
-        if(xstart < 0) xstart = 0; else if(xstart > int32(GetMaxPixelDim())) xstart = int32(GetMaxPixelDim());
-        xend = int32(GetMaxPixelDim()); // ... to the right of the screen
-        xstep = 1;
-        xoffs = -(int32(rect->w) - 1);
-        ++directionCtr;
-    }
-    else // not moving horizontally
-    {
-        xstart = int32r(rect->x); // left object position
-        if(xstart < 0) xstart = 0; else if(xstart > int32(GetMaxPixelDim())) xstart = int32(GetMaxPixelDim());
-        xend = rect->x2(); // right object position
-        if(xend < 0) xend = 0; else if(xend > int32(GetMaxPixelDim())) xend = int32(GetMaxPixelDim());
-        xstep = 1;
-    }
-    if(direction & DIRECTION_UP)
-    {
-        ystart = int32r(rect->y); // topmost position
-        if(ystart < 0) ystart = 0; else if(ystart > int32(GetMaxPixelDim())) ystart = int32(GetMaxPixelDim());
-        yend = 0; // ... up to the top of the screen
-        ystep = -1;
-        ++directionCtr;
-    }
-    else if(direction & DIRECTION_DOWN)
-    {
-        ystart = rect->y2(); // bottom-most position
-        if(ystart < 0) ystart = 0; else if(ystart > int32(GetMaxPixelDim())) ystart = int32(GetMaxPixelDim());
-        yend = int32(GetMaxPixelDim()); // ... down to the bottom of the screen
-        ystep = 1;
-        yoffs = -(int32(rect->h) - 1);
-        ++directionCtr;
-    }
-    else // not moving vertically
-    {
-        ystart = int32r(rect->y); // top object position
-        if(ystart < 0) ystart = 0; else if(ystart > int32(GetMaxPixelDim())) ystart = int32(GetMaxPixelDim());
-        yend = rect->y2(); // bottom object position
-        if(yend < 0) yend = 0; else if(yend > int32(GetMaxPixelDim())) yend = int32(GetMaxPixelDim());
-        ystep = 1;
-    }
-    // collision with no movement direction is as unlikely as movement in 3 directions
-    ASSERT(directionCtr >= 1 && directionCtr <= 2);
+    MovementDirectionInfo mdi(*rect, direction);
+    return CanMoveToDirection(rect, mdi, pixels);
+}
 
-    bool c = false;
-    int32 x = xstart, y = ystart;
-    int32 goodx = rect->x, goody = rect->y;
-
-    // moving by 1 axis
-    if(directionCtr == 1)
+uint32 LayerMgr::CanMoveToDirection(BaseRect *rect, MovementDirectionInfo& mdi, uint32 pixels /* = 1 */ )
+{
+    uint32 moveable = 0;
+    BaseRect r = rect->cloneRect();
+    bool stop = false;
+    int32 xi, yi;
+    int32 xa, ya;
+    while(pixels--)
     {
-        if(direction & (DIRECTION_UP | DIRECTION_DOWN))
+        xa = int32(r.x) + mdi.xstep;
+        ya = int32(r.y) + mdi.ystep;
+        if(mdi.ystep != 0)
         {
-            for(y = ystart ; (ystep > 0 ? y < yend : y > yend); y += ystep)
+            for(xi = 0; xi < int32(r.w); ++xi)
             {
-                for(x = xstart ; (xstep > 0 ? x < xend : x > xend); x += xstep)
+                if(_collisionMap->at(xa + xi, ya + mdi.yoffs))
                 {
-                    if(_collisionMap->at(x,y))
-                        return Point(goodx + xoffs, goody + yoffs);
+                    stop = true;
+                    break;
                 }
-                goody = y;
             }
         }
-        else if(direction & (DIRECTION_LEFT | DIRECTION_RIGHT))
+        if(mdi.xstep != 0)
         {
-            for(x = xstart ; (xstep > 0 ? x < xend : x > xend); x += xstep)
+            for(yi = 0; yi < int32(r.h); ++yi)
             {
-                for(y = ystart ; (ystep > 0 ? y < yend : y > yend); y += ystep)
+                if(_collisionMap->at(xa + mdi.xoffs, ya + yi))
                 {
-                    if(_collisionMap->at(x,y))
-                        return Point(goodx + xoffs, goody + yoffs);
+                    stop = true;
+                    break;
                 }
-                goodx = x;
             }
         }
+        if(stop)
+            break;
+
+        moveable++;
+        r.MoveRelative(mdi.xstep, mdi.ystep);
     }
-    else // special case: diagonal movement (2 axes)
+    return moveable;
+}
+
+Point LayerMgr::GetClosestNonCollidingPoint(BaseRect *rect, uint8 direction)
+{
+    DEBUG(ASSERT(direction));
+    MovementDirectionInfo mdi(*rect, direction);
+    BaseRect r = rect->cloneRect();
+    int32 moveable;
+    while(moveable = (int32)CanMoveToDirection(&r, mdi, uint32(-1) )) // try to move as far as possible
     {
-        do 
-        {
-            for(x = xstart; abs(x - xstart) < int32(rect->w); x -= xstep)
-            {
-                if(_collisionMap->at(x,ystart))
-                    return Point(goodx, goody);
-            }         
-            for(y = ystart; abs(y - ystart) < int32(rect->h); y -= ystep)
-            {
-                if(_collisionMap->at(xstart,y))
-                    return Point(goodx, goody);
-            }
-            xstart += xstep;
-            ystart += ystep;
-            goodx += xstep;
-            goody += ystep;
-
-            /*
-            // limit checking to max. width and height of the rect
-            int32 xstop = (xstep > 0 ? min(xstart + int32(rect->w), xend) : max(xstart - int32(rect->w), xend));
-            int32 ystop = (ystep > 0 ? min(ystart + int32(rect->h), yend) : max(ystart - int32(rect->h), yend));
-            goodx = rect->x;            
-            for(y = ystart ; (ystep > 0 ? y < ystop : y > ystop); y += ystep)
-            {
-                if(_collisionMap->at(xstart,y))
-                    return Point(goodx + xoffs, goody + yoffs);
-                goody = y; // no collision so far, this point was ok
-            }
-            goody = rect->y;
-            for(x = xstart ; (xstep > 0 ? x < xstop : x > xstop); x += xstep)
-            {
-                if(_collisionMap->at(x,ystart))
-                    return Point(goodx + xoffs, goody + yoffs);
-                goodx = x; // no collision so far, this point was ok
-            }
-            xstart += xstep;
-            ystart += ystep;
-            */
-        }
-        while( (ystep > 0 ? ystart < yend : ystart > yend) || (xstep > 0 ? xstart < xend : xstart > xend) );
+        r.MoveRelative(mdi.xstep * moveable, mdi.ystep * moveable);
     }
-
-    return Point(int32(rect->x),int32(rect->y)); // nothing found
+    return Point(int32(r.x), int32(r.y));
 }
 
 bool LayerMgr::CanFallDown(Point anchor, uint32 arealen)

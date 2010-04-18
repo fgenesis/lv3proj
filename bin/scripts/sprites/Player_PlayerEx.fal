@@ -5,6 +5,8 @@ class PlayerEx from Player
     climbSpeed = 64
     fallSpeed = 256
     raiseSpeed = 32
+    movingLeft = false
+    movingRight = false
     //_keyState = nil
     
     init
@@ -32,6 +34,14 @@ class PlayerEx from Player
         
 
         
+    end
+    
+    function OnUpdate(ms)
+        /*if self.movingLeft
+            self.phys.xspeed = -self.walkSpeed
+        elif self.movingRight
+            self.phys.xspeed = self.walkSpeed
+        end*/
     end
     
     function OnInput(vkey, val)
@@ -69,24 +79,35 @@ class PlayerEx from Player
     function OnKeyLeft(pressed)
         p = self.phys
         if pressed
+            self.movingLeft = true
+            self.movingRight = false
             self.GetSprite().name = "standR" // TODO: must be walkL
             p.xspeed = -self.walkSpeed
+            p.xaccel = -self.walkSpeed * 500
         else
-            if (p.xspeed < 0) // already moving in opposite direction?
+            self.movingLeft = false
+            if(p.xspeed < 0) // already moving in opposite direction?
                 p.xspeed = 0
+                p.xaccel = 0
                 self.GetSprite().name = "standR" // TODO: must be standL
             end
+            
         end
     end
     
     function OnKeyRight(pressed)
         p = self.phys
         if pressed
+            self.movingRight = true
+            self.movingLeft = false
             self.GetSprite().name = "walkR"
             p.xspeed = self.walkSpeed
+            p.xaccel = self.walkSpeed * 500
         else
+            self.movingRight = false
             if (p.xspeed > 0) // already moving in opposite direction?
                 p.xspeed = 0
+                p.xaccel = 0
                 self.GetSprite().name = "standR"
             end
         end

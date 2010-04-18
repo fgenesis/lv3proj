@@ -39,13 +39,13 @@ public:
 // the FalconProxyObject will handle correct cleanup on deletion,
 // and prevent that an object that was deleted in C++ but is still present in Falcon
 // and beeing accessed does not cause a segfault.
-class fal_ObjectCarrier : public Falcon::CoreObject
+class fal_ObjectCarrier : public Falcon::FalconObject
 {
     friend class FalconProxyObject;
 
 public:
     fal_ObjectCarrier( const Falcon::CoreClass* generator, FalconProxyObject *fobj )
-    : Falcon::CoreObject( generator ), _falObj(fobj)
+    : Falcon::FalconObject( generator ), _falObj(fobj)
     {
         _obj = fobj->obj; // save ptr for faster access
     }
@@ -53,7 +53,7 @@ public:
     static Falcon::CoreObject* factory( const Falcon::CoreClass *cls, void *user_data, bool );
     
 
-    Falcon::CoreObject *clone() const
+    Falcon::FalconObject *clone() const
     {
         return NULL; // not cloneable
     }

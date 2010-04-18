@@ -19,17 +19,19 @@ void ActiveRect::Init(void)
 
 void ActiveRect::SetBBox(float x_, float y_, uint32 w_, uint32 h_)
 {
-    this->x = x_;
-    this->y = y_;
-    this->w = w_;
-    this->h = h_;
+    BaseRect::SetBBox(x_, y_, w_, h_);
     HasMoved();
 }
 
 void ActiveRect::SetPos(float x_, float y_)
 {
-    this->x = x_;
-    this->y = y_;
+    BaseRect::SetPos(x_, y_);
+    HasMoved();
+}
+
+void ActiveRect::MoveRelative(float xr, float yr)
+{
+    SetPos(x + xr, y + yr);
     HasMoved();
 }
 

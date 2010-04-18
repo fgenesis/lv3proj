@@ -30,6 +30,7 @@ GameEngine::GameEngine()
     collRect.w = 32;
     collRect.h = 32;
     collRectGood = false;
+    checkDirection = DIRECTION_RIGHT;
 }
 
 GameEngine::~GameEngine()
@@ -181,7 +182,7 @@ void GameEngine::OnJoystickEvent(uint32 type, uint32 device, uint32 id, int32 va
     }
 }
 
-void GameEngine::OnMouseEvent(uint32 type, uint32 button, uint32 x, uint32 y, int32 rx, int32 ry)
+void GameEngine::OnMouseEvent(uint32 type, uint32 button, uint32 state, uint32 x, uint32 y, int32 rx, int32 ry)
 {
     // - TEST - this is all test stuff and will be removed later
     if(x >= uint32(mouseRect.w / 2) && y >= uint32(mouseRect.h / 2))
@@ -194,7 +195,7 @@ void GameEngine::OnMouseEvent(uint32 type, uint32 button, uint32 x, uint32 y, in
             if(!_layermgr->CanFallDown(Point(x, y + (mouseRect.h / 2) - 1), 12))
                 mouseCollision = 1;
         }
-        Point p = _layermgr->GetClosestNonCollidingPoint(&mouseRect, DIRECTION_UPRIGHT);
+        Point p = _layermgr->GetClosestNonCollidingPoint(&mouseRect, checkDirection);
         collRect.x = p.x;
         collRect.y = p.y;
         collRectGood = !_layermgr->CollisionWith(&collRect);
@@ -203,17 +204,34 @@ void GameEngine::OnMouseEvent(uint32 type, uint32 button, uint32 x, uint32 y, in
     // on mouseclick, text for intersection with the big white rect
     if(type == SDL_MOUSEBUTTONDOWN)
     {
-        uint8 side = mouseRect.CollisionWith(&bigRect);
-        char *sidestr;
-        switch(side)
+        if(button == 1)
         {
-            case SIDE_TOP: sidestr = "top"; break;
-            case SIDE_BOTTOM: sidestr = "bottom"; break;
-            case SIDE_LEFT: sidestr = "left"; break;
-            case SIDE_RIGHT: sidestr = "right"; break;
-            default: sidestr = "none"; break;
+            uint8 side = mouseRect.CollisionWith(&bigRect);
+            char *sidestr;
+            switch(side)
+            {
+                case SIDE_TOP: sidestr = "top"; break;
+                case SIDE_BOTTOM: sidestr = "bottom"; break;
+                case SIDE_LEFT: sidestr = "left"; break;
+                case SIDE_RIGHT: sidestr = "right"; break;
+                default: sidestr = "none"; break;
+            }
+            logerror("(%d, %d) COLLISION: %s (%u)", int(mouseRect.x), int(mouseRect.y), sidestr, side);
         }
-        logerror("(%d, %d) COLLISION: %s (%u)", int(mouseRect.x), int(mouseRect.y), sidestr, side);
+        else if(button == 3)
+        {
+            switch(checkDirection)
+            {
+                case DIRECTION_RIGHT: checkDirection = DIRECTION_DOWNRIGHT; break;
+                case DIRECTION_DOWNRIGHT: checkDirection = DIRECTION_DOWN; break;
+                case DIRECTION_DOWN: checkDirection = DIRECTION_DOWNLEFT; break;
+                case DIRECTION_DOWNLEFT: checkDirection = DIRECTION_LEFT; break;
+                case DIRECTION_LEFT: checkDirection = DIRECTION_UPLEFT; break;
+                case DIRECTION_UPLEFT: checkDirection = DIRECTION_UP; break;
+                case DIRECTION_UP: checkDirection = DIRECTION_UPRIGHT; break;
+                case DIRECTION_UPRIGHT: checkDirection = DIRECTION_RIGHT; break;
+            }
+        }
     }
 
 

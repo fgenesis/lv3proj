@@ -220,9 +220,9 @@ bool fal_ObjectCarrier::setProperty( const Falcon::String &prop, const Falcon::I
     bool rectChanged = false;
 
     if(prop == "x") { ((ActiveRect*)_obj)->x = float(value.forceNumeric()); rectChanged = true; }
-    if(prop == "y") { ((ActiveRect*)_obj)->y = float(value.forceNumeric()); rectChanged = true; }
-    if(prop == "w") { ((ActiveRect*)_obj)->w = value.forceInteger(); rectChanged = true; }
-    if(prop == "h") { ((ActiveRect*)_obj)->h = value.forceInteger(); rectChanged = true; }
+    else if(prop == "y") { ((ActiveRect*)_obj)->y = float(value.forceNumeric()); rectChanged = true; }
+    else if(prop == "w") { ((ActiveRect*)_obj)->w = value.forceInteger(); rectChanged = true; }
+    else if(prop == "h") { ((ActiveRect*)_obj)->h = value.forceInteger(); rectChanged = true; }
     if(rectChanged)
     {
         if(_obj->GetType() >= OBJTYPE_OBJECT)
@@ -232,7 +232,7 @@ bool fal_ObjectCarrier::setProperty( const Falcon::String &prop, const Falcon::I
     }
 
     // faster check for x2, y2, x2f, y2f
-    if(prop.length() > 1 && prop.getCharAt(1) == '2' && (prop.getCharAt(0) == 'x' || prop.getCharAt('y')))
+    if(prop.length() > 1 && prop.length() <= 3 && prop.getCharAt(1) == '2' && (prop.getCharAt(0) == 'x' || prop.getCharAt('y')))
     {
         throw new Falcon::AccessError( Falcon::ErrorParam( Falcon::e_prop_ro ).
             extra( prop ) );   
@@ -254,7 +254,7 @@ bool fal_ObjectCarrier::setProperty( const Falcon::String &prop, const Falcon::I
         return true; // if trying to assign phys to an ActiveRect, simply nothing will happen
     }
 
-    return false;
+    return FalconObject::setProperty(prop, value);
 }
 
 bool fal_ObjectCarrier::getProperty( const Falcon::String &prop, Falcon::Item &ret ) const
@@ -288,7 +288,7 @@ bool fal_ObjectCarrier::getProperty( const Falcon::String &prop, Falcon::Item &r
         return true;
     }
 
-    return defaultProperty( prop, ret); // property not found
+    return FalconObject::getProperty( prop, ret) || defaultProperty( prop, ret); // property not found
 }
 
 // unbind the BaseObject from Falcon

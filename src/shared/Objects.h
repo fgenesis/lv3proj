@@ -24,6 +24,7 @@ enum ObjectType
     OBJTYPE_PLAYER  = 4
 };
 
+// basic object class, defines shared properties but can't be instantiated
 class BaseObject
 {
     friend class ObjectMgr;
@@ -45,35 +46,24 @@ protected:
     LayerMgr *_layermgr; // required for collision checks
 };
 
-// the base of everything
-class ActiveRect : public BaseObject
+
+// A rectangle with object properties and falon bindings, the base of everything.
+class ActiveRect : public BaseObject, public BaseRect
 {
 public:
     virtual void Init(void);
 
     virtual void SetBBox(float x, float y, uint32 w, uint32 h);
     virtual void SetPos(float x, float y);
+    virtual void MoveRelative(float xr, float yr);
 
     // see SharedDefines.h for the sides enum
     virtual void OnEnter(uint8 side, ActiveRect *who);
     virtual void OnLeave(uint8 side, ActiveRect *who);
     virtual bool OnTouch(uint8 side, ActiveRect *who);
 
-    float x, y; // we have to use floats for correct movement, so that rounding does not make fuss with movements < 1 pixel per step.
-    uint32 w, h;
-
     uint8 CollisionWith(ActiveRect *other); // returns side where the collision occurred
     void AlignToSideOf(ActiveRect *other, uint8 side);
-
-    // Method to calculate the second X corner
-    inline int x2(void) const { return int32r(x) + w; }
-    // Method to calculate the second Y corner
-    inline int y2(void) const { return int32r(y) + h; }
-
-    // Method to calculate the second X corner (float)
-    inline float x2f(void) const { return x + float(w); }
-    // Method to calculate the second Y corner (float)
-    inline float y2f(void) const { return y + float(h); }
 
     inline bool HasMoved(void) { return _moved; }
     inline void SetMoved(bool moved = true) { _moved = moved; }

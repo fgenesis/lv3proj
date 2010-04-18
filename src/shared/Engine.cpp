@@ -135,12 +135,12 @@ void Engine::_ProcessEvents(void)
                 break;
 
             case SDL_MOUSEMOTION:
-                OnMouseEvent(evt.type, evt.motion.state, evt.motion.x, evt.motion.y, evt.motion.xrel, evt.motion.yrel);
+                OnMouseEvent(evt.type, 0, evt.motion.state, evt.motion.x, evt.motion.y, evt.motion.xrel, evt.motion.yrel);
                 break;
 
             case SDL_MOUSEBUTTONDOWN:
             case SDL_MOUSEBUTTONUP:
-                OnMouseEvent(evt.type, evt.button.state, evt.button.x, evt.button.y, 0, 0);
+                OnMouseEvent(evt.type, evt.button.button, evt.button.state, evt.button.x, evt.button.y, 0, 0);
                 break;
 
             case SDL_QUIT:
@@ -197,7 +197,7 @@ void Engine::OnWindowEvent(bool active)
     // TODO: pause if lost focus?
 }
 
-void Engine::OnMouseEvent(uint32 type, uint32 button, uint32 x, uint32 y, int32 rx, int32 ry)
+void Engine::OnMouseEvent(uint32 type, uint32 button, uint32 state, uint32 x, uint32 y, int32 rx, int32 ry)
 {
 }
 

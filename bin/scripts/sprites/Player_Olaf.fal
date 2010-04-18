@@ -4,9 +4,6 @@ class Olaf from PlayerEx
 
     gfx = "sprites/olaf1.anim"
 
-    function OnUpdate(ms)
-        //> ms, " - Olaf Updated!"
-    end
 
 end
 
