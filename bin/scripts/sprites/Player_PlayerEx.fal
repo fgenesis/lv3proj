@@ -86,7 +86,7 @@ class PlayerEx from Player
             p.xaccel = -self.walkSpeed * 500
         else
             self.movingLeft = false
-            if(p.xspeed < 0) // already moving in opposite direction?
+            if(p.xspeed <= 0) // already moving in opposite direction?
                 p.xspeed = 0
                 p.xaccel = 0
                 self.GetSprite().name = "standR" // TODO: must be standL
@@ -105,7 +105,7 @@ class PlayerEx from Player
             p.xaccel = self.walkSpeed * 500
         else
             self.movingRight = false
-            if (p.xspeed > 0) // already moving in opposite direction?
+            if (p.xspeed >= 0) // already moving in opposite direction?
                 p.xspeed = 0
                 p.xaccel = 0
                 self.GetSprite().name = "standR"

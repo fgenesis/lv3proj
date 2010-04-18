@@ -243,7 +243,7 @@ Point LayerMgr::GetClosestNonCollidingPoint(BaseRect *rect, uint8 direction)
     MovementDirectionInfo mdi(*rect, direction);
     BaseRect r = rect->cloneRect();
     int32 moveable;
-    while(moveable = (int32)CanMoveToDirection(&r, mdi, uint32(-1) )) // try to move as far as possible
+    if(moveable = (int32)CanMoveToDirection(&r, mdi, uint32(-1) )) // try to move as far as possible
     {
         r.MoveRelative(mdi.xstep * moveable, mdi.ystep * moveable);
     }
