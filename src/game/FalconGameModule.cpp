@@ -378,6 +378,22 @@ FALCON_FUNC fal_ActiveRect_SetPos(Falcon::VMachine *vm)
     obj->HasMoved();
 }
 
+FALCON_FUNC fal_ActiveRect_CanMoveToDir(Falcon::VMachine *vm)
+{
+    FALCON_REQUIRE_PARAMS_EXTRA(1, "N[,N]");
+    uint8 d = vm->param(0)->forceIntegerEx();
+    fal_ObjectCarrier *self = Falcon::dyncast<fal_ObjectCarrier*>( vm->self().asObject() );
+    if(vm->paramCount() >= 2)
+    {
+        uint32 pixels = vm->param(1)->forceIntegerEx();
+        vm->retval((int64)((ActiveRect*)self->GetObj())->CanMoveToDirection(d, pixels));
+    }
+    else
+    {
+        vm->retval((int64)((ActiveRect*)self->GetObj())->CanMoveToDirection(d)); // use builtin default value
+    }
+}
+
 FALCON_FUNC fal_Object_SetAffectedByPhysics(Falcon::VMachine *vm)
 {
     FALCON_REQUIRE_PARAMS(1);
@@ -623,6 +639,11 @@ FALCON_FUNC fal_Object_GetSprite(Falcon::VMachine *vm)
     vm->retval(new fal_Tile(cls, ((Object*)self->GetObj())->GetSprite()));
 }
 
+FALCON_FUNC fal_Object_CanFallDown(Falcon::VMachine *vm)
+{
+    fal_ObjectCarrier *self = Falcon::dyncast<fal_ObjectCarrier*>( vm->self().asObject() );
+    vm->retval(((Object*)self->GetObj())->CanFallDown());
+}
 
 FALCON_FUNC fal_Screen_GetLayer(Falcon::VMachine *vm)
 {
@@ -1109,6 +1130,7 @@ Falcon::Module *FalconGameModule_create(void)
     m->addClassMethod(clsRect, "OnTouch", fal_NullFunc);
     m->addClassMethod(clsRect, "SetBBox", fal_ActiveRect_SetBBox);
     m->addClassMethod(clsRect, "SetPos", fal_ActiveRect_SetPos);
+    m->addClassMethod(clsRect, "CanMoveToDir", fal_ActiveRect_CanMoveToDir);
     m->addClassProperty(clsRect, "x");
     m->addClassProperty(clsRect, "y");
     m->addClassProperty(clsRect, "w");
@@ -1127,6 +1149,7 @@ Falcon::Module *FalconGameModule_create(void)
     m->addClassMethod(clsObject, "GetSprite", fal_Object_GetSprite);
     m->addClassMethod(clsObject, "SetAffectedByPhysics", &fal_Object_SetAffectedByPhysics);
     m->addClassMethod(clsObject, "IsAffectedByPhysics", &fal_Object_IsAffectedByPhysics);
+    m->addClassMethod(clsObject, "CanFallDown", &fal_Object_CanFallDown);
     m->addClassProperty(clsObject, "phys");
 
     Falcon::Symbol *clsItem = m->addClass("Item", &fal_ObjectCarrier::init);

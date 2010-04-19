@@ -33,14 +33,33 @@ function DoSomeResets(who, inp)
 end
 
 RegisterInputHook("DoSomeResets", .[DoSomeResets olaf] )
-
 RegisterRawInputHook("DisableInputOn", .[DisableInputOn SDLK.END])
+RegisterRawInputHook("CyceGravityOn", .[CycleGravityOn SDLK.PAGEDOWN])
 
 function DisableInputOn(k, e)
     ty, src, which, value = e
     if ty == EVENT_TYPE_KEYBOARD and which == k and value != 0
         KeyMap.disabled = not KeyMap.disabled
         > "KeyMap: ", (KeyMap.disabled ? "disabled" : "enabled")
+    end
+end
+
+function CycleGravityOn(k, e)
+    ty, src, which, value = e
+    if ty == EVENT_TYPE_KEYBOARD and which == k and value != 0
+        CycleGravity()
+        > "Gravity is now: ", Physics.GetGravity()
+    end
+end
+
+function CycleGravity()
+    switch Physics.GetGravity()
+        case 300
+            Physics.SetGravity(60)
+        case 60
+            Physics.SetGravity(-80)
+        default
+            Physics.SetGravity(300)
     end
 end
 

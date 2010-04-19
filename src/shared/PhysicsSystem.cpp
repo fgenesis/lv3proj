@@ -14,16 +14,23 @@ void PhysicsMgr::UpdatePhysics(Object *obj, uint32 ms)
     PhysProps& phys = obj->phys;
     float tf =  ms * 0.001f; // time factor
     bool canfall = obj->CanFallDown();
+    bool canGoUp = obj->CanMoveToDirection(DIRECTION_UP); // TODO: this should be replaced with CanFallDown() equivalent
     uint8 speedsSet = 0; // can be 0, 1 or 2
     bool neg;
 
     // set y acceleration to gravity if we can fall down and acceleration is lower then gravity
-    if(canfall)
+    if(envPhys.gravity >= 0 && canfall)
     {
         if(phys.weight && phys.yaccel < envPhys.gravity)
             phys.yaccel = envPhys.gravity;
     }
-    else // we can't fall, means there is wall directly below us; stop all movement down and set acceleration to 0
+    // set y acceleration to gravity if we can go up and acceleration not as negative as gravity
+    else if(envPhys.gravity < 0 && canGoUp)
+    {
+        if(phys.weight && phys.yaccel > envPhys.gravity)
+            phys.yaccel = envPhys.gravity;
+    }
+    else // we can't go where gravity forces us, means there is wall directly near us; stop all movement into that direction and set acceleration to 0
     {
         if(phys.yaccel > 0.0f)
             phys.yaccel = 0.0f;
@@ -41,7 +48,7 @@ void PhysicsMgr::UpdatePhysics(Object *obj, uint32 ms)
         ++speedsSet;
         neg = fastsgncheck(phys.xspeed);
 
-        // limit speed if required
+        // limit y speed if required
         if(phys.xmaxspeed >= 0.0f && abs(phys.xspeed) > phys.xmaxspeed)
             phys.xspeed = neg ? -phys.xmaxspeed : phys.xmaxspeed;
 
@@ -63,6 +70,7 @@ void PhysicsMgr::UpdatePhysics(Object *obj, uint32 ms)
         ++speedsSet;
         neg = fastsgncheck(phys.yspeed);
 
+        // limit y speed if required
         if(phys.ymaxspeed >= 0.0f && abs(phys.yspeed) > phys.ymaxspeed)
             phys.yspeed = neg ? -phys.ymaxspeed : phys.ymaxspeed;
 
@@ -79,109 +87,107 @@ void PhysicsMgr::UpdatePhysics(Object *obj, uint32 ms)
 
     // we are not moving, nothing else to do here.
     if(!speedsSet)
-        return;
-
-
-    if(speedsSet) // at least one speed is != 0
     {
-        // get new positions for current speed and time diff
-        float newx = obj->x + (phys.xspeed * tf);
-        float newy = obj->y + (phys.yspeed * tf);
-
-        uint8 dirx = DIRECTION_NONE, diry = DIRECTION_NONE;
-
-
-        // check if obj can move in x direction
-        if(phys.xspeed)
-        {
-            if(newx < obj->x)
-            {
-                dirx |= DIRECTION_LEFT;
-                if(!_layerMgr->CanMoveToDirection(obj, DIRECTION_LEFT))
-                {
-                    phys.xspeed = 0.0f;
-                }
-            }
-            else// if(newx > obj->x)
-            {
-                dirx |= DIRECTION_RIGHT;
-                if(!_layerMgr->CanMoveToDirection(obj, DIRECTION_RIGHT))
-                {
-                    phys.xspeed = 0.0f;
-                }
-            }
-        }
-
-        // check if obj can move in y direction
-        if(phys.yspeed)
-        {
-            if(newy < obj->y)
-            {
-                diry |= DIRECTION_UP;
-                if(!_layerMgr->CanMoveToDirection(obj, DIRECTION_UP))
-                {
-                    phys.yspeed = 0.0f;
-                }
-            }
-            else// if(newy > obj->y)
-            {
-                diry |= DIRECTION_DOWN;
-                if(!_layerMgr->CanMoveToDirection(obj, DIRECTION_DOWN))
-                {
-                    phys.yspeed = 0.0f;
-                }
-            }
-        }
-
-        uint8 direction = dirx | diry; // combined directions
-        float oldx = obj->x;
-        float oldy = obj->y;
-        if(phys.xspeed && phys.yspeed) // cam move diagonally? have to recheck if thats the case
-        {
-            if(_layerMgr->CanMoveToDirection(obj, direction))
-            {
-                // obj can move, do it.
-                obj->x = newx;
-                obj->y = newy;
-            }
-            else
-            {
-                // moving into both directions failed, prefer moving up or down only.
-                // the directions stay as they are, otherwise GetClosestNonCollidingPoint() would do mess.
-                obj->y = newy;
-            }
-        }
-        else // just moving in one direction (the check for this was already done above)
-        {
-            if(phys.xspeed)
-                obj->x = newx;
-            if(phys.yspeed)
-                obj->y = newy;
-        }
-
-        // oops, newly selected position is somewhere inside a wall, find nearest valid spot
-        if(direction && _layerMgr->CollisionWith(obj))
-        {
-            obj->x = oldx;
-            obj->y = oldy;
-
-            Point np = _layerMgr->GetClosestNonCollidingPoint(obj, direction);
-
-            obj->x = float(np.x);
-            obj->y = float(np.y);
-
-            // now check where we can move from this position
-            if(dirx && !_layerMgr->CanMoveToDirection(obj, dirx))
-            {
-                phys.xspeed = 0;
-            }
-            if(diry && !_layerMgr->CanMoveToDirection(obj, diry))
-            {
-                phys.yspeed = 0;
-            }
-        }
-
-        obj->UpdateAnchor();
-        obj->HasMoved();
+        return;
     }
+
+    // get new positions for current speed and time diff
+    float newx = obj->x + (phys.xspeed * tf);
+    float newy = obj->y + (phys.yspeed * tf);
+
+    uint8 dirx = DIRECTION_NONE, diry = DIRECTION_NONE;
+
+
+    // check if obj can move in x direction
+    if(phys.xspeed)
+    {
+        if(newx < obj->x)
+        {
+            dirx |= DIRECTION_LEFT;
+            if(!_layerMgr->CanMoveToDirection(obj, DIRECTION_LEFT))
+            {
+                phys.xspeed = 0.0f;
+            }
+        }
+        else// if(newx > obj->x)
+        {
+            dirx |= DIRECTION_RIGHT;
+            if(!_layerMgr->CanMoveToDirection(obj, DIRECTION_RIGHT))
+            {
+                phys.xspeed = 0.0f;
+            }
+        }
+    }
+
+    // check if obj can move in y direction
+    if(phys.yspeed)
+    {
+        if(newy < obj->y)
+        {
+            diry |= DIRECTION_UP;
+            if(!_layerMgr->CanMoveToDirection(obj, DIRECTION_UP))
+            {
+                phys.yspeed = 0.0f;
+            }
+        }
+        else// if(newy > obj->y)
+        {
+            diry |= DIRECTION_DOWN;
+            if(!_layerMgr->CanMoveToDirection(obj, DIRECTION_DOWN))
+            {
+                phys.yspeed = 0.0f;
+            }
+        }
+    }
+
+    uint8 direction = dirx | diry; // combined directions
+    float oldx = obj->x;
+    float oldy = obj->y;
+    if(phys.xspeed && phys.yspeed) // cam move diagonally? have to recheck if thats the case
+    {
+        if(_layerMgr->CanMoveToDirection(obj, direction))
+        {
+            // obj can move, do it.
+            obj->x = newx;
+            obj->y = newy;
+        }
+        else
+        {
+            // moving into both directions failed, prefer moving up or down only.
+            // the directions stay as they are, otherwise GetClosestNonCollidingPoint() would do mess.
+            obj->y = newy;
+        }
+    }
+    else // just moving in one direction (the check for this was already done above)
+    {
+        if(phys.xspeed)
+            obj->x = newx;
+        if(phys.yspeed)
+            obj->y = newy;
+    }
+
+    // oops, newly selected position is somewhere inside a wall, find nearest valid spot
+    if(direction && _layerMgr->CollisionWith(obj))
+    {
+        obj->x = oldx;
+        obj->y = oldy;
+
+        Point np = _layerMgr->GetClosestNonCollidingPoint(obj, direction);
+
+        obj->x = float(np.x);
+        obj->y = float(np.y);
+
+        // now check where we can move from this position
+        if(dirx && !_layerMgr->CanMoveToDirection(obj, dirx))
+        {
+            phys.xspeed = 0;
+        }
+        if(diry && !_layerMgr->CanMoveToDirection(obj, diry))
+        {
+            phys.yspeed = 0;
+        }
+    }
+
+    obj->UpdateAnchor();
+    obj->HasMoved();
 }

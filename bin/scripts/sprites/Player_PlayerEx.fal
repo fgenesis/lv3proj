@@ -44,10 +44,14 @@ class PlayerEx from Player
     end
     
     function UpdateAnim()
-        if self.phys.yspeed // TODO: ladder climbing etc
+        if self.phys.yspeed or self.CanFallDown() // TODO: ladder climbing etc
             self.AnimFall()
         elif self.ownSpeedX
-            self.AnimWalk()
+            if self.CanMoveToDir(self.movingDir)
+                self.AnimWalk()
+            else
+                self.AnimPush()
+            end
         else
             self.AnimStand()
         end
@@ -147,12 +151,15 @@ class PlayerEx from Player
     
     function IsFallingDeep(): return self.phys.yspeed >= self.fallSpeed
     
-    function AnimWalk(): return self.facingDir == DIRECTION_LEFT ? self.AnimWalkR() : self.AnimWalkR()
-    function AnimStand(): return self.facingDir == DIRECTION_LEFT ? self.AnimStandR() : self.AnimStandR() 
-    function AnimFall(): return self.facingDir == DIRECTION_LEFT ? self.AnimFallR() : self.AnimFallR()
+    function AnimWalk(): return self.facingDir == DIRECTION_LEFT ? self.AnimWalkL() : self.AnimWalkR()
+    function AnimPush(): return self.facingDir == DIRECTION_LEFT ? self.AnimPushL() : self.AnimPushR()
+    function AnimStand(): return self.facingDir == DIRECTION_LEFT ? self.AnimStandL() : self.AnimStandR() 
+    function AnimFall(): return self.facingDir == DIRECTION_LEFT ? self.AnimFallL() : self.AnimFallR()
     
     function AnimWalkL(): self.GetSprite().name = "walkL"
     function AnimWalkR(): self.GetSprite().name = "walkR"
+    function AnimPushL(): self.GetSprite().name = "pushL"
+    function AnimPushR(): self.GetSprite().name = "pushR"
     function AnimStandL(): self.GetSprite().name = "standL"
     function AnimStandR(): self.GetSprite().name = "standR"
     function AnimFallL(): self.GetSprite().name = (self.IsFallingDeep() ? "fallL" : "falldeepL")

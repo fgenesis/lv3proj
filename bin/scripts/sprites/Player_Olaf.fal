@@ -21,11 +21,11 @@ class Olaf from PlayerEx
     
     function IsFallingDeep(): return (not self.shieldUp) and (self.phys.yspeed >= self.fallSpeed)
     
-    function AnimWalkL(): self.GetSprite().name = (self.shieldUp ? "walkL" : "walkL") // TODO: 1st must be "walksuL"
-    function AnimWalkR(): self.GetSprite().name = (self.shieldUp ? "walkR" : "walkR") // TODO: 1st must be "walksuR"
+    function AnimWalkL(): self.GetSprite().name = (self.shieldUp ? "walksuL" : "walkL")
+    function AnimWalkR(): self.GetSprite().name = (self.shieldUp ? "walksuR" : "walkR")
     function AnimStandL(): self.GetSprite().name = (self.shieldUp ? "standsuL" : "standL")
     function AnimStandR(): self.GetSprite().name = (self.shieldUp ? "standsuR" : "standR")
-    function AnimFallL(): self.AnimFallLR("R") // TODO: must be "L"
+    function AnimFallL(): self.AnimFallLR("L")
     function AnimFallR(): self.AnimFallLR("R")
     function AnimFallLR(d)
         p = self.phys

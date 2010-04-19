@@ -121,6 +121,11 @@ void ActiveRect::AlignToSideOf(ActiveRect *other, uint8 side)
     // TODO: ...
 }
 
+uint32 ActiveRect::CanMoveToDirection(uint8 d, uint32 pixels /* = 1 */)
+{
+    return _layermgr->CanMoveToDirection((BaseRect*)this, d, pixels);
+}
+
 void Object::Init(void)
 {
     type = OBJTYPE_OBJECT;

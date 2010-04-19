@@ -68,6 +68,8 @@ public:
     inline bool HasMoved(void) { return _moved; }
     inline void SetMoved(bool moved = true) { _moved = moved; }
 
+    uint32 CanMoveToDirection(uint8 d, uint32 pixels = 1);
+
 protected:
 
     bool _moved; // do collision detection if one of the involved objects moved
