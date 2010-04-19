@@ -2,12 +2,14 @@ class PlayerEx from Player
     
     gfx = nil
     walkSpeed = 64
-    climbSpeed = 64
+    climbSpeed = 64 // NYI
     fallSpeed = 256
-    raiseSpeed = 32
-    movingLeft = false
-    movingRight = false
-    //_keyState = nil
+    raiseSpeed = 32 // NYI
+    facingDir = DIRECTION_RIGHT
+    movingDir = DIRECTION_NONE
+    
+    baseSpeedX = 0 // speed from external source (beeing transported, blown away by fan, etc.)
+    ownSpeedX = 0 // own walking speed
     
     init
         self.SetBBox(0,0,32,32)
@@ -21,31 +23,54 @@ class PlayerEx from Player
         p.weight = 70 // to have some default value
         p.xspeed = 0
         p.yspeed = 0
-        p.xmaxspeed = self.walkSpeed
+        p.xmaxspeed = self.walkSpeed  * 2 // do we really need a limit here?
         p.ymaxspeed = self.fallSpeed
         p.xaccel = 0
         p.yaccel = 0
         p.xfriction = 0
         p.yfriction = 0
         self.SetAffectedByPhysics(true)
-        
-        // init pressed key map
-        //self._keyState = arrayBuffer(KeyMAX)
-        
 
         
     end
     
     function OnUpdate(ms)
-        /*if self.movingLeft
-            self.phys.xspeed = -self.walkSpeed
-        elif self.movingRight
-            self.phys.xspeed = self.walkSpeed
-        end*/
+        self.UpdateMovement()
+        self.UpdateAnim()
     end
     
+    function UpdateMovement()
+        self.phys.xspeed = self.baseSpeedX + self.ownSpeedX
+    end
+    
+    function UpdateAnim()
+        if self.phys.yspeed // TODO: ladder climbing etc
+            self.AnimFall()
+        elif self.ownSpeedX
+            self.AnimWalk()
+        else
+            self.AnimStand()
+        end
+    end
+    
+    function SetWalking(d)
+        switch d
+            case DIRECTION_LEFT
+                self.facingDir = DIRECTION_LEFT
+                self.ownSpeedX = -self.walkSpeed
+            
+            case DIRECTION_RIGHT
+                self.facingDir = DIRECTION_RIGHT
+                self.ownSpeedX = self.walkSpeed
+            
+            default
+                self.ownSpeedX = 0
+        end
+        self.movingDir = d
+    end
+        
+    
     function OnInput(vkey, val)
-        //self._keyState[vkey] = val
         switch vkey
             case KeyLEFT
                 self.OnKeyLeft(val)
@@ -79,38 +104,25 @@ class PlayerEx from Player
     function OnKeyLeft(pressed)
         p = self.phys
         if pressed
-            self.movingLeft = true
-            self.movingRight = false
-            self.GetSprite().name = "standR" // TODO: must be walkL
-            p.xspeed = -self.walkSpeed
-            p.xaccel = -self.walkSpeed * 500
+            self.SetWalking(DIRECTION_LEFT)
         else
-            self.movingLeft = false
-            if(p.xspeed <= 0) // already moving in opposite direction?
-                p.xspeed = 0
-                p.xaccel = 0
-                self.GetSprite().name = "standR" // TODO: must be standL
+            if(self.movingDir == DIRECTION_LEFT) // already moving in opposite direction?
+                self.SetWalking(DIRECTION_NONE)
             end
-            
         end
+        self.UpdateMovement()
     end
     
     function OnKeyRight(pressed)
         p = self.phys
         if pressed
-            self.movingRight = true
-            self.movingLeft = false
-            self.GetSprite().name = "walkR"
-            p.xspeed = self.walkSpeed
-            p.xaccel = self.walkSpeed * 500
+            self.SetWalking(DIRECTION_RIGHT)
         else
-            self.movingRight = false
-            if (p.xspeed >= 0) // already moving in opposite direction?
-                p.xspeed = 0
-                p.xaccel = 0
-                self.GetSprite().name = "standR"
+            if(self.movingDir == DIRECTION_RIGHT) // already moving in opposite direction?
+                self.SetWalking(DIRECTION_NONE)
             end
         end
+        self.UpdateMovement()
     end
     
     // --DEBUG JUMP--
@@ -132,6 +144,20 @@ class PlayerEx from Player
     
     function OnKeyY(pressed)
     end
+    
+    function IsFallingDeep(): return self.phys.yspeed >= self.fallSpeed
+    
+    function AnimWalk(): return self.facingDir == DIRECTION_LEFT ? self.AnimWalkR() : self.AnimWalkR()
+    function AnimStand(): return self.facingDir == DIRECTION_LEFT ? self.AnimStandR() : self.AnimStandR() 
+    function AnimFall(): return self.facingDir == DIRECTION_LEFT ? self.AnimFallR() : self.AnimFallR()
+    
+    function AnimWalkL(): self.GetSprite().name = "walkL"
+    function AnimWalkR(): self.GetSprite().name = "walkR"
+    function AnimStandL(): self.GetSprite().name = "standL"
+    function AnimStandR(): self.GetSprite().name = "standR"
+    function AnimFallL(): self.GetSprite().name = (self.IsFallingDeep() ? "fallL" : "falldeepL")
+    function AnimFallR(): self.GetSprite().name = (self.IsFallingDeep() ? "fallR" : "falldeepR")
+    
     
 end
 

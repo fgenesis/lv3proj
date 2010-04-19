@@ -3,7 +3,46 @@
 class Olaf from PlayerEx
 
     gfx = "sprites/olaf1.anim"
+    shieldUp = false
+    glideSpeed = 32
 
+    function OnKeyB(pressed)
+        if pressed: self.ToggleShield()
+    end
+    
+    function OnKeyY(pressed)
+        if pressed: self.ToggleShield()
+    end
+    
+    function ToggleShield()
+        self.shieldUp = not self.shieldUp
+        self.phys.ymaxspeed = (self.shieldUp ? self.glideSpeed : self.fallSpeed)
+    end
+    
+    function IsFallingDeep(): return (not self.shieldUp) and (self.phys.yspeed >= self.fallSpeed)
+    
+    function AnimWalkL(): self.GetSprite().name = (self.shieldUp ? "walkL" : "walkL") // TODO: 1st must be "walksuL"
+    function AnimWalkR(): self.GetSprite().name = (self.shieldUp ? "walkR" : "walkR") // TODO: 1st must be "walksuR"
+    function AnimStandL(): self.GetSprite().name = (self.shieldUp ? "standsuL" : "standL")
+    function AnimStandR(): self.GetSprite().name = (self.shieldUp ? "standsuR" : "standR")
+    function AnimFallL(): self.AnimFallLR("R") // TODO: must be "L"
+    function AnimFallR(): self.AnimFallLR("R")
+    function AnimFallLR(d)
+        p = self.phys
+        sp = self.GetSprite()
+        if self.shieldUp
+            if p.xspeed
+                sp.name = "glidemove" + d
+            else
+                sp.name = "glide" + d
+            end
+        elif self.IsFallingDeep()
+            sp.name = "falldeep" + d
+        else
+            sp.name = "fall" + d
+        end
+    end
+    
 
 end
 

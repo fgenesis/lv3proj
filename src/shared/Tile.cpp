@@ -25,6 +25,10 @@ void AnimatedTile::SetFrame(uint32 frame)
 
 void AnimatedTile::SetName(char *name)
 {
+    // only change frame if the name really changes
+    if(curFrameStore->name == name)
+        return;
+
     AnimMap::iterator am = ani->anims.find(name);
     if(am != ani->anims.end())
     {
