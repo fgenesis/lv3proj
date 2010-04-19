@@ -34,7 +34,15 @@ end
 
 RegisterInputHook("DoSomeResets", .[DoSomeResets olaf] )
 
+RegisterRawInputHook("DisableInputOn", .[DisableInputOn SDLK.END])
 
+function DisableInputOn(k, e)
+    ty, src, which, value = e
+    if ty == EVENT_TYPE_KEYBOARD and which == k and value != 0
+        KeyMap.disabled = not KeyMap.disabled
+        > "KeyMap: ", (KeyMap.disabled ? "disabled" : "enabled")
+    end
+end
 
 
 // open a menu. so far only controllable via console.

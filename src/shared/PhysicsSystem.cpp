@@ -140,8 +140,14 @@ void PhysicsMgr::UpdatePhysics(Object *obj, uint32 ms)
         {
             if(_layerMgr->CanMoveToDirection(obj, direction))
             {
-                // seems obj can move, do it.
+                // obj can move, do it.
                 obj->x = newx;
+                obj->y = newy;
+            }
+            else
+            {
+                // moving into both directions failed, prefer moving up or down only.
+                // the directions stay as they are, otherwise GetClosestNonCollidingPoint() would do mess.
                 obj->y = newy;
             }
         }
