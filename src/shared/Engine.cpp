@@ -119,11 +119,11 @@ void Engine::_ProcessEvents(void)
 
             case SDL_JOYBUTTONDOWN:
             case SDL_JOYBUTTONUP:
-                OnJoystickEvent(evt.jbutton.type, evt.jbutton.which, evt.jbutton.which, evt.jbutton.state);
+                OnJoystickEvent(evt.jbutton.type, evt.jbutton.which, evt.jbutton.button, evt.jbutton.state);
                 break;
 
             case SDL_JOYHATMOTION:
-                OnJoystickEvent(evt.jhat.type, evt.jhat.which, evt.jhat.which, evt.jhat.value);
+                OnJoystickEvent(evt.jhat.type, evt.jhat.which, evt.jhat.hat, evt.jhat.value);
                 break;
 
             case SDL_ACTIVEEVENT:
