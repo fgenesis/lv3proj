@@ -95,7 +95,7 @@ void LayerMgr::UpdateCollisionMap(void)
 // TODO: this can maybe be a lot more optimized...
 void LayerMgr::UpdateCollisionMap(uint32 x, uint32 y) // this x and y are tile positions!
 {
-    DEBUG_LOG("LayerMgr::UpdateCollisionMap(%u, %u)", x, y);
+    //DEBUG_LOG("LayerMgr::UpdateCollisionMap(%u, %u)", x, y);
     DEBUG(ASSERT(_collisionMap));
     uint32 x16 = x << 4, y16 = y << 4; // x*16, y*16
     // pre-select layers to be used, and check if a tile exists at that position

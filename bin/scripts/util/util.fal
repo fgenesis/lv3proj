@@ -9,4 +9,6 @@ function climit(cur, lower, upper)
     return cur
 end
 
+function arraysum(y): return reduce( {a,b => a+b}, y, 0 )
+
 export

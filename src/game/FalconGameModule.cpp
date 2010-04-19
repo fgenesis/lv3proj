@@ -1158,10 +1158,21 @@ Falcon::Module *FalconGameModule_create(void)
     m->addClassProperty(clsPhysProps, "yfriction");
 
 
-    m->addConstant("EVENT_TYPE_KEYBOARD", Falcon::int64(EVENT_TYPE_KEYBOARD));
+    m->addConstant("EVENT_TYPE_KEYBOARD",        Falcon::int64(EVENT_TYPE_KEYBOARD));
     m->addConstant("EVENT_TYPE_JOYSTICK_BUTTON", Falcon::int64(EVENT_TYPE_JOYSTICK_BUTTON));
-    m->addConstant("EVENT_TYPE_JOYSTICK_AXIS", Falcon::int64(EVENT_TYPE_JOYSTICK_AXIS));
-    m->addConstant("EVENT_TYPE_JOYSTICK_HAT", Falcon::int64(EVENT_TYPE_JOYSTICK_HAT));
+    m->addConstant("EVENT_TYPE_JOYSTICK_AXIS",   Falcon::int64(EVENT_TYPE_JOYSTICK_AXIS));
+    m->addConstant("EVENT_TYPE_JOYSTICK_HAT",    Falcon::int64(EVENT_TYPE_JOYSTICK_HAT));
+
+
+    m->addConstant("DIRECTION_NONE",      Falcon::int64(DIRECTION_NONE));
+    m->addConstant("DIRECTION_UP",        Falcon::int64(DIRECTION_UP));
+    m->addConstant("DIRECTION_UPLEFT",    Falcon::int64(DIRECTION_UPLEFT));
+    m->addConstant("DIRECTION_LEFT",      Falcon::int64(DIRECTION_LEFT));
+    m->addConstant("DIRECTION_DOWNLEFT",  Falcon::int64(DIRECTION_DOWNLEFT));
+    m->addConstant("DIRECTION_DOWN",      Falcon::int64(DIRECTION_DOWN));
+    m->addConstant("DIRECTION_DOWNRIGHT", Falcon::int64(DIRECTION_DOWNRIGHT));
+    m->addConstant("DIRECTION_RIGHT",     Falcon::int64(DIRECTION_RIGHT));
+    m->addConstant("DIRECTION_UPRIGHT",   Falcon::int64(DIRECTION_UPRIGHT));
 
 
     // the SDL key bindings

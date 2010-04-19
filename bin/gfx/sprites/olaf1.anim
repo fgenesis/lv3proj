@@ -60,7 +60,7 @@
 4: olaf1r.png:227:86:32:32 500 standR
 
 [standsuR]
-1: olaf1r.png:9:123:32:32 15000 actionsuR # TODO!
+1: olaf1r.png:9:123:32:32 15000 1 # TODO: actionsuR must be here
 
 # [actionsuR] # TODO!
 

@@ -1,4 +1,4 @@
-RegisterInputHook("sneskeys",sneskeys)
+//RegisterInputHook("sneskeys",sneskeys)
 
 
 function sneskeys(inp)
