@@ -394,6 +394,22 @@ FALCON_FUNC fal_ActiveRect_CanMoveToDir(Falcon::VMachine *vm)
     }
 }
 
+FALCON_FUNC fal_ActiveRect_SetCollisionEnabled(Falcon::VMachine *vm)
+{
+    FALCON_REQUIRE_PARAMS(1);
+    fal_ObjectCarrier *self = Falcon::dyncast<fal_ObjectCarrier*>( vm->self().asObject() );
+    ActiveRect *obj = (ActiveRect*)self->GetObj();
+    obj->SetCollisionEnabled(vm->param(0)->asBoolean());
+}
+
+FALCON_FUNC fal_ActiveRect_IsCollisionEnabled(Falcon::VMachine *vm)
+{
+    FALCON_REQUIRE_PARAMS(1);
+    fal_ObjectCarrier *self = Falcon::dyncast<fal_ObjectCarrier*>( vm->self().asObject() );
+    ActiveRect *obj = (ActiveRect*)self->GetObj();
+    vm->retval(obj->IsCollisionEnabled());
+}
+
 FALCON_FUNC fal_Object_SetAffectedByPhysics(Falcon::VMachine *vm)
 {
     FALCON_REQUIRE_PARAMS(1);
@@ -415,6 +431,8 @@ FALCON_FUNC fal_Object_IsAffectedByPhysics(Falcon::VMachine *vm)
     }
     vm->retval(false);
 }
+
+
 
 class fal_TileLayer : public Falcon::CoreObject
 {
@@ -1131,6 +1149,8 @@ Falcon::Module *FalconGameModule_create(void)
     m->addClassMethod(clsRect, "SetBBox", fal_ActiveRect_SetBBox);
     m->addClassMethod(clsRect, "SetPos", fal_ActiveRect_SetPos);
     m->addClassMethod(clsRect, "CanMoveToDir", fal_ActiveRect_CanMoveToDir);
+    m->addClassMethod(clsRect, "IsCollisionEnabled", fal_ActiveRect_IsCollisionEnabled);
+    m->addClassMethod(clsRect, "SetCollisionEnabled", fal_ActiveRect_SetCollisionEnabled);
     m->addClassProperty(clsRect, "x");
     m->addClassProperty(clsRect, "y");
     m->addClassProperty(clsRect, "w");

@@ -93,6 +93,9 @@ void ObjectMgr::Update(uint32 ms)
             obj->OnUpdate(ms);
         }
         // collision detection (object vs object)
+        if(!base->IsCollisionEnabled())
+            continue;
+
         // i guess this will be very slow for MANY objects in the game... have to see how this works out
         for(ObjectMap::iterator jt = _store.begin(); jt != _store.end(); jt++)
         {

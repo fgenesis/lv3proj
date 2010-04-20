@@ -15,6 +15,7 @@ BaseObject::BaseObject()
 void ActiveRect::Init(void)
 {
     type = OBJTYPE_RECT;
+    _collisionEnabled = true;
 }
 
 void ActiveRect::SetBBox(float x_, float y_, uint32 w_, uint32 h_)
@@ -140,6 +141,7 @@ void Object::_GenericInit(void)
     _oldLayerId = 0; // update in first update cycle anyways
     _gfx = NULL;
     _moved = true; // do collision detection on spawn
+    _collisionEnabled = true; // do really do collision detetion
 }
 
 void Object::SetBBox(float x_, float y_, uint32 w_, uint32 h_)
