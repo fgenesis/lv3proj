@@ -1,0 +1,21 @@
+class ImageObject(sprite) from Object
+    _valid = false
+    
+    init
+        tile = self.SetSprite(sprite)
+        if tile
+            self._valid = true
+        else
+            tile = self.SetSprite("misc/noimage.png")
+            if not tile: raise "File not found! (" + sprite + ") - not even placeholder (gfx/misc/noimage.png)"
+        end
+        self.SetBBox(0,0,1,1)
+        self.SetAffectedByPhysics(false)
+        self.SetCollisionEnabled(false)
+    end
+    
+    function valid(): return self._valid
+    
+end
+
+export ImageObject

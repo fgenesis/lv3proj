@@ -13,6 +13,8 @@ pcontrol.Add(olaf)
 pcontrol.Assign(1, olaf)
 pcontrol.register()
 
+img = ImageObject("sprites/lv2logo.png")
+
 function PosLimitTest(who)
     if(who.y > 600)
         who.SetPos(64,48)
