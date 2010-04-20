@@ -13,34 +13,14 @@ void PhysicsMgr::UpdatePhysics(Object *obj, uint32 ms)
 
     PhysProps& phys = obj->phys;
     float tf =  ms * 0.001f; // time factor
-    bool canfall = obj->CanFallDown();
-    bool canGoUp = obj->CanMoveToDirection(DIRECTION_UP); // TODO: this should be replaced with CanFallDown() equivalent
     uint8 speedsSet = 0; // can be 0, 1 or 2
     bool neg;
 
-    // set y acceleration to gravity if we can fall down and acceleration is lower then gravity
-    if(envPhys.gravity >= 0 && canfall)
-    {
-        if(phys.weight && phys.yaccel < envPhys.gravity)
-            phys.yaccel = envPhys.gravity;
-    }
-    // set y acceleration to gravity if we can go up and acceleration not as negative as gravity
-    else if(envPhys.gravity < 0 && canGoUp)
-    {
-        if(phys.weight && phys.yaccel > envPhys.gravity)
-            phys.yaccel = envPhys.gravity;
-    }
-    else // we can't go where gravity forces us, means there is wall directly near us; stop all movement into that direction and set acceleration to 0
-    {
-        if(phys.yaccel > 0.0f)
-            phys.yaccel = 0.0f;
-        if(phys.yspeed > 0.0f)
-            phys.yspeed = 0.0f;
-    }
+    float yaccelTotal = envPhys.gravity + phys.yaccel;
 
     // apply acceleration to speed
     phys.xspeed += (phys.xaccel * tf);
-    phys.yspeed += (phys.yaccel * tf);
+    phys.yspeed += (yaccelTotal * tf);
 
     
     if(phys.xspeed)
