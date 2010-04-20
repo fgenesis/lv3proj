@@ -10,6 +10,24 @@ enum TileType
 };
 
 
+// TODO: this has to be extended & implemented. Add TileClass enum with custom values
+enum TileFlags
+{
+    TILEFLAG_DEFAULT = 0x00, // autodetect colliding pixels
+    TILEFLAG_SOLID   = 0x01, // the whole tile is solid, even if there are transparent pixels
+};
+
+union TileInfo
+{
+    struct 
+    {
+        uint8 flags;
+        uint8 id;
+    };
+    uint16 raw;
+};
+
+
 // the basic tile. static by default, but can be overloaded to support animation
 struct BasicTile
 {

@@ -1,6 +1,10 @@
 
 // some test stuff to see what the falcon bindings can do
-> "-- ACTIVATING TEST --"
+> "-- Setting up test Level --"
+
+// setup the collision map, and calculate it directly
+Game.CreateCollisionMap(true)
+> "-- Calculated collision map --"
 
 // set game constants
 Physics.SetGravity(300)
@@ -137,4 +141,6 @@ function DrainWaterRow(y)
     // cleanup after the row was drained
     CallScheduler.Schedule( [DeleteWaterRow, y], 1200)
 end
+
+> "-- Level setup complete --"
 

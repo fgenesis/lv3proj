@@ -70,4 +70,16 @@ protected:
 
 };
 
+class GameError: public Falcon::Error
+{
+public:
+    GameError():
+      Falcon::Error( "GameError" )
+      {}
+
+      GameError( const Falcon::ErrorParam &params  ):
+      Falcon::Error( "GameError", params )
+      {}
+};
+
 #endif

@@ -84,19 +84,30 @@ void LayerMgr::CreateCollisionMap(void)
     _collisionMap = new BitSet2d(_maxdim * 16, _maxdim * 16, true); // _maxdim is tile size, * 16 is pixel size
 }
 
+void LayerMgr::CreateInfoLayer(void)
+{
+    DEBUG(ASSERT(_maxdim));
+    TileInfo filler;
+    filler.raw = TILEFLAG_DEFAULT;
+    _infoLayer.resize(_maxdim, filler);
+}
+
 // intended for initial collision map generation, NOT for regular updates! (its just too slow)
 void LayerMgr::UpdateCollisionMap(void)
 {
+    DEBUG(ASSERT(_maxdim));
+    if(!_collisionMap)
+        return;
     for(uint32 y = 0; y < _maxdim; ++y)
         for(uint32 x = 0; x < _maxdim; ++x)
             UpdateCollisionMap(x,y);
 }
 
 // TODO: this can maybe be a lot more optimized...
+// before calling this, make sure you check HasCollisionMap() !!
 void LayerMgr::UpdateCollisionMap(uint32 x, uint32 y) // this x and y are tile positions!
 {
     //DEBUG_LOG("LayerMgr::UpdateCollisionMap(%u, %u)", x, y);
-    DEBUG(ASSERT(_collisionMap));
     uint32 x16 = x << 4, y16 = y << 4; // x*16, y*16
     // pre-select layers to be used, and check if a tile exists at that position
     bool uselayer[LAYER_MAX];
@@ -162,6 +173,9 @@ void LayerMgr::UpdateCollisionMap(uint32 x, uint32 y) // this x and y are tile p
 
 bool LayerMgr::CollisionWith(BaseRect *rect, int32 skip /* = 4 */)
 {
+    if(!_collisionMap)
+        return false;
+
     int32 x, y;
     int32 x2 = rect->x2();
     int32 y2 = rect->y2();
@@ -197,6 +211,9 @@ uint32 LayerMgr::CanMoveToDirection(BaseRect *rect, uint8 direction, uint32 pixe
 
 uint32 LayerMgr::CanMoveToDirection(BaseRect *rect, MovementDirectionInfo& mdi, uint32 pixels /* = 1 */ )
 {
+    if(!_collisionMap)
+        return pixels;
+
     uint32 moveable = 0;
     BaseRect r = rect->cloneRect();
     bool stop = false;
@@ -252,6 +269,9 @@ Point LayerMgr::GetClosestNonCollidingPoint(BaseRect *rect, uint8 direction)
 
 bool LayerMgr::CanFallDown(Point anchor, uint32 arealen)
 {
+    if(!_collisionMap)
+        return true;
+
     // this check goes like this: 123412341234... (usually faster than linear search)
     for(uint32 align = 0; align < 4; ++align)
     {
@@ -271,9 +291,6 @@ bool LayerMgr::LoadAsciiLevel(AsciiLevel *level)
 {
     // reserve space
     SetMaxDim(level->tiles.size1d());
-
-    // for the sake of loading speed in debug mode, this is not enabled for now
-    CreateCollisionMap();
 
     // create the layers
     TileLayer *baseLayer = CreateLayer(true);
@@ -342,12 +359,7 @@ bool LayerMgr::LoadAsciiLevel(AsciiLevel *level)
     SetLayer(baseLayer, LAYER_DEFAULT_ENV);
     SetLayer(animLayer, LAYER_DEFAULT_ENV + 1);
     SetLayer(CreateLayer(), LAYER_DEFAULT_ENV + 2); // for testing
-
-    // for the sake of loading speed in debug mode, this is not enabled for now
-    logdebug("Calculating collision map...");
-    UpdateCollisionMap();
     
-
     logdetail("ASCII Level loaded.");
 
     return true;

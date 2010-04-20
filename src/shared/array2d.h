@@ -42,7 +42,7 @@ public:
         fill(fillval);
 
         // if there was content, copy it
-        if(olddata)
+        if(olddata && oldsize)
         {
             for(uint32 x = 0; x < oldsize; ++x)
                 for(uint32 y = 0; y < oldsize; ++y)
@@ -70,6 +70,20 @@ public:
 
     inline uint32 size1d(void) { return _size; }
     inline uint32 size2d(void) { return _size * _size; }
+
+    // use at your own risk
+    inline T* getPtr(void) { return data; }
+    inline void setPtr(T *p) { data = p; }
+    inline void resizeNoAlloc(uint32 s)
+    {
+        _shift = 0;
+        _size = 1;
+        while(_size < s)
+        {
+            _size <<= 1;
+            ++_shift;
+        }
+    }
 
 
 protected:

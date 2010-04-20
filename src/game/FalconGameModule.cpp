@@ -965,9 +965,47 @@ FALCON_FUNC fal_Game_LoadPropsInDir(Falcon::VMachine *vm)
     resMgr.LoadPropsInDir((char*)cstr.c_str());
 }
 
+FALCON_FUNC fal_Game_CreateCollisionMap(Falcon::VMachine *vm)
+{
+    bool update = false;
+    if(vm->paramCount() >= 1)
+        update = vm->param(0)->asBoolean();
+
+    LayerMgr *lm = g_engine_ptr->_GetLayerMgr();
+    lm->CreateCollisionMap();
+    if(update)
+        lm->UpdateCollisionMap();
+}
+
+FALCON_FUNC fal_Game_UpdateCollisionMap(Falcon::VMachine *vm)
+{
+    LayerMgr *lm = g_engine_ptr->_GetLayerMgr();
+    if(!lm->HasCollisionMap())
+    {
+        throw new GameError( Falcon::ErrorParam( Falcon::e_undef_state ).
+            extra( "CollisionMap not created" ) );
+    }
+    if(!vm->paramCount())
+    {
+       lm->UpdateCollisionMap();
+    }
+    if(vm->paramCount() >= 2)
+    {
+        uint32 x = vm->param(0)->forceIntegerEx();
+        uint32 y = vm->param(1)->forceIntegerEx();
+        lm->UpdateCollisionMap(x,y);
+    }
+    else
+    {
+        throw new Falcon::ParamError( Falcon::ErrorParam( Falcon::e_missing_params ).
+            extra( "No args or N,N" ) );
+    }
+}
+
+
 FALCON_FUNC fal_Physics_SetGravity(Falcon::VMachine *vm)
 {
-    FALCON_REQUIRE_PARAMS(1);
+    FALCON_REQUIRE_PARAMS_EXTRA(1, "N");
     g_engine_ptr->physmgr->envPhys.gravity = float(vm->param(0)->forceNumeric());
 }
 
@@ -975,6 +1013,7 @@ FALCON_FUNC fal_Physics_GetGravity(Falcon::VMachine *vm)
 {
     vm->retval(g_engine_ptr->physmgr->envPhys.gravity);
 }
+
 
 
 void forbidden_init(Falcon::VMachine *vm)
@@ -1099,6 +1138,8 @@ Falcon::Module *FalconGameModule_create(void)
     m->addClassMethod(clsGame, "LoadLevel", fal_Game_LoadLevel);
     m->addClassMethod(clsGame, "Exit", fal_Game_Exit);
     m->addClassMethod(clsGame, "LoadPropsInDir", fal_Game_LoadPropsInDir);
+    m->addClassMethod(clsGame, "CreateCollisionMap", fal_Game_CreateCollisionMap);
+    m->addClassMethod(clsGame, "UpdateCollisionMap", fal_Game_UpdateCollisionMap);
     m->addConstant("MAX_VOLUME", Falcon::int64(MIX_MAX_VOLUME));
 
     Falcon::Symbol *symPhysics = m->addSingleton("Physics");
