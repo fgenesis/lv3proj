@@ -109,6 +109,10 @@ public:
         if(prop == "yaccel")      { _phys->yaccel      = value.forceNumeric(); return true; }
         if(prop == "xfriction")   { _phys->xfriction   = value.forceNumeric(); return true; }
         if(prop == "yfriction")   { _phys->yfriction   = value.forceNumeric(); return true; }
+        if(prop == "ubounce")     { _phys->ubounce     = value.forceNumeric(); return true; }
+        if(prop == "dbounce")     { _phys->dbounce     = value.forceNumeric(); return true; }
+        if(prop == "lbounce")     { _phys->lbounce     = value.forceNumeric(); return true; }
+        if(prop == "rbounce")     { _phys->rbounce     = value.forceNumeric(); return true; }
 
         if(prop == "isRef")
             throw new Falcon::AccessError( Falcon::ErrorParam( Falcon::e_prop_ro ).
@@ -128,6 +132,10 @@ public:
         if(prop == "yaccel")      { ret.setNumeric(_phys->yaccel);      return true; }
         if(prop == "xfriction")   { ret.setNumeric(_phys->xfriction);   return true; }
         if(prop == "yfriction")   { ret.setNumeric(_phys->yfriction);   return true; }
+        if(prop == "ubounce")     { ret.setNumeric(_phys->ubounce);     return true; }
+        if(prop == "dbounce")     { ret.setNumeric(_phys->dbounce);     return true; }
+        if(prop == "lbounce")     { ret.setNumeric(_phys->lbounce);     return true; }
+        if(prop == "rbounce")     { ret.setNumeric(_phys->rbounce);     return true; }
         if(prop == "isRef")       { ret.setBoolean(_referenced);        return true; }
 
         return defaultProperty( prop, ret); // property not found
@@ -1240,6 +1248,10 @@ Falcon::Module *FalconGameModule_create(void)
     m->addClassProperty(clsPhysProps, "yaccel");
     m->addClassProperty(clsPhysProps, "xfriction");
     m->addClassProperty(clsPhysProps, "yfriction");
+    m->addClassProperty(clsPhysProps, "ubounce");
+    m->addClassProperty(clsPhysProps, "dbounce");
+    m->addClassProperty(clsPhysProps, "lbounce");
+    m->addClassProperty(clsPhysProps, "rbounce");
 
 
     m->addConstant("EVENT_TYPE_KEYBOARD",        Falcon::int64(EVENT_TYPE_KEYBOARD));

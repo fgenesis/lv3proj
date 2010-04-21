@@ -41,6 +41,7 @@ end
 RegisterInputHook("DoSomeResets", .[DoSomeResets olaf] )
 RegisterRawInputHook("DisableInputOn", .[DisableInputOn SDLK.END])
 RegisterRawInputHook("CyceGravityOn", .[CycleGravityOn SDLK.PAGEDOWN])
+RegisterRawInputHook("ToggleOlafBounceOn", .[ToggleOlafBounceOn SDLK.PAGEUP])
 
 function DisableInputOn(k, e)
     ty, src, which, value = e
@@ -57,6 +58,16 @@ function CycleGravityOn(k, e)
         > "Gravity is now: ", Physics.GetGravity()
     end
 end
+
+function ToggleOlafBounceOn(k, e)
+    ty, src, which, value = e
+    if ty == EVENT_TYPE_KEYBOARD and which == k and value != 0
+        p = olaf.phys
+        p.dbounce = p.dbounce ? 0 : 0.6
+        > "Olaf bounce is now: ", p.dbounce
+    end
+end
+
 
 function CycleGravity()
     switch Physics.GetGravity()

@@ -29,6 +29,7 @@ class PlayerEx from Player
         p.yaccel = 0
         p.xfriction = 0
         p.yfriction = 0
+        p.ubounce = 0.2 // when hitting with head against wall, we bounce back a little (see LV1 "anti-gravity" field in ship)
         self.SetAffectedByPhysics(true)
 
         

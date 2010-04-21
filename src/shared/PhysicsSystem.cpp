@@ -123,7 +123,7 @@ void PhysicsMgr::UpdatePhysics(Object *obj, uint32 ms)
     uint8 direction = dirx | diry; // combined directions
     float oldx = obj->x;
     float oldy = obj->y;
-    if(phys.xspeed && phys.yspeed) // cam move diagonally? have to recheck if thats the case
+    if(phys.xspeed && phys.yspeed) // can move diagonally? have to recheck if thats the case
     {
         if(_layerMgr->CanMoveToDirection(obj, direction))
         {
@@ -160,11 +160,11 @@ void PhysicsMgr::UpdatePhysics(Object *obj, uint32 ms)
         // now check where we can move from this position
         if(dirx && !_layerMgr->CanMoveToDirection(obj, dirx))
         {
-            phys.xspeed = 0;
+            phys.xspeed *= -(dirx & DIRECTION_LEFT ? phys.lbounce : phys.rbounce);
         }
         if(diry && !_layerMgr->CanMoveToDirection(obj, diry))
         {
-            phys.yspeed = 0;
+            phys.yspeed *= -(diry & DIRECTION_UP ? phys.ubounce : phys.dbounce);
         }
     }
 
