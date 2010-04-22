@@ -693,6 +693,56 @@ FALCON_FUNC fal_Screen_GetSize(Falcon::VMachine *vm)
     vm->retval(arr);
 }
 
+FALCON_FUNC fal_Screen_GetLayerSize(Falcon::VMachine *vm)
+{
+    vm->retval((int64)g_engine_ptr->_GetLayerMgr()->GetMaxDim());
+}
+
+FALCON_FUNC fal_Screen_GetTileInfo(Falcon::VMachine *vm)
+{
+    FALCON_REQUIRE_PARAMS_EXTRA(2, "N, N");
+    uint32 x = vm->param(0)->forceIntegerEx();
+    uint32 y = vm->param(1)->forceIntegerEx();
+    LayerMgr *lm = g_engine_ptr->_GetLayerMgr();
+    if(!lm->GetInfoLayer())
+    {
+        throw new GameError( Falcon::ErrorParam( Falcon::e_undef_state ).
+            extra( "TileInfoLayer not created" ) );
+    }
+    uint32 m = lm->GetMaxDim();
+    if( !(x < m && y < m) )
+    {
+        throw new Falcon::AccessError( Falcon::ErrorParam( Falcon::e_arracc ) );
+    }
+    vm->retval((int64)lm->GetTileInfo(x,y));
+}
+
+FALCON_FUNC fal_Screen_SetTileInfo(Falcon::VMachine *vm)
+{
+    FALCON_REQUIRE_PARAMS_EXTRA(3, "N, N, N");
+    uint32 x = vm->param(0)->forceIntegerEx();
+    uint32 y = vm->param(1)->forceIntegerEx();
+    uint32 info = vm->param(2)->forceIntegerEx();
+    LayerMgr *lm = g_engine_ptr->_GetLayerMgr();
+    if(!lm->GetInfoLayer())
+    {
+        throw new GameError( Falcon::ErrorParam( Falcon::e_undef_state ).
+            extra( "TileInfoLayer not created" ) );
+    }
+    uint32 m = lm->GetMaxDim();
+    if( !(x < m && y < m) )
+    {
+        throw new Falcon::AccessError( Falcon::ErrorParam( Falcon::e_arracc ) );
+    }
+    lm->SetTileInfo(x,y,info);
+}
+
+FALCON_FUNC fal_Screen_CreateInfoLayer(Falcon::VMachine *vm)
+{
+    LayerMgr *lm = g_engine_ptr->_GetLayerMgr();
+    lm->CreateInfoLayer();
+}
+
 FALCON_FUNC fal_TileLayer_SetVisible(Falcon::VMachine *vm)
 {
     FALCON_REQUIRE_PARAMS(1);
@@ -1131,6 +1181,10 @@ Falcon::Module *FalconGameModule_create(void)
     Falcon::Symbol *clsScreen = symScreen->getInstance();
     m->addClassMethod(clsScreen, "GetLayer", &fal_Screen_GetLayer);
     m->addClassMethod(clsScreen, "GetSize", &fal_Screen_GetSize);
+    m->addClassMethod(clsScreen, "GetLayerSize", &fal_Screen_GetLayerSize);
+    m->addClassMethod(clsScreen, "SetTileInfo", &fal_Screen_SetTileInfo);
+    m->addClassMethod(clsScreen, "GetTileInfo", &fal_Screen_GetTileInfo);
+    m->addClassMethod(clsScreen, "CreateInfoLayer", &fal_Screen_CreateInfoLayer);
 
     Falcon::Symbol *symGame = m->addSingleton("Game");
     Falcon::Symbol *clsGame = symGame->getInstance();
@@ -1163,6 +1217,7 @@ Falcon::Module *FalconGameModule_create(void)
     m->addClassMethod(clsTileLayer, "SetTile", &fal_TileLayer_SetTile);
     m->addClassMethod(clsTileLayer, "GetTile", &fal_TileLayer_GetTile);
     m->addClassMethod(clsTileLayer, "GetArraySize", &fal_TileLayer_GetArraySize);
+    m->addConstant("TILEFLAG_SOLID", (Falcon::int64)TILEFLAG_SOLID, true);
     
     Falcon::Symbol *clsTile = m->addClass("Tile", &fal_Tile::init);
     clsTile->setWKS(true);

@@ -87,9 +87,7 @@ void LayerMgr::CreateCollisionMap(void)
 void LayerMgr::CreateInfoLayer(void)
 {
     DEBUG(ASSERT(_maxdim));
-    TileInfo filler;
-    filler.raw = TILEFLAG_DEFAULT;
-    _infoLayer.resize(_maxdim, filler);
+    _infoLayer.resize(_maxdim, TILEFLAG_DEFAULT);
 }
 
 // intended for initial collision map generation, NOT for regular updates! (its just too slow)
@@ -108,7 +106,20 @@ void LayerMgr::UpdateCollisionMap(void)
 void LayerMgr::UpdateCollisionMap(uint32 x, uint32 y) // this x and y are tile positions!
 {
     //DEBUG_LOG("LayerMgr::UpdateCollisionMap(%u, %u)", x, y);
+
     uint32 x16 = x << 4, y16 = y << 4; // x*16, y*16
+
+    // DRAFT IMPL: first, check if there is a tile explicitly marked as solid
+    // TODO: each single layer must have an info layer
+    if(GetInfoLayer())
+        if(_infoLayer(x,y) & TILEFLAG_SOLID)
+        {
+            for(uint32 py = 0; py < 16; ++py)
+                for(uint32 px = 0; px < 16; ++px)
+                    _collisionMap->set(x16 + px, y16 + py, true);
+            return;
+        }
+
     // pre-select layers to be used, and check if a tile exists at that position
     bool uselayer[LAYER_MAX];
     bool counter = 0;

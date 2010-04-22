@@ -2,6 +2,11 @@
 // some test stuff to see what the falcon bindings can do
 > "-- Setting up test Level --"
 
+Screen.CreateInfoLayer()
+SetupInfoLayer()
+> "-- Created & set up info layer --"
+
+
 // setup the collision map, and calculate it directly
 Game.CreateCollisionMap(true)
 > "-- Calculated collision map --"
@@ -80,6 +85,34 @@ function CycleGravity()
     end
 end
 
+enum TFlag
+    ELECTRO = 0x0001
+    BREAK   = 0x0002
+end
+
+
+function SetupInfoLayer()
+tileInfoSetup = [
+    "sprites/en.anim" => TFlag.ELECTRO,
+    "sprites/env.anim" => TFlag.ELECTRO,
+    "sprites/enx.anim" => TFlag.ELECTRO,
+    "sprites/greyblock.png" => TFlag.BREAK
+]
+    d = Screen.GetLayerSize() - 1
+    overlay = Tile("misc/noimage.png")
+    for ly in [Screen.GetLayer(6), Screen.GetLayer(7)]
+        for y = 0 to d
+            for x = 0 to d
+                t = ly.GetTile(x,y)
+                if(t and (t.filename in tileInfoSetup) )
+                    Screen.SetTileInfo(x,y, tileInfoSetup[t.filename])
+                    Screen.GetLayer(8).SetTile(x,y,overlay) // debug
+                end
+            end
+        end
+    end
+end
+
 
 // open a menu. so far only controllable via console.
 // this is just here to check IF something works
@@ -93,7 +126,7 @@ end
 
 // replace all blue energy lines with green ones
 function ReplaceEnergyStreams()
-    dim = Screen.GetLayer(6).GetArraySize()
+    dim = Screen.GetLayerSize()
     enx = Tile("sprites/enx.anim")
     en  = Tile("sprites/en.anim")
     for ly in [Screen.GetLayer(6), Screen.GetLayer(7)]

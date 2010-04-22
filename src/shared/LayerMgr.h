@@ -23,7 +23,7 @@ enum LayerDepth
     LAYER_MAX = 32
 };
 
-typedef array2d<TileInfo> TileInfoLayer;
+typedef array2d<uint16> TileInfoLayer;
 
 
 class LayerMgr
@@ -48,10 +48,11 @@ public:
     inline void SetMaxDim(uint32 dim) { _maxdim = dim; }
     inline uint32 GetMaxDim(void) { return _maxdim; }
     inline uint32 GetMaxPixelDim(void) { return _maxdim * 16; }
-    inline bool HasInfoLayer(void) { return _infoLayer.size1d(); }
     void CreateInfoLayer(void);
-    inline void SetInfoLayer(TileInfo *ti) { _infoLayer.setPtr(ti); }
-    inline TileInfo *GetInfoLayer(void) { return _infoLayer.getPtr(); }
+    inline void SetInfoLayer(uint16 *ti) { _infoLayer.setPtr(ti); }
+    inline uint16 *GetInfoLayer(void) { return _infoLayer.getPtr(); }
+    inline uint16 GetTileInfo(uint32 x, uint32 y) { return _infoLayer(x,y); }
+    inline void SetTileInfo(uint32 x, uint32 y, uint16 info) { _infoLayer(x,y) = info; }
 
     inline bool HasCollisionMap(void) { return _collisionMap; }
     void CreateCollisionMap(void); // create new collision map (and delete old if exists)

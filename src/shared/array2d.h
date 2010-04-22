@@ -17,7 +17,7 @@ public:
             data[i] = val;
     }
 
-    inline void resize(uint32 dim, T fillval)
+    inline void resize(uint32 dim, T fillval, bool force = false)
     {
         uint32 req = 0;
         uint32 newsize = 1;
@@ -29,6 +29,10 @@ public:
             newsize <<= 1;
             ++req;
         }
+
+        // array does already have the desired size and data field, nothing to do
+        if(!force && newsize == _size && data)
+            return;
 
         // save old size and data field for later copy
         uint32 oldsize = _size;
