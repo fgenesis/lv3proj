@@ -70,3 +70,93 @@ void SDLfunc_putpixel(SDL_Surface *surface, int x, int y, Uint32 pixel)
         break;
     }
 }
+
+SDL_Surface *CreateEmptySurfaceFrom(SDL_Surface *src)
+{
+    if(!src)
+        return NULL;
+    SDL_Surface *dest = SDL_CreateRGBSurface(src->flags, src->w, src->h, src->format->BitsPerPixel,
+        src->format->Rmask,  src->format->Gmask,  src->format->Bmask,  src->format->Amask);
+    return dest;
+}
+
+SDL_Surface *SurfaceFlipH(SDL_Surface *src)
+{
+    SDL_Surface *dest = CreateEmptySurfaceFrom(src);
+    if(!dest)
+        return NULL;
+    if(SDL_MUSTLOCK(src))
+        SDL_LockSurface(src);
+    if(SDL_MUSTLOCK(dest))
+        SDL_LockSurface(dest);
+
+    for(int y = 0; y < src->h; ++y)
+    {
+        for(int x = 0; x < src->w; ++x)
+        {
+            SDLfunc_putpixel(dest, src->w - x - 1, y, SDLfunc_getpixel(src, x, y));
+        }
+    }
+
+    if(SDL_MUSTLOCK(src))
+        SDL_UnlockSurface(src);
+    if(SDL_MUSTLOCK(dest))
+        SDL_UnlockSurface(dest);
+
+    return dest;
+}
+
+SDL_Surface *SurfaceFlipV(SDL_Surface *src)
+{
+    SDL_Surface *dest = CreateEmptySurfaceFrom(src);
+    if(!dest)
+        return NULL;
+    if(SDL_MUSTLOCK(src))
+        SDL_LockSurface(src);
+    if(SDL_MUSTLOCK(dest))
+        SDL_LockSurface(dest);
+
+    for(int y = 0; y < src->h; ++y)
+    {
+        for(int x = 0; x < src->w; ++x)
+        {
+            SDLfunc_putpixel(dest, x, src->h - y - 1, SDLfunc_getpixel(src, x, y));
+        }
+    }
+
+    if(SDL_MUSTLOCK(src))
+        SDL_UnlockSurface(src);
+    if(SDL_MUSTLOCK(dest))
+        SDL_UnlockSurface(dest);
+
+    return dest;
+}
+
+SDL_Surface *SurfaceFlipHV(SDL_Surface *src)
+{
+    SDL_Surface *dest = CreateEmptySurfaceFrom(src);
+    if(!dest)
+        return NULL;
+    if(SDL_MUSTLOCK(src))
+        SDL_LockSurface(src);
+    if(SDL_MUSTLOCK(dest))
+        SDL_LockSurface(dest);
+
+    for(int y = 0; y < src->h; ++y)
+    {
+        for(int x = 0; x < src->w; ++x)
+        {
+            SDLfunc_putpixel(dest, src->w - x - 1, src->h - y - 1, SDLfunc_getpixel(src, x, y));
+        }
+    }
+
+    if(SDL_MUSTLOCK(src))
+        SDL_UnlockSurface(src);
+    if(SDL_MUSTLOCK(dest))
+        SDL_UnlockSurface(dest);
+
+    return dest;
+}
+
+
+

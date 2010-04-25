@@ -1,6 +1,7 @@
 #include <SDL/SDL.h>
 #include <SDL/SDL_image.h>
 #include <SDL/SDL_mixer.h>
+#include "SDL_func.h"
 
 #include "common.h"
 #include "ResourceMgr.h"
@@ -81,8 +82,8 @@ SDL_Surface *ResourceMgr::LoadImg(char *name, bool count /* = false*/)
     if(origfn.substr(0,4) != "gfx/")
         origfn = "gfx/" + origfn;
 
-    std::string fn,s1,s2,s3,s4;
-    SplitFilenameToProps(origfn.c_str(), &fn, &s1, &s2, &s3, &s4);
+    std::string fn,s1,s2,s3,s4,s5;
+    SplitFilenameToProps(origfn.c_str(), &fn, &s1, &s2, &s3, &s4, &s5);
 
     bool loaded = false;
     SDL_Surface *img = (SDL_Surface*)_GetPtr(origfn);
@@ -104,8 +105,11 @@ SDL_Surface *ResourceMgr::LoadImg(char *name, bool count /* = false*/)
                     rect.w = origin->w - rect.x;
                 if(!rect.h)
                     rect.h = origin->h - rect.y;
+                bool flipH = s5.find('h') != std::string::npos;
+                bool flipV = s5.find('v') != std::string::npos;
 
-                SDL_Surface *section = SDL_CreateRGBSurface(origin->flags, rect.w, rect.h, origin->format->BitsPerPixel, 0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000);
+                SDL_Surface *section = SDL_CreateRGBSurface(origin->flags, rect.w, rect.h, origin->format->BitsPerPixel,
+                    0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000);
                 
                 // properly blit alpha values, save original flags + alpha before blitting, and restore after
                 uint8 oalpha = origin->format->alpha;
@@ -115,7 +119,25 @@ SDL_Surface *ResourceMgr::LoadImg(char *name, bool count /* = false*/)
                 origin->format->alpha = oalpha;
                 origin->flags = oflags;
 
-                img = section;
+                if(flipH && flipV)
+                {
+                    img = SurfaceFlipHV(section);
+                    //SDL_FreeSurface(section);
+                }
+                else if(flipH)
+                {
+                    img = SurfaceFlipH(section);
+                    //SDL_FreeSurface(section);
+                }
+                else if(flipV)
+                {
+                    img = SurfaceFlipV(section);
+                    //SDL_FreeSurface(section);
+                }
+                else
+                {
+                    img = section;
+                }
             }
         }
         else // nothing special, just load image normally

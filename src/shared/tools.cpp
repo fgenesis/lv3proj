@@ -368,7 +368,8 @@ std::string GetTimeString(void)
 
 // splits string like "filename.anim:4:default" or "image.png:32:32:16:16". leaves unused args unchanged!
 void SplitFilenameToProps(const char *in, std::string *fn, std::string *s1 /* = NULL */,
-                                     std::string *s2 /* = NULL */, std::string *s3 /* = NULL */, std::string *s4 /* = NULL */)
+                                     std::string *s2 /* = NULL */, std::string *s3 /* = NULL */, std::string *s4 /* = NULL */,
+                                     std::string *s5 /* = NULL */)
 {
     std::vector<std::string> fields;
     StrSplit(in, ":", fields, true);
@@ -382,4 +383,6 @@ void SplitFilenameToProps(const char *in, std::string *fn, std::string *s1 /* = 
         *s3 = fields[3];
     if(fields.size() >= 5 && s4)
         *s4 = fields[4];
+    if(fields.size() >= 6 && s5)
+        *s5 = fields[5];
 }
