@@ -12,7 +12,6 @@ class AppFalconGame;
 
 typedef std::map<uint32, BaseObject*> ObjectMap;
 typedef std::set<Object*> ObjectSet;
-typedef void (BaseObject::*cleanfunc)(void);
 
 
 class ObjectMgr
@@ -24,8 +23,10 @@ public:
     BaseObject *Get(uint32 id);
     void Update(uint32 ms);
     void RenderLayer(uint32 id);
-    void Remove(uint32 id);
-    void RemoveAll(bool del, cleanfunc f);
+    void FlagForRemove(BaseObject *obj);
+    ObjectMap::iterator GetIterator(uint32 id);
+    ObjectMap::iterator Remove(uint32 id);
+    void RemoveAll(void);
 
     inline void SetPhysicsMgr(PhysicsMgr *pm) { _physMgr = pm; }
     inline void SetLayerMgr(LayerMgr *layers) {_layerMgr = layers; }

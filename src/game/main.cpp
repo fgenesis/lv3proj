@@ -1,8 +1,6 @@
 #include "common.h"
 #include "GameEngine.h"
 
-GameEngine *g_engine_ptr;
-
 int main(int argc, char **argv)
 {
     log_prepare("game_log.txt", "w");
@@ -17,11 +15,9 @@ int main(int argc, char **argv)
 
     // the engine must be created *after* SDL is fully initialized!
     GameEngine engine;
-    g_engine_ptr = &engine;
-
 
     engine.InitScreen(1000,600,0,SDL_RESIZABLE);
-    engine.SetTitle("Lost Vikings 3 Project");
+    engine.SetTitle("LV3p Engine");
     engine.Setup();
     engine.Run();
     engine.Shutdown();

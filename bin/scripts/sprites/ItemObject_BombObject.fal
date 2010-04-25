@@ -1,0 +1,7 @@
+class BombObject from ItemObject(BombItem)
+
+    gfx = "sprites/bomb.png"
+
+end
+
+export BombObject

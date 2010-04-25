@@ -35,7 +35,6 @@ function GetScriptsFromDir(path)
 end
 
 function LoadScriptsFromList(files)
-    global _cmpl
     done_count = 0
     collect_errors = false
     errors = [ => ]

@@ -15,6 +15,9 @@ void PhysicsMgr::UpdatePhysics(Object *obj, uint32 ms)
     float tf =  ms * 0.001f; // time factor
     uint8 speedsSet = 0; // can be 0, 1 or 2
     bool neg;
+    int32 begin_x = int32(obj->x);
+    int32 begin_y = int32(obj->y);
+
 
     float yaccelTotal = envPhys.gravity + phys.yaccel;
 
@@ -168,6 +171,9 @@ void PhysicsMgr::UpdatePhysics(Object *obj, uint32 ms)
         }
     }
 
-    obj->UpdateAnchor();
-    obj->HasMoved();
+    if(begin_x != int32(obj->x) || begin_y != int32(obj->y))
+    {
+        obj->UpdateAnchor();
+        obj->SetMoved(true);
+    }
 }

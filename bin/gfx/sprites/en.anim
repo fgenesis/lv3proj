@@ -1,13 +1,20 @@
-[stand]
-1: en1.png 75 2
-2: en2.png 75 3
-3: en3.png 75 1
+[on]
+en1.png 75
+en2.png 75
+en3.png 75
+r
 
-[spawn]
-1: en1.png 1 stand
+[swon]
+enf3.png 150
+enf2.png 150
+enf1.png 150
+j on
 
-[death]
-1: en3.png 400 0
+[swoff]
+enf1.png 150
+enf2.png 150
+enf3.png 150
+j off
 
-[inactive]
-1: empty16.png 0 0
+[off]
+empty16.png

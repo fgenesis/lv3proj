@@ -1,0 +1,26 @@
+class ItemObject(cons) from Object
+
+    gfx = nil
+    _cons = nil
+    
+    init
+        if not isCallable(cons): raise "ItemObject: must be passed a callable function or class constructor"
+        self._cons = cons
+        self.SetAffectedByPhysics(false)
+        self.SetBBox(0,0,16,16)
+        if self.gfx
+            tile = self.SetSprite(self.gfx)
+            if tile and tile.type == TILETYPE_ANIMATED: tile.name = "default"
+        end
+    end
+    
+    function OnTouch(side, who)
+        if who.type != OBJTYPE_PLAYER: return
+        //if who.AddItem(self._cons()) // NYI
+            > "ItemObject::OnTouch(): '", self._cons, "' to '", who, "'"
+            self.remove()
+        //end
+    end
+end
+
+export ItemObject

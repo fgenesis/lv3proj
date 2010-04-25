@@ -59,7 +59,7 @@ protected:
     std::string _wintitle;
     SDL_Surface *_screen;
     uint32 _screenFlags; // stores surface flags set on screen creation
-    static volatile uint32 s_curFrameTime;
+    static volatile uint32 s_curFrameTime, s_lastFrameTime;
     SDL_Rect _visibleBlockRect;
     uint32 _winsizex;
     uint32 _winsizey;
@@ -69,6 +69,7 @@ protected:
     uint32 _sleeptime;
     Point _cameraPos; // camera / "screen anchor" position in 2D-space, top-left corner (starts with (0,0) )
     bool _quit;
+    bool _paused;
 
 private:
     void _InitJoystick(void); // this does nothing if joystick support was not explicitly initialized in SDL_Init()

@@ -3,8 +3,9 @@
 > "-- Setting up test Level --"
 
 Screen.CreateInfoLayer()
-SetupInfoLayer()
+InitialMapSetup()
 > "-- Created & set up info layer --"
+
 
 
 // setup the collision map, and calculate it directly
@@ -86,33 +87,98 @@ function CycleGravity()
 end
 
 enum TFlag
+    NONE    = 0x0000
     ELECTRO = 0x0001
     BREAK   = 0x0002
 end
 
 
-function SetupInfoLayer()
+function InitialMapSetup()
+    breakable = nil //Tile("misc/breakable.png")
+    trigger = nil //Tile("misc/trigger.png")
+    redcross = nil //Tile("misc/noimage.png")
+    
 tileInfoSetup = [
-    "sprites/en.anim" => TFlag.ELECTRO,
-    "sprites/env.anim" => TFlag.ELECTRO,
-    "sprites/enx.anim" => TFlag.ELECTRO,
-    "sprites/greyblock.png" => TFlag.BREAK
+    //   filename              =>  [flag to set, overlay to place, object to spawn, special ID]
+    "sprites/en.anim"          => .[TFlag.ELECTRO    trigger      nil               0     ],
+    "sprites/en_v.anim"        => .[TFlag.ELECTRO    trigger      nil               0     ],
+    "sprites/enx.anim"         => .[TFlag.ELECTRO    redcross     nil               0     ],
+    "sprites/greyblock.png"    => .[TFlag.BREAK      breakable    nil               0     ],
+    "sprites/bomb.png"         => .[TFlag.NONE       nil          BombObject        0     ],
+    "sprites/button.png"       => .[TFlag.NONE       nil          Button            1     ]
 ]
+
+buttonActions = .[
+            BA_KillEn1
+            BA_KillEn2
+            BA_KillGreyBlocks1
+        ]
+        
+    buttonCounter = 0
+    
     d = Screen.GetLayerSize() - 1
-    overlay = Tile("misc/noimage.png")
     for ly in [Screen.GetLayer(6), Screen.GetLayer(7)]
         for y = 0 to d
             for x = 0 to d
                 t = ly.GetTile(x,y)
                 if(t and (t.filename in tileInfoSetup) )
-                    Screen.SetTileInfo(x,y, tileInfoSetup[t.filename])
-                    Screen.GetLayer(8).SetTile(x,y,overlay) // debug
+                    flag, overlay, objcons, special = tileInfoSetup[t.filename]
+                    Screen.SetTileInfo(x,y, flag)
+                    if overlay: Screen.GetLayer(8).SetTile(x,y,overlay)
+                    if isCallable(objcons)
+                        xpos = x * 16
+                        ypos = y * 16
+                        obj = objcons()
+                        switch special
+                            case 1
+                                if buttonCounter < len(buttonActions)
+                                    obj.SetOnPush(buttonActions[buttonCounter])
+                                    buttonCounter++
+                                end
+                            
+                            default
+                        end
+                                
+                        obj.SetPos(xpos,ypos) // set new object in place
+                        ly.SetTile(x,y,nil) // and remove the static tile
+                    end
+                        
                 end
             end
         end
     end
 end
 
+function BA_KillEn1()
+    ly = Screen.GetLayer(7)
+    for x = 26 to 28: ly.GetTile(x,5).name = "swoff"
+    for x = 25 to 28: ly.GetTile(x,11).name = "swoff"
+    for x = 35 to 37: ly.GetTile(x,7).name = "swoff"
+end
+
+function BA_KillEn2()
+    ly = Screen.GetLayer(7)
+    for y = 7 to 9: ly.GetTile(12,y).name = "swoff"
+    ly.GetTile(4,13).name = "swoff"
+    ly.GetTile(5,13).name = "swoff"
+end
+    
+function BA_KillGreyBlocks1()
+    ly = Screen.GetLayer(6)
+    blk = Tile("ship/broken.png")
+    for x = 9 to 11
+        for y = 5 to 6
+            ly.SetTile(x,y,nil)
+            ly.SetTile(x,y,blk, false)
+        end
+    end
+    for x = 10 to 11
+        for y = 10 to 11
+            ly.SetTile(x,y,nil)
+            ly.SetTile(x,y,blk, false)
+        end
+    end
+end
 
 // open a menu. so far only controllable via console.
 // this is just here to check IF something works

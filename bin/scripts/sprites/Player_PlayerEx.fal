@@ -7,15 +7,18 @@ class PlayerEx from Player
     raiseSpeed = 32 // NYI
     facingDir = DIRECTION_RIGHT
     movingDir = DIRECTION_NONE
+    idle = true // true if this player is just standing there, doing nothing
     
     baseSpeedX = 0 // speed from external source (beeing transported, blown away by fan, etc.)
     ownSpeedX = 0 // own walking speed
+    
+    actionHandler = nil
     
     init
         self.SetBBox(0,0,32,32)
         if self.gfx
             tile = self.SetSprite(self.gfx)
-            if tile: tile.name = "standR"
+            if tile and tile.type == TILETYPE_ANIMATED: tile.name = "standR"
         end
         
         // init physics
@@ -139,6 +142,7 @@ class PlayerEx from Player
     end
     
     function OnKeyA(pressed)
+        if self.actionHandler: self.actionHandler(self, pressed)
     end
     
     function OnKeyB(pressed)
@@ -152,10 +156,42 @@ class PlayerEx from Player
     
     function IsFallingDeep(): return self.phys.yspeed >= self.fallSpeed
     
-    function AnimWalk(): return self.facingDir == DIRECTION_LEFT ? self.AnimWalkL() : self.AnimWalkR()
-    function AnimPush(): return self.facingDir == DIRECTION_LEFT ? self.AnimPushL() : self.AnimPushR()
-    function AnimStand(): return self.facingDir == DIRECTION_LEFT ? self.AnimStandL() : self.AnimStandR() 
-    function AnimFall(): return self.facingDir == DIRECTION_LEFT ? self.AnimFallL() : self.AnimFallR()
+    function AnimWalk()
+        if self.facingDir == DIRECTION_LEFT
+            self.AnimWalkL()
+        else
+            self.AnimWalkR()
+        end
+        self.idle = false
+    end
+    
+    function AnimPush()
+        if self.facingDir == DIRECTION_LEFT
+            self.AnimPushL()
+        else
+            self.AnimPushR()
+        end
+        self.idle = false
+    end
+    
+    function AnimFall()
+        if self.facingDir == DIRECTION_LEFT
+            self.AnimFallL()
+        else
+            self.AnimFallR()
+        end
+        self.idle = false
+    end
+    
+    function AnimStand()
+        if self.idle: return
+        if self.facingDir == DIRECTION_LEFT
+            self.AnimStandL()
+        else
+            self.AnimStandR()
+        end
+        self.idle = true
+    end
     
     function AnimWalkL(): self.GetSprite().name = "walkL"
     function AnimWalkR(): self.GetSprite().name = "walkR"
@@ -165,6 +201,24 @@ class PlayerEx from Player
     function AnimStandR(): self.GetSprite().name = "standR"
     function AnimFallL(): self.GetSprite().name = (self.IsFallingDeep() ? "fallL" : "falldeepL")
     function AnimFallR(): self.GetSprite().name = (self.IsFallingDeep() ? "fallR" : "falldeepR")
+    
+    
+    function OnTouch()
+        //> "PlayerEx::OnTouch()"
+    end
+    
+    function OnEnter()
+        //> "PlayerEx::OnEnter()"
+    end
+    
+    // Interface used by ActionObject
+    function RegisterActionHandler(what)
+        if not isCallable(what): raise "PlayerEx::RegisterActionHandler(): must be passed a callable function or object method"
+        self.actionHandler = what
+        //> self, " ActionHandler = ", what
+        return true // return true to confirm registering was successful
+    end
+    
     
     
 end

@@ -346,6 +346,22 @@
 					RelativePath=".\shared\AppFalcon.h"
 					>
 				</File>
+				<File
+					RelativePath=".\shared\FalconBaseModule.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\FalconBaseModule.h"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\FalconObjectModule.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\FalconObjectModule.h"
+					>
+				</File>
 			</Filter>
 		</Filter>
 		<Filter

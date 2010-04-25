@@ -1,112 +1,112 @@
 # Olaf animations
 # from Lost Vikings 1
 
-# default: idle standing, shield down
-[default]
-1: olaf1r.png:5:5:32:32 15000 actionR # bored action after 15 secs
-
-
-
 #################################
 ###### FACING RIGHT #############
 #################################
 
 
 [standR]
-1: olaf1r.png:5:5:32:32 15000 actionR # bored action after 15 secs
+olaf1r.png:5:5:32:32 15000
+j actionR # bored action after 15 secs
 
 # Olaf has 2 "bored" actions.
 # This is the first one (shield down)
 [actionR]
 # initial: move hand
-1: olaf1r.png:44:5:32:32 200 2
+olaf1r.png:44:5:32:32 200
 
 # do some nosepicking
-2: olaf1r.png:83:5:32:32 200 3
-3: olaf1r.png:122:5:32:32 200 4
-4: olaf1r.png:83:5:32:32 200 5
-5: olaf1r.png:122:5:32:32 200 6
-6: olaf1r.png:83:5:32:32 200 7
-7: olaf1r.png:122:5:32:32 200 8
+olaf1r.png:83:5:32:32 200
+olaf1r.png:122:5:32:32 200
+olaf1r.png:83:5:32:32 200
+olaf1r.png:122:5:32:32 200
+olaf1r.png:83:5:32:32 200
+olaf1r.png:122:5:32:32 200
 
 # check result :)
-8: olaf1r.png:161:5:32:32 600 9 
+olaf1r.png:161:5:32:32 600
 
 # put it back or whatever.. more picking
-9: olaf1r.png:122:5:32:32 200 10
-10: olaf1r.png:83:5:32:32 200 11
-11: olaf1r.png:122:5:32:32 200 12
-12: olaf1r.png:83:5:32:32 200 13
-13: olaf1r.png:122:5:32:32 200 14
-14: olaf1r.png:83:5:32:32 200 15
+olaf1r.png:122:5:32:32 200
+olaf1r.png:83:5:32:32 200
+olaf1r.png:122:5:32:32 200
+olaf1r.png:83:5:32:32 200
+olaf1r.png:122:5:32:32 200
+olaf1r.png:83:5:32:32 200
 
 # move hand back
-15: olaf1r.png:43:5:32:32 200 standR
+olaf1r.png:43:5:32:32 200
+j standR
 
 [walkR]
-1: olaf1r.png:5:44:32:32 110 2
-2: olaf1r.png:44:44:32:32 110 3
-3: olaf1r.png:83:44:32:32 110 4
-4: olaf1r.png:122:44:32:32 110 5
-5: olaf1r.png:161:44:32:32 110 6
-6: olaf1r.png:200:44:32:32 110 7
-7: olaf1r.png:239:44:32:32 110 8
-8: olaf1r.png:278:44:32:32 110 1
+olaf1r.png:5:44:32:32 110
+olaf1r.png:44:44:32:32 110
+olaf1r.png:83:44:32:32 110
+olaf1r.png:122:44:32:32 110
+olaf1r.png:161:44:32:32 110
+olaf1r.png:200:44:32:32 110
+olaf1r.png:239:44:32:32 110
+olaf1r.png:278:44:32:32 110
 
 [fallR]
-1: olaf1r.png:5:84:32:32 150 2
-2: olaf1r.png:44:84:32:32 150 1
+olaf1r.png:5:84:32:32 150
+olaf1r.png:44:84:32:32 150
 
 [falldeepR]
-1: olaf1r.png:83:84:32:32 500 1
+olaf1r.png:83:84:32:32 500
 
 [landhardR]
-1: olaf1r.png:122:84:32:32 200 2
-2: olaf1r.png:161:84:32:32 1500 3
-3: olaf1r.png:200:84:32:32 500 4
-4: olaf1r.png:239:84:32:32 500 standR
+olaf1r.png:122:84:32:32 200
+olaf1r.png:161:84:32:32 1500
+olaf1r.png:200:84:32:32 500
+olaf1r.png:239:84:32:32 500
+j standR
 
 [standsuR]
-1: olaf1r.png:5:123:32:32 15000 actionsuR
+olaf1r.png:5:123:32:32 15000
+j actionsuR
 
 [actionsuR]
-1: olaf1r.png:44:123:32:32 750 2
-2: olaf1r.png:83:123:32:32 110 3
-3: olaf1r.png:122:123:32:32 110 4
-4: olaf1r.png:83:123:32:32 50 standsuR
+olaf1r.png:44:123:32:32 750
+olaf1r.png:83:123:32:32 110
+olaf1r.png:122:123:32:32 110
+olaf1r.png:83:123:32:32 50
+j standsuR
 
 [walksuR]
-1: olaf1r.png:5:163:32:32 110 2
-2: olaf1r.png:44:163:32:32 110 3
-3: olaf1r.png:83:163:32:32 110 4
-4: olaf1r.png:122:163:32:32 110 5
-5: olaf1r.png:161:163:32:32 110 6
-6: olaf1r.png:200:163:32:32 110 7
-7: olaf1r.png:239:163:32:32 110 8
-8: olaf1r.png:278:163:32:32 110 1
+olaf1r.png:5:163:32:32 110
+olaf1r.png:44:163:32:32 110
+olaf1r.png:83:163:32:32 110
+olaf1r.png:122:163:32:32 110
+olaf1r.png:161:163:32:32 110
+olaf1r.png:200:163:32:32 110
+olaf1r.png:239:163:32:32 110
+olaf1r.png:278:163:32:32 110
 
 [glideR]
-1: olaf1r.png:5:202:32:32 110 2
-2: olaf1r.png:44:202:32:32 110 1
+olaf1r.png:5:202:32:32 110
+olaf1r.png:44:202:32:32 110
 
 [glidemoveR]
-1: olaf1r.png:83:202:32:32 110 2
-2: olaf1r.png:122:202:32:32 110 1
+olaf1r.png:83:202:32:32 110
+olaf1r.png:122:202:32:32 110
 
 [deathR]
-1: olaf1r.png:5:281:32:32 110 2
-2: olaf1r.png:44:281:32:32 110 3
-3: olaf1r.png:83:281:32:32 110 4
-4: olaf1r.png:122:281:32:32 110 5
-5: olaf1r.png:161:281:32:32 110 6
-6: olaf1r.png:200:281:32:32 110 7
-7: olaf1r.png:239:281:32:32 1500 rm
+olaf1r.png:5:281:32:32 110
+olaf1r.png:44:281:32:32 110
+olaf1r.png:83:281:32:32 110
+olaf1r.png:122:281:32:32 110
+olaf1r.png:161:281:32:32 110
+olaf1r.png:200:281:32:32 110
+olaf1r.png:239:281:32:32 1500
+j invis
 
 [pushR]
-1: olaf1r.png:5:517:32:32 200 2
-2: olaf1r.png:44:517:32:32 200 3
-3: olaf1r.png:83:517:32:32 200 4
-4: olaf1r.png:122:517:32:32 200 1
+olaf1r.png:5:517:32:32 200
+olaf1r.png:44:517:32:32 200
+olaf1r.png:83:517:32:32 200
+olaf1r.png:122:517:32:32 200
 
 
 #################################
@@ -115,98 +115,107 @@
 
 
 [standL]
-1: olaf1l.png:5:5:32:32 15000 actionL # bored action after 15 secs
+olaf1l.png:5:5:32:32 15000
+j actionL # bored action after 15 secs
 
 # Olaf has 2 "bored" actions.
-# This is the first one (shield down)
+# This is the second one (shield up)
 [actionL]
 # initial: move hand
-1: olaf1l.png:44:5:32:32 200 2
+olaf1l.png:44:5:32:32 200
 
 # do some nosepicking
-2: olaf1l.png:83:5:32:32 200 3
-3: olaf1l.png:122:5:32:32 200 4
-4: olaf1l.png:83:5:32:32 200 5
-5: olaf1l.png:122:5:32:32 200 6
-6: olaf1l.png:83:5:32:32 200 7
-7: olaf1l.png:122:5:32:32 200 8
+olaf1l.png:83:5:32:32 200
+olaf1l.png:122:5:32:32 200
+olaf1l.png:83:5:32:32 200
+olaf1l.png:122:5:32:32 200
+olaf1l.png:83:5:32:32 200
+olaf1l.png:122:5:32:32 200
 
 # check result :)
-8: olaf1l.png:161:5:32:32 600 9 
+olaf1l.png:161:5:32:32 600
 
 # put it back or whatever.. more picking
-9: olaf1l.png:122:5:32:32 200 10
-10: olaf1l.png:83:5:32:32 200 11
-11: olaf1l.png:122:5:32:32 200 12
-12: olaf1l.png:83:5:32:32 200 13
-13: olaf1l.png:122:5:32:32 200 14
-14: olaf1l.png:83:5:32:32 200 15
+olaf1l.png:122:5:32:32 200
+olaf1l.png:83:5:32:32 200
+olaf1l.png:122:5:32:32 200
+olaf1l.png:83:5:32:32 200
+olaf1l.png:122:5:32:32 200
+olaf1l.png:83:5:32:32 200
 
 # move hand back
-15: olaf1l.png:43:5:32:32 200 standL
+olaf1l.png:44:5:32:32 200
+j standL
 
 [walkL]
-1: olaf1l.png:5:44:32:32 110 2
-2: olaf1l.png:44:44:32:32 110 3
-3: olaf1l.png:83:44:32:32 110 4
-4: olaf1l.png:122:44:32:32 110 5
-5: olaf1l.png:161:44:32:32 110 6
-6: olaf1l.png:200:44:32:32 110 7
-7: olaf1l.png:239:44:32:32 110 8
-8: olaf1l.png:278:44:32:32 110 1
+olaf1l.png:5:44:32:32 110
+olaf1l.png:44:44:32:32 110
+olaf1l.png:83:44:32:32 110
+olaf1l.png:122:44:32:32 110
+olaf1l.png:161:44:32:32 110
+olaf1l.png:200:44:32:32 110
+olaf1l.png:239:44:32:32 110
+olaf1l.png:278:44:32:32 110
 
 [fallL]
-1: olaf1l.png:5:84:32:32 150 2
-2: olaf1l.png:44:84:32:32 150 1
+olaf1l.png:5:84:32:32 150
+olaf1l.png:44:84:32:32 150
 
 [falldeepL]
-1: olaf1l.png:83:84:32:32 500 1
+olaf1l.png:83:84:32:32 500
 
 [landhardL]
-1: olaf1l.png:122:84:32:32 200 2
-2: olaf1l.png:161:84:32:32 1500 3
-3: olaf1l.png:200:84:32:32 500 4
-4: olaf1l.png:239:84:32:32 500 standL
+olaf1l.png:122:84:32:32 200
+olaf1l.png:161:84:32:32 1500
+olaf1l.png:200:84:32:32 500
+olaf1l.png:239:84:32:32 500
+j standL
 
 [standsuL]
-1: olaf1l.png:5:123:32:32 15000 1 # TODO: must be actionsuL
+olaf1l.png:5:123:32:32 15000
+j actionsuL
 
 [actionsuL]
-1: olaf1l.png:44:123:32:32 750 2
-2: olaf1l.png:83:123:32:32 110 3
-3: olaf1l.png:122:123:32:32 110 4
-4: olaf1l.png:83:123:32:32 50 standsuL
+olaf1l.png:44:123:32:32 750
+olaf1l.png:83:123:32:32 110
+olaf1l.png:122:123:32:32 110
+olaf1l.png:83:123:32:32 50
+j standsuL
 
 [walksuL]
-1: olaf1l.png:5:163:32:32 110 2
-2: olaf1l.png:44:163:32:32 110 3
-3: olaf1l.png:83:163:32:32 110 4
-4: olaf1l.png:122:163:32:32 110 5
-5: olaf1l.png:161:163:32:32 110 6
-6: olaf1l.png:200:163:32:32 110 7
-7: olaf1l.png:239:163:32:32 110 8
-8: olaf1l.png:278:163:32:32 110 1
+olaf1l.png:5:163:32:32 110
+olaf1l.png:44:163:32:32 110
+olaf1l.png:83:163:32:32 110
+olaf1l.png:122:163:32:32 110
+olaf1l.png:161:163:32:32 110
+olaf1l.png:200:163:32:32 110
+olaf1l.png:239:163:32:32 110
+olaf1l.png:278:163:32:32 110
 
 [glideL]
-1: olaf1l.png:5:202:32:32 110 2
-2: olaf1l.png:44:202:32:32 110 1
+olaf1l.png:5:202:32:32 110
+olaf1l.png:44:202:32:32 110
 
 [glidemoveL]
-1: olaf1l.png:83:202:32:32 110 2
-2: olaf1l.png:122:202:32:32 110 1
+olaf1l.png:83:202:32:32 110
+olaf1l.png:122:202:32:32 110
 
 [deathL]
-1: olaf1l.png:5:281:32:32 110 2
-2: olaf1l.png:44:281:32:32 110 3
-3: olaf1l.png:83:281:32:32 110 4
-4: olaf1l.png:122:281:32:32 110 5
-5: olaf1l.png:161:281:32:32 110 6
-6: olaf1l.png:200:281:32:32 110 7
-7: olaf1l.png:239:281:32:32 1500 rm
+olaf1l.png:5:281:32:32 110
+olaf1l.png:44:281:32:32 110
+olaf1l.png:83:281:32:32 110
+olaf1l.png:122:281:32:32 110
+olaf1l.png:161:281:32:32 110
+olaf1l.png:200:281:32:32 110
+olaf1l.png:239:281:32:32 1500
+j invis
 
 [pushL]
-1: olaf1l.png:5:517:32:32 200 2
-2: olaf1l.png:44:517:32:32 200 3
-3: olaf1l.png:83:517:32:32 200 4
-4: olaf1l.png:122:517:32:32 200 1
+olaf1l.png:5:517:32:32 200
+olaf1l.png:44:517:32:32 200
+olaf1l.png:83:517:32:32 200
+olaf1l.png:122:517:32:32 200
+
+[invis]
+empty16.png
 

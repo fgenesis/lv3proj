@@ -9,14 +9,16 @@
 #include "ObjectMgr.h"
 
 
-volatile uint32 Engine::s_curFrameTime;
+volatile uint32 Engine::s_curFrameTime; // game time
+volatile uint32 Engine::s_lastFrameTime; // last frame's clock()
 
 Engine::Engine()
-: _screen(NULL), _fps(0), _sleeptime(0), _quit(false), _framecounter(0)
+: _screen(NULL), _fps(0), _sleeptime(0), _quit(false), _framecounter(0), _paused(false)
 {
     log("Game Engine start.");
     _layermgr = new LayerMgr(this);
-    _fpsclock = s_curFrameTime = clock();
+    _fpsclock = s_lastFrameTime = clock();
+    s_curFrameTime = 0;
 
     physmgr = new PhysicsMgr;
     physmgr->SetLayerMgr(_layermgr);
@@ -81,17 +83,23 @@ void Engine::_InitJoystick(void)
 
 void Engine::Run(void)
 {
-    uint32 ms = clock();
-    uint32 oldms;
+    uint32 ms;
+    uint32 diff;
     while(!_quit)
     {
-        s_curFrameTime = ms;
-        _ProcessEvents();
-        oldms = ms;
         ms = clock();
-        _Process(ms - oldms);
-        _Render();
+        diff = ms - s_lastFrameTime;
+        diff &= 0x7F; // 127 ms max. allowed diff time
+        _ProcessEvents();
+        if(!_paused)
+        {
+            s_curFrameTime += diff;
+            _Process(diff);
+            _Render();
+        }
+
         _CalcFPS();
+        s_lastFrameTime = ms;
     }
 }
 
@@ -154,11 +162,11 @@ void Engine::_CalcFPS(void)
 {
     ++_framecounter;
     uint32 ms = clock();
-    if(ms - _fpsclock >= CLOCKS_PER_SEC >> 1)
+    if(ms - _fpsclock >= CLOCKS_PER_SEC >> 2)
     {
         char buf[100];
         _fpsclock = ms;
-        _fps = _framecounter << 1;
+        _fps = _framecounter << 2;
         _framecounter = 0;
         sprintf(buf, "%s - %u FPS - %u sleep", _wintitle.c_str(), _fps, _sleeptime);
         SDL_WM_SetCaption((const char*)buf, NULL);
@@ -172,6 +180,7 @@ void Engine::_CalcFPS(void)
         }
     }
     SDL_Delay(_sleeptime);
+
 }
 
 bool Engine::Setup(void)
@@ -225,6 +234,10 @@ void Engine::OnKeyDown(SDLKey key, SDLMod mod)
             flags |= SDL_FULLSCREEN; // add fullscreen flag
 
         InitScreen(x, y, bpp, flags);
+    }
+    if(key == SDLK_PAUSE)
+    {
+        _paused = !_paused;
     }
 
 }

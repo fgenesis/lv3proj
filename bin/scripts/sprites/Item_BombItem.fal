@@ -1,0 +1,9 @@
+class BombItem from Item
+
+    function OnUse()
+        > "Bomb used!"
+    end
+    
+end
+
+export BombItem

@@ -1,4 +1,3 @@
-//load Player_PlayerEx
 
 class Olaf from PlayerEx
 
@@ -16,6 +15,7 @@ class Olaf from PlayerEx
     
     function ToggleShield()
         self.shieldUp = not self.shieldUp
+        self.idle = false
         self.phys.ymaxspeed = (self.shieldUp ? self.glideSpeed : self.fallSpeed)
     end
     

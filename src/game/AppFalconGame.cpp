@@ -4,6 +4,10 @@
 
 #include "FalconGameModule.h"
 
+AppFalconGame::AppFalconGame(Engine *e) : AppFalcon(e)
+{
+    FalconGameModule_SetEnginePtr(e);
+}
 
 void AppFalconGame::_LoadModules(void)
 {

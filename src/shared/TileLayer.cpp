@@ -35,7 +35,7 @@ void TileLayer::SetTile(uint32 x, uint32 y, BasicTile *tile, bool updateCollisio
     tileref = tile;
 
     // if this tile is relevant for collision detection, update collision map at this pos
-    if(updateCollision && collision && mgr)
+    if(updateCollision && collision && mgr && mgr->HasCollisionMap())
         mgr->UpdateCollisionMap(x,y);
 }
 

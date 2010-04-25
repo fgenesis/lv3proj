@@ -13,17 +13,16 @@ ObjectMgr::ObjectMgr(Engine *e)
 
 ObjectMgr::~ObjectMgr()
 {
-    RemoveAll(true, NULL);
+    RemoveAll();
 }
 
-void ObjectMgr::RemoveAll(bool del, cleanfunc f)
+void ObjectMgr::RemoveAll(void)
 {
     for(ObjectMap::iterator it = _store.begin(); it != _store.end(); it++)
     {
-        if(f)
-            (it->second->*f)();
-        if(del)
-            delete it->second;
+        BaseObject *obj = it->second;
+        obj->unbind();
+        delete obj;
     }
     for(uint32 i = 0; i < LAYER_MAX; ++i)
         _renderLayers[i].clear();
@@ -35,7 +34,7 @@ void ObjectMgr::RemoveAll(bool del, cleanfunc f)
 uint32 ObjectMgr::Add(BaseObject *obj)
 {
     obj->_id = ++_curId;
-    _store[_curId] = obj;
+    _store[obj->_id] = obj;
     if(obj->GetType() >= OBJTYPE_OBJECT)
     {
         _renderLayers[((Object*)obj)->GetLayer()].insert((Object*)obj);
@@ -52,14 +51,30 @@ BaseObject *ObjectMgr::Get(uint32 id)
     return NULL;
 }
 
-void ObjectMgr::Remove(uint32 id)
+ObjectMap::iterator ObjectMgr::GetIterator(uint32 id)
 {
-    BaseObject *obj = Get(id);
-    _store.erase(id);
-    if(obj->GetType() >= OBJTYPE_OBJECT)
+    ObjectMap::iterator it = _store.find(id);
+    if(it != _store.end())
+        return it;
+
+    return _store.end();
+}
+
+ObjectMap::iterator ObjectMgr::Remove(uint32 id)
+{
+    ObjectMap::iterator it = GetIterator(id);
+    BaseObject *obj = it->second;
+    if(obj)
     {
-        _renderLayers[((Object*)obj)->GetLayer()].erase((Object*)obj);
+        it = _store.erase(it);
+        if(obj->GetType() >= OBJTYPE_OBJECT)
+        {
+            _renderLayers[((Object*)obj)->GetLayer()].erase((Object*)obj);
+        }
+        obj->unbind();
+        delete obj;
     }
+    return it;
 }
 
 void ObjectMgr::Update(uint32 ms)
@@ -69,9 +84,14 @@ void ObjectMgr::Update(uint32 ms)
     if(!ms)
         return;
 
+    // first, update all objects, handle physics, movement, etc.
     for(ObjectMap::iterator it = _store.begin(); it != _store.end(); it++)
     {
         ActiveRect *base = (ActiveRect*)it->second;
+
+        // do not touch objects flagged for deletion
+        if(base->MustDie())
+            continue;
 
         if(base->GetType() >= OBJTYPE_OBJECT)
         {
@@ -92,16 +112,23 @@ void ObjectMgr::Update(uint32 ms)
 
             obj->OnUpdate(ms);
         }
+    }
+
+    // now that every object that should have moved has done so, we can check what collided with what
+    for(ObjectMap::iterator it = _store.begin(); it != _store.end(); it++)
+    {
+        ActiveRect *base = (ActiveRect*)it->second;
+
         // collision detection (object vs object)
-        if(!base->IsCollisionEnabled())
+        if(base->MustDie() || !base->IsCollisionEnabled())
             continue;
 
         // i guess this will be very slow for MANY objects in the game... have to see how this works out
         for(ObjectMap::iterator jt = _store.begin(); jt != _store.end(); jt++)
         {
             ActiveRect *other = (ActiveRect*)jt->second;
-            // never calculate collision with self; and only calc if at least one of both objects has moved 
-            if(base == other || !(base->HasMoved() || other->HasMoved()))
+            // never calculate collision with self; and only calc if at least one of both objects has moved.
+            if(base == other || other->MustDie() || !other->IsCollisionEnabled() || !(base->HasMoved() || other->HasMoved()))
                 continue;
 
             if(uint8 side = base->CollisionWith(other))
@@ -132,23 +159,40 @@ void ObjectMgr::Update(uint32 ms)
                 }
             }
         }
-        base->SetMoved(false); // collision detection and everything done. next movement may be done in next cycle.
+    }
+
+    for(ObjectMap::iterator it = _store.begin(); it != _store.end(); )
+    {
+        BaseObject *obj = it->second;
+        if(obj->MustDie())
+        {
+            // remove expired objects
+            it = Remove(obj->GetId());
+        }
+        else
+        {
+            // reset moved state for all objects.
+            // collision detection and everything done. next movement may be done in next cycle.
+            ((ActiveRect*)it->second)->SetMoved(false);
+            it++;
+        }
     }
 }
 
 void ObjectMgr::RenderLayer(uint32 id)
 {
+    SDL_Surface *esf = _engine->GetSurface();
     for(ObjectSet::iterator it = _renderLayers[id].begin(); it != _renderLayers[id].end(); it++)
     {
         Object *obj = *it;
-        if(obj->GetSprite())
+        if(BasicTile *sprite = obj->GetSprite())
         {
             SDL_Rect dst;
             dst.x = int(obj->x);
             dst.y = int(obj->y);
             dst.w = obj->w;
             dst.h = obj->h;
-            SDL_BlitSurface(obj->GetSprite()->surface, NULL, _engine->GetSurface(), &dst);
+            SDL_BlitSurface(sprite->surface, NULL, esf, &dst);
         }
     }
 }

@@ -1,0 +1,34 @@
+class ActionObject from Object
+    
+    gfx = nil
+    maxdist = 0 // in pixels
+    
+    init
+        self.SetAffectedByPhysics(false)
+        // collision has to be enabled, since we can trigger buttons and levers also with arrows and alike...
+        self.SetBBox(0,0,16,16)
+        if self.gfx
+            tile = self.SetSprite(self.gfx)
+            if tile and tile.type == TILETYPE_ANIMATED: tile.name = "default"
+        end
+    end
+    
+    function OnTouch(side, who)
+        if who.type != OBJTYPE_PLAYER: return
+        if not who.RegisterActionHandler(self.HandleAction)
+            > "Huh?! ActionObject::OnTouch() failed to register (", who, ")"
+        end
+    end
+    
+    function HandleAction(who, state)
+        if self.GetDistance(who) <= self.maxdist
+            self.OnAction(who, state)
+        end
+    end
+    
+    function OnAction(who, state)
+        > "Warning: ActionObject::OnAction(): not overloaded method called"
+    end
+end
+
+export ActionObject

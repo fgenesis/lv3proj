@@ -38,10 +38,13 @@ public:
     inline uint8 GetType(void) { return type; }
 
     inline void SetLayerMgr(LayerMgr *mgr) { _layermgr = mgr; }
+    inline void MustDie(bool b) { _mustdie = b; }
+    inline bool MustDie(void) { return _mustdie; }
 
 protected:
     uint32 _id;
     uint8 type;
+    bool _mustdie; // if this is true, do not touch this object anymore
 
     LayerMgr *_layermgr; // required for collision checks
 };
@@ -69,6 +72,10 @@ public:
     inline void SetMoved(bool moved = true) { _moved = moved; }
     inline bool IsCollisionEnabled(void) { return _collisionEnabled; }
     inline void SetCollisionEnabled(bool b) { _collisionEnabled = b; }
+
+    virtual float GetDistanceX(ActiveRect *other);
+    virtual float GetDistanceY(ActiveRect *other);
+    virtual float GetDistance(ActiveRect *other);
 
     uint32 CanMoveToDirection(uint8 d, uint32 pixels = 1);
 

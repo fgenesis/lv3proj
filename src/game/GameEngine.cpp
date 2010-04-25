@@ -15,7 +15,7 @@
 GameEngine::GameEngine()
 : Engine()
 {
-    falcon = new AppFalconGame;
+    falcon = new AppFalconGame(this);
 
     _playerCount = 1;
 
@@ -41,7 +41,7 @@ GameEngine::~GameEngine()
 
 void GameEngine::Shutdown(void)
 {
-    objmgr->RemoveAll(true, &BaseObject::unbind); // unbind all objects BEFORE dropping falcon
+    objmgr->RemoveAll(); // this will unbind all objects BEFORE dropping falcon
     delete falcon;
     Falcon::Engine::PerformGC();
     Falcon::Engine::Shutdown();

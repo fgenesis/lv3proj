@@ -3,10 +3,12 @@
 
 #include <falcon/engine.h>
 
+class Engine;
+
 class AppFalcon
 {
 public:
-    AppFalcon();
+    AppFalcon(Engine *e);
     ~AppFalcon();
     bool Init(char *initscript = NULL);
     void DeleteVM(void);

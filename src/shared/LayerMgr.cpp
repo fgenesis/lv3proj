@@ -59,6 +59,7 @@ void LayerMgr::Clear(void)
 
 void LayerMgr::Render(void)
 {
+    ObjectMgr *omgr = engine->objmgr;
     for(uint32 i = 0; i < LAYER_MAX; ++i)
     {
         // render map tiles
@@ -66,7 +67,7 @@ void LayerMgr::Render(void)
             _layers[i]->Render();
 
         // render objects/sprites
-        engine->objmgr->RenderLayer(i);
+        omgr->RenderLayer(i);
     }
 }
 
@@ -321,10 +322,8 @@ bool LayerMgr::LoadAsciiLevel(AsciiLevel *level)
             for(uint32 i = 0; i < filevect.size(); ++i)
             {
                 std::string& f = filevect[i];
-                startIdxStr = "";
                 startAnim = "";
-                SplitFilenameToProps(f.c_str(), &realFileName, &startIdxStr, &startAnim);
-                startIdx = atoi(startIdxStr.c_str());
+                SplitFilenameToProps(f.c_str(), &realFileName, &startAnim);
                 if(FileGetExtension(realFileName) == ".png")
                 {
                     it = tmap.find(f);
@@ -350,7 +349,7 @@ bool LayerMgr::LoadAsciiLevel(AsciiLevel *level)
                         Anim *ani = resMgr.LoadAnim((char*)realFileName.c_str());
                         if(ani)
                         {
-                            atile = new AnimatedTile(ani, startIdx, startAnim.c_str());
+                            atile = new AnimatedTile(ani, startAnim.c_str());
                             atile->Init(Engine::GetCurFrameTime());
                             atile->filename = realFileName;
                             tmap[f] = atile;

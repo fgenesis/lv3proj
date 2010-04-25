@@ -1,0 +1,6 @@
+[default]
+button.png
+
+[use]
+button2.png 250
+j default

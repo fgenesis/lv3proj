@@ -1,0 +1,26 @@
+class Button from ActionObject
+
+    gfx = "sprites/button.anim"
+    onPush = nil
+    
+    function OnAction(who, state)
+        if not state: return
+        tile = self.GetSprite()
+        tile.name = "use"
+        if isCallable(self.onPush)
+            self.onPush(who)
+        else
+            > "Button(", self.id, ")  was pushed by ", who, " (no action)"
+        end
+    end
+    
+    function SetOnPush(func)
+        if isCallable(func)
+            self.onPush = func
+        else
+            raise "Button::SetOnPress(): expected a callable function!"
+        end
+    end
+end
+
+export Button

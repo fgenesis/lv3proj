@@ -37,19 +37,22 @@ struct AnimatedTile : BasicTile
 {
 public:
     AnimatedTile();
-    AnimatedTile(Anim *a, uint32 idx = 0, const char *startwith = NULL);
-    Anim *ani;
-    AnimFrame *curFrame;
-    AnimFrameStore *curFrameStore;
-    uint32 nextupdate; // the time when this tile will change its texture (Engine::GetCurrentFrameTime() + X)
+    AnimatedTile(Anim *a, const char *startwith = NULL);
 
-    void SetupDefaults(uint32 idx = 0, const char *startwith = NULL);
-    void SetName(char *name);
+    void SetupDefaults(const char *startwith = NULL);
+    void SetName(const char *name);
     void SetFrame(uint32 frame);
     const char *GetName(void) { return curFrameStore->name.c_str(); }
-    uint32 GetFrame(void) { return curFrame->index; }
+    uint32 GetFrame(void) { return curFrameIdx; }
     void Init(uint32 curtime); // current system clock
     void Update(uint32 curtime);
+
+private:
+    Anim *ani;
+    uint32 nextupdate; // the time when this tile will change its texture (Engine::GetCurrentFrameTime() + X)
+    uint32 curFrameIdx;
+    AnimFrame *curFrame;
+    AnimFrameStore *curFrameStore;
 
 };
 

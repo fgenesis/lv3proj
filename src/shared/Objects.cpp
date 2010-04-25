@@ -10,6 +10,7 @@ BaseObject::BaseObject()
     _falObj = NULL;
     _layermgr = NULL;
     _id = 0;
+    _mustdie = false;
 }
 
 void ActiveRect::Init(void)
@@ -126,6 +127,34 @@ uint32 ActiveRect::CanMoveToDirection(uint8 d, uint32 pixels /* = 1 */)
 {
     return _layermgr->CanMoveToDirection((BaseRect*)this, d, pixels);
 }
+
+float ActiveRect::GetDistanceX(ActiveRect *other)
+{
+    float result;
+    if(this->x < other->x)
+        result = other->x - (this->x + this->w);
+    else
+        result = this->x - (other->x + other->w);
+    return fastsgncheck(result) ? 0.0f : result;
+}
+
+float ActiveRect::GetDistanceY(ActiveRect *other)
+{
+    float result;
+    if(this->y < other->y)
+        result = other->y - (this->y + this->h);
+    else
+        result = this->y - (other->y + other->h);
+    return fastsgncheck(result) ? 0.0f : result;
+}
+
+float ActiveRect::GetDistance(ActiveRect *other)
+{
+    float x = GetDistanceX(other);
+    float y = GetDistanceY(other);
+    return sqrt(x*x + y*y);
+}
+
 
 void Object::Init(void)
 {
