@@ -4,6 +4,11 @@ class Olaf from PlayerEx
     gfx = "sprites/olaf1.anim"
     shieldUp = false
     glideSpeed = 32
+    
+    /*init
+        self.gfxOffsX = -6
+        self.gfxOffsY = -4
+    end*/
 
     function OnKeyB(pressed)
         if pressed: self.ToggleShield()

@@ -267,6 +267,11 @@ bool fal_ObjectCarrier::setProperty( const Falcon::String &prop, const Falcon::I
 
         return true; // if trying to assign phys to an ActiveRect, simply nothing will happen
     }
+    if(_obj->GetType() >= OBJTYPE_OBJECT)
+    {
+        if(prop == "gfxOffsX") { ((Object*)_obj)->gfxoffsx = int32(value.forceInteger()); return true; }
+        if(prop == "gfxOffsY") { ((Object*)_obj)->gfxoffsy = int32(value.forceInteger()); return true; }
+    }
 
     return FalconObject::setProperty(prop, value);
 }
@@ -305,6 +310,12 @@ bool fal_ObjectCarrier::getProperty( const Falcon::String &prop, Falcon::Item &r
             ret.setObject(p);
         }
         return true;
+    }
+    if(_obj->GetType() >= OBJTYPE_OBJECT)
+    {
+        if(prop == "gfxOffsX") { ret = Falcon::int32(((Object*)_obj)->gfxoffsx); return true; }
+        if(prop == "gfxOffsY") { ret = Falcon::int32(((Object*)_obj)->gfxoffsy); return true; }
+
     }
 
     return FalconObject::getProperty( prop, ret) || defaultProperty( prop, ret); // property not found
@@ -785,6 +796,8 @@ Falcon::Module *FalconObjectModule_create(void)
     m->addClassMethod(clsObject, "IsAffectedByPhysics", &fal_Object_IsAffectedByPhysics);
     m->addClassMethod(clsObject, "CanFallDown", &fal_Object_CanFallDown);
     m->addClassProperty(clsObject, "phys");
+    m->addClassProperty(clsObject, "gfxOffsX");
+    m->addClassProperty(clsObject, "gfxOffsY");
 
     Falcon::Symbol *clsItem = m->addClass("Item", &fal_ObjectCarrier::init);
     clsItem->getClassDef()->addInheritance(inhRect);

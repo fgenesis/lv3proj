@@ -176,6 +176,7 @@ void Object::_GenericInit(void)
     _gfx = NULL;
     _moved = true; // do collision detection on spawn
     _collisionEnabled = true; // do really do collision detetion
+    gfxoffsx = gfxoffsy = 0;
 }
 
 void Object::SetBBox(float x_, float y_, uint32 w_, uint32 h_)

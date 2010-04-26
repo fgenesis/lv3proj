@@ -179,6 +179,8 @@ void ObjectMgr::Update(uint32 ms)
     }
 }
 
+// this renders the objects.
+// it is called from LayerMgr::Render(), so that objects on higher layers are drawn over objects on lower layers
 void ObjectMgr::RenderLayer(uint32 id)
 {
     SDL_Surface *esf = _engine->GetSurface();
@@ -188,8 +190,8 @@ void ObjectMgr::RenderLayer(uint32 id)
         if(BasicTile *sprite = obj->GetSprite())
         {
             SDL_Rect dst;
-            dst.x = int(obj->x);
-            dst.y = int(obj->y);
+            dst.x = int(obj->x) + obj->gfxoffsx;
+            dst.y = int(obj->y) + obj->gfxoffsy;
             dst.w = obj->w;
             dst.h = obj->h;
             SDL_BlitSurface(sprite->GetSurface(), NULL, esf, &dst);

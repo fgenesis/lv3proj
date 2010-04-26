@@ -120,6 +120,7 @@ public:
     }
 
     PhysProps phys;
+    int32 gfxoffsx, gfxoffsy; // especially NPC objects can have a larger sprite then their bounding box. these are the relative offsets for the sprite.
 
 protected:
     void _GenericInit(void);
