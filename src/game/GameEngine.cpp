@@ -35,8 +35,6 @@ GameEngine::GameEngine()
 
 GameEngine::~GameEngine()
 {
-    delete objmgr;
-    delete physmgr;
 }
 
 void GameEngine::Shutdown(void)
@@ -54,15 +52,19 @@ bool GameEngine::Setup(void)
     Falcon::Engine::Init();
 
     // load the initialization script
-    char *initscript = resMgr.LoadTextFile("scripts/init.fal");
-    falcon->Init(initscript);
+    memblock *mb = resMgr.LoadTextFile("scripts/init.fal");
+    ASSERT(mb); // TODO: this must be return false, maybe
+    falcon->Init((char*)mb->ptr);
+    resMgr.Drop(mb);
 
     AsciiLevel *level = LoadAsciiLevel("levels/testlevel.txt");
     _layermgr->LoadAsciiLevel(level);
     delete level;
 
-    char *testscript = resMgr.LoadTextFile("scripts/test.fal");
-    falcon->EmbedStringAsModule(testscript, "testscript");
+    mb = resMgr.LoadTextFile("scripts/test.fal");
+    ASSERT(mb);
+    falcon->EmbedStringAsModule((char*)mb->ptr, "testscript");
+    resMgr.Drop(mb);
     
     //sndCore.PlayMusic("lv1_snes_ship.ogg");
 

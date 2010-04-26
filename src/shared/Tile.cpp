@@ -2,21 +2,52 @@
 #include "Engine.h"
 #include "Tile.h"
 
-
-AnimatedTile::AnimatedTile()
-: nextupdate(0), curFrameIdx(0)
+BasicTile::~BasicTile()
 {
-     surface = NULL;
-     type = TILETYPE_ANIMATED;
+    // a basic tile has a surface it carries around all the time,
+    // but in an animated tile, <surface> just points to a surface in its Anim ptr, so it does not need to be dropped!
+    if(type == TILETYPE_STATIC)
+        resMgr.Drop(surface);
 }
 
-AnimatedTile::AnimatedTile(Anim *a, const char *startwith /* = NULL*/)
-: nextupdate(0), curFrameIdx(0)
+AnimatedTile::~AnimatedTile()
 {
-    surface = NULL;
+    DEBUG(ASSERT(type == TILETYPE_ANIMATED));
+    resMgr.Drop(ani);
+}
+
+BasicTile *BasicTile::_New(const char *filename)
+{
+    if(SDL_Surface *img = resMgr.LoadImg((char*)filename))
+        return new BasicTile(img, filename);
+
+    return NULL;
+}
+
+BasicTile *AnimatedTile::New(const char *filename)
+{
+    std::string ext(FileGetExtension(filename));
+    if(ext == ".anim")
+    {
+        if(Anim *ani = resMgr.LoadAnim((char*)filename))
+        {
+            AnimatedTile *tile = new AnimatedTile(ani);
+            ((AnimatedTile*)tile)->Init(Engine::GetCurFrameTime());
+            return tile;
+        }
+
+        return NULL;
+    }
+
+    return BasicTile::_New(filename);
+}
+
+
+AnimatedTile::AnimatedTile(Anim *a, const char *startwith /* = NULL*/)
+: BasicTile(NULL, a->filename.c_str()), nextupdate(0), curFrameIdx(0)
+{
     type = TILETYPE_ANIMATED;
     ani = a;
-    ASSERT(ani);
     SetupDefaults(startwith);
 }
 
@@ -25,7 +56,7 @@ void AnimatedTile::SetFrame(uint32 frame)
     curFrame = &(curFrameStore->store[frame]);
     nextupdate = Engine::GetCurFrameTime() + curFrame->frametime;
     curFrameIdx = frame;
-    surface = curFrame->surface;
+    surface = curFrame->GetSurface();
 }
 
 void AnimatedTile::SetName(const char *name)

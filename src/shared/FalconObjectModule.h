@@ -4,7 +4,7 @@
 
 class BaseObject;
 class TileLayer;
-struct BasicTile;
+class BasicTile;
 
 Falcon::Module *FalconObjectModule_create(void);
 void FalconObjectModule_SetEnginePtr(Engine *eng);
@@ -99,10 +99,7 @@ private:
 class fal_Tile : public Falcon::CoreObject
 {
 public:
-    fal_Tile( const Falcon::CoreClass* generator, BasicTile *obj )
-        : Falcon::CoreObject( generator ), _tile(obj)
-    {
-    }
+    fal_Tile( const Falcon::CoreClass* generator, BasicTile *obj );
 
     static Falcon::CoreObject* factory( const Falcon::CoreClass *cls, void *user_data, bool )
     {
@@ -115,6 +112,8 @@ public:
     {
         return NULL; // not cloneable
     }
+
+    virtual bool finalize(void);
 
     virtual bool setProperty( const Falcon::String &prop, const Falcon::Item &value );
     virtual bool getProperty( const Falcon::String &prop, Falcon::Item &ret ) const;

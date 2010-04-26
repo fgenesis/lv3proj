@@ -43,6 +43,7 @@
 #  pragma warning( disable : 4800 )    // conversion to bool, performance warning
 #  pragma warning( disable : 4244 )    // conversion from 'uint64' to 'int16', possible loss of data
 #  pragma warning( disable : 4996 )    // disable warning for "too old" functions (VC80)
+#  pragma warning( disable : 4355 )    // 'this' : used in base member initializer list
 #endif
 
 ////////////////////////////////////

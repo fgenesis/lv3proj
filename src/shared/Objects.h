@@ -6,14 +6,14 @@
 #include "PhysicsSystem.h"
 
 /*
- * NOTE: The OnEnter(), OnLeave(), OnWhatever() functions are defined in FalconGameModule.cpp !!
+ * NOTE: The OnEnter(), OnLeave(), OnWhatever() functions are defined in FalconObjectModule.cpp !!
  */
 
 class Object;
 class ObjectMgr;
 class BaseObject;
 class FalconProxyObject;
-struct BasicTile;
+class BasicTile;
 
 enum ObjectType
 {
@@ -31,6 +31,7 @@ class BaseObject
 
 public:
     BaseObject();
+    virtual ~BaseObject() {}
     virtual void Init(void) = 0;
     FalconProxyObject *_falObj;
     void unbind(void); // clears bindings from falcon, should be called before deletion
@@ -90,6 +91,7 @@ protected:
 class Object : public ActiveRect
 {
 public:
+    virtual ~Object();
     virtual void Init(void);
 
     virtual void OnUpdate(uint32 ms);
@@ -103,11 +105,8 @@ public:
     inline void SetLayer(uint32 newLayer) { _layerId = newLayer; } // will be updated in next cycle, before rendering
     inline uint32 GetLayer(void) { return _layerId; }
     inline uint32 GetOldLayer(void) { return _oldLayerId; }
-    inline void SetSprite(BasicTile *tile)
-    {
-        // TODO: properly cleanup old gfx
-        _gfx = tile;
-    }
+    void SetSprite(BasicTile *tile);
+
     inline BasicTile *GetSprite(void) { return _gfx; }
 
     bool CanFallDown(void);

@@ -107,7 +107,7 @@ void ObjectMgr::Update(uint32 ms)
                 obj->_SetLayerUpdated();
             }
             // update gfx if required
-            if(obj->GetSprite() && obj->GetSprite()->type == TILETYPE_ANIMATED)
+            if(obj->GetSprite() && obj->GetSprite()->GetType() == TILETYPE_ANIMATED)
                 ((AnimatedTile*)(obj->GetSprite()))->Update(Engine::GetCurFrameTime());
 
             obj->OnUpdate(ms);
@@ -192,7 +192,7 @@ void ObjectMgr::RenderLayer(uint32 id)
             dst.y = int(obj->y);
             dst.w = obj->w;
             dst.h = obj->h;
-            SDL_BlitSurface(sprite->surface, NULL, esf, &dst);
+            SDL_BlitSurface(sprite->GetSurface(), NULL, esf, &dst);
         }
     }
 }

@@ -20,8 +20,29 @@ ResourceMgr::~ResourceMgr()
     }
 }
 
+void ResourceMgr::DropUnused(void)
+{
+    bool del;
+    do // Anims contain references to SDL_Surfaces, which may be skipped if the Anim is deleted after the
+    {  // Surface's count is checked. iterate over tiles again in case we deleted something in the previous loop.
+        del = false;
+        for(PtrCountMap::iterator it = _ptrmap.begin(); it != _ptrmap.end(); )
+        {
+            if(!it->second.count)
+            {
+                _Delete(it->first, it->second.rt);
+                it = _ptrmap.erase(it);
+                del = true;
+            }
+            else
+                it++;
+        }
+    } while(del);
+}
+
 void ResourceMgr::_IncRef(void *ptr, ResourceType rt)
 {
+    DEBUG(ASSERT(ptr != NULL));
     if(!ptr)
         return;
 
@@ -34,39 +55,68 @@ void ResourceMgr::_IncRef(void *ptr, ResourceType rt)
 
 void ResourceMgr::_DecRef(void *ptr)
 {
+    DEBUG(ASSERT(ptr != NULL));
     PtrCountMap::iterator it = _ptrmap.find(ptr);
     if(it != _ptrmap.end())
+    {
+        if(!it->second.count) // if we do proper refcounting, we should never try to _DecRef a ptr with refcount 0
+        {
+            DEBUG(logerror("ResourceMgr::_DecRef("PTRFMT") - already 0 (type %u)", ptr, it->second.count, it->second.rt));
+        }
         if( !(--(it->second.count)) )
-            _Delete(it->first, it->second.rt);
+        {
+            DEBUG(logdebug("ResourceMgr::_DecRef("PTRFMT") - now UNUSED (type %u)", ptr, it->second.count, it->second.rt));
+            return;
+        }
+        else
+        {
+            DEBUG(logdebug("ResourceMgr::_DecRef("PTRFMT") - now %u (type %u)", ptr, it->second.count, it->second.rt));
+        }
+    }
+    else
+    {
+        DEBUG(logerror("ResourceMgr::_DecRef("PTRFMT") - NOT FOUND", ptr));
+    }
 }
 
 void ResourceMgr::_Delete(void *ptr, ResourceType rt)
 {
+    bool found = false;
     for(FileRefMap::iterator it = _frmap.begin(); it != _frmap.end(); it++)
     {
         if(it->second == ptr)
         {
+            found = true;
             _frmap.erase(it);
             break;
         }
     }
+    if(!found)
+    {
+        DEBUG(logerror("ResourceMgr::_Delete("PTRFMT") - not found in FileRefMap (type %u)", ptr, rt));
+    }
 
     switch(rt)
     {
-        case RESTYPE_GENERIC:
+        case RESTYPE_MEMBLOCK:
+            DEBUG(logdebug("ResourceMgr:: Deleting memblock "PTRFMT" with ptr "PTRFMT", size %u",
+                ptr, ((memblock*)ptr)->ptr, ((memblock*)ptr)->size));
             delete ((memblock*)ptr)->ptr;
             delete (memblock*)ptr;
             break;
 
         case RESTYPE_ANIM:
+            DEBUG(logdebug("ResourceMgr:: Deleting Anim "PTRFMT" (%s)", ptr, ((Anim*)ptr)->filename.c_str()));
             delete (Anim*)ptr;
             break;
 
         case RESTYPE_SDL_SURFACE:
+            DEBUG(logdebug("ResourceMgr:: Deleting SDL_Surface "PTRFMT" (%ux%u)", ptr, ((SDL_Surface*)ptr)->w, ((SDL_Surface*)ptr)->h));
             SDL_FreeSurface((SDL_Surface*)ptr);
             break;
 
         case RESTYPE_MIX_CHUNK:
+            DEBUG(logdebug("ResourceMgr:: Deleting Mix_Chunk "PTRFMT, ptr));
             Mix_FreeChunk((Mix_Chunk*)ptr);
             break;
 
@@ -75,7 +125,7 @@ void ResourceMgr::_Delete(void *ptr, ResourceType rt)
     }
 }
 
-SDL_Surface *ResourceMgr::LoadImg(char *name, bool count /* = false*/)
+SDL_Surface *ResourceMgr::LoadImg(char *name)
 {
     // there may be a recursive call - adding this twice would be not a good idea!
     std::string origfn(name);
@@ -85,11 +135,9 @@ SDL_Surface *ResourceMgr::LoadImg(char *name, bool count /* = false*/)
     std::string fn,s1,s2,s3,s4,s5;
     SplitFilenameToProps(origfn.c_str(), &fn, &s1, &s2, &s3, &s4, &s5);
 
-    bool loaded = false;
     SDL_Surface *img = (SDL_Surface*)_GetPtr(origfn);
     if(!img)
     {
-        logdebug("LoadImg: '%s'", origfn.c_str());
         // we got additional properties
         if(fn != origfn)
         {
@@ -138,6 +186,7 @@ SDL_Surface *ResourceMgr::LoadImg(char *name, bool count /* = false*/)
                 {
                     img = section;
                 }
+                _DecRef(origin);
             }
         }
         else // nothing special, just load image normally
@@ -157,29 +206,25 @@ SDL_Surface *ResourceMgr::LoadImg(char *name, bool count /* = false*/)
             SDL_FreeSurface(img);
             img = newimg;
         }
-        loaded = true;
+        logdebug("LoadImg: '%s' -> "PTRFMT, origfn.c_str(), img);
     }
-    if(count || loaded)
-    {
-        _SetPtr(origfn, (void*)img);
-        _IncRef((void*)img, RESTYPE_SDL_SURFACE);
-    }
+
+    _SetPtr(origfn, (void*)img);
+    _IncRef((void*)img, RESTYPE_SDL_SURFACE);
 
     return img;
 }
 
-Anim *ResourceMgr::LoadAnim(char *name, bool count /* = false */)
+Anim *ResourceMgr::LoadAnim(char *name)
 {
     std::string fn("gfx/");
     std::string relpath(_PathStripLast(name));
     std::string loadpath;
     fn += name;
 
-    bool loaded = false;
     Anim *ani = (Anim*)_GetPtr(fn);
     if(!ani)
     {
-        logdebug("LoadAnim: '%s'", fn.c_str());
         ani = LoadAnimFile((char*)fn.c_str());
         if(ani)
         {
@@ -189,7 +234,8 @@ Anim *ResourceMgr::LoadAnim(char *name, bool count /* = false */)
                 for(AnimFrameVector::iterator af = am->second.store.begin(); af != am->second.store.end(); af++)
                 {
                     loadpath = AddPathIfNecessary(af->filename,relpath);
-                    af->surface = resMgr.LoadImg((char*)loadpath.c_str(), true); // get all images referenced
+                    af->surface = resMgr.LoadImg((char*)loadpath.c_str()); // get all images referenced
+                    af->callback.ptr(af->surface); // register callback for auto-deletion
                 }
         }
         else
@@ -197,51 +243,45 @@ Anim *ResourceMgr::LoadAnim(char *name, bool count /* = false */)
             logerror("LoadAnim failed: '%s'", fn.c_str());
             return NULL;
         }
-        loaded = true;
+        logdebug("LoadAnim: '%s' -> "PTRFMT, fn.c_str(), ani);
     }
-    if(count || loaded)
-    {
-        _SetPtr(fn, (void*)ani);
-        _IncRef((void*)ani, RESTYPE_ANIM);
-    }
+
+    _SetPtr(fn, (void*)ani);
+    _IncRef((void*)ani, RESTYPE_ANIM);
+
     return ani;
 }
 
-Mix_Music *ResourceMgr::LoadMusic(char *name, bool count /* = false */)
+Mix_Music *ResourceMgr::LoadMusic(char *name)
 {
     std::string fn("music/");
     fn += name;
 
-    bool loaded = false;
     Mix_Music *music = (Mix_Music*)_GetPtr(fn);
     if(!music)
     {
-        logdebug("LoadMusic: '%s'", fn.c_str());
         music = Mix_LoadMUS((char*)fn.c_str());
         if(!music)
         {
             logerror("LoadMusic failed: '%s'", fn.c_str());
             return NULL;
         }
-        loaded = true;
+        logdebug("LoadMusic: '%s' -> "PTRFMT, fn.c_str(), music);
     }
-    if(count || loaded)
-    {
-        _SetPtr(fn, (void*)music);
-        _IncRef((void*)music, RESTYPE_MIX_CHUNK);
-    }
+
+    _SetPtr(fn, (void*)music);
+    _IncRef((void*)music, RESTYPE_MIX_CHUNK);
+
     return music;
 }
 
 
-memblock *ResourceMgr::LoadFile(char *name, bool count /* = false */)
+memblock *ResourceMgr::LoadFile(char *name)
 {
     std::string fn(name);
     memblock *mb = (memblock*)_GetPtr(fn);
-    bool loaded = false;
     if(!mb)
     {
-        logdebug("LoadFile: '%s'", name);
         FILE *fh = fopen(name, "rb");
         if(!fh)
         {
@@ -259,25 +299,21 @@ memblock *ResourceMgr::LoadFile(char *name, bool count /* = false */)
         mb = new memblock(new uint8[size], size);
         fread(mb->ptr, 1, size, fh);
         fclose(fh);
-        loaded = true;
+        logdebug("LoadFile: '%s' -> "PTRFMT" [-> "PTRFMT"] size %u", name, mb, mb->ptr, mb->size);
     }
-    if(count || loaded)
-    {
-        _SetPtr(fn, (void*)mb);
-        _IncRef((void*)mb, RESTYPE_GENERIC);
-    }
+
+    _SetPtr(fn, (void*)mb);
+    _IncRef((void*)mb, RESTYPE_MEMBLOCK);
 
     return mb;
 }
 
-char *ResourceMgr::LoadTextFile(char *name, bool count /* = false */)
+memblock *ResourceMgr::LoadTextFile(char *name)
 {
     std::string fn(name);
     memblock *mb = (memblock*)_GetPtr(fn);
-    bool loaded = false;
     if(!mb)
     {
-        logdebug("LoadTextFile: '%s'", name);
         FILE *fh = fopen(name, "r");
         if(!fh)
         {
@@ -305,15 +341,13 @@ char *ResourceMgr::LoadTextFile(char *name, bool count /* = false */)
         mb->size = realsize;
 
         fclose(fh);
-        loaded = true;
-    }
-    if(count || loaded)
-    {
-        _SetPtr(fn, (void*)mb);
-        _IncRef((void*)mb, RESTYPE_GENERIC);
+        logdebug("LoadTextFile: '%s' -> "PTRFMT" [-> "PTRFMT"] size %u", name, mb, mb->ptr, mb->size);
     }
 
-    return (char*)mb->ptr;
+    _SetPtr(fn, (void*)mb);
+    _IncRef((void*)mb, RESTYPE_MEMBLOCK);
+
+    return mb;
 }
 
 std::string ResourceMgr::GetPropForFile(char *fn, char *prop)

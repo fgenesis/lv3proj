@@ -273,6 +273,11 @@ bool fal_ObjectCarrier::setProperty( const Falcon::String &prop, const Falcon::I
 
 bool fal_ObjectCarrier::getProperty( const Falcon::String &prop, Falcon::Item &ret ) const
 {
+    if(prop == "valid")
+    {
+        ret = _obj != NULL;
+        return true;
+    }
     if(!_obj)
     {
         throw new Falcon::AccessError( Falcon::ErrorParam( Falcon::e_invop_unb ).
@@ -475,38 +480,32 @@ FALCON_FUNC fal_Object_IsAffectedByPhysics(Falcon::VMachine *vm)
     vm->retval(false);
 }
 
+fal_Tile::fal_Tile( const Falcon::CoreClass* generator, BasicTile *obj )
+: Falcon::CoreObject( generator ), _tile(obj)
+{
+    if(obj)
+        obj->ref++;
+}
 
+bool fal_Tile::finalize(void)
+{
+    if(_tile)
+        _tile->ref--; // the GC will eat the carrier, making this tile unreferencable
+    return false; // this tells the GC to call the destructor
+}
 
 void fal_Tile::init(Falcon::VMachine *vm)
 {
     FALCON_REQUIRE_PARAMS_EXTRA(1, "S filename");
     Falcon::AutoCString file(vm->param(0)->asString());
     fal_Tile *self = Falcon::dyncast<fal_Tile*>( vm->self().asObject() );
-    BasicTile *tile = NULL;
 
-    std::string ext(FileGetExtension(file.c_str()));
-
-    if(ext == ".anim")
+    if(BasicTile *tile = AnimatedTile::New(file.c_str())) // new tile, refcount is initialized with 1
     {
-        if(Anim *ani = resMgr.LoadAnim((char*)file.c_str()))
-        {
-            tile = new AnimatedTile(ani);
-            tile->filename = file;   
-            ((AnimatedTile*)tile)->Init(Engine::GetCurFrameTime());
-        }
-    }
-    else
-    {
-        if(SDL_Surface *img = resMgr.LoadImg((char*)file.c_str()))
-        {
-            tile = new BasicTile;
-            tile->surface = img;
-            tile->filename = file;   
-        }
-    }
-
-    if(tile)
+        // we are picking up a newly created tile, but nobody else holds it, must NOT increase refcount
+        ASSERT(self->_tile == NULL); // at an init() call, we must not hold a tile yet
         self->_tile = tile;
+    }
     else
         vm->self().setNil();
 }
@@ -517,7 +516,7 @@ bool fal_Tile::setProperty( const Falcon::String &prop, const Falcon::Item &valu
 
     if(prop == "name")
     {
-        if(_tile->type == TILETYPE_ANIMATED)
+        if(_tile->GetType() == TILETYPE_ANIMATED)
         {
             Falcon::AutoCString cname(value);
             ((AnimatedTile*)_tile)->SetName((char*)cname.c_str());
@@ -545,12 +544,12 @@ bool fal_Tile::getProperty( const Falcon::String &prop, Falcon::Item &ret ) cons
 {
     if(prop == "type")
     {
-        ret = (Falcon::uint32)(_tile->type);
+        ret = (Falcon::uint32)(_tile->GetType());
         return true;
     }
     else if(prop == "name")
     {
-        if(_tile->type == TILETYPE_ANIMATED)
+        if(_tile->GetType() == TILETYPE_ANIMATED)
             ret = Falcon::String(((AnimatedTile*)_tile)->GetName());
         else
             ret.setNil();
@@ -559,7 +558,7 @@ bool fal_Tile::getProperty( const Falcon::String &prop, Falcon::Item &ret ) cons
     }
     else if(prop == "frame")
     {
-        if(_tile->type == TILETYPE_ANIMATED)
+        if(_tile->GetType() == TILETYPE_ANIMATED)
             ret = (Falcon::int32)(((AnimatedTile*)_tile)->GetFrame());
         else
             ret.setNil();
@@ -568,7 +567,7 @@ bool fal_Tile::getProperty( const Falcon::String &prop, Falcon::Item &ret ) cons
     }
     else if(prop == "filename")
     {
-        ret = Falcon::String(_tile->filename.c_str());
+        ret = Falcon::String(_tile->GetFilename());
         return true;
     }
     else
@@ -587,33 +586,13 @@ FALCON_FUNC fal_Object_SetSprite(Falcon::VMachine *vm)
     if(param->isString())
     {
         Falcon::AutoCString file(vm->param(0)->asString());
-        BasicTile *tile = NULL;
 
-        std::string ext(FileGetExtension(file.c_str()));
-
-        if(ext == ".anim")
-        {
-            if(Anim *ani = resMgr.LoadAnim((char*)file.c_str()))
-            {
-                tile = new AnimatedTile(ani);
-                tile->filename = file;   
-                ((AnimatedTile*)tile)->Init(Engine::GetCurFrameTime());
-            }
-        }
-        else
-        {
-            if(SDL_Surface *img = resMgr.LoadImg((char*)file.c_str()))
-            {
-                tile = new BasicTile;
-                tile->surface = img;
-                tile->filename = file;   
-            }
-        }
-        if(tile)
+        if(BasicTile *tile = AnimatedTile::New(file.c_str()))
         {
             ((Object*)self->GetObj())->SetSprite(tile);
             Falcon::CoreClass *cls = vm->findWKI("Tile")->asClass();
             vm->retval(new fal_Tile(cls,tile));
+            tile->ref--; // the tile was passed to the carrier, means it isn't referenced here anymore
         }
         else
             vm->retnil();
@@ -666,10 +645,9 @@ FALCON_FUNC fal_TileLayer_SetTile(Falcon::VMachine *vm)
     uint32 y = vm->param(1)->forceInteger();
 
 
-    if(x >= self->GetLayer()->GetArraySize() || x >= self->GetLayer()->GetArraySize())
+    if(x >= self->GetLayer()->GetArraySize() || y >= self->GetLayer()->GetArraySize())
     {
-        vm->retval(false);
-        return;
+        throw new Falcon::AccessError( Falcon::ErrorParam( Falcon::e_arracc ) );
     }
 
     Falcon::Item *tileArg = vm->param(2);
@@ -678,31 +656,14 @@ FALCON_FUNC fal_TileLayer_SetTile(Falcon::VMachine *vm)
         updateCollision = vm->param(3)->asBoolean();
 
     BasicTile *tile = NULL;
+    bool isNewTile = false;
 
     // support direct string-in and auto-convert to a tile
     if(tileArg->isString())
     {
         Falcon::AutoCString file(vm->param(2)->asString());
-        std::string ext(FileGetExtension(file.c_str()));
-
-        if(ext == ".anim")
-        {
-            if(Anim *ani = resMgr.LoadAnim((char*)file.c_str()))
-            {
-                tile = new AnimatedTile(ani);
-                tile->filename = file;   
-                ((AnimatedTile*)tile)->Init(Engine::GetCurFrameTime());
-            }
-        }
-        else
-        {
-            if(SDL_Surface *img = resMgr.LoadImg((char*)file.c_str()))
-            {
-                tile = new BasicTile;
-                tile->surface = img;
-                tile->filename = file;   
-            }
-        }     
+        tile = AnimatedTile::New(file.c_str());
+        isNewTile = true;
     }
     else if(tileArg->isOfClass("Tile"))
     {
@@ -717,6 +678,8 @@ FALCON_FUNC fal_TileLayer_SetTile(Falcon::VMachine *vm)
     if(tile)
     {
         self->GetLayer()->SetTile(x,y,tile,updateCollision);
+        if(isNewTile)
+            tile->ref--; // we created this tile, now passed to TileLayer -> we are not holding it anymore.
         vm->retval(true);
     }
     else
@@ -778,6 +741,7 @@ Falcon::Module *FalconObjectModule_create(void)
     clsBaseObject->getClassDef()->factory(&fal_ObjectCarrier::factory);
     m->addClassProperty(clsBaseObject, "id");
     m->addClassProperty(clsBaseObject, "type");
+    m->addClassProperty(clsBaseObject, "valid");
     m->addClassMethod(clsBaseObject, "remove", fal_BaseObject_Remove);
     m->addConstant("OBJTYPE_RECT", (Falcon::int64)OBJTYPE_RECT, true);
     m->addConstant("OBJTYPE_OBJECT", (Falcon::int64)OBJTYPE_OBJECT, true);

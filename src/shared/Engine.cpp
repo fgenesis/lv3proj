@@ -30,6 +30,10 @@ Engine::Engine()
 
 Engine::~Engine()
 {
+    delete objmgr;
+    delete physmgr;
+    delete _layermgr;
+    resMgr.DropUnused(); // at this point, all resources should have a refcount of 0, so this removes all.
     if(_screen)
         SDL_FreeSurface(_screen);
 }

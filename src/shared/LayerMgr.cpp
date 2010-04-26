@@ -140,7 +140,7 @@ void LayerMgr::UpdateCollisionMap(uint32 x, uint32 y) // this x and y are tile p
     {
         if(uselayer[i])
         {
-            SDL_Surface *surface = _layers[i]->tilearray(x,y)->surface;
+            SDL_Surface *surface = _layers[i]->tilearray(x,y)->GetSurface();
             if(SDL_MUSTLOCK(surface))
                 SDL_LockSurface(surface);
         }
@@ -158,8 +158,8 @@ void LayerMgr::UpdateCollisionMap(uint32 x, uint32 y) // this x and y are tile p
                 if(uselayer[i])
                 {
                     BasicTile *tile = _layers[i]->tilearray(x,y);
-                    pix = SDLfunc_getpixel(tile->surface, px, py);
-                    SDL_GetRGBA(pix, tile->surface->format, &r, &g, &b, &a);
+                    pix = SDLfunc_getpixel(tile->GetSurface(), px, py);
+                    SDL_GetRGBA(pix, tile->GetSurface()->format, &r, &g, &b, &a);
                     // if not fully transparent, this pixel is solid and cannot be passed
                     if(a) // TODO: maybe support that an alpha value below some threshold does NOT count as solid...?
                     {
@@ -176,7 +176,7 @@ void LayerMgr::UpdateCollisionMap(uint32 x, uint32 y) // this x and y are tile p
     {
         if(uselayer[i])
         {
-            SDL_Surface *surface = _layers[i]->tilearray(x,y)->surface;
+            SDL_Surface *surface = _layers[i]->tilearray(x,y)->GetSurface();
             if(SDL_MUSTLOCK(surface))
                 SDL_UnlockSurface(surface);
         }
@@ -309,8 +309,6 @@ bool LayerMgr::LoadAsciiLevel(AsciiLevel *level)
     TileLayer *animLayer = CreateLayer();
     
     // load the tiles
-    std::map<std::string, BasicTile*> tmap; // stores already allocated animated tiles
-    std::map<std::string, BasicTile*>::iterator it;
     std::string realFileName, startAnim;
     uint32 startIdx = 0;
     std::string startIdxStr;
@@ -324,43 +322,10 @@ bool LayerMgr::LoadAsciiLevel(AsciiLevel *level)
                 std::string& f = filevect[i];
                 startAnim = "";
                 SplitFilenameToProps(f.c_str(), &realFileName, &startAnim);
-                if(FileGetExtension(realFileName) == ".png")
+                if(BasicTile *tile = AnimatedTile::New(realFileName.c_str()))
                 {
-                    it = tmap.find(f);
-                    BasicTile *staTile = NULL;
-                    if(it == tmap.end())
-                    {
-                        staTile = new BasicTile;
-                        staTile->surface = resMgr.LoadImg((char*)f.c_str());
-                        staTile->filename = realFileName;
-                        tmap[f] = staTile;
-                    }
-                    else
-                        staTile = it->second;
-
-                    baseLayer->SetTile(x,y,staTile,false); // this will just copy the surface
-                }
-                else if(FileGetExtension(realFileName) == ".anim")
-                {
-                    it = tmap.find(f);
-                    AnimatedTile *atile = NULL;
-                    if(it == tmap.end())
-                    {
-                        Anim *ani = resMgr.LoadAnim((char*)realFileName.c_str());
-                        if(ani)
-                        {
-                            atile = new AnimatedTile(ani, startAnim.c_str());
-                            atile->Init(Engine::GetCurFrameTime());
-                            atile->filename = realFileName;
-                            tmap[f] = atile;
-                        }
-                        else
-                            logerror("LayerMgr::LoadAsciiLevel: Error loading '%s'", realFileName.c_str());
-                    }
-                    else
-                        atile = (AnimatedTile*)it->second;
-                        
-                    animLayer->SetTile(x,y,atile,false);
+                    (tile->GetType() == TILETYPE_ANIMATED ? animLayer : baseLayer)->SetTile(x,y,tile,false);
+                    tile->ref--;
                 }
             }
         }

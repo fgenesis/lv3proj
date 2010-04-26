@@ -400,9 +400,7 @@ void EditorEngine::SetupInterfaceLayers(void)
                 SDL_Surface *img = resMgr.LoadImg((char*)fn.c_str());
                 if(img)
                 {
-                    tile = new BasicTile;
-                    tile->surface = img;
-                    tile->filename = fn;
+                    tile = new BasicTile(img, fn.c_str());
                 }
             }
 

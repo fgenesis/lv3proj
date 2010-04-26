@@ -3,6 +3,7 @@
 
 #include <map>
 #include <vector>
+#include "ResourceMgr.h" // required for ResourceCallback<>
 
 struct SDL_Surface;
 
@@ -18,12 +19,21 @@ struct AnimFrameCmd
     std::string param;
 };
 
-struct AnimFrame
+class AnimFrame
 {
+    friend class ResourceMgr;
+
+public:
+    inline const char *GetFilename(void) { return filename.c_str(); }
+    inline SDL_Surface *GetSurface(void) { return surface; }
+    uint16 frametime;
     AnimFrame() : surface(NULL) {}
     AnimFrame(std::string& fn, uint16 t) : surface(NULL), filename(fn), frametime(t) {}
+protected:
+
     std::string filename;
-    uint16 frametime;
+    ResourceCallback<SDL_Surface> callback;
+
     SDL_Surface *surface;
 };
 

@@ -162,6 +162,11 @@ void Object::Init(void)
     _GenericInit();
 }
 
+Object::~Object(void)
+{
+    SetSprite(NULL); // this will handle refcounting
+}
+
 void Object::_GenericInit(void)
 {
     memset(&phys, 0, sizeof(PhysProps)); // TODO: apply some useful default values
@@ -189,6 +194,17 @@ void Object::SetPos(float x_, float y_)
 bool Object::CanFallDown(void)
 {
     return _layermgr->CanFallDown(anchor, w / 2);
+}
+
+void Object::SetSprite(BasicTile *tile)
+{
+    if(tile == _gfx)
+        return;
+    if(tile)
+        tile->ref++;
+    if(_gfx)
+        _gfx->ref--;
+    _gfx = tile;
 }
 
 void Item::Init(void)

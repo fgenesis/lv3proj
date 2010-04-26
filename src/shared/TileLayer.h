@@ -1,16 +1,16 @@
 #ifndef TILELAYER_H
 #define TILELAYER_H
 
-#include <set>
+#include <map>
 #include "array2d.h"
 
 struct SDL_Surface;
 struct SDL_Rect;
-struct AnimatedTile;
-struct BasicTile;
+class AnimatedTile;
+class BasicTile;
 class LayerMgr;
 
-typedef std::set<AnimatedTile*> AnimTileSet;
+typedef std::map<AnimatedTile*, uint32> AnimTileMap;
 
 
 class TileLayer
@@ -18,6 +18,7 @@ class TileLayer
     friend class LayerMgr;
 
 public:
+    ~TileLayer();
     void Update(uint32 curtime);
     void Render(void);
     void SetTile(uint32 x, uint32 y, BasicTile *tile, bool updateCollision = true);
@@ -34,7 +35,7 @@ protected:
     SDL_Surface *target; // where to render to - should be set to Engine::GetSurface()
     SDL_Rect *visible_area; // what to render - Engine::GetVisibleBlockRect()
     array2d<BasicTile*> tilearray;
-    AnimTileSet tileset;
+    AnimTileMap tilemap;
     uint32 used; // amount of used tiles - if 0 Update() and Render() are skipped. Counted in SetTile()
     LayerMgr *mgr; // ptr to layer mgr - this is needed for collision map (re-)calculation
 };

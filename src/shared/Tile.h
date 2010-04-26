@@ -22,23 +22,32 @@ enum TileFlags
 
 
 // the basic tile. static by default, but can be overloaded to support animation
-struct BasicTile
+class BasicTile
 {
+    friend class ResourceMgr;
 public:
-    BasicTile() : surface(NULL), type(TILETYPE_STATIC) {}
-    std::string filename;
-    SDL_Surface *surface; // surface to be drawn
-    uint8 type; // read-only!!
+    BasicTile(SDL_Surface *s, const char *fn)
+        : surface(s), filename(fn), type(TILETYPE_STATIC), ref(this) {}
+    static BasicTile *_New(const char *filename); // internal, use AnimatedTile::New() instead
+    virtual ~BasicTile();
+    inline SDL_Surface *GetSurface(void) { return surface; }
+    inline uint8 GetType(void) { return type; }
+    inline const char *GetFilename(void) { return filename.c_str(); }
+    SelfRefCounter<BasicTile> ref;
 
+protected:
+    uint8 type;
+    SDL_Surface *surface; // surface to be drawn
+    std::string filename;
 };
 
 
-struct AnimatedTile : BasicTile
+class AnimatedTile : public BasicTile
 {
 public:
-    AnimatedTile();
     AnimatedTile(Anim *a, const char *startwith = NULL);
-
+    static BasicTile *New(const char *filename);
+    virtual ~AnimatedTile();
     void SetupDefaults(const char *startwith = NULL);
     void SetName(const char *name);
     void SetFrame(uint32 frame);

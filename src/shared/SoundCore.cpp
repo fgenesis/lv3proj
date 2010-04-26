@@ -50,7 +50,7 @@ void SoundCore::PlayMusic(char *fn, double repeat_pos /* = 0.0*/)
     SetLoopPoint(atof(loopstr.c_str()));
     if(Mix_PlayingMusic())
         StopMusic();
-    _music = resMgr.LoadMusic(fn);
+    _music = resMgr.LoadMusic(fn); // TODO: do refcounting
     if(!_music)
         return;
     Mix_PlayMusic(_music, 0); // TODO: instead of loops implement some auto-reposition system
