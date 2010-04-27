@@ -8,3 +8,7 @@
 #ifdef max
 #undef max
 #endif
+
+#ifdef PlaySound
+#undef PlaySound
+#endif

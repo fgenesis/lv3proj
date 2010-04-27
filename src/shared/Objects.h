@@ -31,7 +31,7 @@ class BaseObject
 
 public:
     BaseObject();
-    virtual ~BaseObject() {}
+    virtual ~BaseObject();
     virtual void Init(void) = 0;
     FalconProxyObject *_falObj;
     void unbind(void); // clears bindings from falcon, should be called before deletion
@@ -46,6 +46,8 @@ protected:
     uint32 _id;
     uint8 type;
     bool _mustdie; // if this is true, do not touch this object anymore
+
+
 
     LayerMgr *_layermgr; // required for collision checks
 };
@@ -66,7 +68,7 @@ public:
     virtual void OnLeave(uint8 side, ActiveRect *who);
     virtual bool OnTouch(uint8 side, ActiveRect *who);
 
-    uint8 CollisionWith(ActiveRect *other); // returns side where the collision occurred
+    uint8 CollisionWith(BaseRect *other); // returns side where the collision occurred
     void AlignToSideOf(ActiveRect *other, uint8 side);
 
     inline bool HasMoved(void) { return _moved; }

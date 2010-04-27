@@ -120,6 +120,11 @@ void ResourceMgr::_Delete(void *ptr, ResourceType rt)
             Mix_FreeChunk((Mix_Chunk*)ptr);
             break;
 
+        case RESTYPE_MIX_MUSIC:
+            DEBUG(logdebug("ResourceMgr:: Deleting Mix_Music "PTRFMT, ptr));
+            Mix_FreeMusic((Mix_Music*)ptr);
+            break;
+
         default:
             ASSERT(false);
     }
@@ -270,9 +275,32 @@ Mix_Music *ResourceMgr::LoadMusic(char *name)
     }
 
     _SetPtr(fn, (void*)music);
-    _IncRef((void*)music, RESTYPE_MIX_CHUNK);
+    _IncRef((void*)music, RESTYPE_MIX_MUSIC);
 
     return music;
+}
+
+Mix_Chunk *ResourceMgr::LoadSound(char *name)
+{
+    std::string fn("sfx/");
+    fn += name;
+
+    Mix_Chunk *sound = (Mix_Chunk*)_GetPtr(fn);
+    if(!sound)
+    {
+        sound = Mix_LoadWAV((char*)fn.c_str());
+        if(!sound)
+        {
+            logerror("LoadSound failed: '%s'", fn.c_str());
+            return NULL;
+        }
+        logdebug("LoadSound: '%s' -> "PTRFMT, fn.c_str(), sound);
+    }
+
+    _SetPtr(fn, (void*)sound);
+    _IncRef((void*)sound, RESTYPE_MIX_CHUNK);
+
+    return sound;
 }
 
 

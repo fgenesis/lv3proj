@@ -1,11 +1,8 @@
 class ImageObject(sprite) from Object
-    _valid = false
     
     init
         tile = self.SetSprite(sprite)
-        if tile
-            self._valid = true
-        else
+        if not tile
             tile = self.SetSprite("misc/noimage.png")
             if not tile: raise "File not found! (" + sprite + ") - not even placeholder (gfx/misc/noimage.png)"
         end
@@ -13,8 +10,6 @@ class ImageObject(sprite) from Object
         self.SetAffectedByPhysics(false)
         self.SetCollisionEnabled(false)
     end
-    
-    function valid(): return self._valid
     
 end
 

@@ -553,6 +553,11 @@ bool fal_Tile::setProperty( const Falcon::String &prop, const Falcon::Item &valu
 
 bool fal_Tile::getProperty( const Falcon::String &prop, Falcon::Item &ret ) const
 {
+    if(!_tile)
+    {
+        ret.setNil();
+        return true;
+    }
     if(prop == "type")
     {
         ret = (Falcon::uint32)(_tile->GetType());
@@ -591,7 +596,7 @@ bool fal_Tile::getProperty( const Falcon::String &prop, Falcon::Item &ret ) cons
 
 FALCON_FUNC fal_Object_SetSprite(Falcon::VMachine *vm)
 {
-    FALCON_REQUIRE_PARAMS_EXTRA(1, "S filename / Tile / AnimatedTile");
+    FALCON_REQUIRE_PARAMS_EXTRA(1, "nil / S filename / Tile / AnimatedTile");
     Falcon::Item *param = vm->param(0);
     fal_ObjectCarrier *self = Falcon::dyncast<fal_ObjectCarrier*>( vm->self().asObject() );
     if(param->isString())
@@ -608,6 +613,10 @@ FALCON_FUNC fal_Object_SetSprite(Falcon::VMachine *vm)
         else
             vm->retnil();
     }
+    else if(param->isNil())
+    {
+        ((Object*)self->GetObj())->SetSprite(NULL); // refcounting done in SetSprite()
+    }
     else if(param->isOfClass("Tile"))
     {
         fal_Tile *ftile = Falcon::dyncast<fal_Tile*>(param->asObject());
@@ -621,11 +630,40 @@ FALCON_FUNC fal_Object_SetSprite(Falcon::VMachine *vm)
     }
 }
 
+FALCON_FUNC fal_Object_SetLayerId(Falcon::VMachine *vm)
+{
+    FALCON_REQUIRE_PARAMS_EXTRA(1, "N in [0..31]");
+    fal_ObjectCarrier *self = Falcon::dyncast<fal_ObjectCarrier*>( vm->self().asObject() );
+    uint32 id = vm->param(0)->forceIntegerEx();
+    if(id >= LAYER_MAX)
+    {
+        throw new Falcon::AccessError( Falcon::ErrorParam( Falcon::e_arracc ).
+            extra( "N in [0..31]" ) );
+    }
+
+    BaseObject *obj = self->GetObj();
+    if(obj->GetType() >= OBJTYPE_OBJECT)
+        ((Object*)obj)->SetLayer(id);
+}
+
+FALCON_FUNC fal_Object_GetLayerId(Falcon::VMachine *vm)
+{
+    fal_ObjectCarrier *self = Falcon::dyncast<fal_ObjectCarrier*>( vm->self().asObject() );
+    BaseObject *obj = self->GetObj();
+    if(obj->GetType() >= OBJTYPE_OBJECT)
+        vm->retval((Falcon::int64)((Object*)obj)->GetLayer());
+    else
+        vm->retnil();
+}
+
 FALCON_FUNC fal_Object_GetSprite(Falcon::VMachine *vm)
 {
     fal_ObjectCarrier *self = Falcon::dyncast<fal_ObjectCarrier*>( vm->self().asObject() );
     Falcon::CoreClass *cls = vm->findWKI("Tile")->asClass();
-    vm->retval(new fal_Tile(cls, ((Object*)self->GetObj())->GetSprite()));
+    if(BasicTile *tile = ((Object*)self->GetObj())->GetSprite())
+        vm->retval(new fal_Tile(cls, tile));
+    else
+        vm->retnil();
 }
 
 FALCON_FUNC fal_Object_CanFallDown(Falcon::VMachine *vm)
@@ -718,6 +756,64 @@ FALCON_FUNC fal_TileLayer_GetArraySize(Falcon::VMachine *vm)
     vm->retval((Falcon::int32)self->GetLayer()->GetArraySize());
 }
 
+FALCON_FUNC fal_TileLayer_SetCollisionEnabled(Falcon::VMachine *vm)
+{
+    FALCON_REQUIRE_PARAMS_EXTRA(1, "B");
+    fal_TileLayer *self = Falcon::dyncast<fal_TileLayer*>( vm->self().asObject() );
+    self->GetLayer()->collision = vm->param(0)->asBoolean();
+}
+
+FALCON_FUNC fal_TileLayer_IsCollisionEnabled(Falcon::VMachine *vm)
+{
+    fal_TileLayer *self = Falcon::dyncast<fal_TileLayer*>( vm->self().asObject() );
+    vm->retval(self->GetLayer()->collision);
+}
+
+FALCON_FUNC fal_Objects_GetLastId(Falcon::VMachine *vm)
+{
+    vm->retval((Falcon::int64)g_engine_ptr->objmgr->GetLastId());
+}
+
+FALCON_FUNC fal_Objects_Get(Falcon::VMachine *vm)
+{
+    FALCON_REQUIRE_PARAMS_EXTRA(1, "N");
+    BaseObject *obj = g_engine_ptr->objmgr->Get(vm->param(0)->forceIntegerEx());
+    if(!obj)
+    {
+        vm->retnil();
+        return;
+    }
+    DEBUG(ASSERT(obj->_falObj && obj->_falObj->coreCls));
+    fal_ObjectCarrier *co = new fal_ObjectCarrier(obj->_falObj->coreCls, obj->_falObj);
+    vm->retval(co);
+}
+
+FALCON_FUNC fal_Objects_GetAllInRect(Falcon::VMachine *vm)
+{
+    FALCON_REQUIRE_PARAMS_EXTRA(4, "N x, N y, N width, N height");
+    BaseRect rect;
+    rect.x = (float)vm->param(0)->forceNumeric();
+    rect.y = (float)vm->param(1)->forceNumeric();
+    rect.w = (uint32)vm->param(2)->forceInteger();
+    rect.h = (uint32)vm->param(3)->forceInteger();
+    ObjectList li;
+    g_engine_ptr->objmgr->GetAllObjectsIn(rect, li);
+    if(li.empty())
+    {
+        vm->retnil();
+        return;
+    }
+    Falcon::CoreArray *arr = new Falcon::CoreArray(li.size());
+    for(ObjectList::iterator it = li.begin(); it != li.end(); it++)
+    {
+        BaseObject *obj = *it;
+        DEBUG(ASSERT(obj->_falObj && obj->_falObj->coreCls));
+        fal_ObjectCarrier *co = new fal_ObjectCarrier(obj->_falObj->coreCls, obj->_falObj);
+        arr->append(co);
+    }
+    vm->retval(arr);
+}
+
 
 
 
@@ -726,6 +822,11 @@ Falcon::Module *FalconObjectModule_create(void)
     Falcon::Module *m = new Falcon::Module;
     m->name("ObjectModule");
 
+    Falcon::Symbol *symObjects = m->addSingleton("Objects");
+    Falcon::Symbol *clsObjects = symObjects->getInstance();
+    m->addClassMethod(clsObjects, "GetAllInRect", fal_Objects_GetAllInRect);
+    m->addClassMethod(clsObjects, "Get", fal_Objects_Get);
+    m->addClassMethod(clsObjects, "GetLastId", fal_Objects_GetLastId);
 
     Falcon::Symbol *clsTileLayer = m->addClass("TileLayer", &forbidden_init);
     clsTileLayer->setWKS(true);
@@ -734,6 +835,8 @@ Falcon::Module *FalconObjectModule_create(void)
     m->addClassMethod(clsTileLayer, "SetTile", &fal_TileLayer_SetTile);
     m->addClassMethod(clsTileLayer, "GetTile", &fal_TileLayer_GetTile);
     m->addClassMethod(clsTileLayer, "GetArraySize", &fal_TileLayer_GetArraySize);
+    m->addClassMethod(clsTileLayer, "SetCollisionEnabled", &fal_TileLayer_SetCollisionEnabled);
+    m->addClassMethod(clsTileLayer, "IstCollisionEnabled", &fal_TileLayer_IsCollisionEnabled);
     m->addConstant("TILEFLAG_SOLID", (Falcon::int64)TILEFLAG_SOLID, true);
 
     Falcon::Symbol *clsTile = m->addClass("Tile", &fal_Tile::init);
@@ -792,6 +895,8 @@ Falcon::Module *FalconObjectModule_create(void)
     m->addClassMethod(clsObject, "OnUpdate", fal_NullFunc);
     m->addClassMethod(clsObject, "SetSprite", fal_Object_SetSprite);
     m->addClassMethod(clsObject, "GetSprite", fal_Object_GetSprite);
+    m->addClassMethod(clsObject, "SetLayerId", fal_Object_SetLayerId);
+    m->addClassMethod(clsObject, "GetLayerId", fal_Object_GetLayerId);
     m->addClassMethod(clsObject, "SetAffectedByPhysics", &fal_Object_SetAffectedByPhysics);
     m->addClassMethod(clsObject, "IsAffectedByPhysics", &fal_Object_IsAffectedByPhysics);
     m->addClassMethod(clsObject, "CanFallDown", &fal_Object_CanFallDown);

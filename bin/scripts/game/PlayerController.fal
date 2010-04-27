@@ -28,6 +28,12 @@ class PlayerController
         self._activeChar += nil
     end
     
+    function Remove(who)
+        arrayDel(self._playerReg, who)
+        pos = arrayFind(self._activeChar, who)
+        if pos >= 0: self._activeChar[pos] = nil
+    end
+    
     // active a player object for a human player, so that all input from this person is forwarded to the player class object
     // @params:
     //    playerNum: which human player (in case of multiplayer), starts with 1.

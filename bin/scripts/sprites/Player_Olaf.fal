@@ -5,10 +5,11 @@ class Olaf from PlayerEx
     shieldUp = false
     glideSpeed = 32
     
-    /*init
-        self.gfxOffsX = -6
-        self.gfxOffsY = -4
-    end*/
+    init
+        self.gfxOffs = [ [-6, -4], [0, -4], [-12, -4] ] // graphics offsets, [0]: normal, [1]: pushing left, [2]: pushing right
+        self.SetGfxOffs(0)
+        self.SetBBox(6,4,20,28) // this is not fully correct but should be sufficient for now
+    end
 
     function OnKeyB(pressed)
         if pressed: self.ToggleShield()
@@ -35,6 +36,7 @@ class Olaf from PlayerEx
     function AnimFallLR(d)
         p = self.phys
         sp = self.GetSprite()
+        if not sp: return // ???!!?!
         if self.shieldUp
             if p.xspeed
                 sp.name = "glidemove" + d

@@ -13,6 +13,11 @@ BaseObject::BaseObject()
     _mustdie = false;
 }
 
+BaseObject::~BaseObject()
+{
+    DEBUG(logdebug("~BaseObject "PTRFMT, this));
+}
+
 void ActiveRect::Init(void)
 {
     type = OBJTYPE_RECT;
@@ -40,7 +45,7 @@ void ActiveRect::MoveRelative(float xr, float yr)
 // returns the side on which we hit 'other'
 // (side of 'other')
 // TODO: optimize this function! it should be possible to do this a lot simpler...
-uint8 ActiveRect::CollisionWith(ActiveRect *other)
+uint8 ActiveRect::CollisionWith(BaseRect *other)
 {
     int32 ix = int32(x);
     int32 iy = int32(y);
@@ -171,8 +176,7 @@ void Object::_GenericInit(void)
 {
     memset(&phys, 0, sizeof(PhysProps)); // TODO: apply some useful default values
     _physicsAffected = false;
-    _layerId = LAYER_DEFAULT_SPRITES;
-    _oldLayerId = 0; // update in first update cycle anyways
+    _oldLayerId = _layerId = LAYER_MAX / 2; // place on middle layer by default
     _gfx = NULL;
     _moved = true; // do collision detection on spawn
     _collisionEnabled = true; // do really do collision detetion

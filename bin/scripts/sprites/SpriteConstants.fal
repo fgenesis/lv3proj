@@ -11,3 +11,4 @@ DEATH_SPIKE = 8
 DEATH_MUMMY = 9
 DEATH_ACID = 10
 
+export

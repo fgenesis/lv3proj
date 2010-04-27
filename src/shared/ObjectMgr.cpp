@@ -66,6 +66,7 @@ ObjectMap::iterator ObjectMgr::Remove(uint32 id)
     BaseObject *obj = it->second;
     if(obj)
     {
+        DEBUG(logdebug("ObjectMgr::Remove(%u) -> "PTRFMT, id, obj));
         it = _store.erase(it);
         if(obj->GetType() >= OBJTYPE_OBJECT)
         {
@@ -197,5 +198,12 @@ void ObjectMgr::RenderLayer(uint32 id)
             SDL_BlitSurface(sprite->GetSurface(), NULL, esf, &dst);
         }
     }
+}
+
+void ObjectMgr::GetAllObjectsIn(BaseRect& rect, ObjectList& result)
+{
+    for(ObjectMap::iterator it = _store.begin(); it != _store.end(); it++)
+        if(((ActiveRect*)it->second)->CollisionWith(&rect))
+            result.push_back(it->second);
 }
 

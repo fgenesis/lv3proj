@@ -74,6 +74,16 @@ uint32 SoundCore::GetMusicVolume(void)
     return Mix_VolumeMusic(-1);
 }
 
+// TODO: this is the minimal thing to play sound, must be improved and free resources after use!
+void SoundCore::PlaySound(char *fn)
+{
+    Mix_Chunk *sound = resMgr.LoadSound(fn);
+    if(sound)
+    {
+        Mix_PlayChannel(-1, sound, 0);
+    }
+}
+
 
 // extern, global (since we aren't using singletons here)
 SoundCore sndCore;

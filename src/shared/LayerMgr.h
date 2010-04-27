@@ -15,12 +15,9 @@ class ActiveRect;
 enum LayerDepth
 {
     LAYER_REARMOST_BACKGROUND = 0,
-    LAYER_DEFAULT_ENV = 6, // where most walls and basic stuff should be put. the editor will start with this layer.
-    LAYER_DEFAULT_SPRITES = 15, // the default sprite layer. should not contain
-                        // anything else than sprites, because these have to be treated specially
     LAYER_FOREMOST_OVERLAY = 31,
 
-    LAYER_MAX = 32
+    LAYER_MAX = 32 // do not use
 };
 
 typedef array2d<uint16> TileInfoLayer;

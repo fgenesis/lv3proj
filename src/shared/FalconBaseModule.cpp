@@ -2,6 +2,9 @@
 #include "common.h"
 #include "AppFalcon.h"
 #include "FalconBaseModule.h"
+#include "SoundCore.h"
+
+#include "UndefUselessCrap.h"
 
 FALCON_FUNC fal_NullFunc(Falcon::VMachine *vm)
 {
@@ -102,10 +105,21 @@ FALCON_FUNC fal_include_ex( Falcon::VMachine *vm )
     }
 }
 
+FALCON_FUNC fal_Sound_Play( Falcon::VMachine *vm )
+{
+    FALCON_REQUIRE_PARAMS_EXTRA(1,"S");
+    Falcon::AutoCString cstr(vm->param(0)->asString());
+    sndCore.PlaySound((char*)cstr.c_str());
+}
+
 Falcon::Module *FalconBaseModule_create(void)
 {
     Falcon::Module *m = new Falcon::Module;
     m->name("BaseModule");
+
+    Falcon::Symbol *symSound = m->addSingleton("Sound");
+    Falcon::Symbol *clsSound = symSound->getInstance();
+    m->addClassMethod(clsSound, "Play", fal_Sound_Play);
 
     m->addExtFunc("include_ex", fal_include_ex);
 

@@ -32,7 +32,9 @@ BasicTile *AnimatedTile::New(const char *filename)
         if(Anim *ani = resMgr.LoadAnim((char*)filename))
         {
             AnimatedTile *tile = new AnimatedTile(ani);
-            ((AnimatedTile*)tile)->Init(Engine::GetCurFrameTime());
+            tile->filename = filename;
+            tile->Init(Engine::GetCurFrameTime());
+
             return tile;
         }
 

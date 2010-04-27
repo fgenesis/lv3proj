@@ -17,6 +17,7 @@ class ItemObject(cons) from Object
     function OnTouch(side, who)
         if who.type != OBJTYPE_PLAYER: return
         //if who.AddItem(self._cons()) // NYI
+            Sound.Play("collect.ogg")
             > "ItemObject::OnTouch(): '", self._cons, "' to '", who, "'"
             self.remove()
         //end

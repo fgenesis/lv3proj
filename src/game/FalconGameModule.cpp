@@ -241,9 +241,7 @@ Falcon::Module *FalconGameModule_create(void)
 
     Falcon::Symbol *symGame = m->addSingleton("Game");
     Falcon::Symbol *clsGame = symGame->getInstance();
-    //m->addClassMethod(clsGame, "LoadTile", fal_Game_LoadTile); // DEPRECATED - kept for reference
     m->addClassMethod(clsGame, "GetTime", fal_Game_GetTime);
-    //m->addClassMethod(clsGame, "CreateObject", fal_Game_CreateObject); // DEPRECATED - kept for reference
     m->addClassMethod(clsGame, "SetSoundVolume", fal_Game_SetSoundVolume);
     m->addClassMethod(clsGame, "GetSoundVolume", fal_Game_GetSoundVolume);
     m->addClassMethod(clsGame, "SetMusicVolume", fal_Game_SetMusicVolume);

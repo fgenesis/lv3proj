@@ -305,8 +305,14 @@ bool LayerMgr::LoadAsciiLevel(AsciiLevel *level)
     SetMaxDim(level->tiles.size1d());
 
     // create the layers
-    TileLayer *baseLayer = CreateLayer(true);
-    TileLayer *animLayer = CreateLayer();
+    TileLayer *layers[LAYER_MAX];
+    for(uint32 i = 0; i < LAYER_MAX; ++i)
+    {
+        layers[i] = CreateLayer();
+        SetLayer(layers[i], i);
+    }
+    TileLayer *baseLayer = layers[6];
+    TileLayer *animLayer = layers[7];
     
     // load the tiles
     std::string realFileName, startAnim;
@@ -331,10 +337,6 @@ bool LayerMgr::LoadAsciiLevel(AsciiLevel *level)
         }
     }
 
-    SetLayer(baseLayer, LAYER_DEFAULT_ENV);
-    SetLayer(animLayer, LAYER_DEFAULT_ENV + 1);
-    SetLayer(CreateLayer(), LAYER_DEFAULT_ENV + 2); // for testing
-    
     logdetail("ASCII Level loaded.");
 
     return true;

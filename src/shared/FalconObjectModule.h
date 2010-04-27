@@ -28,6 +28,7 @@ public:
     // (via BaseObject::remove() in Falcon, or fal_BaseObject_Remove in C++)
     BaseObject *obj; // to speedup access, could be done via self()->_obj, but the self() call adds too much overhead imho
     Falcon::VMachine *vm; // the VM CallMethod invokes
+    const Falcon::CoreClass *coreCls; // the internal class the object belongs to
 };
 
 // the fal_ObjectCarrier is the actual object stored inside the falcon VM
@@ -44,6 +45,7 @@ public:
         : Falcon::FalconObject( generator ), _falObj(fobj)
     {
         _obj = fobj->obj; // save ptr for faster access
+        fobj->coreCls = generator; // store internal class
     }
     static void init(Falcon::VMachine *vm);
     static Falcon::CoreObject* factory( const Falcon::CoreClass *cls, void *user_data, bool );

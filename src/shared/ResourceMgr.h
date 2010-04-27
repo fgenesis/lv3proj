@@ -17,7 +17,8 @@ class ResourceMgr
         RESTYPE_MEMBLOCK,
         RESTYPE_ANIM,
         RESTYPE_SDL_SURFACE,
-        RESTYPE_MIX_CHUNK
+        RESTYPE_MIX_CHUNK,
+        RESTYPE_MIX_MUSIC,
     };
 
     struct ResStruct
@@ -40,6 +41,7 @@ public:
     SDL_Surface *LoadImg(char *name);
     Anim *LoadAnim(char *name);
     Mix_Music *LoadMusic(char *name);
+    Mix_Chunk *LoadSound(char *name);
     memblock *LoadFile(char *name);
     memblock *LoadTextFile(char *name);
     void SetPropForFile(char *fn, char *prop, char *what);

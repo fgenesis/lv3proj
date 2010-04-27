@@ -1,0 +1,43 @@
+
+class EnergyLine(vertical, off) from Object
+    
+    _ox = 0
+    _oy = 0
+    
+    init
+        self.SetAffectedByPhysics(false)
+        self.SetCollisionEnabled(true)
+        if vertical
+            self.SetBBox(0,0,8,16)
+            tile = self.SetSprite("sprites/en_v.anim")
+            self._ox = 4
+            self.gfxOffsX = -4
+        else
+            tile = self.SetSprite("sprites/en.anim")
+            self.SetBBox(0,0,16,8)
+            self._oy = 4
+            self.gfxOffsY = -4
+        end
+        self.GetSprite().name = off ? "off" : "on"
+    end
+    
+    // used when created from tiles, on the fly
+    function AdjustPosition()
+        self.SetPos(self.x + self._ox, self.y + self._oy)
+        self._ox = 0
+        self._oy = 0
+    end
+    
+    function OnTouch(side, who)
+        tile = self.GetSprite()
+        if tile and tile.name != "on": return
+        if who provides Kill
+            who.Kill(DEATH_ELECTRO)
+        else
+            > "EnergyLine: '", who, "' is beeing toasted, but doesn't have a Kill() method"
+        end
+    end
+
+end
+
+export EnergyLine

@@ -1,6 +1,8 @@
 #ifndef SOUNDCORE_H
 #define SOUNDCORE_H
 
+#include <SDL/SDL_mixer.h>
+
 
 class SoundFile
 {
@@ -23,7 +25,7 @@ class SoundCore
 public:
     SoundCore();
     ~SoundCore();
-    SoundFile *PlaySound(char *fn);
+    void PlaySound(char *fn);
     void PlayMusic(char *fn, double repeat_pos = 0.0);
     void StopMusic();
     void SetMusicVolume(uint8 vol);

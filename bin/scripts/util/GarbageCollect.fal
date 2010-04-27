@@ -9,6 +9,7 @@ function GarbageCheckPeriodic()
 end
 
 GC.adjust(GC.ADJ_STRICT)
+GC.enable(false)
 > "Garbage collection policy: ", GC.adjust()
 
 // DEBUG: turn on GC logging to keep track of allocated items

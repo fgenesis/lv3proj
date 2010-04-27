@@ -425,7 +425,7 @@ void EditorEngine::SetupEditorLayers(void)
         _layermgr->SetLayer(_layermgr->CreateLayer(false, 0, 0), i);
 
     }
-    SetActiveLayer(LAYER_DEFAULT_ENV);
+    SetActiveLayer(LAYER_MAX / 2);
 }
 
 void EditorEngine::SetLeftMainDistance(uint32 dist)

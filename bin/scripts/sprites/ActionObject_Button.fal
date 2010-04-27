@@ -7,20 +7,15 @@ class Button from ActionObject
         if not state: return
         tile = self.GetSprite()
         tile.name = "use"
+        Sound.Play("button.ogg")
         if isCallable(self.onPush)
-            self.onPush(who)
+            self.onPush(who, self)
         else
             > "Button(", self.id, ")  was pushed by ", who, " (no action)"
         end
     end
     
-    function SetOnPush(func)
-        if isCallable(func)
-            self.onPush = func
-        else
-            raise "Button::SetOnPress(): expected a callable function!"
-        end
-    end
+    function SetOnPush(func): self.onPush = func
 end
 
 export Button

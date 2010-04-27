@@ -3,51 +3,62 @@
 > "-- Setting up test Level --"
 
 Screen.CreateInfoLayer()
+
+Screen.GetLayer(2).SetCollisionEnabled(false); // layer 2 for background
+Screen.GetLayer(3).SetCollisionEnabled(false); // layer 3: buttons and other objects behind olaf
+Screen.GetLayer(4).SetCollisionEnabled(false); // layer 4: olaf himself
+Screen.GetLayer(5).SetCollisionEnabled(false); // layer 5: sprite overlay
+Screen.GetLayer(6).SetCollisionEnabled(true); // layer 6: for solid wall (fixed for ASCII maps)
+Screen.GetLayer(7).SetCollisionEnabled(false); // layer 7 is for animated tiles (fixed for ASCII maps)
+
 InitialMapSetup()
 > "-- Created & set up info layer --"
 
 
-
-// setup the collision map, and calculate it directly
+// at this point, the ASCII level loader already populated the layers with tiles, create & update the collision map
 Game.CreateCollisionMap(true)
 > "-- Calculated collision map --"
 
 // set game constants
 Physics.SetGravity(300)
 
+
 // create olaf character for testing
 olaf = Olaf()
-olaf.SetPos(64,48)
+olaf.SetLayerId(4)
+olaf.SetPos(72,48)
 pcontrol = PlayerController()
 pcontrol.Add(olaf)
 pcontrol.Assign(1, olaf)
 pcontrol.register()
 
 img = ImageObject("sprites/lv2logo.png")
+CallScheduler.Schedule(img.remove, 3000)
 
-function PosLimitTest(who)
-    if(who.y > 600)
+function DoSomeResets(who, k, e)
+    ty, src, which, value = e
+    if ty == EVENT_TYPE_KEYBOARD and which == k and value != 0
         who.SetPos(64,48)
-        who.phys.yspeed = 0
-        who.phys.yaccel = 0
+        GC.perform(true)
+        return true // drop the event 
     end
-    CallScheduler.Schedule( .[PosLimitTest who], 1000)
 end
- 
-PosLimitTest(olaf)
 
-function DoSomeResets(who, inp)
-    vkey, pl, val = inp
-    if (vkey == KeySELECT) and val
-        olaf.SetPos(64,48)
+RegisterRawInputHook("DoSomeResets", .[DoSomeResets olaf SDLK.TAB] )
+RegisterRawInputHook("DisableInputOn", .[DisableInputOn SDLK.END])
+RegisterRawInputHook("CycleGravityOn", .[CycleGravityOn SDLK.PAGEDOWN])
+RegisterRawInputHook("ToggleOlafBounceOn", .[ToggleOlafBounceOn SDLK.PAGEUP])
+RegisterRawInputHook("ToggleGodmode", .[ToggleGodmode olaf SDLK.COMMA])
+//RegisterRawInputHook("RemovePlayerTest", .[RemovePlayerTest olaf SDLK.q])
+PlayerAliveCheck(olaf)
+
+/*function RemovePlayerTest(who, k, e)
+    ty, src, which, value = e
+    if ty == EVENT_TYPE_KEYBOARD and which == k and value != 0
+        olaf.remove()
         GC.perform(true)
     end
-end
-
-RegisterInputHook("DoSomeResets", .[DoSomeResets olaf] )
-RegisterRawInputHook("DisableInputOn", .[DisableInputOn SDLK.END])
-RegisterRawInputHook("CyceGravityOn", .[CycleGravityOn SDLK.PAGEDOWN])
-RegisterRawInputHook("ToggleOlafBounceOn", .[ToggleOlafBounceOn SDLK.PAGEUP])
+end*/
 
 function DisableInputOn(k, e)
     ty, src, which, value = e
@@ -74,6 +85,15 @@ function ToggleOlafBounceOn(k, e)
     end
 end
 
+function ToggleGodmode(who, k, e)
+    ty, src, which, value = e
+    if ty == EVENT_TYPE_KEYBOARD and which == k and value != 0
+        who.godmode = not who.godmode
+        Sound.Play( who.godmode ? "menuaccept.ogg" : "blockbreak.ogg" )
+        > "God mode ", ( who.godmode ? "ON" : "OFF" )
+        return true // drop the event 
+    end
+end
 
 function CycleGravity()
     switch Physics.GetGravity()
@@ -86,6 +106,8 @@ function CycleGravity()
     end
 end
 
+
+
 enum TFlag
     NONE    = 0x0000
     ELECTRO = 0x0001
@@ -97,21 +119,25 @@ function InitialMapSetup()
     breakable = nil //Tile("misc/breakable.png")
     trigger = nil //Tile("misc/trigger.png")
     redcross = nil //Tile("misc/noimage.png")
+    EN_cons = [EnergyLine, false]
+    EN_V_cons = [EnergyLine, true]
     
 tileInfoSetup = [
-    //   filename              =>  [flag to set, overlay to place, object to spawn, special ID]
-    "sprites/en.anim"          => .[TFlag.ELECTRO    trigger      nil               0     ],
-    "sprites/en_v.anim"        => .[TFlag.ELECTRO    trigger      nil               0     ],
-    "sprites/enx.anim"         => .[TFlag.ELECTRO    redcross     nil               0     ],
-    "sprites/greyblock.png"    => .[TFlag.BREAK      breakable    nil               0     ],
-    "sprites/bomb.png"         => .[TFlag.NONE       nil          BombObject        0     ],
-    "sprites/button.png"       => .[TFlag.NONE       nil          Button            1     ]
+    //   filename              =>  [flag to set, overlay to place, object to spawn,          special ID, object: layerId]
+    "sprites/en.anim"          => .[TFlag.NONE       trigger      EN_cons,                   2           5],
+    "sprites/en_v.anim"        => .[TFlag.NONE       trigger      EN_V_cons,                 2           5],
+    "sprites/enx.anim"         => .[TFlag.ELECTRO    redcross     EN_cons                    3           5],
+    "sprites/greyblock.png"    => .[TFlag.BREAK      breakable    nil                        0           nil],
+    "sprites/bomb.png"         => .[TFlag.NONE       nil          BombObject                 0           3],
+    "sprites/button.png"       => .[TFlag.NONE       nil          Button                     1           3]
 ]
 
 buttonActions = .[
             BA_KillEn1
             BA_KillEn2
             BA_KillGreyBlocks1
+            ,[RandomizeTest, true]
+            ,[RandomizeTest, false]
         ]
         
     buttonCounter = 0
@@ -122,63 +148,117 @@ buttonActions = .[
             for x = 0 to d
                 t = ly.GetTile(x,y)
                 if(t and (t.filename in tileInfoSetup) )
-                    flag, overlay, objcons, special = tileInfoSetup[t.filename]
+                    flag, overlay, objcons, special, layerId = tileInfoSetup[t.filename]
                     Screen.SetTileInfo(x,y, flag)
                     if overlay: Screen.GetLayer(8).SetTile(x,y,overlay)
                     if isCallable(objcons)
                         xpos = x * 16
                         ypos = y * 16
                         obj = objcons()
+                        obj.SetPos(xpos,ypos) // set new object in place
+                        obj.SetLayerId(layerId) // put it on target layer
+                        if special != 3: ly.SetTile(x,y,nil) // and remove the static tile
                         switch special
-                            case 1
+                            case 1 // button
                                 if buttonCounter < len(buttonActions)
                                     obj.SetOnPush(buttonActions[buttonCounter])
                                     buttonCounter++
                                 end
-                            
-                            default
+                            case 2 // energy line
+                                obj.AdjustPosition()
+                            case 3
+                                obj.SetSprite(nil)
                         end
-                                
-                        obj.SetPos(xpos,ypos) // set new object in place
-                        ly.SetTile(x,y,nil) // and remove the static tile
                     end
-                        
                 end
             end
         end
     end
 end
 
-function BA_KillEn1()
-    ly = Screen.GetLayer(7)
-    for x = 26 to 28: ly.GetTile(x,5).name = "swoff"
-    for x = 25 to 28: ly.GetTile(x,11).name = "swoff"
-    for x = 35 to 37: ly.GetTile(x,7).name = "swoff"
+function BA_KillEn1(who, trigger)
+    trigger.SetOnPush(nil)
+    RemoveAllEnergyLinesIn(378,69,256,130)
 end
 
-function BA_KillEn2()
-    ly = Screen.GetLayer(7)
-    for y = 7 to 9: ly.GetTile(12,y).name = "swoff"
-    ly.GetTile(4,13).name = "swoff"
-    ly.GetTile(5,13).name = "swoff"
+function BA_KillEn2(who, trigger)
+    trigger.SetOnPush(nil)
+    RemoveAllEnergyLinesIn(48,96,160,150)
 end
     
-function BA_KillGreyBlocks1()
-    ly = Screen.GetLayer(6)
+function BA_KillGreyBlocks1(who, trigger)
+    trigger.SetOnPush(nil)
+    PlaySoundMulti("blockbreak.ogg", 3, 60)
+    ly = Screen.GetLayer(6) // solid tile layer
+    ly2 = Screen.GetLayer(2) // background layer
     blk = Tile("ship/broken.png")
     for x = 9 to 11
         for y = 5 to 6
             ly.SetTile(x,y,nil)
-            ly.SetTile(x,y,blk, false)
+            ly2.SetTile(x,y,blk, false)
         end
     end
     for x = 10 to 11
         for y = 10 to 11
             ly.SetTile(x,y,nil)
-            ly.SetTile(x,y,blk, false)
+            ly2.SetTile(x,y,blk, false)
         end
     end
 end
+
+function RemoveAllEnergyLinesIn(x,y,w,h)
+    arr = Objects.GetAllInRect(x,y,w,h)
+    for obj in arr
+        select obj
+            case EnergyLine
+                tile = obj.GetSprite()
+                if tile: tile.name = "swoff"
+                CallScheduler.Schedule( obj.remove, 2000 )
+        end
+    end
+end
+
+function PlaySoundMulti(file, times, offs)
+    Sound.Play(file)
+    for i = 1 to times - 1
+        CallScheduler.Schedule( [Sound.Play, file], i * offs )
+    end
+end
+
+function RandomizeTest(fill)
+    Sound.Play("menuaccept.ogg")
+    tiles = (not fill) ? nil : .[
+        Tile("sprites/greyblock.png")
+        Tile("sprites/door1.png")
+        Tile("sprites/erikhead.png")
+        Tile("sprites/lockred.png")
+        Tile("sprites/target.png")
+        Tile("sprites/outlet1.png")
+        Tile("sprites/outlet3.png")
+        Tile("ship/girder1.png")
+        Tile("ship/broken.png")
+        Tile("ship/girder1.png")
+        Tile("ship/block1.png")
+    ]
+    ly = Screen.GetLayer(5)
+    for y = 28 to 37
+        for x = 0 to 62
+            ly.SetTile(x,y,fill ? randomPick(tiles) : nil,false)
+        end
+    end
+end
+
+function PlayerAliveCheck(who)
+    if who.dead and who.GetSprite().name == "invis"
+        img = ImageObject("misc/fail.png")
+        img.SetPos(100,100)
+        Sound.Play("klaxonloop.ogg")
+    else
+        CallScheduler.Schedule( [PlayerAliveCheck, who], 1500)
+    end
+end
+
+
 
 // open a menu. so far only controllable via console.
 // this is just here to check IF something works
@@ -252,5 +332,6 @@ function DrainWaterRow(y)
     CallScheduler.Schedule( [DeleteWaterRow, y], 1200)
 end
 
+GC.perform(true)
 > "-- Level setup complete --"
 

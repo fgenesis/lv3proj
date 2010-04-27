@@ -36,7 +36,7 @@ olaf1r.png:122:5:32:32 200
 olaf1r.png:83:5:32:32 200
 
 # move hand back
-olaf1r.png:43:5:32:32 200
+olaf1r.png:44:5:32:32 200
 j standR
 
 [walkR]
@@ -107,6 +107,16 @@ olaf1r.png:5:517:32:32 200
 olaf1r.png:44:517:32:32 200
 olaf1r.png:83:517:32:32 200
 olaf1r.png:122:517:32:32 200
+
+[electroR]
+olaf1r.png:5:793:32:32 200
+olaf1r.png:44:793:32:32 200
+olaf1r.png:5:793:32:32 200
+olaf1r.png:44:793:32:32 200
+olaf1r.png:5:793:32:32 200
+olaf1r.png:44:793:32:32 200
+olaf1r.png:5:793:32:32 200
+j invis
 
 
 #################################
@@ -216,6 +226,17 @@ olaf1r.png:44:517:32:32:h 200
 olaf1r.png:83:517:32:32:h 200
 olaf1r.png:122:517:32:32:h 200
 
+[electroL]
+olaf1r.png:5:793:32:32:h 200
+olaf1r.png:44:793:32:32:h 200
+olaf1r.png:5:793:32:32:h 200
+olaf1r.png:44:793:32:32:h 200
+olaf1r.png:5:793:32:32:h 200
+olaf1r.png:44:793:32:32:h 200
+olaf1r.png:5:793:32:32:h 200
+j invis
+
+###### GENERIC #####
+
 [invis]
 empty16.png
-

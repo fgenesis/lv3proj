@@ -1,6 +1,7 @@
 class PlayerEx from Player
     
     gfx = nil
+    gfxOffs = nil
     walkSpeed = 64
     climbSpeed = 64 // NYI
     fallSpeed = 256
@@ -8,6 +9,8 @@ class PlayerEx from Player
     facingDir = DIRECTION_RIGHT
     movingDir = DIRECTION_NONE
     idle = true // true if this player is just standing there, doing nothing
+    dead = false // dead means can't move
+    godmode = false // invincible
     
     baseSpeedX = 0 // speed from external source (beeing transported, blown away by fan, etc.)
     ownSpeedX = 0 // own walking speed
@@ -39,6 +42,7 @@ class PlayerEx from Player
     end
     
     function OnUpdate(ms)
+        if self.dead: return
         self.UpdateMovement()
         self.UpdateAnim()
     end
@@ -79,6 +83,7 @@ class PlayerEx from Player
         
     
     function OnInput(vkey, val)
+        if self.dead: return
         switch vkey
             case KeyLEFT
                 self.OnKeyLeft(val)
@@ -163,15 +168,19 @@ class PlayerEx from Player
             self.AnimWalkR()
         end
         self.idle = false
+        self.SetGfxOffs(0)
     end
     
     function AnimPush()
         if self.facingDir == DIRECTION_LEFT
+            self.SetGfxOffs(1)
             self.AnimPushL()
         else
+            self.SetGfxOffs(2)
             self.AnimPushR()
         end
         self.idle = false
+
     end
     
     function AnimFall()
@@ -181,6 +190,7 @@ class PlayerEx from Player
             self.AnimFallR()
         end
         self.idle = false
+        self.SetGfxOffs(0)
     end
     
     function AnimStand()
@@ -191,6 +201,16 @@ class PlayerEx from Player
             self.AnimStandR()
         end
         self.idle = true
+        self.SetGfxOffs(0)
+    end
+    
+    function AnimElectro()
+        if self.facingDir == DIRECTION_LEFT
+            self.AnimElectroL()
+        else
+            self.AnimElectroR()
+        end
+        self.SetGfxOffs(0)
     end
     
     function AnimWalkL(): self.GetSprite().name = "walkL"
@@ -201,6 +221,12 @@ class PlayerEx from Player
     function AnimStandR(): self.GetSprite().name = "standR"
     function AnimFallL(): self.GetSprite().name = (self.IsFallingDeep() ? "fallL" : "falldeepL")
     function AnimFallR(): self.GetSprite().name = (self.IsFallingDeep() ? "fallR" : "falldeepR")
+    function AnimElectroL(): self.GetSprite().name = "electroL"
+    function AnimElectroR(): self.GetSprite().name = "electroR"
+    
+    function SetGfxOffs(i)
+        self.gfxOffsX, self.gfxOffsY = self.gfxOffs[i]
+    end
     
     
     function OnTouch()
@@ -218,6 +244,19 @@ class PlayerEx from Player
         //> self, " ActionHandler = ", what
         return true // return true to confirm registering was successful
     end
+    
+    function Kill(how)
+        if self.godmode: return
+        self.dead = true
+        switch how
+            case DEATH_ELECTRO
+                p = self.phys
+                self.SetAffectedByPhysics(false)
+                self.AnimElectro()
+        end
+    end
+        
+        
     
     
     
