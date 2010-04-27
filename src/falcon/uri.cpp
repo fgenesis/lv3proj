@@ -563,7 +563,18 @@ const String &URI::get( bool synthQuery ) const
          m_encoded += "/";
 
       if (m_userInfo.size() != 0)
-         m_encoded += URLEncode( m_userInfo ) + "@";
+      {
+         //TODO Break into user and password
+         uint32 pos = m_userInfo.find(":");
+         if( pos != String::npos )
+         {
+            m_encoded += URLEncode( m_userInfo.subString( 0 , pos ) )
+                  + ":"
+                  + URLEncode( m_userInfo.subString( pos+1 ) ) + "@";
+         }
+         else
+            m_encoded += URLEncode( m_userInfo ) + "@";
+      }
 
       if (m_host.size() != 0)
          m_encoded += URLEncode( m_host );
@@ -581,7 +592,7 @@ const String &URI::get( bool synthQuery ) const
       m_encoded += "/";
 
    if ( m_path.get().size() != 0 )
-      m_encoded += URLEncode( m_path.get() );
+      m_encoded += URLEncodePath( m_path.get() );
 
    if ( m_query.size() != 0 )
       m_encoded += "?" + m_query;
@@ -631,7 +642,13 @@ void URI::URLEncode( const String &source, String &target )
       {
          target.append( '+' );
       }
-      else if ( chr < 0x20 || chr > 0x7F || isSubDelim( chr ) || chr == '%' )
+      else if ( chr < 0x20 || chr > 0x7F || isResDelim( chr ) ||
+            chr == '%'
+            || chr == '"' || chr == '\'' || chr == '`'
+            || chr == '\\'
+            || chr == '^' || chr == '~'
+            || chr == '{' || chr == '}'
+            || chr == '<' || chr == '>' )
       {
          target.append( '%' );
          target.append( URI::CharToHex( chr >> 4 ) );
@@ -645,7 +662,43 @@ void URI::URLEncode( const String &source, String &target )
    }
 }
 
+//TODO: Make one with above
+void URI::URLEncodePath( const String &source, String &target )
+{
+   target = ""; // resets manipulator
+   target.reserve( source.size() );
 
+   // encode as UTF-8
+   AutoCString sutf( source );
+   const char *cutf = sutf.c_str();
+   target.reserve( sutf.length() );
+
+   while ( *cutf != 0 )
+   {
+      unsigned char chr = (unsigned char) *cutf;
+
+      if ( chr == 0x20 )
+      {
+         target.append( '+' );
+      }
+      // in the paths, we can't encode path chars as '/' and '\\'
+      else if ( chr < 0x20 || chr > 0x7F || isSubDelim( chr ) ||
+            chr == '%'
+            || chr == '"' || chr == '\'' || chr == '`'
+            || chr == '{' || chr == '}'
+            || chr == '<' || chr == '>' )
+      {
+         target.append( '%' );
+         target.append( URI::CharToHex( chr >> 4 ) );
+         target.append( URI::CharToHex( chr & 0xF ) );
+      }
+      else {
+         target.append( chr );
+      }
+
+      ++cutf;
+   }
+}
 
 bool URI::URLDecode( const String &source, String &target )
 {
@@ -659,7 +712,7 @@ bool URI::URLDecode( const String &source, String &target )
    {
       uint32 chr = source.getCharAt( i );
       // an URL encoded string cannot have raw characters outside defined ranges.
-      if ( chr < 0x20 || chr > 0x7F )
+      if ( chr > 0x7F )
       {
          bOk = false;
          break;

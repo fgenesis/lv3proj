@@ -17,6 +17,11 @@
    Short description
 */
 
+extern "C"
+{
+   extern char **environ;
+}
+
 #define _REENTRANT
 #include <sys/time.h>
 
@@ -169,6 +174,37 @@ bool _unsetEnv( const String &var )
    memcpy( buffer, env.c_str(), env.length() );
    buffer[ env.length() ] = '\0';
    return (putenv( buffer ) == 0);
+}
+
+void _enumerateEnvironment( EnvStringCallback cb, void* cbData )
+{
+   // do we know which encoding are we using?
+   String enc;
+   bool bTranscode = GetSystemEncoding( enc ) && enc != "C";
+
+   char** env = environ;
+   while( *env != 0 )
+   {
+      String temp;
+      if( bTranscode )
+      {
+         if( ! TranscodeFromString( *env, enc, temp ) )
+         {
+            bTranscode = false;
+            temp = *env;
+         }
+      }
+      else
+         temp = *env;
+
+      uint32 pos;
+      if ( (pos = temp.find( "=" )) )
+      {
+         cb( temp.subString(0,pos), temp.subString(pos+1), cbData );
+      }
+
+      ++env;
+   }
 }
 
 }

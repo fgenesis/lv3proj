@@ -53,6 +53,7 @@ VMachine *VMachine::getCurrent()
 
 VMachine::VMachine():
    m_services( &traits::t_string(), &traits::t_voidp() ),
+   m_systemData( this ),
    m_slots( &traits::t_string(), &traits::t_coreslotptr() ),
    m_nextVM(0),
    m_prevVM(0),
@@ -70,6 +71,7 @@ VMachine::VMachine():
 
 VMachine::VMachine( bool initItems ):
    m_services( &traits::t_string(), &traits::t_voidp() ),
+   m_systemData( this ),
    m_slots( &traits::t_string(), &traits::t_coreslotptr() ),
    m_nextVM(0),
    m_prevVM(0),
@@ -290,6 +292,12 @@ void VMachine::finalize()
 {
    // we should have at least 2 refcounts here: one is from the caller and one in the GC.
    fassert( m_refcount >= 2 );
+
+   /*
+    * We are destroying the VM, so disable any things
+    * that may access it when it's being freed.
+    */
+   m_systemData.earlyCleanup();
 
    // disengage from mempool
    if ( memPool != 0 )
@@ -1310,7 +1318,7 @@ bool VMachine::linkSubClass( LiveModule *lmod, const Symbol *clssym,
           throw new CodeError( ErrorParam( e_circular_inh, __LINE__ )
                 .origin( e_orig_vm )
                 .extra( clssym->name() ) );
-
+                
          // --- fg EDIT START ---
          // --- update the inheritance lists if they contain still undefined symbols,
          //     while we already know the resolved ones
@@ -1459,13 +1467,13 @@ bool VMachine::getCallerItem( Item &caller, uint32 level )
 {
    StackFrame* frame = currentFrame();
 
-   while( frame != 0 && level > 0 )
+   while( (frame != 0 && frame->m_symbol != 0 ) && level > 0 )
    {
       frame = frame->prev();
       level--;
    }
 
-   if ( frame == 0 || frame->m_module == 0 )
+   if ( frame == 0 || frame->m_symbol == 0 )
       return false;
 
    const Symbol* sym = frame->m_symbol;

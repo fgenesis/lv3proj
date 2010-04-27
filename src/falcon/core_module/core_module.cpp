@@ -494,6 +494,8 @@ Module* core_module_init()
    self->addClassMethod( func_meta, "name", &Falcon::core::Function_name );
    self->addClassMethod( func_meta, "caller", &Falcon::core::Function_caller ).asSymbol()->
       addParam("level");    //static
+   self->addClassMethod( func_meta, "trace", &Falcon::core::Function_trace ).asSymbol()->
+      addParam("level");    //static
 
    /*#
       @class GarbagePointer
@@ -566,6 +568,14 @@ Module* core_module_init()
       ->addParam("substr")->addParam("repstr")->addParam("start")->addParam("end");
    self->addClassMethod( string_meta,"replicate", &Falcon::core::mth_strReplicate ).asSymbol()
       ->addParam("times");
+   self->addClassMethod( string_meta,"esq", &Falcon::core::mth_strEsq ).asSymbol()
+      ->addParam("inplace");
+   self->addClassMethod( string_meta,"unesq", &Falcon::core::mth_strUnesq ).asSymbol()
+      ->addParam("inplace");
+   self->addClassMethod( string_meta,"escape", &Falcon::core::mth_strEscape ).asSymbol()
+      ->addParam("full");
+   self->addClassMethod( string_meta,"unescape", &Falcon::core::mth_strUnescape ).asSymbol()
+      ->addParam("inplace");
    self->addClassMethod( string_meta, "upper", &Falcon::core::mth_strUpper );
    self->addClassMethod( string_meta, "lower", &Falcon::core::mth_strLower );
    self->addClassMethod( string_meta, "cmpi", &Falcon::core::mth_strCmpIgnoreCase ).asSymbol()
@@ -704,6 +714,9 @@ Module* core_module_init()
    self->addClassMethod( dict_meta, "setProperty", &Falcon::core::mth_setProperty ).asSymbol()->
       addParam("propName")->addParam("value");
    self->addClassMethod( dict_meta, "properties", &Falcon::core::mth_properties );
+   
+   self->addClassMethod( dict_meta, "dop", &Falcon::core::Dictionary_dop ).asSymbol()->
+      addParam("key")->addParam("dflt")->addParam("orig");
 
    //==================================================================
    // Object class
@@ -1230,7 +1243,7 @@ Module* core_module_init()
    //=======================================================================
    // RTL math
    //=======================================================================
-
+   self->addConstant("PI", 3.1415926535897932384626433832795);
    self->addExtFunc( "log", &Falcon::core::flc_math_log )->
       addParam("x");
    self->addExtFunc( "exp", &Falcon::core::flc_math_exp )->
@@ -1321,6 +1334,16 @@ Module* core_module_init()
       addParam("string")->addParam("substr")->addParam("repstr")->addParam("start")->addParam("end");
    self->addExtFunc( "strReplicate", &Falcon::core::mth_strReplicate )->
       addParam("string")->addParam("times");
+
+   self->addExtFunc( "strEsq", &Falcon::core::mth_strEsq )->
+      addParam("string")->addParam("inplace");
+   self->addExtFunc( "strUnesq", &Falcon::core::mth_strUnesq )->
+      addParam("string")->addParam("inplace");
+   self->addExtFunc( "strEscape", &Falcon::core::mth_strEscape )->
+      addParam("string")->addParam("full");
+   self->addExtFunc( "strUnescape", &Falcon::core::mth_strUnesq )->
+      addParam("string")->addParam("inplace");
+
    self->addExtFunc( "strBuffer", &Falcon::core::strBuffer )->
       addParam("size");
    self->addExtFunc( "strUpper", &Falcon::core::mth_strUpper )->
@@ -1461,6 +1484,7 @@ Module* core_module_init()
       addParam("varName")->addParam("value");
    self->addExtFunc( "unsetenv", &Falcon::core::falcon_unsetenv )->
       addParam("varName");
+   self->addExtFunc( "getEnviron", &Falcon::core::falcon_getEnviron );
 
    //=======================================================================
    // Messaging API
@@ -1502,6 +1526,14 @@ Module* core_module_init()
          addParam("default");
    self->addClassMethod( vmslot_class, "first", &Falcon::core::VMSlot_first );
    self->addClassMethod( vmslot_class, "last", &Falcon::core::VMSlot_last );
+
+   self->addClassMethod( vmslot_class, "send", &Falcon::core::VMSlot_send ).asSymbol()->
+         addParam("event");
+   self->addClassMethod( vmslot_class, "register", &Falcon::core::VMSlot_register ).asSymbol()->
+         addParam("event")->addParam("callback");
+   self->addClassMethod( vmslot_class, "getEvent", &Falcon::core::VMSlot_getEvent ).asSymbol()->
+         addParam("event");
+
 
    //=======================================================================
    // RTL CLASSES
@@ -1769,6 +1801,26 @@ Module* core_module_init()
    self->addClassMethod( fileStats_class, "read",
             Falcon::core::FileStat_read ).setReadOnly(true).asSymbol()->
       addParam("path");
+
+   //=======================================================================
+   // The Random class
+   //=======================================================================
+
+   Falcon::Symbol *random_class = self->addClass( "Random", &Falcon::core::flc_Random_init )
+       ->addParam("seed");
+   random_class->setWKS( true );
+   self->addClassMethod( random_class, "random", &Falcon::core::flc_random );
+   self->addClassMethod( random_class, "randomChoice", &Falcon::core::flc_randomChoice );
+   self->addClassMethod( random_class, "randomPick", &Falcon::core::flc_randomPick ).asSymbol()->
+       addParam("series");
+   self->addClassMethod( random_class, "randomWalk", &Falcon::core::flc_randomWalk ).asSymbol()->
+       addParam("series")->addParam("size");
+   self->addClassMethod( random_class, "randomGrab", &Falcon::core::flc_randomGrab ).asSymbol()->
+       addParam("series")->addParam("size");
+   self->addClassMethod( random_class, "randomSeed", &Falcon::core::flc_randomSeed ).asSymbol()->
+       addParam("seed");
+   self->addClassMethod( random_class, "randomDice", &Falcon::core::flc_randomDice ).asSymbol()->
+       addParam("dices");
 
    //=======================================================================
    // The sequence class

@@ -149,6 +149,28 @@ FALCON_FUNC  falcon_unsetenv( ::Falcon::VMachine *vm )
    Sys::_unsetEnv( *i_var->asString() );
 }
 
+
+static void _falcon_getEnviron_cb( const String& key, const String& value, void* data )
+{
+   LinearDict* ret = (LinearDict*) data;
+   ret->put( new CoreString( key ), new CoreString( value ) );
+}
+
+/*#
+   @function getEnviron()
+   @brief Return a dictionary containing all the environment variables.
+   @return A dictionary where each key is an environment variable.
+*/
+
+FALCON_FUNC  falcon_getEnviron( ::Falcon::VMachine *vm )
+{
+   LinearDict* ret = new LinearDict;
+   Sys::_enumerateEnvironment( &_falcon_getEnviron_cb, ret );
+   vm->retval( new CoreDict( ret ) );
+}
+
+
+
 }
 }
 

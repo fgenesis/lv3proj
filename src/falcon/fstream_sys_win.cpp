@@ -23,7 +23,7 @@
 #include <falcon/vm_sys_win.h>
 #include <falcon/path.h>
 
-#include <Wincon.h>
+#include <wincon.h>
 
 #ifndef INVALID_SET_FILE_POINTER
    #define INVALID_SET_FILE_POINTER ((DWORD)-1)
@@ -69,7 +69,7 @@ bool BaseFileStream::close()
 {
    WinFileSysData *data = static_cast< WinFileSysData *>( m_fsData );
 
-   if ( m_status & Stream::t_open ) {
+   if ( open() ) {
       if( ! CloseHandle( data->m_handle ) ) {
          data->m_lastError = GetLastError();
          m_status = Stream::t_error;
@@ -90,7 +90,9 @@ int32 BaseFileStream::read( void *buffer, int32 size )
    DWORD result;
    if ( ! ReadFile( data->m_handle, buffer, size, &result, NULL ) ) {
       data->m_lastError = GetLastError();
-      if( data->m_lastError == ERROR_NOACCESS )
+      if( data->m_lastError == ERROR_NOACCESS || 
+         data->m_lastError == ERROR_HANDLE_EOF ||
+         data->m_lastError == ERROR_BROKEN_PIPE )
       {
          // ReadFile returns ERROR_NOACCESS at EOF
          data->m_lastError = 0;
@@ -98,7 +100,7 @@ int32 BaseFileStream::read( void *buffer, int32 size )
          return 0;
       }
 
-      m_status = Stream::t_error;
+      m_status = m_status | Stream::t_error;
       return -1;
    }
 
@@ -119,7 +121,7 @@ int32 BaseFileStream::write( const void *buffer, int32 size )
    DWORD result;
    if ( ! WriteFile( data->m_handle, buffer, size, &result, NULL ) ) {
       data->m_lastError = GetLastError();
-      m_status = Stream::t_error;
+      m_status = m_status | Stream::t_error;
       return -1;
    }
 
@@ -168,7 +170,7 @@ int64 BaseFileStream::seek( int64 pos, e_whence whence )
    DWORD npos = (int32) SetFilePointer( data->m_handle, posLow, &posHI, from );
    if( npos == INVALID_SET_FILE_POINTER && GetLastError() != NO_ERROR ) {
       data->m_lastError = GetLastError();
-      m_status = Stream::t_error;
+      m_status = m_status | Stream::t_error;
       return -1;
    }
    else {
@@ -193,7 +195,7 @@ int64 BaseFileStream::tell()
    DWORD npos = (int32) SetFilePointer( data->m_handle, 0, &posHI, FILE_CURRENT );
    if( npos == INVALID_SET_FILE_POINTER && GetLastError() != NO_ERROR ) {
       data->m_lastError = GetLastError();
-      m_status = Stream::t_error;
+      m_status = m_status | Stream::t_error;
       return -1;
    }
 
@@ -214,7 +216,7 @@ bool BaseFileStream::truncate( int64 pos )
       SetFilePointer( data->m_handle, posLow, &posHI, FILE_BEGIN );
       if( GetLastError() != NO_ERROR ) {
          data->m_lastError = GetLastError();
-         m_status = Stream::t_error;
+         m_status = m_status | Stream::t_error;
          return false;
       }
    }
@@ -222,7 +224,7 @@ bool BaseFileStream::truncate( int64 pos )
    SetEndOfFile( data->m_handle );
    if( GetLastError() != NO_ERROR ) {
       data->m_lastError = GetLastError();
-      m_status = Stream::t_error;
+      m_status = m_status | Stream::t_error;
       return false;
    }
 
@@ -438,7 +440,7 @@ void BaseFileStream::setError( int64 errorCode )
    WinFileSysData *data = static_cast< WinFileSysData *>( m_fsData );
    data->m_lastError = (uint32) errorCode;
    if ( errorCode != 0 )
-      status( t_error );
+      status( status() | t_error );
    else
       status( (t_status) (((int)status()) & ~(int)Stream::t_error ));
 }
@@ -640,16 +642,21 @@ StdInStream::StdInStream():
       dupped = GetStdHandle( STD_INPUT_HANDLE );
       if( dupped != INVALID_HANDLE_VALUE )
       {
+         SetConsoleMode( dupped, 0 );
+
+         /*
          SetConsoleMode( dupped,
 			   ENABLE_ECHO_INPUT |
 			   ENABLE_PROCESSED_INPUT );
+            */
       }
    }
    else {
+      SetConsoleMode( dupped, 0 );
 	   // remove the readline mode, as it breaks the WaitForXX functions.
-	   SetConsoleMode( dupped,
+	   /*SetConsoleMode( dupped,
 			ENABLE_ECHO_INPUT |
-			ENABLE_PROCESSED_INPUT );
+			ENABLE_PROCESSED_INPUT );*/
    }
 
    m_fsData = new WinFileSysData( dupped, 0, true, WinFileSysData::e_dirIn );

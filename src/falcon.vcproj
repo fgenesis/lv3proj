@@ -471,6 +471,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\falcon\signals_win.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\falcon\smba.cpp"
 				>
 			</File>
@@ -484,6 +488,10 @@
 			</File>
 			<File
 				RelativePath=".\falcon\src_parser.h"
+				>
+			</File>
+			<File
+				RelativePath=".\falcon\src_parser.hpp"
 				>
 			</File>
 			<File

@@ -55,10 +55,13 @@ FALCON_FUNC  mth_metaclass ( ::Falcon::VMachine *vm );
 FALCON_FUNC  mth_getProperty( ::Falcon::VMachine *vm );
 FALCON_FUNC  mth_setProperty( ::Falcon::VMachine *vm );
 FALCON_FUNC  mth_properties( ::Falcon::VMachine *vm );
+FALCON_FUNC  Dictionary_dop( ::Falcon::VMachine *vm );
+
 //FALCON_FUNC  mth_hasProperty( ::Falcon::VMachine *vm );
 
 FALCON_FUNC  Function_name ( ::Falcon::VMachine *vm );
 FALCON_FUNC  Function_caller ( ::Falcon::VMachine *vm );
+FALCON_FUNC  Function_trace ( ::Falcon::VMachine *vm );
 FALCON_FUNC  Function_attributes( ::Falcon::VMachine *vm );
 
 // Iterator class
@@ -148,6 +151,9 @@ FALCON_FUNC  VMSlot_retract( ::Falcon::VMachine *vm );
 FALCON_FUNC  VMSlot_getAssert( ::Falcon::VMachine *vm );
 FALCON_FUNC  VMSlot_first( ::Falcon::VMachine *vm );
 FALCON_FUNC  VMSlot_last( ::Falcon::VMachine *vm );
+FALCON_FUNC  VMSlot_send( ::Falcon::VMachine *vm );
+FALCON_FUNC  VMSlot_register( ::Falcon::VMachine *vm );
+FALCON_FUNC  VMSlot_getEvent( ::Falcon::VMachine *vm );
 
 
 FALCON_FUNC  core_exit ( ::Falcon::VMachine *vm );
@@ -248,6 +254,7 @@ FALCON_FUNC  input ( ::Falcon::VMachine *vm );
 FALCON_FUNC  falcon_getenv( ::Falcon::VMachine *vm );
 FALCON_FUNC  falcon_setenv( ::Falcon::VMachine *vm );
 FALCON_FUNC  falcon_unsetenv( ::Falcon::VMachine *vm );
+FALCON_FUNC  falcon_getEnviron( ::Falcon::VMachine *vm );
 FALCON_FUNC  InputStream_creator ( ::Falcon::VMachine *vm );
 FALCON_FUNC  OutputStream_creator ( ::Falcon::VMachine *vm );
 FALCON_FUNC  IOStream_creator ( ::Falcon::VMachine *vm );
@@ -316,6 +323,11 @@ FALCON_FUNC  mth_strFrontTrim ( ::Falcon::VMachine *vm );
 FALCON_FUNC  mth_strBackTrim ( ::Falcon::VMachine *vm );
 FALCON_FUNC  mth_strReplace ( ::Falcon::VMachine *vm );
 FALCON_FUNC  mth_strReplicate ( ::Falcon::VMachine *vm );
+FALCON_FUNC  mth_strEsq ( ::Falcon::VMachine *vm );
+FALCON_FUNC  mth_strUnesq ( ::Falcon::VMachine *vm );
+FALCON_FUNC  mth_strEscape ( ::Falcon::VMachine *vm );
+FALCON_FUNC  mth_strUnescape ( ::Falcon::VMachine *vm );
+
 FALCON_FUNC  strBuffer ( ::Falcon::VMachine *vm );
 FALCON_FUNC  mth_strUpper ( ::Falcon::VMachine *vm );
 FALCON_FUNC  mth_strLower ( ::Falcon::VMachine *vm );
@@ -328,6 +340,7 @@ FALCON_FUNC  strFromMemBuf ( ::Falcon::VMachine *vm );
 FALCON_FUNC  String_join ( ::Falcon::VMachine *vm );
 FALCON_FUNC  String_ptr( VMachine *vm );
 FALCON_FUNC  String_charSize( VMachine *vm );
+
 
 FALCON_FUNC  mth_arrayIns ( ::Falcon::VMachine *vm );
 FALCON_FUNC  mth_arrayDel ( ::Falcon::VMachine *vm );
@@ -401,6 +414,7 @@ FALCON_FUNC  fileChown ( ::Falcon::VMachine *vm );
 FALCON_FUNC  fileChgroup ( ::Falcon::VMachine *vm );
 FALCON_FUNC  fileCopy ( ::Falcon::VMachine *vm );
 
+FALCON_FUNC  flc_Random_init( ::Falcon::VMachine *vm );
 FALCON_FUNC  flc_random ( ::Falcon::VMachine *vm );
 FALCON_FUNC  flc_randomChoice ( ::Falcon::VMachine *vm );
 FALCON_FUNC  flc_randomPick ( ::Falcon::VMachine *vm );

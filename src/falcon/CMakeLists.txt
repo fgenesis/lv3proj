@@ -26,6 +26,7 @@ if(UNIX OR APPLE)
     time_sys_unix.cpp
     vm_sys_posix.cpp
     vfs_file_unix.cpp
+    signals_posix.cpp
   )
 
   #for solaris system flavor, add sys_solaris.cpp
@@ -91,8 +92,11 @@ elseif(WIN32)
     vm_sys_win.cpp
     vfs_file_win.cpp
     falcon_engine.rc
+    signals_win.cpp
   )
 endif()
+
+#################
 
 set(CORE_MODULE_SOURCES
   core_module/array_ext.cpp
@@ -142,6 +146,7 @@ set(CORE_MODULE_SOURCES
   core_module/uri_ext.cpp
   core_module/vminfo_ext.cpp
 )
+
 
 add_library(falcon_engine SHARED
   attribmap.cpp
@@ -238,6 +243,9 @@ add_library(falcon_engine SHARED
   src_parser.hpp
   src_parser.cpp
   #
+  
+  ${FALCON_HEADERS}
+  
   ${CORE_MODULE_SOURCES}
   ${SYS_SPECIFIC}
 )

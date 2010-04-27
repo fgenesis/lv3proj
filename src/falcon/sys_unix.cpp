@@ -17,6 +17,16 @@
    Short description
 */
 
+#ifdef __APPLE__
+#include <crt_externs.h>
+#define environ (*_NSGetEnviron())
+#else
+extern "C"
+{
+   extern char **environ;
+}
+#endif
+
 #include <unistd.h>
 #include <time.h>
 #include <sys/time.h>
@@ -177,8 +187,38 @@ bool _unsetEnv( const String &var )
    return result;
 }
 
-}
+void _enumerateEnvironment( EnvStringCallback cb, void* cbData )
+{
+   // do we know which encoding are we using?
+   String enc;
+   bool bTranscode = GetSystemEncoding( enc ) && enc != "C";
+
+   char** env = environ;
+   while( *env != 0 )
+   {
+      String temp;
+      if( bTranscode )
+      {
+         if( ! TranscodeFromString( *env, enc, temp ) )
+         {
+            bTranscode = false;
+            temp = *env;
+         }
+      }
+      else
+         temp = *env;
+
+      uint32 pos;
+      if ( (pos = temp.find( "=" )) != String::npos )
+      {
+         cb( temp.subString(0,pos), temp.subString(pos+1), cbData );
+      }
+
+      ++env;
+   }
 }
 
+}
+}
 
 /* end of sys_unix.cpp */

@@ -24,7 +24,7 @@ namespace Falcon {
 
 bool coreslot_broadcast_internal( VMachine *vm )
 {
-   Iterator *ci = static_cast< Iterator *>( vm->local(0)->asGCPointer() );
+   Iterator *ci = dyncast< Iterator *>( vm->local(0)->asGCPointer() );
    VMMessage* msg = 0;
    Item *msgItem = vm->local(4);
    if( msgItem->isInteger() )
@@ -34,29 +34,70 @@ bool coreslot_broadcast_internal( VMachine *vm )
 
    if ( ! ci->hasCurrent() )
    {
-      // were we called after a message?
-      if( msg != 0 )
+      // child call?
+      if ( vm->local(5)->isNil() )
       {
-         msg->onMsgComplete( true );
-         delete msg;
+         // were we called after a message?
+         if( msg != 0 )
+         {
+            msg->onMsgComplete( true );
+            delete msg;
+         }
+
+         // let the GC pointer to take care of the ietrator.
+         return false;
       }
 
-      // let the GC pointer to take care of the ietrator.
-      return false;
+      // we have a child that wants to get the message too.
+      ci = dyncast< Iterator *>( vm->local(5)->asGCPointer() );
+      *vm->local(0) = *vm->local(5);
+      vm->local(5)->setNil();
    }
 
    Item current = ci->getCurrent();
+   int baseParamCount = 0;
 
    if ( ! current.isCallable() )
    {
-      if( current.isComposed() )
+      const String& name = *vm->local(3)->asString();
+      if( name.size() != 0 )
       {
-         // may throw
-         current.asDeepItem()->readProperty( "on_" + *vm->local(3)->asString(), current );
+         if( current.isComposed() )
+         {
+            // may throw
+            try {
+               current.asDeepItem()->readProperty( "on_" + name, current );
+            }
+            catch( Error* err )
+            {
+               // see if we can get "__on_event"
+               try
+               {
+                  current.asDeepItem()->readProperty( "__on_event", current );
+                  // yes? -- ignore the previous error.
+                  err->decref();
+                  // and push the event name
+                  vm->pushParam( new CoreString(name) );
+                  baseParamCount = 1;
+               }
+               catch( Error* err1 )
+               {
+                  // no? -- throw the original error
+                  err1->decref();
+                  throw err;
+               }
+            }
+         }
+         else
+         {
+            throw new CodeError( ErrorParam( e_non_callable, __LINE__ ).extra( "broadcast" ) );
+         }
       }
       else
       {
-         throw new CodeError( ErrorParam( e_non_callable, __LINE__ ).extra( "broadcast" ) );
+         // ignore this item.
+         ci->next();
+         return true;
       }
    }
 
@@ -65,7 +106,7 @@ bool coreslot_broadcast_internal( VMachine *vm )
    {
       Item cache = *vm->local( 2 );
       vm->pushParam( cache );
-      vm->callFrame( current, 1 );
+      vm->callFrame( current, 1 + baseParamCount );
    }
    else
    {
@@ -89,7 +130,7 @@ bool coreslot_broadcast_internal( VMachine *vm )
          }
       }
 
-      vm->callFrame( current, (int32)paramCount );
+      vm->callFrame( current, (int32)paramCount + baseParamCount );
    }
 
    ci->next();
@@ -97,30 +138,70 @@ bool coreslot_broadcast_internal( VMachine *vm )
 }
 
 
-void CoreSlot::prepareBroadcast( VMContext *vmc, uint32 pfirst, uint32 pcount, VMMessage *msg )
+CoreSlot::~CoreSlot()
 {
+   if( m_children != 0 )
+   {
+      // to avoid double deletion, we remove the child from the map
+      /*
+      I disable it because I am not sure it's possible to make loops,
+      and the deletor takes already care of the items.
+      while( ! m_children->empty() )
+      {
+         MapIterator iter = m_children->begin();
+         CoreSlot* sl = iter.currentValue();
+         m_children->erase( iter );
+         sl->decref();
+      }*/
+
+      delete m_children;
+      m_children = 0;
+   }
+}
+
+
+void CoreSlot::prepareBroadcast( VMContext *vmc, uint32 pfirst, uint32 pcount, VMMessage *msg, String* msgName )
+{
+   // no listeners?
    if( empty() )
    {
+      // have we receiving a named message and do we have a child?
+      if( msgName != 0 )
+      {
+         CoreSlot* child = getChild( *msgName, false );
+         if( child != 0 )
+         {
+            child->prepareBroadcast( vmc, pfirst, pcount, msg, msgName );
+         }
+      }
+
       return;
    }
 
    Iterator* iter = new Iterator( this );
 
-   // and create a full functional frame.
-   //vmc->createFrame( pcount );
-
    // we don't need to set the slot as owner, as we're sure it stays in range
    // (slots are marked) on themselves.
-   vmc->addLocals( 5 );
+   vmc->addLocals( 6 );
    vmc->local(0)->setGCPointer( iter );
    *vmc->local(1) = (int64) pfirst;
    *vmc->local(2) = (int64) pcount;
-   *vmc->local(3) = new CoreString( m_name );
+   *vmc->local(3) = new CoreString( msgName == 0 ? m_name : *msgName );
 
    if ( msg != 0 )
    {
       // store it as an opaque pointer.
       vmc->local(4)->setInteger( (int64) msg );
+   }
+
+   // have we received a named message and do we have a child?
+   if( msgName != 0 )
+   {
+      CoreSlot* child = getChild( *msgName, false );
+      if( child != 0 )
+      {
+         vmc->local(5)->setGCPointer( new Iterator(child) );
+      }
    }
 
    vmc->returnHandler( &coreslot_broadcast_internal );
@@ -151,6 +232,37 @@ CoreSlot *CoreSlot::clone() const
    return const_cast<CoreSlot*>(this);
 }
 
+
+CoreSlot* CoreSlot::getChild( const String& name, bool create )
+{
+   if ( m_children == 0 )
+   {
+      if ( ! create )
+         return 0;
+
+      // create the children map
+      m_children = new Map( &traits::t_string(), &traits::t_coreslotptr() );
+   }
+
+   // we have already a map.
+   void* vchild = m_children->find( &name );
+
+   if( vchild == 0 )
+   {
+      if ( ! create )
+         return 0;
+
+      CoreSlot* child = new CoreSlot( name );
+      m_children->insert( &name, child );
+      return child;
+   }
+
+   // no need to incref it if it's already in the map!
+
+   return *(CoreSlot**) vchild;
+}
+
+
 void CoreSlot::gcMark( uint32 mark )
 {
    if ( m_bHasAssert )
@@ -164,7 +276,7 @@ void CoreSlot::setAssertion( VMachine* vm, const Item &a )
    setAssertion( a );
    if ( ! empty() )
    {
-      vm->addLocals( 5 ); // Warning -- we add 5 to nil the msg ptr callback at local(4).
+      vm->addLocals( 6 ); // Warning -- we add 5 to nil the msg ptr callback at local(4).
       Iterator* iter = new Iterator( this );
       // we don't need to set the slot as owner, as we're sure it stays in range
       // (slots are marked) on themselves.
@@ -173,6 +285,8 @@ void CoreSlot::setAssertion( VMachine* vm, const Item &a )
       *vm->local(2) = m_assertion;
       *vm->local(3) = new CoreString( m_name );
       // local(4) must stay nil; it's used by broadcast_internal as msg callback pointer.
+      // local(4) must stay nil; it's used by broadcast_internal as msg callback pointer.
+
 
       vm->returnHandler( &coreslot_broadcast_internal );
    }
@@ -225,7 +339,7 @@ CoreSlotCarrier::CoreSlotCarrier( const CoreClass* generator, CoreSlot* cs, bool
    if( cs != 0 )
    {
       cs->incref();
-      m_user_data = cs;
+      setUserData( cs );
    }
 }
 
@@ -289,6 +403,8 @@ void CoreSlotPtrTraits::copy( void *targetZone, const void *sourceZone ) const
    CoreSlot *source = (CoreSlot *) sourceZone;
 
    *target = source;
+   if( source != 0 )
+      source->incref();
 }
 
 int CoreSlotPtrTraits::compare( const void *firstz, const void *secondz ) const

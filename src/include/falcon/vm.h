@@ -39,6 +39,7 @@
 #include <falcon/baton.h>
 #include <falcon/livemodule.h>
 #include <falcon/vmcontext.h>
+#include <falcon/MersenneTwister.h>
 
 #define FALCON_VM_DFAULT_CHECK_LOOPS 5000
 
@@ -447,6 +448,9 @@ protected:
 
    /** filtered load path */
    String m_appSearchPath;
+
+   /** random number generator */
+   MTRand _mtrand;
 
    //=============================================================
    // Private functions
@@ -977,9 +981,21 @@ public:
    */
    virtual void run();
 
+   /** Become target of OS signals. */
+   bool becomeSignalTarget()
+   {
+      return m_systemData.becomeSignalTarget();
+   }
+
 
    /** Fills an error traceback with the current VM traceback. */
    void fillErrorTraceback( Error &error ) { currentContext()->fillErrorTraceback( error ); }
+
+   /** Returns a single step traceback in the current context. */
+   bool getTraceStep( uint32 level, const Symbol* &sym, uint32& line, uint32 &pc )
+   {
+      return m_currentContext->getTraceStep( level, sym, line, pc );
+   }
 
    /** Get the caller of the current symbol.
 
@@ -2276,6 +2292,9 @@ public:
 
    void breakRequest( bool mode ) { m_break = mode; }
    bool breakRequest() const { return m_break; }
+
+   /** Returns the Random Number Generator */
+   MTRand& getRNG(void) { return _mtrand; }
 
 //==========================================================================
 //==========================================================================

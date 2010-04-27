@@ -210,11 +210,34 @@ void VMContext::fillErrorTraceback( Error &error )
          else
             line = 0;
 
-         error.addTrace( sym->module()->name(), sym->name(), line, frame->m_call_pc );
+         error.addTrace( sym->module()->name(), sym->module()->path(), sym->name(), line, frame->m_call_pc );
       }
 
       frame = frame->prev();
    }
+}
+
+bool VMContext::getTraceStep( uint32 level, const Symbol* &sym, uint32& line, uint32 &pc )
+{
+   StackFrame* frame = currentFrame();
+   while( frame != 0 && frame->m_symbol != 0 && level > 0 )
+   {
+      frame = frame->prev();
+      level--;
+   }
+
+   if( frame == 0 || frame->m_symbol == 0 )
+      return false;
+
+   
+   sym = frame->m_symbol;
+   pc = frame->m_call_pc;
+   if( sym->isFunction() )
+      line = sym->module()->getLineAt( sym->getFuncDef()->basePC() + pc );
+   else
+      line = 0;
+
+   return true;
 }
 
 

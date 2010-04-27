@@ -131,6 +131,9 @@ int32 StreamBuffer::read( void *b, int32 size )
          // in the meanwhile, put the data in.
          memcpy( buf, m_buffer + m_bufPos, avail );
          m_bufPos = m_bufLen;  // declare we have consumed everything.
+         // return a partial read in case of underlying networks
+         if ( m_stream->type() == t_network )
+            return avail;
       }
    }
 
@@ -337,6 +340,9 @@ bool StreamBuffer::flush()
    m_bReseek = m_bReseek || m_bufPos != m_bufLen;
    m_changed = false;
    m_bufPos = m_bufLen = 0;
+
+   m_stream->flush();
+
    return true;
 }
 

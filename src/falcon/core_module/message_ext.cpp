@@ -216,6 +216,7 @@ FALCON_FUNC getSlot( ::Falcon::VMachine *vm )
       fassert( cc_slot != 0 );
       // the factory function takes care of increffing cs
       CoreObject *obj = cc_slot->asClass()->createInstance( cs );
+      cs->decref();
       vm->retval( obj );
    }
 }
@@ -349,7 +350,7 @@ FALCON_FUNC getAssert( ::Falcon::VMachine *vm )
 /*#
    @class VMSlot
    @brief VM Interface for message oriented programming operations.
-   @param name The name of the mesasge managed by this VMSlot.
+   @optparam name The name of the mesasge managed by this VMSlot.
 
    The VMSlot instance is a direct interface to the messaging
    facility of the VM creating it. It is implicitly created by
@@ -373,6 +374,119 @@ FALCON_FUNC getAssert( ::Falcon::VMachine *vm )
    referenced via @a subscribe function. Slots are considered
    unique by name, so that comparisons on slots are performed
    on their names.
+
+   If the @b name parameter is not given, the slot will be created as
+   "anonymous", and won't be registered with this virtual machine. It will
+   be possible to use it only through its methods.
+
+   @section ev_anonym_slots Anonymous slots
+
+   An anonymous slot can be created using an empty call to the VMSlot class
+   constructor. This will make the slot private for the users that can
+   access it; in other words, the slot won't be published to the VM and
+   it won't be possible to broadcast on it using the standard functions
+   @a broadcast or @a assert functions.
+
+   @section ev_slots Automatic broadcast marshaling
+
+   If a listener subscribed to a slot is a callable item, then it's called in
+   case of broadcasts. If it's a non-callable property provider (class instances,
+   blessed dictionaries, non-callable arrays) then a callable property named
+   like "on_<slot_name>" is searched; if found, it's called (as a method of the
+   host entity), otherwise a catch all method named "__on_event" is searched.
+
+   If the "__on_event" method is found, it's called with the first parameter
+   containing the broadcast name. Otherwise, an access error is raised.
+
+   @section ev_events Events
+
+   Events are "named broadcasts". They are issued on slots and excite all the listeners
+   that are subscribed to that slot. The main difference is that automatic marshalling
+   is directed to the name of the @i event rather to the name of the @i slot.
+
+   See the following code:
+
+   @code
+      object Receiver
+         _count = 0
+
+         function display(): > "Count is now ", self._count
+         function on_add(): self._count++
+         function on_sub(): self._count--
+         function __on_event( evname ): > "Received an unknown event: ", evname
+      end
+
+      s = VMSlot()  // creates an anonymous slot
+
+      s.subscribe( Receiver )
+
+      s.send( "add" ) // Instead of sending a broadcast ...
+      s.send( "add" ) // ... generate some events via send()
+
+      s.send( "A strange event", "some param" )  // will complain
+      Receiver.display()   // show the count
+   @endcode
+
+   The @a VSMlot.send  method works similarly to the @a VMSlot.broadcast method,
+   but it allows to specify an arbitrary event name. Callbacks subscribed to this
+   slot would be called for @i every event, be it generated through a broadcast or
+   via a send call.
+
+   @section ev_subslots Registering to events and Sub-slots
+
+   While callbacks subscribed to the slot will be excited no matter what kind of
+   event is generated, it is possible to @i register callbacks to respond only to
+   @i particular @i events via the @a VMSlot.register method.
+
+   See the following example:
+
+   @code
+   slot = VMSlot()  // creates an anonymous slot
+   slot.register( "first",
+      { param => printl( "First called with ", param ) } )
+
+   slot.register( "second",
+      { param => printl( "Second called with ", param ) } )
+
+   // send "first" and "second" events
+   slot.send( "first", "A parameter" )
+   slot.send( "second", "Another parameter" )
+
+   // this will actually do nothing
+   slot.broadcast( "A third parameter" )
+   @endcode
+
+   As no callback is @i subscribed to the slot, but some are just @i register to
+   some events, a generic @i broadcast will have no effect.
+
+   An interesting thing about registering to events is that a slot keeps tracks
+   of callbacks and items registered to a specific event via a named slot. For
+   example, to know who is currently subscribed to the "first" event, it's possible
+   to call the @a VMSlot.getEvent method and inspect the returned slot. Any change
+   in that returned slot will cause the event registration to change.
+
+   For example, continuing the above code...
+
+   @code
+      //...
+      fevt = slot.getEvent( "first" )
+
+      // display each subscribed item
+      for elem in fevt: > elem.toString()
+
+      // and broadcast on the event first
+      fevt.broadcast( "The parameter" )
+   @endcode
+
+   As seen, a broadcast on a sub-slot is equivalent to an event send on the parent
+   slot.
+
+   @note It is then possible to cache repeatedly broadcast slots, so that the virtual
+   machine is not forced to search across the subscribed events.
+
+   This structure can be freely replicated at any level. In the above example,
+   @b fevt may be subject of send() and register() method application, and its own
+   events can be retrieved trough its @a VMSlot.getEvent method.
 */
 
 /*#
@@ -383,18 +497,27 @@ FALCON_FUNC VMSlot_init( ::Falcon::VMachine *vm )
 {
    Item *i_msg = vm->param( 0 );
 
-   if ( i_msg == 0 || ! i_msg->isString() )
+   if ( i_msg != 0 && ! (i_msg->isString()||i_msg->isNil()) )
    {
       throw new ParamError( ErrorParam( e_inv_params, __LINE__ )
          .origin( e_orig_runtime )
-         .extra( "S" ) );
+         .extra( "[S]" ) );
    }
 
-   CoreSlot* vms = vm->getSlot( *i_msg->asString(), true );
-   fassert( vms != 0 );
+   CoreSlot* vms;
+   if ( i_msg != 0 && i_msg->isString() )
+   {
+      vms = vm->getSlot( *i_msg->asString(), true );
+      fassert( vms != 0 );
+   }
+   else
+   {
+      vms = new CoreSlot("");
+   }
 
    CoreSlotCarrier* self = dyncast<CoreSlotCarrier *>( vm->self().asObjectSafe() );
    self->setSlot( vms );
+   vms->decref();
 }
 
 
@@ -409,6 +532,126 @@ FALCON_FUNC VMSlot_broadcast( ::Falcon::VMachine *vm )
 {
    CoreSlot* cs = (CoreSlot*) vm->self().asObject()->getUserData();
    cs->prepareBroadcast( vm->currentContext(), 0, vm->paramCount() );
+}
+
+
+/*#
+   @method send VMSlot
+   @brief Performs an event generation on this slot.
+   @param event Event name.
+   @param ... Extra parameters to be sent to listeners.
+
+   The send method works as broadcast, with two major differences;
+   - In case of objects being subscribed to this slot, the name of the
+     broadcast message is that specified as a parameter, and not that
+     of this slot. This means that automatic marshaling will be performed
+     on methods named like on_<event>, and not on_<self.name>.
+   - Items registered with @a VMSlot.register gets activated only if the
+     @b event name is the same to which they are registered to.
+
+*/
+
+FALCON_FUNC VMSlot_send( ::Falcon::VMachine *vm )
+{
+   CoreSlot* cs = (CoreSlot*) vm->self().asObject()->getUserData();
+
+   Item *i_msg = vm->param( 0 );
+   if ( i_msg == 0 || ! i_msg->isString() )
+   {
+      throw new ParamError( ErrorParam( e_inv_params, __LINE__ )
+         .origin( e_orig_runtime )
+         .extra( "S" ) );
+   }
+
+   // better to cache the name
+   Item iName = *i_msg;
+   cs->prepareBroadcast( vm->currentContext(), 1, vm->paramCount()-1, 0, iName.asString() );
+}
+
+/*#
+   @method register VMSlot
+   @brief Registers a listener for a specific event.
+   @param event A string representing the event name.
+   @param handler Handler to associate to this event.
+
+   This function associates the given @b handler to a sub-slot named after
+   the @b event parameter. This operation is equivalent to call
+   @a VMSlot.getEvent() to create the desired sub-slot, and then call
+   @a VMSlot.subscribe() on that named slot.
+
+   @see VMSlot.send
+*/
+
+FALCON_FUNC VMSlot_register( ::Falcon::VMachine *vm )
+{
+   CoreSlot* cs = (CoreSlot*) vm->self().asObject()->getUserData();
+
+   Item *i_event = vm->param( 0 );
+   Item *i_handler = vm->param( 1 );
+
+   if ( i_event == 0 || ! i_event->isString()
+       || i_handler == 0 || ! (i_handler->isComposed() || i_handler->isCallable() ) )
+   {
+      throw new ParamError( ErrorParam( e_inv_params, __LINE__ )
+         .origin( e_orig_runtime )
+         .extra( "S,C|O" ) );
+   }
+
+   // Get the child core slot
+   CoreSlot* child = cs->getChild( *i_event->asString(), true );
+   child->append( *i_handler );
+}
+
+/*#
+   @method getEvent VMSlot
+   @brief Returns an event (as a child VMSlot) handled by this slot.
+   @param event A string representing the event name.
+   @optparam force Pass true to create the event if it is not existing.
+   @return a VMSlot representing the given event in this slot, or @b nil
+           if not found.
+
+   This method returns a named VMSlot that will be excited by @a VMSlot.send
+   applied on this slot with the same @b event name.
+
+   In other words, subscribing or unsubscribing items from the returned slot would
+   add or remove listeners for a @a VMSlot.send call on this slot.
+
+   Also, a broadcast on the returned VMSlot has the same effect of a @a VMSlot.send
+   with the same name as the @b event passed.
+
+   @see VMSlot.send
+*/
+
+FALCON_FUNC VMSlot_getEvent( ::Falcon::VMachine *vm )
+{
+   CoreSlot* cs = (CoreSlot*) vm->self().asObject()->getUserData();
+
+   Item *i_event = vm->param( 0 );
+   Item *i_force = vm->param( 1 );
+
+   if ( i_event == 0 || ! i_event->isString() )
+   {
+      throw new ParamError( ErrorParam( e_inv_params, __LINE__ )
+         .origin( e_orig_runtime )
+         .extra( "S" ) );
+   }
+
+   // Get the child core slot
+   CoreSlot* child = cs->getChild( *i_event->asString(),
+         i_force != 0 && i_force->isTrue() ); // force creation if required
+   if( child != 0 )
+   {
+      // found or to be created.
+      Item* icc = vm->findWKI("VMSlot");
+      fassert( icc != 0 );
+      fassert( icc->isClass() );
+      vm->retval( icc->asClass()->createInstance(child) );
+      child->decref();
+   }
+   else
+   {
+      vm->retnil();
+   }
 }
 
 /*#
