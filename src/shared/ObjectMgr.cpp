@@ -67,7 +67,7 @@ ObjectMap::iterator ObjectMgr::Remove(uint32 id)
     if(obj)
     {
         DEBUG(logdebug("ObjectMgr::Remove(%u) -> "PTRFMT, id, obj));
-        it = _store.erase(it);
+        _store.erase(it++);
         if(obj->GetType() >= OBJTYPE_OBJECT)
         {
             _renderLayers[((Object*)obj)->GetLayer()].erase((Object*)obj);

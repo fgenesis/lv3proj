@@ -31,7 +31,7 @@ void ResourceMgr::DropUnused(void)
             if(!it->second.count)
             {
                 _Delete(it->first, it->second.rt);
-                it = _ptrmap.erase(it);
+                _ptrmap.erase(it++);
                 del = true;
             }
             else
