@@ -11,6 +11,7 @@ class PlayerEx from Player
     idle = true // true if this player is just standing there, doing nothing
     dead = false // dead means can't move
     godmode = false // invincible
+    canDebugJump = false
     
     baseSpeedX = 0 // speed from external source (beeing transported, blown away by fan, etc.)
     ownSpeedX = 0 // own walking speed
@@ -140,7 +141,7 @@ class PlayerEx from Player
     
     // --DEBUG JUMP--
     function OnKeyUp(pressed)
-        if pressed: self.phys.yspeed = -128
+        if pressed and self.canDebugJump: self.phys.yspeed = -128
     end
     
     function OnKeyDown(pressed)
@@ -213,6 +214,16 @@ class PlayerEx from Player
         self.SetGfxOffs(0)
     end
     
+    function AnimDeathNormal()
+        if self.facingDir == DIRECTION_LEFT
+            self.AnimDeathNormalL()
+        else
+            self.AnimDeathNormalR()
+        end
+        self.SetGfxOffs(0)
+    end
+    
+    
     function AnimWalkL(): self.GetSprite().name = "walkL"
     function AnimWalkR(): self.GetSprite().name = "walkR"
     function AnimPushL(): self.GetSprite().name = "pushL"
@@ -223,18 +234,29 @@ class PlayerEx from Player
     function AnimFallR(): self.GetSprite().name = (self.IsFallingDeep() ? "fallR" : "falldeepR")
     function AnimElectroL(): self.GetSprite().name = "electroL"
     function AnimElectroR(): self.GetSprite().name = "electroR"
+    function AnimDeathNormalL(): self.GetSprite().name = "deathL"
+    function AnimDeathNormalR(): self.GetSprite().name = "deathR"
     
     function SetGfxOffs(i)
         self.gfxOffsX, self.gfxOffsY = self.gfxOffs[i]
     end
     
     
-    function OnTouch()
+    function OnTouch(side, who)
         //> "PlayerEx::OnTouch()"
+        select who
+            case Player, Unit
+                return false //can move through us
+        end
+        return false // TODO: what here??
     end
     
-    function OnEnter()
+    function OnEnter(side, who)
         //> "PlayerEx::OnEnter()"
+    end
+    
+    function OnTouchWall(side)
+        if side == SIDE_BOTTOM: Sound("land3.ogg").Play() // TODO: this sound is different for every viking
     end
     
     // Interface used by ActionObject
@@ -251,8 +273,16 @@ class PlayerEx from Player
         switch how
             case DEATH_ELECTRO
                 p = self.phys
+                self.SetCollisionEnabled(false)
                 self.SetAffectedByPhysics(false)
                 self.AnimElectro()
+                Sound("elecbuzz.ogg").Play()
+                
+            case DEATH_CRUSH
+                self.SetCollisionEnabled(false)
+                self.SetAffectedByPhysics(false)
+                self.AnimDeathNormal() // TODO: this must be changed to crush anim
+                Sound("crush.ogg").Play()
         end
     end
         

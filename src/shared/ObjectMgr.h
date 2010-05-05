@@ -13,7 +13,7 @@ class AppFalconGame;
 
 typedef std::map<uint32, BaseObject*> ObjectMap;
 typedef std::set<Object*> ObjectSet;
-typedef std::list<BaseObject*> ObjectList;
+typedef std::set<std::pair<BaseObject*,uint8> > ObjectWithSideSet;
 
 
 class ObjectMgr
@@ -26,12 +26,14 @@ public:
     inline uint32 GetLastId(void) { return _curId; }
     void Update(uint32 ms);
     void RenderLayer(uint32 id);
+    void RenderBBoxes(void); // debug function
     void FlagForRemove(BaseObject *obj);
     ObjectMap::iterator GetIterator(uint32 id);
     ObjectMap::iterator Remove(uint32 id);
     void RemoveAll(void);
+    void HandleObjectCollision(ActiveRect *base, ActiveRect *other, uint8 side);
 
-    void GetAllObjectsIn(BaseRect& rect, ObjectList& result);
+    void GetAllObjectsIn(BaseRect& rect, ObjectWithSideSet& result, uint8 force_side = SIDE_NONE);
 
     inline void SetPhysicsMgr(PhysicsMgr *pm) { _physMgr = pm; }
     inline void SetLayerMgr(LayerMgr *layers) {_layerMgr = layers; }

@@ -4,6 +4,7 @@
 #include "ObjectMgr.h"
 #include "LayerMgr.h"
 #include "Tile.h"
+#include "SDL_func.h"
 
 ObjectMgr::ObjectMgr(Engine *e)
 : _curId(0)
@@ -97,9 +98,10 @@ void ObjectMgr::Update(uint32 ms)
         if(base->GetType() >= OBJTYPE_OBJECT)
         {
             Object *obj = (Object*)base;
+            _layerMgr->RemoveFromCollisionMap(obj);
             // physics
-            if(obj->IsAffectedByPhysics())
-                _physMgr->UpdatePhysics(obj, ms); // the collision with walls is handled in here. also sets HasMoved() to true if required.
+            if(obj->IsAffectedByPhysics())        // the collision with walls is handled in here. also sets HasMoved() to true if required.
+                _physMgr->UpdatePhysics(obj, ms); // also takes care of triggering OnTouch() for solid objects vs Players and other specific things
             // update layer sets if changed
             if(obj->_NeedsLayerUpdate())
             {
@@ -112,6 +114,7 @@ void ObjectMgr::Update(uint32 ms)
                 ((AnimatedTile*)(obj->GetSprite()))->Update(Engine::GetCurFrameTime());
 
             obj->OnUpdate(ms);
+            _layerMgr->UpdateCollisionMap(obj);
         }
     }
 
@@ -132,32 +135,15 @@ void ObjectMgr::Update(uint32 ms)
             if(base == other || other->MustDie() || !other->IsCollisionEnabled() || !(base->HasMoved() || other->HasMoved()))
                 continue;
 
+            // first, trigger collision with the object that has moved.
             if(uint8 side = base->CollisionWith(other))
             {
-                // if OnTouch() returns true, movement should be stopped and remain "touching" (= no overlap should occur)
-                if(base->OnTouch(side, other))
-                {
-                    // we should only move objects around, since rects are considered static unless manually moved
-                    if(base->GetType() >= OBJTYPE_OBJECT)
-                    {
-                        int32 xold = base->x, yold = base->y; // TODO: need width and height too?
-                        base->AlignToSideOf(other, side);
-                        if(_layerMgr->CollisionWith(base))
-                        {
-                            // ouch, new position collided with wall... reset position to old
-                            // and now we HAVE TO call OnEnter()
-                            // TODO: try pushing to left or right a little (at an elevator, for example. it never crushes anything)
-                            //       (but this can be done in falcon too.. i think)
-                            base->x = xold;
-                            base->y = yold;
-                            base->OnEnter(side, other);
-                        }
-                    }
-                }
-                else
-                {
-                    base->OnEnter(side, other);
-                }
+                HandleObjectCollision(base, other, side);
+            }
+            // if they STILL collide after that, trigger collision from other object
+            if(uint8 side = other->CollisionWith(base))
+            {
+                HandleObjectCollision(other, base, side);
             }
         }
     }
@@ -180,6 +166,37 @@ void ObjectMgr::Update(uint32 ms)
     }
 }
 
+// <base> is the object that has moved, usually; <side> is <base's> side where <other> collided with it
+void ObjectMgr::HandleObjectCollision(ActiveRect *base, ActiveRect *other, uint8 side)
+{
+    // if OnTouch() returns true, movement should be stopped and remain "touching" (= no overlap should occur)
+    if(base->OnTouch(side, other))
+    {
+        // we should only move objects around, since rects are considered static unless manually moved
+        if(base->GetType() >= OBJTYPE_OBJECT)
+        {
+            float xold = base->x, yold = base->y; // TODO: need width and height too?
+            uint8 oside = InvertSide(side);
+            base->AlignToSideOf(other, oside);
+            if(_layerMgr->CollisionWith(base, 4, ((Object*)base)->IsBlocking() ? ~LCF_BLOCKING_OBJECT : LCF_ALL)) // if object is blocking skip this flag
+            {
+                // ouch, new position collided with wall... reset position to old
+                // and now we HAVE TO call OnEnter()
+                // TODO: try pushing to left or right a little (at an elevator, for example. it never crushes anything)
+                //       (but this can be done in falcon too.. i think)
+                base->x = xold;
+                base->y = yold;
+                base->OnEnter(side, other);
+            }
+        }
+    }
+    else
+    {
+        base->OnEnter(side, other);
+    }
+}
+
+
 // this renders the objects.
 // it is called from LayerMgr::Render(), so that objects on higher layers are drawn over objects on lower layers
 void ObjectMgr::RenderLayer(uint32 id)
@@ -200,10 +217,23 @@ void ObjectMgr::RenderLayer(uint32 id)
     }
 }
 
-void ObjectMgr::GetAllObjectsIn(BaseRect& rect, ObjectList& result)
+void ObjectMgr::GetAllObjectsIn(BaseRect& rect, ObjectWithSideSet& result, uint8 force_side /* = SIDE_NONE */)
 {
     for(ObjectMap::iterator it = _store.begin(); it != _store.end(); it++)
-        if(((ActiveRect*)it->second)->CollisionWith(&rect))
-            result.push_back(it->second);
+        if(uint8 side = ((ActiveRect*)it->second)->CollisionWith(&rect))
+            result.insert(std::pair<BaseObject*,uint8>(it->second, force_side ? force_side : side));
 }
 
+void ObjectMgr::RenderBBoxes(void)
+{
+    SDL_Rect r;
+    for(ObjectMap::iterator it = _store.begin(); it != _store.end(); it++)
+    {
+        BaseRect& br = ((ActiveRect*)it->second)->cloneRect();
+        r.x = int32(br.x);
+        r.y = int32(br.y);
+        r.h = br.h;
+        r.w = br.w;
+        SDLfunc_drawRectangle(_engine->GetSurface(), r, 0xDF, 0xDF, 0xDF, 0);
+    }
+}

@@ -26,9 +26,35 @@ enum Side
 
     SIDE_TOPLEFT = SIDE_TOP | SIDE_LEFT,
     SIDE_TOPRIGHT = SIDE_TOP | SIDE_RIGHT,
-    SIDE_BOTTOMLEFT = SIDE_TOP | SIDE_LEFT,
-    SIDE_BOTTOMRIGHT = SIDE_TOP | SIDE_RIGHT
+    SIDE_BOTTOMLEFT = SIDE_BOTTOM | SIDE_LEFT,
+    SIDE_BOTTOMRIGHT = SIDE_BOTTOM | SIDE_RIGHT,
+
+    SIDE_ALL = SIDE_TOPLEFT | SIDE_BOTTOMRIGHT,
+
+    SIDE_FLAG_SOLID = 0x80 // special, set by the physics mgr for a simulated OnTouch() call
 };
 
+// TODO: this can be solved faster with some evil shifting like ((s << 1) | (s >> 1)) & ...
+// but go the safe way for now
+inline uint8 InvertSide(uint8 s)
+{
+    uint32 n = s & ~SIDE_ALL;
+
+    if(s & SIDE_TOP)         n |= SIDE_BOTTOM;
+    else if(s & SIDE_BOTTOM) n |= SIDE_TOP;
+
+    if(s & SIDE_LEFT)        n |= SIDE_RIGHT;
+    else if(s & SIDE_RIGHT)  n |= SIDE_LEFT;
+
+    return n;
+}
+
+enum CoreEventTypes
+{
+    EVENT_TYPE_KEYBOARD = 0,
+    EVENT_TYPE_JOYSTICK_BUTTON = 1,
+    EVENT_TYPE_JOYSTICK_AXIS = 2,
+    EVENT_TYPE_JOYSTICK_HAT = 3
+};
 
 #endif

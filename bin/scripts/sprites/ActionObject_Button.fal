@@ -1,21 +1,68 @@
 class Button from ActionObject
 
     gfx = "sprites/button.anim"
+    sound = "button.ogg"
     onPush = nil
     
     function OnAction(who, state)
-        if not state: return
+        if not state: return false
         tile = self.GetSprite()
         tile.name = "use"
-        Sound.Play("button.ogg")
         if isCallable(self.onPush)
             self.onPush(who, self)
         else
             > "Button(", self.id, ")  was pushed by ", who, " (no action)"
         end
+        return true
     end
     
     function SetOnPush(func): self.onPush = func
 end
 
-export Button
+class TimedButton(ms) from ActionObject
+
+    gfx = "sprites/button.anim"
+    sound = "button.ogg"
+    onPush = nil
+    onReset = nil
+    timer = nil
+    canUse = true
+    
+    init
+        if not ms: raise "TimedButton: expected time delay in constructor"
+        self.timer = ms
+    end
+    
+    function SetOnReset(func): self.onReset = func
+    function SetOnPush(func): self.onPush = func
+    
+    function OnAction(who, state)
+        if not (state and self.canUse): return false
+        tile = self.GetSprite()
+        tile.name = "use2"
+        if isCallable(self.onPush)
+            self.onPush(who, self)
+        else
+            > "TimedButton(", self.id, ")  was pushed by ", who, " (no action)"
+        end
+        self.canUse = false
+        CallScheduler.Schedule(self.Reset, self.timer)
+        return true
+    end
+    
+    function Reset()
+        self.canUse = true
+        tile = self.GetSprite()
+        tile.name = "default"
+        if isCallable(self.onReset)
+            self.onReset(self)
+        else
+            > "TimedButton(", self.id, ") reset after ", self.timer, " (no action)"
+        end
+
+    end
+end
+
+
+export Button, TimedButton
+

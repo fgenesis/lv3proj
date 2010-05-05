@@ -70,7 +70,7 @@ void ResourceMgr::_DecRef(void *ptr)
         }
         else
         {
-            DEBUG(logdebug("ResourceMgr::_DecRef("PTRFMT") - now %u (type %u)", ptr, it->second.count, it->second.rt));
+            //DEBUG(logdebug("ResourceMgr::_DecRef("PTRFMT") - now %u (type %u)", ptr, it->second.count, it->second.rt));
         }
     }
     else

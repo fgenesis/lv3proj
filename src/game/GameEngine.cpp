@@ -20,17 +20,15 @@ GameEngine::GameEngine()
     _playerCount = 1;
 
     // test
+#ifdef _DEBUG
     mouseRect.w = 32;
     mouseRect.h = 32;
     mouseCollision = 0;
-    bigRect.x = 150;
-    bigRect.y = 450;
-    bigRect.w = 100;
-    bigRect.h = 100;
     collRect.w = 32;
     collRect.h = 32;
     collRectGood = false;
     checkDirection = DIRECTION_RIGHT;
+#endif
 }
 
 GameEngine::~GameEngine()
@@ -57,16 +55,10 @@ bool GameEngine::Setup(void)
     falcon->Init((char*)mb->ptr);
     resMgr.Drop(mb);
 
-    AsciiLevel *level = LoadAsciiLevel("levels/testlevel.txt");
-    _layermgr->LoadAsciiLevel(level);
-    delete level;
-
     mb = resMgr.LoadTextFile("scripts/test.fal");
     ASSERT(mb);
     falcon->EmbedStringAsModule((char*)mb->ptr, "testscript");
     resMgr.Drop(mb);
-    
-    //sndCore.PlayMusic("lv1_snes_ship.ogg");
 
     return true;
 }
@@ -187,6 +179,7 @@ void GameEngine::OnJoystickEvent(uint32 type, uint32 device, uint32 id, int32 va
 void GameEngine::OnMouseEvent(uint32 type, uint32 button, uint32 state, uint32 x, uint32 y, int32 rx, int32 ry)
 {
     // - TEST - this is all test stuff and will be removed later
+#ifdef _DEBUG
     if(x >= uint32(mouseRect.w / 2) && y >= uint32(mouseRect.h / 2))
     {
         mouseRect.x = x - mouseRect.w / 2;
@@ -203,23 +196,30 @@ void GameEngine::OnMouseEvent(uint32 type, uint32 button, uint32 state, uint32 x
         collRectGood = !_layermgr->CollisionWith(&collRect);
 
     }
-    // on mouseclick, text for intersection with the big white rect
+#endif
     if(type == SDL_MOUSEBUTTONDOWN)
     {
         if(button == 1)
         {
-            uint8 side = mouseRect.CollisionWith(&bigRect);
-            char *sidestr;
-            switch(side)
+            logcustom(0, YELLOW, "Mouse position: (%u, %u), tile position: (%u, %u)", x, y, x / 16, y / 16);
+            BaseRect r;
+            r.x = x;
+            r.y = y;
+            r.h = r.w = 1;
+            ObjectWithSideSet objs;
+            objmgr->GetAllObjectsIn(r, objs);
+            for(ObjectWithSideSet::iterator it = objs.begin(); it != objs.end(); it++)
             {
-                case SIDE_TOP: sidestr = "top"; break;
-                case SIDE_BOTTOM: sidestr = "bottom"; break;
-                case SIDE_LEFT: sidestr = "left"; break;
-                case SIDE_RIGHT: sidestr = "right"; break;
-                default: sidestr = "none"; break;
+                ActiveRect *obj = (ActiveRect*)it->first;
+                logcustom(0, YELLOW, "-> Object(%u): type %u, xywh=(%d,%d,%u,%u), layer=%d [%c%c%c]",
+                    obj->GetId(), obj->GetType(), int32(obj->x), int32(obj->y), obj->w, obj->h,
+                    obj->GetType() >= OBJTYPE_OBJECT ? ((Object*)obj)->GetLayer() : -1,
+                    obj->IsCollisionEnabled() ? 'C' : '-', 
+                    obj->GetType() >= OBJTYPE_OBJECT && ((Object*)obj)->IsAffectedByPhysics() ? 'P' : '-',
+                    obj->GetType() >= OBJTYPE_OBJECT && ((Object*)obj)->IsBlocking() ? 'B' : '-');
             }
-            logerror("(%d, %d) COLLISION: %s (%u)", int(mouseRect.x), int(mouseRect.y), sidestr, side);
         }
+#ifdef _DEBUG
         else if(button == 3)
         {
             switch(checkDirection)
@@ -234,9 +234,8 @@ void GameEngine::OnMouseEvent(uint32 type, uint32 button, uint32 state, uint32 x
                 case DIRECTION_UPRIGHT: checkDirection = DIRECTION_RIGHT; break;
             }
         }
+#endif
     }
-
-
 }
 
 void GameEngine::_Render(void)
@@ -249,16 +248,9 @@ void GameEngine::_Render(void)
     _layermgr->Render();
 
     // TEST/DEBUG
+#ifdef _DEBUG
 
-    // part 1 - draw a huge rect, centered
-    SDL_Rect bigone;
-    bigone.x = bigRect.x;
-    bigone.y = bigRect.y;
-    bigone.w = bigRect.w;
-    bigone.h = bigRect.h;
-    SDL_FillRect(GetSurface(), &bigone, 0xFFFFFFFF);
-
-    // part 2 - draw the small rect that follows the mouse cursor
+    // draw the small rect that follows the mouse cursor
     SDL_Rect mrect;
     mrect.x = mouseRect.x;
     mrect.y = mouseRect.y;
@@ -278,6 +270,7 @@ void GameEngine::_Render(void)
     cdrect.h = collRect.h;
     SDL_FillRect(GetSurface(), &cdrect, collRectGood ? 0xFF0000FF : 0xFFFF00CC);
     // -end-
+#endif
 
     SDL_Flip(_screen);
 }

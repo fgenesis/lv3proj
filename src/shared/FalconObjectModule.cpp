@@ -360,6 +360,12 @@ void Object::OnUpdate(uint32 ms)
     _falObj->CallMethod("OnUpdate", 1, Falcon::Item(Falcon::int64(ms)));
 }
 
+void Object::OnTouchWall(uint8 side)
+{
+    DEBUG_ASSERT_RETURN_VOID(_falObj);
+    _falObj->CallMethod("OnTouchWall", 2, Falcon::Item(Falcon::int64(side)));
+}
+
 bool Item::OnUse(Object *who)
 {
     DEBUG_ASSERT_RETURN(_falObj, false); // no further processing
@@ -672,6 +678,20 @@ FALCON_FUNC fal_Object_CanFallDown(Falcon::VMachine *vm)
     vm->retval(((Object*)self->GetObj())->CanFallDown());
 }
 
+FALCON_FUNC fal_Object_IsBlocking(Falcon::VMachine *vm)
+{
+    fal_ObjectCarrier *self = Falcon::dyncast<fal_ObjectCarrier*>( vm->self().asObject() );
+    vm->retval(((Object*)self->GetObj())->IsBlocking());
+}
+
+FALCON_FUNC fal_Object_SetBlocking(Falcon::VMachine *vm)
+{
+    FALCON_REQUIRE_PARAMS_EXTRA(1,"B");
+    bool block = vm->param(0)->asBoolean();
+    fal_ObjectCarrier *self = Falcon::dyncast<fal_ObjectCarrier*>( vm->self().asObject() );
+    ((Object*)self->GetObj())->SetBlocking(block);
+}
+
 
 FALCON_FUNC fal_TileLayer_SetVisible(Falcon::VMachine *vm)
 {
@@ -796,7 +816,7 @@ FALCON_FUNC fal_Objects_GetAllInRect(Falcon::VMachine *vm)
     rect.y = (float)vm->param(1)->forceNumeric();
     rect.w = (uint32)vm->param(2)->forceInteger();
     rect.h = (uint32)vm->param(3)->forceInteger();
-    ObjectList li;
+    ObjectWithSideSet li;
     g_engine_ptr->objmgr->GetAllObjectsIn(rect, li);
     if(li.empty())
     {
@@ -804,9 +824,9 @@ FALCON_FUNC fal_Objects_GetAllInRect(Falcon::VMachine *vm)
         return;
     }
     Falcon::CoreArray *arr = new Falcon::CoreArray(li.size());
-    for(ObjectList::iterator it = li.begin(); it != li.end(); it++)
+    for(ObjectWithSideSet::iterator it = li.begin(); it != li.end(); it++)
     {
-        BaseObject *obj = *it;
+        BaseObject *obj = it->first;
         DEBUG(ASSERT(obj->_falObj && obj->_falObj->coreCls));
         fal_ObjectCarrier *co = new fal_ObjectCarrier(obj->_falObj->coreCls, obj->_falObj);
         arr->append(co);
@@ -879,6 +899,8 @@ Falcon::Module *FalconObjectModule_create(void)
     m->addClassMethod(clsRect, "GetDistance", fal_ActiveRect_GetDistance);
     m->addClassMethod(clsRect, "GetDistanceX", fal_ActiveRect_GetDistanceX);
     m->addClassMethod(clsRect, "GetDistanceY", fal_ActiveRect_GetDistanceY);
+    m->addClassMethod(clsRect, "SetBlocking", fal_NullFunc); // ActiveRect does not have this
+    m->addClassMethod(clsRect, "IsBlocking", fal_FalseFunc); // ActiveRect does not have this, return false
     m->addClassProperty(clsRect, "x");
     m->addClassProperty(clsRect, "y");
     m->addClassProperty(clsRect, "w");
@@ -893,6 +915,7 @@ Falcon::Module *FalconObjectModule_create(void)
     Falcon::InheritDef *inhObject = new Falcon::InheritDef(clsObject); // there are other classes that inherit from Object
     clsObject->setWKS(true);
     m->addClassMethod(clsObject, "OnUpdate", fal_NullFunc);
+    m->addClassMethod(clsObject, "OnTouchWall", fal_NullFunc);
     m->addClassMethod(clsObject, "SetSprite", fal_Object_SetSprite);
     m->addClassMethod(clsObject, "GetSprite", fal_Object_GetSprite);
     m->addClassMethod(clsObject, "SetLayerId", fal_Object_SetLayerId);
@@ -900,6 +923,8 @@ Falcon::Module *FalconObjectModule_create(void)
     m->addClassMethod(clsObject, "SetAffectedByPhysics", &fal_Object_SetAffectedByPhysics);
     m->addClassMethod(clsObject, "IsAffectedByPhysics", &fal_Object_IsAffectedByPhysics);
     m->addClassMethod(clsObject, "CanFallDown", &fal_Object_CanFallDown);
+    m->addClassMethod(clsRect, "SetBlocking", fal_Object_SetBlocking);
+    m->addClassMethod(clsRect, "IsBlocking", fal_Object_IsBlocking);
     m->addClassProperty(clsObject, "phys");
     m->addClassProperty(clsObject, "gfxOffsX");
     m->addClassProperty(clsObject, "gfxOffsY");

@@ -12,6 +12,7 @@
 #include "ObjectMgr.h"
 #include "SoundCore.h"
 #include "PhysicsSystem.h"
+#include "AsciiLevelParser.h"
 
 #include "FalconBaseModule.h"
 #include "FalconObjectModule.h"
@@ -155,7 +156,14 @@ FALCON_FUNC fal_Game_SetPlayerCount(Falcon::VMachine *vm)
 
 FALCON_FUNC fal_Game_LoadLevel(Falcon::VMachine *vm)
 {
-    // TODO: implement this!
+    FALCON_REQUIRE_PARAMS_EXTRA(1,"S filename");
+    Falcon::AutoCString cstr = vm->param(0)->asString();
+    AsciiLevel *level = LoadAsciiLevel((char*)cstr.c_str());
+    if(!level)
+    {
+        throw new GameError( Falcon::ErrorParam( Falcon::e_nofile ) );
+    }
+    g_engine_ptr->_GetLayerMgr()->LoadAsciiLevel(level);
 }
 
 FALCON_FUNC fal_Game_Exit(Falcon::VMachine *vm)
@@ -194,7 +202,7 @@ FALCON_FUNC fal_Game_UpdateCollisionMap(Falcon::VMachine *vm)
     {
        lm->UpdateCollisionMap();
     }
-    if(vm->paramCount() >= 2)
+    else if(vm->paramCount() >= 2)
     {
         uint32 x = vm->param(0)->forceIntegerEx();
         uint32 y = vm->param(1)->forceIntegerEx();
@@ -205,6 +213,18 @@ FALCON_FUNC fal_Game_UpdateCollisionMap(Falcon::VMachine *vm)
         throw new Falcon::ParamError( Falcon::ErrorParam( Falcon::e_missing_params ).
             extra( "No args or N,N" ) );
     }
+}
+
+FALCON_FUNC fal_Game_PlayMusic(Falcon::VMachine *vm)
+{
+    FALCON_REQUIRE_PARAMS_EXTRA(1,"S filename");
+    Falcon::AutoCString cstr(vm->param(0)->asString());
+    sndCore.PlayMusic((char*)cstr.c_str());
+}
+
+FALCON_FUNC fal_Game_StopMusic(Falcon::VMachine *vm)
+{
+    sndCore.StopMusic();
 }
 
 
@@ -246,6 +266,8 @@ Falcon::Module *FalconGameModule_create(void)
     m->addClassMethod(clsGame, "GetSoundVolume", fal_Game_GetSoundVolume);
     m->addClassMethod(clsGame, "SetMusicVolume", fal_Game_SetMusicVolume);
     m->addClassMethod(clsGame, "GetMusicVolume", fal_Game_GetMusicVolume);
+    m->addClassMethod(clsGame, "PlayMusic", fal_Game_PlayMusic);
+    m->addClassMethod(clsGame, "StopMusic", fal_Game_PlayMusic);
     m->addClassMethod(clsGame, "GetPlayerCount", fal_Game_GetPlayerCount);
     m->addClassMethod(clsGame, "SetPlayerCount", fal_Game_SetPlayerCount);
     m->addClassMethod(clsGame, "LoadLevel", fal_Game_LoadLevel);
@@ -254,23 +276,6 @@ Falcon::Module *FalconGameModule_create(void)
     m->addClassMethod(clsGame, "CreateCollisionMap", fal_Game_CreateCollisionMap);
     m->addClassMethod(clsGame, "UpdateCollisionMap", fal_Game_UpdateCollisionMap);
     m->addConstant("MAX_VOLUME", Falcon::int64(MIX_MAX_VOLUME));
-
-
-    m->addConstant("EVENT_TYPE_KEYBOARD",        Falcon::int64(EVENT_TYPE_KEYBOARD));
-    m->addConstant("EVENT_TYPE_JOYSTICK_BUTTON", Falcon::int64(EVENT_TYPE_JOYSTICK_BUTTON));
-    m->addConstant("EVENT_TYPE_JOYSTICK_AXIS",   Falcon::int64(EVENT_TYPE_JOYSTICK_AXIS));
-    m->addConstant("EVENT_TYPE_JOYSTICK_HAT",    Falcon::int64(EVENT_TYPE_JOYSTICK_HAT));
-
-
-    m->addConstant("DIRECTION_NONE",      Falcon::int64(DIRECTION_NONE));
-    m->addConstant("DIRECTION_UP",        Falcon::int64(DIRECTION_UP));
-    m->addConstant("DIRECTION_UPLEFT",    Falcon::int64(DIRECTION_UPLEFT));
-    m->addConstant("DIRECTION_LEFT",      Falcon::int64(DIRECTION_LEFT));
-    m->addConstant("DIRECTION_DOWNLEFT",  Falcon::int64(DIRECTION_DOWNLEFT));
-    m->addConstant("DIRECTION_DOWN",      Falcon::int64(DIRECTION_DOWN));
-    m->addConstant("DIRECTION_DOWNRIGHT", Falcon::int64(DIRECTION_DOWNRIGHT));
-    m->addConstant("DIRECTION_RIGHT",     Falcon::int64(DIRECTION_RIGHT));
-    m->addConstant("DIRECTION_UPRIGHT",   Falcon::int64(DIRECTION_UPRIGHT));
 
 
     // the SDL key bindings

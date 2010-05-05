@@ -18,12 +18,14 @@ void musicFinished(void)
 }
 
 SoundFile::SoundFile(Mix_Chunk *p)
-: sound(p)
+: sound(p), channel(-1), resCallback(p), ref(this)
 {
 }
 
 SoundFile::~SoundFile()
 {
+    Stop();
+    // resource management done by ResourceCallback
 }
 
 void SoundFile::SetVolume(uint8 vol)
@@ -31,6 +33,27 @@ void SoundFile::SetVolume(uint8 vol)
     Mix_VolumeChunk(sound, vol);
 }
 
+uint8 SoundFile::GetVolume(void)
+{
+    return Mix_VolumeChunk(sound, -1);
+}
+
+void SoundFile::Play(void)
+{
+    channel = Mix_PlayChannel(-1, sound, 0);
+    //DEBUG(logdebug("PLAY on channel %u", channel));
+}
+
+bool SoundFile::IsPlaying(void)
+{
+    return channel >= 0 && Mix_Playing(channel) && Mix_GetChunk(channel) == sound;
+}
+
+void SoundFile::Stop(void)
+{
+    //if(IsPlaying())
+        Mix_HaltChannel(channel);
+}
 
 SoundCore::SoundCore()
 : _music(NULL)
@@ -39,29 +62,32 @@ SoundCore::SoundCore()
     Mix_AllocateChannels(16);
 }
 
-SoundCore::~SoundCore()
+void SoundCore::Destroy()
 {
+    StopMusic();
     Mix_CloseAudio();
 }
 
-void SoundCore::PlayMusic(char *fn, double repeat_pos /* = 0.0*/)
+void SoundCore::PlayMusic(char *fn)
 {
-    std::string loopstr = resMgr.GetPropForMusic(fn, "looppoint");
-    SetLoopPoint(atof(loopstr.c_str()));
     if(Mix_PlayingMusic())
         StopMusic();
-    _music = resMgr.LoadMusic(fn); // TODO: do refcounting
+    _music = resMgr.LoadMusic(fn);
     if(!_music)
         return;
-    Mix_PlayMusic(_music, 0); // TODO: instead of loops implement some auto-reposition system
-                              // to continue playing from a specific position
+    SetLoopPoint(atof(resMgr.GetPropForMusic(fn, "looppoint").c_str()));
+    Mix_PlayMusic(_music, 0);
     Mix_HookMusicFinished(musicFinished);
 }
 
 void SoundCore::StopMusic(void)
 {
-    Mix_HaltMusic();
-    _music = NULL;
+    if(_music)
+    {
+        Mix_HaltMusic();
+        resMgr.Drop(_music);
+        _music = NULL;
+    }
 }
 
 void SoundCore::SetMusicVolume(uint8 vol)
@@ -74,14 +100,15 @@ uint32 SoundCore::GetMusicVolume(void)
     return Mix_VolumeMusic(-1);
 }
 
-// TODO: this is the minimal thing to play sound, must be improved and free resources after use!
-void SoundCore::PlaySound(char *fn)
+SoundFile *SoundCore::GetSound(char *fn)
 {
-    Mix_Chunk *sound = resMgr.LoadSound(fn);
-    if(sound)
+    Mix_Chunk *chunk = resMgr.LoadSound(fn);
+    if(chunk)
     {
-        Mix_PlayChannel(-1, sound, 0);
+        SoundFile *sound = new SoundFile(chunk);
+        return sound;
     }
+    return NULL;
 }
 
 

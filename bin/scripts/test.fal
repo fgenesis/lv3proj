@@ -1,6 +1,7 @@
 
 // some test stuff to see what the falcon bindings can do
 > "-- Setting up test Level --"
+Game.LoadLevel("testlevel.txt")
 
 Screen.CreateInfoLayer()
 
@@ -27,13 +28,34 @@ Physics.SetGravity(300)
 olaf = Olaf()
 olaf.SetLayerId(4)
 olaf.SetPos(72,48)
+olaf.canDebugJump = true
 pcontrol = PlayerController()
 pcontrol.Add(olaf)
 pcontrol.Assign(1, olaf)
 pcontrol.register()
 
-img = ImageObject("sprites/lv2logo.png")
-CallScheduler.Schedule(img.remove, 3000)
+img = ImageObject("sprites/lv3logo.png")
+CallScheduler.Schedule(img.remove, 4000)
+
+blk = IronBlock()
+blk.SetPos(422,36)
+
+blk2 = IronBlock()
+blk2.SetPos(356,38)
+
+blk3 = IronBlock()
+blk3.SetPos(442,245)
+
+blk4 = IronBlock()
+blk4.SetPos(495,299)
+
+blk5 = IronBlock()
+blk5.SetPos(536,320)
+
+Game.SetMusicVolume(80)
+Game.PlayMusic("lv1_snes_ship.ogg")
+
+
 
 function DoSomeResets(who, k, e)
     ty, src, which, value = e
@@ -49,6 +71,7 @@ RegisterRawInputHook("DisableInputOn", .[DisableInputOn SDLK.END])
 RegisterRawInputHook("CycleGravityOn", .[CycleGravityOn SDLK.PAGEDOWN])
 RegisterRawInputHook("ToggleOlafBounceOn", .[ToggleOlafBounceOn SDLK.PAGEUP])
 RegisterRawInputHook("ToggleGodmode", .[ToggleGodmode olaf SDLK.COMMA])
+RegisterRawInputHook("ResetBlockTest", .[ResetBlockTest blk SDLK.m])
 //RegisterRawInputHook("RemovePlayerTest", .[RemovePlayerTest olaf SDLK.q])
 PlayerAliveCheck(olaf)
 
@@ -59,6 +82,14 @@ PlayerAliveCheck(olaf)
         GC.perform(true)
     end
 end*/
+
+function ResetBlockTest(who, k, e)
+    ty, src, which, value = e
+    if ty == EVENT_TYPE_KEYBOARD and which == k and value != 0
+        who.SetPos(422,36)
+        return true // drop the event 
+    end
+end
 
 function DisableInputOn(k, e)
     ty, src, which, value = e
@@ -89,7 +120,7 @@ function ToggleGodmode(who, k, e)
     ty, src, which, value = e
     if ty == EVENT_TYPE_KEYBOARD and which == k and value != 0
         who.godmode = not who.godmode
-        Sound.Play( who.godmode ? "menuaccept.ogg" : "blockbreak.ogg" )
+        Sound( who.godmode ? "menuaccept.ogg" : "blockbreak.ogg" ).Play()
         > "God mode ", ( who.godmode ? "ON" : "OFF" )
         return true // drop the event 
     end
@@ -99,10 +130,13 @@ function CycleGravity()
     switch Physics.GetGravity()
         case 300
             Physics.SetGravity(60)
+            Sound("use.ogg").Play()
         case 60
             Physics.SetGravity(-80)
+            Sound("windup.ogg").Play()
         default
             Physics.SetGravity(300)
+            Sound("blockbreak.ogg").Play()
     end
 end
 
@@ -219,14 +253,15 @@ function RemoveAllEnergyLinesIn(x,y,w,h)
 end
 
 function PlaySoundMulti(file, times, offs)
-    Sound.Play(file)
-    for i = 1 to times - 1
-        CallScheduler.Schedule( [Sound.Play, file], i * offs )
+    sound = Sound(file)
+    if not sound: return
+    for i = 1 to times
+        CallScheduler.Schedule( sound.Play, i * offs )
     end
 end
 
 function RandomizeTest(fill)
-    Sound.Play("menuaccept.ogg")
+    Sound("menuaccept.ogg").Play()
     tiles = (not fill) ? nil : .[
         Tile("sprites/greyblock.png")
         Tile("sprites/door1.png")
@@ -252,7 +287,7 @@ function PlayerAliveCheck(who)
     if who.dead and who.GetSprite().name == "invis"
         img = ImageObject("misc/fail.png")
         img.SetPos(100,100)
-        Sound.Play("klaxonloop.ogg")
+        Sound("klaxonloop.ogg").Play()
     else
         CallScheduler.Schedule( [PlayerAliveCheck, who], 1500)
     end

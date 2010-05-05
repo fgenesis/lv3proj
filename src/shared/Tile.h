@@ -1,6 +1,7 @@
 #ifndef TILE_H
 #define TILE_H
 
+#include "SelfRefCounter.h"
 #include "Anim.h"
 
 enum TileType

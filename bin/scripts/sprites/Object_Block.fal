@@ -1,0 +1,66 @@
+class Block from Object
+
+    _sound = nil
+    
+    gfx = nil
+    fallSpeed = 256
+    
+    init
+        self._sound = Sound("blockfall.ogg")
+        tile = self.SetSprite(self.gfx)
+        if not tile
+            tile = self.SetSprite("misc/noimage32.png")
+            if not tile: raise "File not found! (" + self.gfx + ") - not even placeholder (gfx/misc/noimage32.png)"
+        end
+        self.SetBlocking(true)
+        self.SetBBox(0,0,32,32)
+        self.SetCollisionEnabled(true)
+        
+        // init physics
+        p = self.phys // note that p is a reference automatically, and all fields initialized with 0
+        p.ymaxspeed = self.fallSpeed
+        self.SetAffectedByPhysics(true)
+    end
+    
+    function OnTouch(side, who)
+        //> "Block: OnTouch(", side, ", ", who, ")"
+        
+        // someone pushing us?
+        if side && SIDE_FLAG_SOLID // indication that this call was invoked from the physics mgr, and is not a "normal" collision
+            side &= SIDE_ALL // remove the flag
+            if who.type >= OBJTYPE_PLAYER
+                if side == SIDE_LEFT // pushing from left, move to right
+                    if self.CanMoveToDir(DIRECTION_RIGHT)
+                        self.x += 1
+                        return true
+                    end
+                elif side == SIDE_RIGHT // pushing from right, move to left
+                    if self.CanMoveToDir(DIRECTION_LEFT)
+                        self.x -= 1
+                        return true
+                    end
+                end
+            end
+        end
+        
+        return who.IsBlocking(InvertSide(side))
+    end
+    
+    function OnEnter(side, who)
+        //> "Block: OnEnter(", side, ", ", who, ")"
+        select who
+            case PlayerEx
+                //if not who.CanMoveToDir(side) // this is a bit buggy... "teleport bug" again
+                    who.Kill(DEATH_CRUSH)
+                //end
+        end
+    end
+    
+    function OnTouchWall(side)
+        if side && (SIDE_BOTTOM || SIDE_TOP): if self._sound: self._sound.Play()
+    end
+
+    
+end
+
+export Block

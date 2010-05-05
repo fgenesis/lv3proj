@@ -10,6 +10,14 @@ class LayerMgr;
 class ObjectMgr;
 class PhysicsMgr;
 
+enum EngineDebugFlags
+{
+    EDBG_NONE                   = 0x00,
+    EDBG_COLLISION_MAP_OVERLAY  = 0x01,
+    EDBG_HIDE_SPRITES           = 0x02,
+    EDBG_HIDE_LAYERS            = 0x04,
+    EDBG_SHOW_BBOXES            = 0x08
+};
 
 class Engine
 {
@@ -41,6 +49,16 @@ public:
     inline static uint32 GetCurFrameTime(void) { return s_curFrameTime; }
     inline void SetSleepTime(uint32 t) { _sleeptime = t; }
     virtual void Run(void);
+    inline bool HasDebugFlag(uint32 flag) { return _debugFlags & flag; }
+    inline void SetDebugFlag(uint32 flag) { _debugFlags |= flag; }
+    inline void UnsetDebugFlag(uint32 flag) { _debugFlags &= ~flag; }
+    inline void ToggleDebugFlag(uint32 flag) // do no use multiple flags for this!
+    {
+        if(HasDebugFlag(flag))
+            UnsetDebugFlag(flag);
+        else
+            SetDebugFlag(flag);
+    }
 
     inline LayerMgr *_GetLayerMgr(void) const { return _layermgr; }
 
@@ -70,6 +88,7 @@ protected:
     Point _cameraPos; // camera / "screen anchor" position in 2D-space, top-left corner (starts with (0,0) )
     bool _quit;
     bool _paused;
+    uint32 _debugFlags;
 
 private:
     void _InitJoystick(void); // this does nothing if joystick support was not explicitly initialized in SDL_Init()

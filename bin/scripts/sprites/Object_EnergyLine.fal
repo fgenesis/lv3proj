@@ -33,8 +33,8 @@ class EnergyLine(vertical, off) from Object
         if tile and tile.name != "on": return
         if who provides Kill
             who.Kill(DEATH_ELECTRO)
-        else
-            > "EnergyLine: '", who, "' is beeing toasted, but doesn't have a Kill() method"
+        //else
+        //    > "EnergyLine: '", who, "' is beeing toasted, but doesn't have a Kill() method"
         end
     end
 

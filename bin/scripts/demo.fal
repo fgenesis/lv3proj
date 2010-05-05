@@ -1,0 +1,376 @@
+/* Solvable demo level for the first public techdemo release
+ * Uses the file levels/demolevel.txt - do not modify!
+ * In this level, only Olaf is present (others not yet implemented)
+*/
+
+
+
+// --- helper functions start ---
+
+function RemoveAllEnergyLinesIn(x,y,w,h)
+    arr = Objects.GetAllInRect(x,y,w,h)
+    for obj in arr
+        select obj
+            case EnergyLine
+                tile = obj.GetSprite()
+                if tile: tile.name = "swoff"
+                CallScheduler.Schedule( obj.remove, 2000 )
+        end
+    end
+end
+
+function PlaySoundMulti(file, times, offs)
+    sound = Sound(file)
+    if not sound: return
+    for i = 1 to times
+        CallScheduler.Schedule( sound.Play, i * offs )
+    end
+end
+
+// * dir: direction to prefer: 1 = up/down, 2 = left/right
+// * ms: amount of ms (roughly) between each block removal
+// * layer: which layer to operate on
+class ContinousBlockDestructor(dir, ms, layer)
+    store = nil
+    blocktype = nil
+    interval = ms
+    layerId = layer
+    layerRef = nil
+    prefer = dir
+    sound = nil
+    
+    init
+        self.layerRef = Screen.GetLayer(self.layerId)
+        self.store = []
+        self.sound = Sound("blockbreak.ogg")
+    end
+    
+    function CheckFit(tile)
+        return (tile and tile.filename == self.blocktype) ? tile : nil
+    end
+    
+    // calcs the the path from start position
+    function SetPos(x,y)
+        ly = self.layerRef
+        t = ly.GetTile(x,y)
+        if not t: return // store is empty, ok
+        self.blocktype = t.filename
+        pathlen = 0
+        curdir = 0 // 1=up, 2=down, 3=left, 4=right
+        up = nil
+        down = nil
+        left = nil
+        right = nil
+        next = nil
+        arrayAdd(self.store, [x,y] )
+        loop
+            up =    ( [x,y-1] in self.store ? nil : self.CheckFit(ly.GetTile(x,y-1)) )
+            down =  ( [x,y+1] in self.store ? nil : self.CheckFit(ly.GetTile(x,y+1)) )
+            left =  ( [x-1,y] in self.store ? nil : self.CheckFit(ly.GetTile(x-1,y)) )
+            right = ( [x+1,y] in self.store ? nil : self.CheckFit(ly.GetTile(x+1,y)) )
+            
+            // no way to go, seems we are done
+            if not (up or down or left or right)
+                break
+            end
+            
+            if self.prefer == 1 // up/down
+                next = (curdir == 1 ? up : down) // we are moving up
+            elif self.prefer == 2 // left/right
+                next = (curdir == 3 ? left : right) // we are moving left
+            end
+            
+            if not next
+                // when we are here, no straight way has been found
+                // when going up/down, try left/right, and vice versa
+                if curdir == 1 or curdir == 2
+                    next = (left ? left : right)
+                    if not next: next = (up ? up : down)
+                else
+                    next = (up ? up : down)
+                    if not next: next = (left ? left : right)
+                end
+                
+                if not next: raise @ "Programmer's fail! $curdir $up $down $left $right"
+            end
+            
+            // now since we are here, we selected the next tile, add coords to store
+            switch next
+                case up
+                    arrayAdd(self.store, [x,y-1] )
+                    curdir = 1
+                    y--
+                case down
+                    arrayAdd(self.store, [x,y+1] )
+                    curdir = 2
+                    y++
+                case left
+                    arrayAdd(self.store, [x-1,y] )
+                    curdir = 3
+                    x--
+                case right
+                    arrayAdd(self.store, [x+1,y] )
+                    curdir = 4
+                    x++
+            end
+            pathlen++
+        end
+        return pathlen
+    end
+    
+    function DoNext()
+        if not len(self.store): return // are we done?
+        x,y = arrayHead(self.store) // remove first element
+        self.layerRef.SetTile(x,y,nil)
+        self.sound.Play()
+        CallScheduler.Schedule(self.DoNext, self.interval)
+    end
+    
+    function Start(delay)
+        if delay
+            CallScheduler.Schedule(self.DoNext, delay)
+        else
+            self.DoNext()
+        end
+    end
+    
+end
+
+class WinObject(level) from Object
+    _lvl = nil
+    init
+        self.SetBBox(0,0,16,16)
+        self._lvl = level
+    end
+    function OnTouch(side, who)
+        select who
+            case Player
+                WinLevel(self._lvl)
+                self.remove()
+        end
+    end
+end
+
+function WinLevel(level)
+    Game.PlayMusic("lv1_amiga_intro.ogg")
+    Game.SetMusicVolume(120)
+    img = ImageObject("misc/win.png")
+    img.SetPos(100,100)
+    level.player.godmode = true
+    level.player.canDebugJump = true
+end
+
+function TurnOnGravity()
+    Physics.SetGravity(300)
+    Sound("use.ogg").Play()
+end
+
+function TurnOffGravity()
+    Physics.SetGravity(-80)
+    Sound("windup.ogg").Play()
+end
+
+
+
+// --- level main class start ---
+
+class Demolevel
+
+    player = nil
+    pcontrol = nil
+
+    function Load()
+        Game.LoadLevel("demolevel.txt")
+    end
+    
+    function Init()
+        Screen.GetLayer(2).SetCollisionEnabled(false); // layer 2 for background
+        Screen.GetLayer(3).SetCollisionEnabled(false); // layer 3: buttons and other objects behind olaf
+        Screen.GetLayer(4).SetCollisionEnabled(false); // layer 4: olaf himself
+        Screen.GetLayer(5).SetCollisionEnabled(false); // layer 5: sprite overlay
+        Screen.GetLayer(6).SetCollisionEnabled(true); // layer 6: for solid wall (fixed for ASCII maps)
+        Screen.GetLayer(7).SetCollisionEnabled(false); // layer 7 is for animated tiles (fixed for ASCII maps)
+        
+        // this is not needed for this level
+        //Screen.CreateInfoLayer()
+        
+        
+        self.CreateObjects()
+        self.SetupPlayer()
+        
+        Game.CreateCollisionMap(true)
+        
+        // setup environment
+        TurnOnGravity()
+    end
+    
+    function SetupPlayer()
+        olaf = Olaf()
+        olaf.SetLayerId(4)
+        olaf.SetPos(72,48)
+        self.pcontrol = PlayerController()
+        self.pcontrol.Add(olaf)
+        self.pcontrol.Assign(1, olaf)
+        self.pcontrol.register()
+        self.player = olaf
+    end
+    
+    function CreateObjects()
+        EN_cons = [EnergyLine, false]
+        EN_V_cons = [EnergyLine, true]
+        TBTN_cons = innerfunc()
+            static: callCount = 0
+            callCount++
+            if callCount == 1: return TimedButton(4000)
+            if callCount == 2: return TimedButton(5000)
+            if callCount == 3: return TimedButton(7000)
+            raise "oops!"
+        end
+        WIN_cons = [WinObject, self]
+        tileInfoSetup = [
+            //   filename              =>  [object to spawn,     special ID,  layerId]
+            "sprites/en.anim"          => .[EN_cons,              2           7],
+            "sprites/en_v.anim"        => .[EN_V_cons,            2           7],
+            "sprites/enx.anim"         => .[EN_cons               3           3],
+            "sprites/button.png"       => .[Button                1           3],
+            "sprites/button2.png"      => .[TBTN_cons             5           3],
+            "sprites/ironblock.png"    => .[IronBlock             0           5],
+            "sprites/greyblock.png"    => .[nil                   4           2],
+            "sprites/empty16.png"      => .[nil                   0           0],
+            "sprites/exit1.png"        => .[WIN_cons              3           3],
+            "sprites/exit2.png"        => .[nil                   3           3]
+        ]
+        brokenTile = Tile("ship/broken.png")
+        buttonCounter = 0
+        
+        maxpos = Screen.GetLayerSize() - 1
+        for ly in [Screen.GetLayer(6), Screen.GetLayer(7)] // Game.LoadLevel() puts the tiles for ascii levels to the layers 6 and 7
+            for y = 0 to maxpos
+                for x = 0 to maxpos
+                    tile = ly.GetTile(x,y)
+                    if(tile and (tile.filename in tileInfoSetup) )
+                    
+                        objcons, special, layerId = tileInfoSetup[tile.filename]
+                        
+                        if isCallable(objcons)
+                            xpos = x * 16 // each tile is 16x16 pixels...
+                            ypos = y * 16
+                            obj = objcons() // create object
+                            obj.SetPos(xpos,ypos) // set new object in place
+                            obj.SetLayerId(layerId) // put it on target layer
+                            ly.SetTile(x,y,nil) // and remove the static tile
+                            
+                            switch special
+                                case 1, 5 // button
+                                    buttonCounter++
+                                    obj.SetOnPush( [self.ButtonPressHandler, buttonCounter] )
+                                    
+                                    if special == 5
+                                        obj.SetOnReset(TurnOnGravity)
+                                    end
+                                    
+                                case 2 // blue energy line
+                                    obj.AdjustPosition()
+                                    
+                                case 3
+                                    // special 3 (green energy lines) must be moved to a different layer (overlay)
+                                    Screen.GetLayer(layerId).SetTile(x,y, tile)
+                                    obj.SetSprite(nil)
+                            end
+                            
+                        else
+                            // destroyable grey block, add broken background behind them,
+                            // so we can see remains if they get destroyed
+                            if special == 4
+                                Screen.GetLayer(layerId).SetTile(x,y,brokenTile)
+                            elif special == 3
+                                ly.SetTile(x,y,nil)
+                                Screen.GetLayer(layerId).SetTile(x,y, tile)
+                                obj.SetSprite(nil)
+                            end
+                        end
+                        
+                    end
+                end
+            end
+        end
+        
+    end // CreateObjects()
+    
+    function ButtonPressHandler(id, who, btn)
+    
+        removeAction = true
+        
+        switch id
+            case 1
+                RemoveAllEnergyLinesIn(418,38,32,32)
+                
+            case 2
+                RemoveAllEnergyLinesIn(139,34,32,48)
+                
+            case 3
+                bd = ContinousBlockDestructor(2, 150, 6)
+                bd.SetPos(36,4)
+                bd.Start(0)
+            
+            case 4, 9, 11 // timed buttons
+                removeAction = false
+                TurnOffGravity()
+                
+            case 5
+                bd = ContinousBlockDestructor(1, 300, 6)
+                bd.SetPos(14,7)
+                bd.Start(0)
+                
+                bd = ContinousBlockDestructor(2, 500, 6)
+                bd.SetPos(24,14)
+                bd.Start(0)
+                
+            case 6
+                RemoveAllEnergyLinesIn(687,113,32,32)
+               
+            case 7
+                bd = ContinousBlockDestructor(2, 500, 6)
+                bd.SetPos(50,9)
+                bd.Start(0)
+                
+            case 8
+                RemoveAllEnergyLinesIn(767,213,32,80)
+                
+            case 10
+                bd = ContinousBlockDestructor(1, 200, 6)
+                bd.SetPos(30,16)
+                bd.Start(0)
+                
+                bd = ContinousBlockDestructor(2, 500, 6)
+                bd.SetPos(30,13)
+                bd.Start(0)
+                
+        
+        end
+        if removeAction: btn.SetOnPush(nil)
+    end
+
+end
+
+function PlayerAliveCheck(who)
+    if who.dead and who.GetSprite().name == "invis"
+        img = ImageObject("misc/fail.png")
+        img.SetPos(100,100)
+        Sound("klaxonloop.ogg").Play()
+    else
+        CallScheduler.Schedule( [PlayerAliveCheck, who], 1500)
+    end
+end
+
+lvl = Demolevel()
+lvl.Load()
+lvl.Init()
+
+PlayerAliveCheck(lvl.player)
+
+Game.SetMusicVolume(80)
+Game.PlayMusic("lv1_snes_ship.ogg")
+
+
+

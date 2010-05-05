@@ -94,7 +94,7 @@ olaf1r.png:122:202:32:32 110
 
 [deathR]
 olaf1r.png:5:281:32:32 110
-olaf1r.png:44:281:32:32 110
+olaf1r.png:44:281:32:32 300
 olaf1r.png:83:281:32:32 110
 olaf1r.png:122:281:32:32 110
 olaf1r.png:161:281:32:32 110
@@ -109,13 +109,13 @@ olaf1r.png:83:517:32:32 200
 olaf1r.png:122:517:32:32 200
 
 [electroR]
-olaf1r.png:5:793:32:32 200
-olaf1r.png:44:793:32:32 200
-olaf1r.png:5:793:32:32 200
-olaf1r.png:44:793:32:32 200
-olaf1r.png:5:793:32:32 200
-olaf1r.png:44:793:32:32 200
-olaf1r.png:5:793:32:32 200
+olaf1r.png:5:793:32:32 250
+olaf1r.png:44:793:32:32 250
+olaf1r.png:5:793:32:32 250
+olaf1r.png:44:793:32:32 250
+olaf1r.png:5:793:32:32 250
+olaf1r.png:44:793:32:32 250
+olaf1r.png:5:793:32:32 250
 j invis
 
 
@@ -227,13 +227,13 @@ olaf1r.png:83:517:32:32:h 200
 olaf1r.png:122:517:32:32:h 200
 
 [electroL]
-olaf1r.png:5:793:32:32:h 200
-olaf1r.png:44:793:32:32:h 200
-olaf1r.png:5:793:32:32:h 200
-olaf1r.png:44:793:32:32:h 200
-olaf1r.png:5:793:32:32:h 200
-olaf1r.png:44:793:32:32:h 200
-olaf1r.png:5:793:32:32:h 200
+olaf1r.png:5:793:32:32:h 250
+olaf1r.png:44:793:32:32:h 250
+olaf1r.png:5:793:32:32:h 250
+olaf1r.png:44:793:32:32:h 250
+olaf1r.png:5:793:32:32:h 250
+olaf1r.png:44:793:32:32:h 250
+olaf1r.png:5:793:32:32:h 250
 j invis
 
 ###### GENERIC #####

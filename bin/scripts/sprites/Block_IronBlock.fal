@@ -1,0 +1,7 @@
+class IronBlock from Block
+    
+    gfx = "sprites/ironblock.png"
+    
+end
+
+export IronBlock

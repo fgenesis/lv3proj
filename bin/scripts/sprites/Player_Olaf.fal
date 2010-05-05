@@ -22,7 +22,23 @@ class Olaf from PlayerEx
     function ToggleShield()
         self.shieldUp = not self.shieldUp
         self.idle = false
-        self.phys.ymaxspeed = (self.shieldUp ? self.glideSpeed : self.fallSpeed)
+        if self.shieldUp
+            self.phys.ymaxspeed = self.glideSpeed
+            self.h = 32
+            self.y -= 4
+        else
+            self.phys.ymaxspeed = self.fallSpeed
+            self.h = 28 // as above
+            self.y += 4
+        end
+        self.SetGfxOffs(0)
+    end
+    
+    function SetGfxOffs(i)
+        xo, yo = self.gfxOffs[i]
+        if self.h == 32: yo = 0
+        self.gfxOffsX = xo
+        self.gfxOffsY = yo
     end
     
     function IsFallingDeep(): return (not self.shieldUp) and (self.phys.yspeed >= self.fallSpeed)
@@ -48,6 +64,18 @@ class Olaf from PlayerEx
         else
             sp.name = "fall" + d
         end
+    end
+    
+    function OnTouch(side, who)
+        // stop anything that comes from above in case we have the shield up
+        //> "Olaf::OnTouch(", side, ", ", who, ")"
+        if side == SIDE_TOP and self.shieldUp: return true
+        return self.PlayerEx.OnTouch(side, who)
+    end
+    
+    function IsBlocking(side)
+        if side == SIDE_TOP and self.shieldUp: return true
+        return self.PlayerEx.IsBlocking(side)
     end
     
 

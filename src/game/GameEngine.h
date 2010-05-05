@@ -38,12 +38,13 @@ protected:
     uint32 _playerCount;
 
     // TEMP: for debugging/testing
+#ifdef _DEBUG
     ActiveRect mouseRect;
-    ActiveRect bigRect;
     ActiveRect collRect;
     bool collRectGood;
     uint8 mouseCollision; // 0: floating; 1: standing; 2: collision
     uint8 checkDirection;
+#endif
 
 };
 

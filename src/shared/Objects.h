@@ -53,7 +53,8 @@ protected:
 };
 
 
-// A rectangle with object properties and falon bindings, the base of everything.
+// A rectangle with object properties and falcon bindings, the base of everything.
+// can be used to detect collision with other objects, but not to block their movement.
 class ActiveRect : public BaseObject, public BaseRect
 {
 public:
@@ -68,7 +69,6 @@ public:
     virtual void OnLeave(uint8 side, ActiveRect *who);
     virtual bool OnTouch(uint8 side, ActiveRect *who);
 
-    uint8 CollisionWith(BaseRect *other); // returns side where the collision occurred
     void AlignToSideOf(ActiveRect *other, uint8 side);
 
     inline bool HasMoved(void) { return _moved; }
@@ -89,7 +89,7 @@ protected:
 };
 
 
-// a normal "Sprite" object
+// a normal "Sprite" object. can block other objects.
 class Object : public ActiveRect
 {
 public:
@@ -97,6 +97,7 @@ public:
     virtual void Init(void);
 
     virtual void OnUpdate(uint32 ms);
+    virtual void OnTouchWall(uint8 side);
     virtual void SetBBox(float x, float y, uint32 w, uint32 h);
     virtual void SetPos(float x, float y);
 
@@ -107,11 +108,13 @@ public:
     inline void SetLayer(uint32 newLayer) { _layerId = newLayer; } // will be updated in next cycle, before rendering
     inline uint32 GetLayer(void) { return _layerId; }
     inline uint32 GetOldLayer(void) { return _oldLayerId; }
+    inline void SetBlocking(bool b) { _blocking = true; }
+    inline bool IsBlocking(void) { return _blocking; }
     void SetSprite(BasicTile *tile);
 
     inline BasicTile *GetSprite(void) { return _gfx; }
 
-    bool CanFallDown(void);
+    bool CanFallDown(void); // TODO: obsolete
 
 
 
@@ -122,11 +125,17 @@ public:
     }
 
     PhysProps phys;
+    struct
+    {
+        int32 x,y;
+        uint32 w,h;
+    } _oldLayerRect; // this is used to keep track of the previous positions of the object. necessary to update the collision map of the LayerMgr.
     int32 gfxoffsx, gfxoffsy; // especially NPC objects can have a larger sprite then their bounding box. these are the relative offsets for the sprite.
 
 protected:
     void _GenericInit(void);
     bool _physicsAffected;
+    bool _blocking; // true if this object affects the LayerMgr's CollisionMap
     uint32 _layerId; // layer ID where this sprite is drawn on
     uint32 _oldLayerId; // prev. layer id, if theres a difference between both, ObjectMgr::Update() has to correct the layer set assignment
     BasicTile *_gfx;

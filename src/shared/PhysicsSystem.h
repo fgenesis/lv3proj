@@ -3,6 +3,7 @@
 
 class LayerMgr;
 class Object;
+class ObjectMgr;
 
 
 // an object can have certain physical properties.
@@ -24,6 +25,9 @@ struct PhysProps
     float dbounce; // ... must not be negative.
     float lbounce; // ... directions are separate for up, down, left, right
     float rbounce;
+
+    // internal
+    bool _impactPending;
 };
 
 // and the environment can have certain physical properties too
@@ -41,9 +45,11 @@ public:
     EnvPhysProps envPhys;
     
     inline void SetLayerMgr(LayerMgr *layers) { _layerMgr = layers; }
+    inline void SetObjMgr(ObjectMgr *mgr) { _objMgr = mgr; }
 private:
 
     LayerMgr *_layerMgr;
+    ObjectMgr *_objMgr;
 };
 
 

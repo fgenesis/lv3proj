@@ -1,5 +1,6 @@
 #include "common.h"
 #include "array2d.h"
+#include "ResourceMgr.h"
 #include "AsciiLevelParser.h"
 
 
@@ -13,7 +14,7 @@ AsciiLevel *ParseAsciiLevel(char *strbuf)
 
     std::vector<std::string>::iterator lin = lines.begin();
 
-    // first, parse tile dat
+    // first, parse tile data
 
     for( ; lin != lines.end(); lin++)
     {
@@ -79,24 +80,16 @@ AsciiLevel *ParseAsciiLevel(char *strbuf)
 AsciiLevel *LoadAsciiLevel(char *fn)
 {
     logdebug("LoadAsciiLevel: '%s'", fn);
-    FILE *fh = fopen(fn, "r");
-    if(!fh)
+    std::string filename("levels/");
+    filename += fn;
+    memblock *mb = resMgr.LoadTextFile((char*)filename.c_str());
+    if(!mb)
     {
         logerror("LoadAsciiLevel: Failed to open '%s'", fn);
         return NULL;
     }
 
-    fseek(fh, 0, SEEK_END);
-    uint32 size = ftell(fh);
-    rewind(fh);
-
-    char *buf = new char[size];
-    uint32 bytes = fread(buf, 1, size, fh);
-    ASSERT(bytes <= size);
-    buf[bytes] = 0;
-    fclose(fh);
-
-    AsciiLevel *level = ParseAsciiLevel(buf);
-    delete [] buf;
+    AsciiLevel *level = ParseAsciiLevel((char*)mb->ptr);
+    resMgr.Drop(mb);
     return level;
 }

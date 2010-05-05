@@ -288,6 +288,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\shared\SelfRefCounter.h"
+				>
+			</File>
+			<File
 				RelativePath=".\shared\SharedDefines.h"
 				>
 			</File>

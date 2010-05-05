@@ -13,7 +13,8 @@ volatile uint32 Engine::s_curFrameTime; // game time
 volatile uint32 Engine::s_lastFrameTime; // last frame's clock()
 
 Engine::Engine()
-: _screen(NULL), _fps(0), _sleeptime(0), _quit(false), _framecounter(0), _paused(false)
+: _screen(NULL), _fps(0), _sleeptime(0), _quit(false), _framecounter(0), _paused(false),
+_debugFlags(EDBG_NONE)
 {
     log("Game Engine start.");
     _layermgr = new LayerMgr(this);
@@ -23,6 +24,7 @@ Engine::Engine()
     physmgr = new PhysicsMgr;
     physmgr->SetLayerMgr(_layermgr);
     objmgr = new ObjectMgr(this);
+    physmgr->SetObjMgr(objmgr);
     objmgr->SetLayerMgr(_layermgr);
     objmgr->SetPhysicsMgr(physmgr);
     _InitJoystick();
@@ -33,6 +35,7 @@ Engine::~Engine()
     delete objmgr;
     delete physmgr;
     delete _layermgr;
+    sndCore.Destroy();
     resMgr.DropUnused(); // at this point, all resources should have a refcount of 0, so this removes all.
     if(_screen)
         SDL_FreeSurface(_screen);
@@ -220,25 +223,42 @@ void Engine::OnJoystickEvent(uint32 type, uint32 device, uint32 id, int32 val)
 
 void Engine::OnKeyDown(SDLKey key, SDLMod mod)
 {
-    if(key == SDLK_F4 && (mod & KMOD_LALT))
-        _quit = true;
-    if(key == SDLK_RETURN && (mod & KMOD_LALT))
+    if(mod & KMOD_LALT)
     {
-        uint32 x = GetResX();
-        uint32 y = GetResY();
-        uint8 bpp = GetBPP();
-        uint32 flags = _screen->flags | _screenFlags;
 
-        SDL_FreeSurface(_screen);
+        if(key == SDLK_F4)
+            _quit = true;
+        if(key == SDLK_RETURN)
+        {
+            uint32 x = GetResX();
+            uint32 y = GetResY();
+            uint8 bpp = GetBPP();
+            uint32 flags = _screen->flags | _screenFlags;
 
-        // toggle between fullscreen, preserving other flags
-        if(flags & SDL_FULLSCREEN)
-            flags &= ~SDL_FULLSCREEN; // remove fullscreen flag
-        else
-            flags |= SDL_FULLSCREEN; // add fullscreen flag
+            SDL_FreeSurface(_screen);
 
-        InitScreen(x, y, bpp, flags);
+            // toggle between fullscreen, preserving other flags
+            if(flags & SDL_FULLSCREEN)
+                flags &= ~SDL_FULLSCREEN; // remove fullscreen flag
+            else
+                flags |= SDL_FULLSCREEN; // add fullscreen flag
+
+            InitScreen(x, y, bpp, flags);
+        }
     }
+    if(mod & KMOD_CTRL)
+    {
+        if(key == SDLK_F1)
+            ToggleDebugFlag(EDBG_COLLISION_MAP_OVERLAY);
+        else if(key == SDLK_F2)
+            ToggleDebugFlag(EDBG_HIDE_SPRITES);
+        else if(key == SDLK_F3)
+            ToggleDebugFlag(EDBG_HIDE_LAYERS);
+        else if(key == SDLK_F4)
+            ToggleDebugFlag(EDBG_SHOW_BBOXES);
+    }
+
+
     if(key == SDLK_PAUSE)
     {
         _paused = !_paused;

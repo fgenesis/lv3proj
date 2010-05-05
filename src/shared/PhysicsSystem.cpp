@@ -2,6 +2,7 @@
 #include "SharedDefines.h"
 #include "Objects.h"
 #include "LayerMgr.h"
+#include "ObjectMgr.h"
 #include "PhysicsSystem.h"
 
 
@@ -17,6 +18,8 @@ void PhysicsMgr::UpdatePhysics(Object *obj, uint32 ms)
     bool neg;
     int32 begin_x = int32(obj->x);
     int32 begin_y = int32(obj->y);
+    ObjectWithSideSet solidCollidedObjs;
+    bool selectNearby = obj->IsCollisionEnabled() && (obj->GetType() >= OBJTYPE_PLAYER || obj->IsBlocking());
 
 
     float yaccelTotal = envPhys.gravity + phys.yaccel;
@@ -90,6 +93,17 @@ void PhysicsMgr::UpdatePhysics(Object *obj, uint32 ms)
             if(!_layerMgr->CanMoveToDirection(obj, DIRECTION_LEFT))
             {
                 phys.xspeed = 0.0f;
+
+                // we can not move in that direction, check if there is an object we would have pushed otherwise
+                if(selectNearby)
+                {
+                    BaseRect area;
+                    area.x = newx;
+                    area.y = obj->y;
+                    area.w = 1;
+                    area.h = obj->h - 1;
+                    _objMgr->GetAllObjectsIn(area, solidCollidedObjs, SIDE_LEFT);
+                }
             }
         }
         else// if(newx > obj->x)
@@ -98,6 +112,17 @@ void PhysicsMgr::UpdatePhysics(Object *obj, uint32 ms)
             if(!_layerMgr->CanMoveToDirection(obj, DIRECTION_RIGHT))
             {
                 phys.xspeed = 0.0f;
+
+                // we can not move in that direction, check if there is an object we would have pushed otherwise
+                if(selectNearby)
+                {
+                    BaseRect area;
+                    area.x = newx + obj->w;
+                    area.y = obj->y;
+                    area.w = 1;
+                    area.h = obj->h - 1;
+                    _objMgr->GetAllObjectsIn(area, solidCollidedObjs, SIDE_RIGHT);
+                }
             }
         }
     }
@@ -111,6 +136,17 @@ void PhysicsMgr::UpdatePhysics(Object *obj, uint32 ms)
             if(!_layerMgr->CanMoveToDirection(obj, DIRECTION_UP))
             {
                 phys.yspeed = 0.0f;
+
+                // we can not move in that direction, check if there is an object we would have pushed otherwise
+                if(selectNearby)
+                {
+                    BaseRect area;
+                    area.x = obj->x;
+                    area.y = newy;
+                    area.w = obj->w;
+                    area.h = 1;
+                    _objMgr->GetAllObjectsIn(area, solidCollidedObjs, SIDE_TOP);
+                }
             }
         }
         else// if(newy > obj->y)
@@ -119,6 +155,34 @@ void PhysicsMgr::UpdatePhysics(Object *obj, uint32 ms)
             if(!_layerMgr->CanMoveToDirection(obj, DIRECTION_DOWN))
             {
                 phys.yspeed = 0.0f;
+
+                // we can not move in that direction, check if there is an object we would have pushed otherwise
+                if(selectNearby)
+                {
+                    BaseRect area;
+                    area.x = obj->x;
+                    area.y = newy + obj->h;
+                    area.w = obj->w - 1;
+                    area.h = 1;
+                    _objMgr->GetAllObjectsIn(area, solidCollidedObjs, SIDE_BOTTOM);
+                }
+            }
+        }
+    }
+
+    if(solidCollidedObjs.size())
+    {
+        for(ObjectWithSideSet::iterator it = solidCollidedObjs.begin(); it != solidCollidedObjs.end(); it++)
+        {
+            if(obj->GetType() >= OBJTYPE_OBJECT)
+            {
+                Object *target = (Object*)it->first;
+                if(target == obj)
+                    continue;
+                if(target->IsBlocking() && target->IsCollisionEnabled())
+                {
+                    target->OnTouch(InvertSide(it->second) | SIDE_FLAG_SOLID, obj); // TODO: return value? call for other object as well?? !!
+                }
             }
         }
     }
@@ -159,6 +223,9 @@ void PhysicsMgr::UpdatePhysics(Object *obj, uint32 ms)
 
         obj->x = float(np.x);
         obj->y = float(np.y);
+
+        if(int32(oldx) != np.x || int32(oldy) != np.y)
+            obj->OnTouchWall(direction); // if we are going right, the wall hits us right...
 
         // now check where we can move from this position
         if(dirx && !_layerMgr->CanMoveToDirection(obj, dirx))

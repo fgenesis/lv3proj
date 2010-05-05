@@ -4,17 +4,29 @@
 
 // fast 2D array avoiding multiplication to access array indexes
 // the size has to be a power of 2, if not, it will automatically align
-template <class T> class array2d
+template <class T, bool OOBCHECK = false> class array2d
 {
 public:
 
-    array2d() : _shift(0), _size(0), data(NULL) {}
+    array2d() : _shift(0), _size(0), data(NULL) { ASSERT(!OOBCHECK); } // when checking for bounds, we NEED a default value to return
+    array2d(T defaultval): _shift(0), _size(0), data(NULL), _defaultval(defaultval) {}
+    ~array2d() { this->free(); }
 
     inline void fill(T val)
     {
         uint32 s = size2d();
         for(uint32 i = 0; i < s; ++i)
             data[i] = val;
+    }
+
+    inline void free(void)
+    {
+        if(data)
+        {
+            delete [] data;
+            data = NULL;
+            _shift = _size = 0;
+        }
     }
 
     inline void resize(uint32 dim, T fillval, bool force = false)
@@ -51,7 +63,7 @@ public:
             for(uint32 x = 0; x < oldsize; ++x)
                 for(uint32 y = 0; y < oldsize; ++y)
                     data[(y << req) | x] = olddata[(y << _shift) | x];
-            delete olddata;
+            delete [] olddata;
         }
 
         _shift = req;
@@ -59,6 +71,12 @@ public:
 
     inline T& operator () (uint32 x, uint32 y)
     {
+        // trust the compiler to optimize this out
+        if(OOBCHECK)
+        {
+            if(x >= _size || y >= _size)
+                return _defaultval;
+        }
         return data[(y << _shift) | x];
     }
 
@@ -95,6 +113,7 @@ protected:
     uint32 _size;
     uint32 _shift;
 
+    T _defaultval;
     T *data;
 
 };

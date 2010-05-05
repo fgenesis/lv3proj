@@ -2,6 +2,7 @@ class ItemObject(cons) from Object
 
     gfx = nil
     _cons = nil
+    _sound = nil
     
     init
         if not isCallable(cons): raise "ItemObject: must be passed a callable function or class constructor"
@@ -12,13 +13,14 @@ class ItemObject(cons) from Object
             tile = self.SetSprite(self.gfx)
             if tile and tile.type == TILETYPE_ANIMATED: tile.name = "default"
         end
+        self._sound = Sound("collect.ogg")
     end
     
     function OnTouch(side, who)
         if who.type != OBJTYPE_PLAYER: return
         //if who.AddItem(self._cons()) // NYI
-            Sound.Play("collect.ogg")
             > "ItemObject::OnTouch(): '", self._cons, "' to '", who, "'"
+            if self._sound: self._sound.Play()
             self.remove()
         //end
     end

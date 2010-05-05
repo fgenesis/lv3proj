@@ -11,6 +11,7 @@ class Engine;
 struct SDL_Surface;
 struct AsciiLevel;
 class ActiveRect;
+class Object;
 
 enum LayerDepth
 {
@@ -20,7 +21,17 @@ enum LayerDepth
     LAYER_MAX = 32 // do not use
 };
 
+enum LayerCollisionFlag
+{
+    LCF_NONE = 0x00,
+    LCF_WALL = 0x01,
+    LCF_BLOCKING_OBJECT = 0x02,
+
+    LCF_ALL = 0xFF
+};
+
 typedef array2d<uint16> TileInfoLayer;
+typedef array2d<uint8, true> CollisionMap;
 
 
 class LayerMgr
@@ -51,24 +62,26 @@ public:
     inline uint16 GetTileInfo(uint32 x, uint32 y) { return _infoLayer(x,y); }
     inline void SetTileInfo(uint32 x, uint32 y, uint16 info) { _infoLayer(x,y) = info; }
 
-    inline bool HasCollisionMap(void) { return _collisionMap; }
+    inline bool HasCollisionMap(void) { return _collisionMap.size1d(); }
     void CreateCollisionMap(void); // create new collision map (and delete old if exists)
     void UpdateCollisionMap(uint32 x, uint32 y); // recalculates the collision map at a specific tile
     void UpdateCollisionMap(void); // recalculates the *whole* collision map - use rarely!
-    bool CollisionWith(BaseRect *rect, int32 skip = 4); // check if a rectangle overlaps with at least one solid pixel in our collision map.
+    void UpdateCollisionMap(Object *obj); // uses LCF_BLOCKING_OBJECT to mark the collision map
+    void RemoveFromCollisionMap(Object *obj);
+    bool CollisionWith(BaseRect *rect, int32 skip = 4, uint8 flags = LCF_ALL); // check if a rectangle overlaps with at least one solid pixel in our collision map.
     // when calling this function, we assume there is NO collision yet (check new position with CollisionWith() before!)
     Point GetClosestNonCollidingPoint(BaseRect *rect, uint8 direction);
     uint32 CanMoveToDirection(BaseRect *rect, uint8 direction, uint32 pixels = 1); // returns the amount of pixels until the object hits the wall, up to [pixels]
     uint32 CanMoveToDirection(BaseRect *rect, MovementDirectionInfo& mdi, uint32 pixels = 1);
     bool CanFallDown(Point anchor, uint32 arealen);
-    bool LoadAsciiLevel(AsciiLevel *level);
+    void LoadAsciiLevel(AsciiLevel *level);
 
 
 private:
     Engine *engine;
     TileLayer *_layers[LAYER_MAX];
     TileInfoLayer _infoLayer;
-    BitSet2d *_collisionMap;
+    CollisionMap _collisionMap;
     uint32 _maxdim; // max dimension for all created layers
 
 };

@@ -7,14 +7,6 @@
 Falcon::Module *FalconGameModule_create(void);
 void FalconGameModule_SetEnginePtr(Engine *e);
 
-enum CoreEventTypes
-{
-    EVENT_TYPE_KEYBOARD = 0,
-    EVENT_TYPE_JOYSTICK_BUTTON = 1,
-    EVENT_TYPE_JOYSTICK_AXIS = 2,
-    EVENT_TYPE_JOYSTICK_HAT = 3
-};
-
 
 
 class GameError: public Falcon::Error

@@ -42,10 +42,10 @@ void ActiveRect::MoveRelative(float xr, float yr)
     HasMoved();
 }
 
-// returns the side on which we hit 'other'
+// returns our side on which 'other' collided with us
 // (side of 'other')
 // TODO: optimize this function! it should be possible to do this a lot simpler...
-uint8 ActiveRect::CollisionWith(BaseRect *other)
+uint8 BaseRect::CollisionWith(BaseRect *other)
 {
     int32 ix = int32(x);
     int32 iy = int32(y);
@@ -75,7 +75,7 @@ uint8 ActiveRect::CollisionWith(BaseRect *other)
     int32 width = xend - xstart;
     int32 height = yend - ystart;
 
-    // TODO: if 'other' is completely contained in 'this', this test is always returns SIDE_LEFT
+    // TODO: if 'other' is completely contained in 'this', this test is always returns SIDE_RIGHT
     //       just noting this here in case this has to be corrected someday, but for now it seems that its not necessary
 
     // check if 'this' is completely contained in 'other'
@@ -91,32 +91,32 @@ uint8 ActiveRect::CollisionWith(BaseRect *other)
         if(ycd >= xcd) // height diff is greater than width diff, so we came from top or bottom
         {
             if(yc < other_yc)
-                return SIDE_TOP;
-            else
                 return SIDE_BOTTOM;
+            else
+                return SIDE_TOP;
         }
         else // width diff is greater, so we came from left or right
         {
             if(xc < other_xc)
-                return SIDE_LEFT;
-            else
                 return SIDE_RIGHT;
+            else
+                return SIDE_LEFT;
         }
     }
 
     if(height >= width) // must be left or right
     {
         if(xstart == oix)
-            return SIDE_LEFT;
-        else
             return SIDE_RIGHT;
+        else
+            return SIDE_LEFT;
     }
     else // must be top or bottom
     {
         if(ystart == oiy)
-            return SIDE_TOP;
-        else
             return SIDE_BOTTOM;
+        else
+            return SIDE_TOP;
     }
 
     NOT_REACHED_LINE;
@@ -124,8 +124,40 @@ uint8 ActiveRect::CollisionWith(BaseRect *other)
 
 void ActiveRect::AlignToSideOf(ActiveRect *other, uint8 side)
 {
-    SetMoved(true);
-    // TODO: ...
+    DEBUG(ASSERT(side != SIDE_NONE));
+
+    int32 oldix = uint32(this->x);
+    int32 oldiy = uint32(this->y);
+
+    if(GetId() >= OBJTYPE_OBJECT)
+    {
+        Object *self = (Object*)this;
+        // stop movement if required
+        if(side & (SIDE_TOP | SIDE_BOTTOM))
+            self->phys.yspeed = 0.0f;
+        if(side & (SIDE_LEFT | SIDE_RIGHT))
+            self->phys.xspeed = 0.0f;
+    }
+
+    switch(side)
+    {
+        case SIDE_TOP:
+            this->y = other->y - this->h;
+            break;
+
+        case SIDE_BOTTOM:
+            this->y = other->y + other->h;
+            break;
+
+        case SIDE_LEFT:
+            this->x = other->x - this->w;
+
+        case SIDE_RIGHT:
+            this->x = other->x + other->w;
+    }
+
+    if(oldix != int32(this->x) || oldiy != int32(this->y))
+        SetMoved(true);
 }
 
 uint32 ActiveRect::CanMoveToDirection(uint8 d, uint32 pixels /* = 1 */)
@@ -181,6 +213,11 @@ void Object::_GenericInit(void)
     _moved = true; // do collision detection on spawn
     _collisionEnabled = true; // do really do collision detetion
     gfxoffsx = gfxoffsy = 0;
+    _oldLayerRect.x = 0;
+    _oldLayerRect.y = 0;
+    _oldLayerRect.w = 0;
+    _oldLayerRect.h = 0;
+    _blocking = false;
 }
 
 void Object::SetBBox(float x_, float y_, uint32 w_, uint32 h_)

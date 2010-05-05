@@ -20,9 +20,9 @@ public:
     uint32 w, h;
 
     // Method to calculate the second X corner
-    inline int x2(void) const { return int32r(x) + w; }
+    inline int x2(void) const { return int32(x) + w; }
     // Method to calculate the second Y corner
-    inline int y2(void) const { return int32r(y) + h; }
+    inline int y2(void) const { return int32(y) + h; }
 
     // Method to calculate the second X corner (float)
     inline float x2f(void) const { return x + float(w); }
@@ -58,6 +58,20 @@ public:
         this->x += xr;
         this->y += yr;
     }
+
+    inline bool operator==(BaseRect& other)
+    {
+        return int32(x) == int32(other.x) && int32(y) == int32(other.y) && w == other.w && h == other.h;
+    }
+
+    inline bool operator!=(BaseRect& other)
+    {
+        return int32(x) != int32(other.x) || int32(y) != int32(other.y) || w != other.w || h != other.h;
+    }
+
+    // in Objects.cpp
+    uint8 CollisionWith(BaseRect *other); // returns side where the collision occurred
+
 };
 
 struct MovementDirectionInfo
