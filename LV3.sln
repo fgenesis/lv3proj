@@ -48,6 +48,11 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "falcon_ext", "src\falcon_ex
 		{91245151-4CC8-481A-AC7B-CFE1CB864F65} = {91245151-4CC8-481A-AC7B-CFE1CB864F65}
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "lvpak", "src\lvpak.vcproj", "{6DC3CA93-C38F-46F8-BC96-FACA963C28E6}"
+	ProjectSection(ProjectDependencies) = postProject
+		{4CA929A3-1073-4120-AE68-BD7E111F82A3} = {4CA929A3-1073-4120-AE68-BD7E111F82A3}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -90,6 +95,10 @@ Global
 		{97682C4B-0762-47C9-ACCC-83EA74FA6B71}.Debug|Win32.Build.0 = Debug|Win32
 		{97682C4B-0762-47C9-ACCC-83EA74FA6B71}.Release|Win32.ActiveCfg = Release|Win32
 		{97682C4B-0762-47C9-ACCC-83EA74FA6B71}.Release|Win32.Build.0 = Release|Win32
+		{6DC3CA93-C38F-46F8-BC96-FACA963C28E6}.Debug|Win32.ActiveCfg = Debug|Win32
+		{6DC3CA93-C38F-46F8-BC96-FACA963C28E6}.Debug|Win32.Build.0 = Debug|Win32
+		{6DC3CA93-C38F-46F8-BC96-FACA963C28E6}.Release|Win32.ActiveCfg = Release|Win32
+		{6DC3CA93-C38F-46F8-BC96-FACA963C28E6}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

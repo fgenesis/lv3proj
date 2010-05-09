@@ -136,4 +136,17 @@
 #endif //COMPILER == COMPILER_GNU
 
 
+// taken from ACE
+#if defined (i386) || defined (__i386__) || defined (_M_IX86) || \
+    defined (vax) || defined (__alpha) || defined (__LITTLE_ENDIAN__) || \
+    defined (ARM) || defined (_M_IA64) || defined (__ia64__) || \
+    defined (_M_AMD64) || defined (__amd64)
+    // We know these are little endian.
+#   define LITTLE_ENDIAN 1
+#else
+    // Otherwise, we assume big endian.
+#   define BIG_ENDIAN 1
+#endif
+
+
 #endif

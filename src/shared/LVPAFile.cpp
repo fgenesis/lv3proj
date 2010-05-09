@@ -1,0 +1,582 @@
+#include "common.h"
+#include "Crc32.h"
+#include "LZMACompressor.h"
+#include "LVPAFile.h"
+
+const char* gMagic = "LVPA";
+const uint32 gVersion = 0;
+
+
+ByteBuffer &operator >> (ByteBuffer& bb, LVPAMasterHeader& hdr)
+{
+    bb >> hdr.version;
+    bb >> hdr.flags;
+    bb >> hdr.hdrEntries;
+    bb >> hdr.packedHdrSize;
+    bb >> hdr.realHdrSize;
+    bb >> hdr.hdrOffset;
+    bb >> hdr.hdrCrc;
+    bb >> hdr.packProps;
+    bb >> hdr.dataOffs;
+    return bb;
+}
+
+ByteBuffer &operator << (ByteBuffer& bb, LVPAMasterHeader& hdr)
+{
+    bb << hdr.version;
+    bb << hdr.flags;
+    bb << hdr.hdrEntries;
+    bb << hdr.packedHdrSize;
+    bb << hdr.realHdrSize;
+    bb << hdr.hdrOffset;
+    bb << hdr.hdrCrc;
+    bb << hdr.packProps;
+    bb << hdr.dataOffs;
+    return bb;
+}
+
+ByteBuffer &operator >> (ByteBuffer& bb, LVPAFileHeader& h)
+{
+    bb >> h.filename;
+    bb >> h.packedSize;
+    bb >> h.realSize;
+    bb >> h.crc;
+    bb >> h.flags;
+    bb >> h.props;
+    return bb;
+}
+
+ByteBuffer &operator << (ByteBuffer& bb, LVPAFileHeader& h)
+{
+    bb << h.filename;
+    bb << h.packedSize;
+    bb << h.realSize;
+    bb << h.crc;
+    bb << h.flags;
+    bb << h.props;
+    return bb;
+}
+
+
+LVPAFile::LVPAFile()
+: _handle(NULL)
+{
+}
+
+LVPAFile::~LVPAFile()
+{
+    Clear();
+    _CloseFile();
+}
+
+void LVPAFile::Clear(void)
+{
+    for(uint32 i = 0; i < _headers.size(); ++i)
+    {
+        if(_headers[i].data.ptr)
+        {
+            delete [] _headers[i].data.ptr;
+            _headers[i].data.ptr = NULL;
+            _headers[i].data.size = 0;
+        }
+    }
+    _headers.clear();
+    _indexes.clear();
+}
+
+bool LVPAFile::_OpenFile(void)
+{
+    if(!_handle)
+        _handle = fopen(_ownName.c_str(), "rb");
+
+    return _handle != NULL;
+}
+
+void LVPAFile::_CloseFile(void)
+{
+    if(_handle)
+    {
+        fclose(_handle);
+        _handle = NULL;
+    }
+}
+
+void LVPAFile::Add(char *fn, memblock mb, LVPAFileFlags flags)
+{
+    LVPAIndexMap::iterator it = _indexes.find(fn);
+    if(it == _indexes.end())
+    {
+        LVPAFileHeader hdr;
+        hdr.data = mb;
+        hdr.flags = flags;
+        hdr.filename = fn;
+        hdr.good = true;
+        _headers.push_back(hdr);
+        _indexes[fn] = _headers.size() - 1; // save the index of the hdr we just added
+    }
+    else
+    {
+        LVPAFileHeader& hdrRef = _headers[it->second];
+        if(hdrRef.data.ptr && hdrRef.data.ptr != mb.ptr)
+            delete [] hdrRef.data.ptr;
+        hdrRef.data = mb;
+        hdrRef.flags = flags;
+        hdrRef.good = true;
+    }
+}
+
+memblock LVPAFile::Remove(char *fn)
+{
+    LVPAIndexMap::iterator it = _indexes.find(fn);
+    if(it == _indexes.end())
+        return memblock();
+
+    uint32 idx = it->second;
+    memblock mb = _headers[idx].data; // copy ptr
+    _headers[idx].data = memblock(); // overwrite with empty
+    _indexes.erase(it); // remove entry
+
+    return mb;
+}
+
+bool LVPAFile::Delete(char *fn)
+{
+    memblock mb = Remove(fn);
+    if(mb.ptr)
+    {
+        delete [] mb.ptr;
+        return true;
+    }
+    return false;
+}
+
+memblock LVPAFile::Get(char *fn)
+{
+    LVPAIndexMap::iterator it = _indexes.find(fn);
+    if(it == _indexes.end())
+        return memblock();
+
+    LVPAFileHeader& hdrRef = _headers[it->second];
+    if(hdrRef.data.ptr) // already loaded, good
+        return hdrRef.data;
+
+    // seems we don't have the data yet, load from disk
+    return _LoadFile(hdrRef);
+}
+
+void LVPAFile::Free(char *fn)
+{
+    LVPAIndexMap::iterator it = _indexes.find(fn);
+    if(it == _indexes.end())
+        return;
+
+    LVPAFileHeader& hdrRef = _headers[it->second];
+    if(hdrRef.data.ptr)
+    {
+        delete [] hdrRef.data.ptr;
+        hdrRef.data.ptr = NULL;
+    }
+    hdrRef.data.size = 0;
+}
+
+bool LVPAFile::LoadFrom(const char *fn, LVPALoadFlags loadFlags)
+{
+    _ownName = fn;
+
+    if(!_OpenFile())
+        return false;
+
+    Clear();
+
+    uint32 bytes;
+    char magic[4];
+
+    bytes = fread(magic, 1, 4, _handle);
+    if(bytes != 4 || memcmp(magic, gMagic, 4))
+    {
+        _CloseFile();
+        return false;
+    }
+
+    LZMACompressor buf;
+    LVPAMasterHeader masterHdr;
+
+    buf.resize(sizeof(LVPAMasterHeader));
+    bytes = fread((void*)buf.contents(), 1, sizeof(LVPAMasterHeader), _handle);
+    buf >> masterHdr; // not reading it directly via fread() is intentional
+
+    DEBUG(logdebug("master data offset: %u", masterHdr.dataOffs));
+    DEBUG(logdebug("master header offset: %u", masterHdr.hdrOffset));
+
+    // ... space for additional data/headers here...
+
+    // seek to the file header's offset if we are not yet there
+    if(ftell(_handle) != masterHdr.hdrOffset)
+        fseek(_handle, masterHdr.hdrOffset, SEEK_SET);
+
+    // read the (packed) file headers
+    buf.resize(masterHdr.packedHdrSize);
+    bytes = fread((void*)buf.contents(), 1, masterHdr.packedHdrSize, _handle);
+    if(bytes != masterHdr.packedHdrSize)
+    {
+        logerror("Can't read headers, file is corrupt");
+        _CloseFile();
+        return false;
+    }
+    
+    // decompress the headers if packed
+    if(masterHdr.flags & LVPAHDR_PACKED)
+    {
+        buf.Compressed(true); // tell the buf that it is compressed so it will allow decompression
+        buf.RealSize(masterHdr.realHdrSize);
+        buf.Decompress(masterHdr.packProps);
+    }
+
+    // check CRC
+    {
+        CRC32 crc;
+        crc.Update((uint8*)buf.contents(), buf.size());
+        crc.Finalize();
+        if(crc.Result() != masterHdr.hdrCrc)
+            return false;
+    }
+
+    LVPAFileHeader solidBlockHdr;
+    solidBlockHdr.realSize = 0; // we use this as indicator if it is used
+
+    // read the headers
+    _headers.resize(masterHdr.hdrEntries);
+    uint32 dataStartOffs = masterHdr.dataOffs;
+    uint32 solidOffs = 0;
+    for(uint32 i = 0; i < masterHdr.hdrEntries; )
+    {
+        LVPAFileHeader &h = _headers[i];
+        buf >> h;
+
+        h.good = true;
+
+        if(h.flags & LVPAFLAG_SOLID)
+        {
+            h.offset = solidOffs;
+            solidOffs += h.packedSize;
+            DEBUG(logdebug("(S) '%s' offset: %u", h.filename.c_str(), h.offset));
+        }
+        else
+        {
+            h.offset = dataStartOffs;
+            dataStartOffs += h.packedSize; // next file starts where this one ended
+            DEBUG(logdebug("'%s' offset: %u", h.filename.c_str(), h.offset));
+        }
+
+        if(h.filename.empty()) // empty filename? this is the solid block then.
+        {
+            solidBlockHdr = h;
+            --masterHdr.hdrEntries;
+        }
+        else
+            ++i;
+    }
+
+    // first, unpack the solid block, if there is one
+    if(solidBlockHdr.realSize)
+    {
+        _headers.resize(masterHdr.hdrEntries); // since the solid block hdr was not stored here, there is 1 space too much, which must be removed
+        
+        LVPAFileHeader &h = solidBlockHdr;
+        if(ftell(_handle) != h.offset)
+            fseek(_handle, h.offset, SEEK_SET);
+
+        buf.resize(h.packedSize);
+        bytes = fread((void*)buf.contents(), 1, h.packedSize, _handle);
+        if(bytes != h.packedSize)
+        {
+            logerror("Can't read enough bytes for solid block");
+            h.good = false;
+        }
+        else
+        {
+            if(h.flags & LVPAFLAG_PACKED)
+            {
+                buf.Compressed(true); // tell the buf that it is compressed so it will allow decompression
+                buf.RealSize(h.realSize);
+                buf.Decompress(h.props);
+            }
+
+            _solidBlock.size = buf.size();
+            _solidBlock.ptr = new uint8[buf.size()];
+            buf.read(_solidBlock.ptr, buf.size());
+            h.good = true;
+        }
+    }
+
+    // at this point we have processed all headers
+    _CreateIndexes();
+
+    // iterate over all files if requested
+    if(loadFlags & LVPALOAD_SOLID)
+    {
+        for(uint32 i = 0; i < masterHdr.hdrEntries; ++i)
+        {
+            if(_headers[i].flags & LVPAFLAG_SOLID || loadFlags & LVPALOAD_ALL)
+                _LoadFile(_headers[i]);
+        }
+
+        if(loadFlags & LVPALOAD_ALL)
+            _CloseFile(); // got everything, file can be closed
+    }
+    // otherwise, leave the file open, as we may want to read more later on
+
+    return true;
+}
+
+bool LVPAFile::Save(uint32 compression)
+{
+    return SaveAs(_ownName.c_str(), compression);
+}
+
+bool LVPAFile::SaveAs(const char *fn, uint32 compression)
+{
+    // close the file if already open, to allow overwriting
+    _CloseFile();
+
+    FILE *outfile = fopen(fn, "wb");
+    if(!outfile)
+        return false;
+
+    LVPAMasterHeader masterHdr;
+    memset(&masterHdr, 0, sizeof(LVPAMasterHeader));
+
+    fwrite(gMagic, 4, 1, outfile);
+    fwrite(&masterHdr, sizeof(LVPAMasterHeader), 1, outfile); // this will be overwritten later
+
+    LZMACompressor zhdr;
+    LZMACompressor zsolid;
+    uint32 solidSize = 0;
+    
+    LVPAFileHeader solidHeader;
+
+    zhdr.reserve((_headers.size() + 1) * (sizeof(LVPAFileHeader) + 20)); // guess size
+
+    // find out sizes early to prevent re-allocation,
+    // and prepare some of the header fields
+    for(uint32 i = 0; i < _headers.size(); ++i)
+    {
+        LVPAFileHeader& h = _headers[i];
+        if(!h.good)
+            continue;
+
+        if(h.flags & LVPAFLAG_SOLID)
+            solidSize += h.data.size;
+
+        h.realSize = h.packedSize = h.data.size;
+        CRC32 crc;
+        crc.Update(h.data.ptr, h.data.size);
+        crc.Finalize();
+        h.crc = crc.Result();
+    }
+    if(solidSize)
+    {
+        zsolid.reserve(solidSize);
+
+        // fill the buffer for the solid block with data
+        for(LVPAIndexMap::iterator it = _indexes.begin(); it != _indexes.end(); it++)
+        {
+            LVPAFileHeader& h = _headers[it->second];
+            if(!h.good)
+                continue;
+
+            if( !(h.flags & LVPAFLAG_SOLID) )
+                continue;
+
+            h.offset = zsolid.wpos();
+            DEBUG(logdebug("(S) '%s' offset: %u", h.filename.c_str(), h.offset));
+            zsolid.append(h.data.ptr, h.data.size);
+            h.flags &= ~LVPAFLAG_PACKED; // solid files are never marked as packed, because the solid block itself is already packed
+        }
+
+        solidHeader.realSize = zsolid.size();
+        {
+            CRC32 crc;
+            crc.Update((uint8*)zsolid.contents(), zsolid.size());
+            crc.Finalize();
+            solidHeader.crc = crc.Result();
+        }
+        zsolid.Compress(compression);
+        solidHeader.flags = zsolid.Compressed() ? LVPAHDR_PACKED : LVPAHDR_NONE;
+        solidHeader.packedSize = zsolid.size();
+        solidHeader.props = zsolid.GetEncodedProps();
+        // solidHeader.filename = "" // has that value by default
+        solidHeader.offset = ftell(outfile);
+        DEBUG(logdebug("solid block offset: %u", solidHeader.offset));
+        fwrite(zsolid.contents(), zsolid.size(), 1, outfile);
+        zhdr << solidHeader;
+        solidHeader.good = true;
+    }
+    
+    // write the other files into the container file, compressed (if the flag is set)
+    // headers are mostly prepared already
+    for(LVPAIndexMap::iterator it = _indexes.begin(); it != _indexes.end(); it++)
+    {
+        LVPAFileHeader& h = _headers[it->second];
+        if(!h.good)
+            continue;
+
+        // solid files were already written to the solid block
+        if( !(h.flags & LVPAFLAG_SOLID) )
+        {
+            h.offset = ftell(outfile);
+            DEBUG(logdebug("'%s' offset: %u", h.filename.c_str(), h.offset));
+            if(h.flags & LVPAFLAG_PACKED)
+            {
+                LZMACompressor compr;
+                compr.append(h.data.ptr, h.data.size);
+                compr.Compress(compression);
+                if(!compr.Compressed())
+                    h.flags &= ~LVPAFLAG_PACKED;
+                h.packedSize = compr.size();
+                h.props = compr.GetEncodedProps();
+                fwrite(compr.contents(), compr.size(), 1, outfile);
+            }
+            else
+            {
+                h.props = 0;
+                fwrite(h.data.ptr, h.data.size, 1, outfile);
+            }
+        }
+
+        zhdr << h;
+    }
+
+    CRC32 hcrc;
+    hcrc.Update((uint8*)zhdr.contents(), zhdr.size());
+    hcrc.Finalize();
+    masterHdr.hdrEntries = _headers.size() + (solidSize ? 1 : 0);
+    masterHdr.hdrCrc = hcrc.Result();
+    masterHdr.realHdrSize = zhdr.size();
+    zhdr.Compress(compression);
+    masterHdr.packProps = zhdr.GetEncodedProps();
+    masterHdr.packedHdrSize = zhdr.size();
+    masterHdr.flags = zhdr.Compressed() ? LVPAHDR_PACKED : LVPAHDR_NONE;
+    masterHdr.version = gVersion;
+    masterHdr.hdrOffset = ftell(outfile);
+    masterHdr.dataOffs = solidSize ? solidHeader.offset : 4 + sizeof(LVPAMasterHeader);
+    DEBUG(logdebug("master data offset: %u", masterHdr.dataOffs));
+    DEBUG(logdebug("master header offset: %u", masterHdr.hdrOffset));
+    fwrite(zhdr.contents(), zhdr.size(), 1, outfile);
+
+    zhdr.clear();
+    zhdr << masterHdr;
+    fseek(outfile, 4, SEEK_SET); // after "LVPA"
+    fwrite(zhdr.contents(), zhdr.size(), 1, outfile);
+
+    fclose(outfile);
+
+    return true;
+}
+
+
+memblock LVPAFile::_LoadFile(LVPAFileHeader& h)
+{
+    // h.good is set to false if there was a previous attempt to load the file that failed
+    if( !(h.good && _OpenFile()) )
+        return memblock();
+
+    if((h.flags & LVPAFLAG_SOLID) && !_solidBlock.ptr)
+    {
+        logerror("File '%s' is marked as solid, but there is no solid block", h.filename.c_str());
+        h.good = false;
+        return memblock();
+    }
+
+    if((h.flags & LVPAFLAG_SOLID) && (h.flags & LVPAFLAG_PACKED))
+    {
+        logerror("File '%s' is marked as packed AND solid, not good (ignoring packed flag)", h.filename.c_str());
+        h.flags &= ~LVPAFLAG_PACKED;
+    }
+
+    LZMACompressor buf;
+    buf.resize(h.packedSize);
+    buf.wpos(0);
+    uint32 bytes;
+
+    if(h.flags & LVPAFLAG_SOLID)
+    {
+        if(h.offset + h.packedSize <= _solidBlock.size)
+            buf.append(_solidBlock.ptr + h.offset, h.packedSize);
+        else
+        {
+            logerror("Solid file '%s' exceeds solid block length, can't read", h.filename.c_str());
+            h.good = false;
+            return memblock();
+        }
+    }
+    else // not solid, read from file
+    {
+        // seek if necessary
+        if(ftell(_handle) != h.offset)
+            fseek(_handle, h.offset, SEEK_SET);
+
+        bytes = fread((void*)buf.contents(), 1, h.packedSize, _handle);
+        if(bytes != h.packedSize)
+        {
+            logerror("Unable to read enough data for file '%s'", h.filename.c_str());
+            h.good = false;
+            return memblock();
+        }
+    }
+
+    if(h.flags & LVPAFLAG_PACKED)
+    {
+        buf.Compressed(true); // tell the buf that it is compressed so it will allow decompression
+        buf.RealSize(h.realSize);
+        buf.Decompress(h.props);
+    }
+
+    // check CRC32 for that file
+    {
+        CRC32 crc;
+        crc.Update((uint8*)buf.contents(), buf.size());
+        crc.Finalize();
+        if(crc.Result() != h.crc)
+        {
+            logerror("CRC mismatch for '%s', file is corrupt", h.filename.c_str());
+            h.good = false;
+            return memblock();
+        }
+    }
+
+    memblock mb(new uint8[buf.size()], buf.size());
+    buf.read(mb.ptr, buf.size());
+
+    // file is unpacked & loaded, store it
+    h.data = mb;
+    h.good = true;
+
+    return mb;
+}
+
+const LVPAFileHeader LVPAFile::GetFileInfo(uint32 i)
+{
+    return _headers[i];
+}
+
+void LVPAFile::_CreateIndexes(void)
+{
+    for(uint32 i = 0; i < _headers.size(); ++i)
+    {
+        LVPAFileHeader& h = _headers[i];
+        if(h.filename.size())
+        {
+            _indexes[h.filename] = i;
+        }
+    }
+}
+
+bool LVPAFile::AllGood(void)
+{
+    for(uint32 i = 0; i < _headers.size(); ++i)
+    if(!_headers[i].good)
+        return false;
+
+    return true;
+}
