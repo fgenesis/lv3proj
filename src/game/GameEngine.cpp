@@ -21,6 +21,7 @@ GameEngine::GameEngine()
 
     // test
 #ifdef _DEBUG
+    SetDebugFlag(EDBG_SHOW_BBOXES);
     mouseRect.w = 32;
     mouseRect.h = 32;
     mouseCollision = 0;
@@ -190,7 +191,7 @@ void GameEngine::OnMouseEvent(uint32 type, uint32 button, uint32 state, uint32 x
             if(!_layermgr->CanFallDown(Point(x, y + (mouseRect.h / 2) - 1), 12))
                 mouseCollision = 1;
         }
-        Point p = _layermgr->GetClosestNonCollidingPoint(&mouseRect, checkDirection);
+        Point p = _layermgr->GetNonCollidingPoint(&mouseRect, checkDirection);
         collRect.x = p.x;
         collRect.y = p.y;
         collRectGood = !_layermgr->CollisionWith(&collRect);

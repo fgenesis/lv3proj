@@ -84,7 +84,6 @@ class KeyMap
         // process virtual key lookup
         if(iter = dictFind(self.binds, .[ty src which] ))
             vkey, player = iter.value()
-
             retval = .[vkey player value]
             return retval
         end

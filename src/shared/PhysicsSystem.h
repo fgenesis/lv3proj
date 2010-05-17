@@ -27,7 +27,11 @@ struct PhysProps
     float rbounce;
 
     // internal
-    bool _impactPending;
+
+    // these are only interesting for the physics system (wall collision), so we store them here
+    float _lastx;
+    float _lasty;
+    bool _wallTouched;
 };
 
 // and the environment can have certain physical properties too

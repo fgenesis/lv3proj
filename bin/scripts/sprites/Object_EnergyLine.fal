@@ -28,15 +28,18 @@ class EnergyLine(vertical, off) from Object
         self._oy = 0
     end
     
-    function OnTouch(side, who)
+    function OnTouchedBy(side, who)
         tile = self.GetSprite()
-        if tile and tile.name != "on": return
+        if tile and tile.name != "on": return false
         if who provides Kill
             who.Kill(DEATH_ELECTRO)
         //else
         //    > "EnergyLine: '", who, "' is beeing toasted, but doesn't have a Kill() method"
         end
+        return false
     end
+    
+    function Stoppable(): return false
 
 end
 

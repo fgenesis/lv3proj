@@ -1,6 +1,8 @@
 class ItemObject(cons) from Object
 
+    sound = "collect.ogg"
     gfx = nil
+    
     _cons = nil
     _sound = nil
     
@@ -8,21 +10,25 @@ class ItemObject(cons) from Object
         if not isCallable(cons): raise "ItemObject: must be passed a callable function or class constructor"
         self._cons = cons
         self.SetAffectedByPhysics(false)
+        self.SetCollisionEnabled(true)
         self.SetBBox(0,0,16,16)
         if self.gfx
             tile = self.SetSprite(self.gfx)
             if tile and tile.type == TILETYPE_ANIMATED: tile.name = "default"
         end
-        self._sound = Sound("collect.ogg")
+        self._sound = Sound(self.sound)
     end
     
-    function OnTouch(side, who)
-        if who.type != OBJTYPE_PLAYER: return
-        //if who.AddItem(self._cons()) // NYI
-            > "ItemObject::OnTouch(): '", self._cons, "' to '", who, "'"
-            if self._sound: self._sound.Play()
-            self.remove()
-        //end
+    function OnTouchedBy(side, who)
+        //> "ItemObject::OnTouchedBy(", side, ", ", who, ")"
+        if who.type == OBJTYPE_PLAYER
+            //if who.AddItem(self._cons()) // NYI
+                > "ItemObject::OnTouchedBy(): '", self._cons, "' to '", who, "'"
+                if self._sound: self._sound.Play()
+                self.remove()
+            //end
+        end
+        return false
     end
 end
 

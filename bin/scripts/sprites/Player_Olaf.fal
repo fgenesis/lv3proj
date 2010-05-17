@@ -66,11 +66,17 @@ class Olaf from PlayerEx
         end
     end
     
-    function OnTouch(side, who)
+    function OnTouchedBy(side, who, sec)
         // stop anything that comes from above in case we have the shield up
-        //> "Olaf::OnTouch(", side, ", ", who, ")"
-        if side == SIDE_TOP and self.shieldUp: return true
-        return self.PlayerEx.OnTouch(side, who)
+        //> "Olaf::OnTouchedBy(", side, ", ", who, ")"
+        if side == SIDE_TOP and self.shieldUp
+            if who provides Stoppable
+                return who.Stoppable()
+            else
+                return true
+            end
+        end
+        return self.PlayerEx.OnTouchedBy(side, who)
     end
     
     function IsBlocking(side)

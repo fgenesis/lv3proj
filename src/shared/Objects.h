@@ -66,8 +66,13 @@ public:
 
     // see SharedDefines.h for the sides enum
     virtual void OnEnter(uint8 side, ActiveRect *who);
-    virtual void OnLeave(uint8 side, ActiveRect *who);
+    virtual void OnLeave(uint8 side, ActiveRect *who); // TODO: NYI
     virtual bool OnTouch(uint8 side, ActiveRect *who);
+
+    virtual void OnEnteredBy(uint8 side, ActiveRect *who);
+    virtual void OnLeftBy(uint8 side, ActiveRect *who); // TODO: NYI
+    virtual bool OnTouchedBy(uint8 side, ActiveRect *who);
+    
 
     void AlignToSideOf(ActiveRect *other, uint8 side);
 
@@ -97,7 +102,7 @@ public:
     virtual void Init(void);
 
     virtual void OnUpdate(uint32 ms);
-    virtual void OnTouchWall(uint8 side);
+    virtual void OnTouchWall(uint8 side, float xspeed, float yspeed);
     virtual void SetBBox(float x, float y, uint32 w, uint32 h);
     virtual void SetPos(float x, float y);
 

@@ -341,10 +341,22 @@ void ActiveRect::OnEnter(uint8 side, ActiveRect *who)
     _falObj->CallMethod("OnEnter", 2, Falcon::Item(Falcon::int32(side)), Falcon::Item(who->_falObj->self()));
 }
 
+void ActiveRect::OnEnteredBy(uint8 side, ActiveRect *who)
+{
+    DEBUG_ASSERT_RETURN_VOID(_falObj);
+    _falObj->CallMethod("OnEnteredBy", 2, Falcon::Item(Falcon::int32(side)), Falcon::Item(who->_falObj->self()));
+}
+
 void ActiveRect::OnLeave(uint8 side, ActiveRect *who)
 {
     DEBUG_ASSERT_RETURN_VOID(_falObj);
     _falObj->CallMethod("OnLeave", 2, Falcon::Item(Falcon::int32(side)), Falcon::Item(who->_falObj->self()));
+}
+
+void ActiveRect::OnLeftBy(uint8 side, ActiveRect *who)
+{
+    DEBUG_ASSERT_RETURN_VOID(_falObj);
+    _falObj->CallMethod("OnLeftBy", 2, Falcon::Item(Falcon::int32(side)), Falcon::Item(who->_falObj->self()));
 }
 
 bool ActiveRect::OnTouch(uint8 side, ActiveRect *who)
@@ -354,16 +366,24 @@ bool ActiveRect::OnTouch(uint8 side, ActiveRect *who)
     return result && result->type() != FLC_ITEM_NIL ? result->asBoolean() : false;
 }
 
+bool ActiveRect::OnTouchedBy(uint8 side, ActiveRect *who)
+{
+    DEBUG_ASSERT_RETURN(_falObj, true); // no further processing
+    Falcon::Item *result = _falObj->CallMethod("OnTouchedBy", 2, Falcon::Item(Falcon::int32(side)), Falcon::Item(who->_falObj->self()));
+    return result && result->type() != FLC_ITEM_NIL ? result->asBoolean() : false;
+}
+
 void Object::OnUpdate(uint32 ms)
 {
     DEBUG_ASSERT_RETURN_VOID(_falObj);
     _falObj->CallMethod("OnUpdate", 1, Falcon::Item(Falcon::int64(ms)));
 }
 
-void Object::OnTouchWall(uint8 side)
+void Object::OnTouchWall(uint8 side, float xspeed, float yspeed)
 {
     DEBUG_ASSERT_RETURN_VOID(_falObj);
-    _falObj->CallMethod("OnTouchWall", 2, Falcon::Item(Falcon::int64(side)));
+    _falObj->CallMethod("OnTouchWall", 3, Falcon::Item(Falcon::int64(side)), Falcon::Item(Falcon::numeric(xspeed)),
+        Falcon::Item(Falcon::numeric(yspeed)));
 }
 
 bool Item::OnUse(Object *who)
@@ -891,6 +911,9 @@ Falcon::Module *FalconObjectModule_create(void)
     m->addClassMethod(clsRect, "OnEnter", fal_NullFunc);
     m->addClassMethod(clsRect, "OnLeave", fal_NullFunc);
     m->addClassMethod(clsRect, "OnTouch", fal_NullFunc);
+    m->addClassMethod(clsRect, "OnEnteredBy", fal_NullFunc);
+    m->addClassMethod(clsRect, "OnLeftBy", fal_NullFunc);
+    m->addClassMethod(clsRect, "OnTouchedBy", fal_NullFunc);
     m->addClassMethod(clsRect, "SetBBox", fal_ActiveRect_SetBBox);
     m->addClassMethod(clsRect, "SetPos", fal_ActiveRect_SetPos);
     m->addClassMethod(clsRect, "CanMoveToDir", fal_ActiveRect_CanMoveToDir);

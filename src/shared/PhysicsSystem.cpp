@@ -5,6 +5,8 @@
 #include "ObjectMgr.h"
 #include "PhysicsSystem.h"
 
+#include "UndefUselessCrap.h"
+
 
 void PhysicsMgr::UpdatePhysics(Object *obj, uint32 ms)
 {
@@ -16,8 +18,10 @@ void PhysicsMgr::UpdatePhysics(Object *obj, uint32 ms)
     float tf =  ms * 0.001f; // time factor
     uint8 speedsSet = 0; // can be 0, 1 or 2
     bool neg;
-    int32 begin_x = int32(obj->x);
-    int32 begin_y = int32(obj->y);
+    int32 begin_ix = int32(obj->x);
+    int32 begin_iy = int32(obj->y);
+    float begin_x = obj->x;
+    float begin_y = obj->y;
     ObjectWithSideSet solidCollidedObjs;
     bool selectNearby = obj->IsCollisionEnabled() && (obj->GetType() >= OBJTYPE_PLAYER || obj->IsBlocking());
 
@@ -78,8 +82,9 @@ void PhysicsMgr::UpdatePhysics(Object *obj, uint32 ms)
     }
 
     // get new positions for current speed and time diff
-    float newx = obj->x + (phys.xspeed * tf);
-    float newy = obj->y + (phys.yspeed * tf);
+    BaseRect newRect = obj->cloneRect();
+    newRect.x = obj->x + (phys.xspeed * tf);
+    newRect.y = obj->y + (phys.yspeed * tf);
 
     uint8 dirx = DIRECTION_NONE, diry = DIRECTION_NONE;
 
@@ -87,18 +92,16 @@ void PhysicsMgr::UpdatePhysics(Object *obj, uint32 ms)
     // check if obj can move in x direction
     if(phys.xspeed)
     {
-        if(newx < obj->x)
+        if(newRect.x < obj->x)
         {
             dirx |= DIRECTION_LEFT;
             if(!_layerMgr->CanMoveToDirection(obj, DIRECTION_LEFT))
             {
-                phys.xspeed = 0.0f;
-
                 // we can not move in that direction, check if there is an object we would have pushed otherwise
                 if(selectNearby)
                 {
                     BaseRect area;
-                    area.x = newx;
+                    area.x = newRect.x;
                     area.y = obj->y;
                     area.w = 1;
                     area.h = obj->h - 1;
@@ -106,18 +109,16 @@ void PhysicsMgr::UpdatePhysics(Object *obj, uint32 ms)
                 }
             }
         }
-        else// if(newx > obj->x)
+        else if(newRect.x > obj->x)
         {
             dirx |= DIRECTION_RIGHT;
             if(!_layerMgr->CanMoveToDirection(obj, DIRECTION_RIGHT))
             {
-                phys.xspeed = 0.0f;
-
                 // we can not move in that direction, check if there is an object we would have pushed otherwise
                 if(selectNearby)
                 {
                     BaseRect area;
-                    area.x = newx + obj->w;
+                    area.x = newRect.x + obj->w;
                     area.y = obj->y;
                     area.w = 1;
                     area.h = obj->h - 1;
@@ -130,38 +131,34 @@ void PhysicsMgr::UpdatePhysics(Object *obj, uint32 ms)
     // check if obj can move in y direction
     if(phys.yspeed)
     {
-        if(newy < obj->y)
+        if(newRect.y < obj->y)
         {
             diry |= DIRECTION_UP;
             if(!_layerMgr->CanMoveToDirection(obj, DIRECTION_UP))
             {
-                phys.yspeed = 0.0f;
-
                 // we can not move in that direction, check if there is an object we would have pushed otherwise
                 if(selectNearby)
                 {
                     BaseRect area;
                     area.x = obj->x;
-                    area.y = newy;
+                    area.y = newRect.y;
                     area.w = obj->w;
                     area.h = 1;
                     _objMgr->GetAllObjectsIn(area, solidCollidedObjs, SIDE_TOP);
                 }
             }
         }
-        else// if(newy > obj->y)
+        else if(newRect.y > obj->y)
         {
             diry |= DIRECTION_DOWN;
             if(!_layerMgr->CanMoveToDirection(obj, DIRECTION_DOWN))
             {
-                phys.yspeed = 0.0f;
-
                 // we can not move in that direction, check if there is an object we would have pushed otherwise
                 if(selectNearby)
                 {
                     BaseRect area;
                     area.x = obj->x;
-                    area.y = newy + obj->h;
+                    area.y = newRect.y + obj->h;
                     area.w = obj->w - 1;
                     area.h = 1;
                     _objMgr->GetAllObjectsIn(area, solidCollidedObjs, SIDE_BOTTOM);
@@ -177,70 +174,123 @@ void PhysicsMgr::UpdatePhysics(Object *obj, uint32 ms)
             if(obj->GetType() >= OBJTYPE_OBJECT)
             {
                 Object *target = (Object*)it->first;
-                if(target == obj)
+                if(target == obj || !obj->IsCollisionEnabled())
                     continue;
                 if(target->IsBlocking() && target->IsCollisionEnabled())
                 {
-                    target->OnTouch(InvertSide(it->second) | SIDE_FLAG_SOLID, obj); // TODO: return value? call for other object as well?? !!
+                    obj->OnTouch(it->second | SIDE_FLAG_SOLID, target);
+                    target->OnTouchedBy(InvertSide(it->second) | SIDE_FLAG_SOLID, obj); // TODO: return value?
                 }
             }
         }
     }
 
-    uint8 direction = dirx | diry; // combined directions
-    float oldx = obj->x;
-    float oldy = obj->y;
-    if(phys.xspeed && phys.yspeed) // can move diagonally? have to recheck if thats the case
+    if(uint8 direction = dirx | diry) // combined directions
     {
-        if(_layerMgr->CanMoveToDirection(obj, direction))
+        if(!_layerMgr->CollisionWith(&newRect))
         {
-            // obj can move, do it.
-            obj->x = newx;
-            obj->y = newy;
+            obj->x = newRect.x;
+            obj->y = newRect.y;
         }
-        else
+        else // oops, newly selected position is somewhere inside a wall, find nearest valid spot
         {
-            // moving into both directions failed, prefer moving up or down only.
-            // the directions stay as they are, otherwise GetClosestNonCollidingPoint() would do mess.
-            obj->y = newy;
+
+            // -- start of messy part --
+            // TODO: this part is a draft and not optimized. clean this up and OPTIMIZE!!
+            Point pud, plr, pdia, pcur((uint32)obj->x, (uint32)obj->y);
+            
+            float distx = abs(newRect.x - obj->x);
+            float disty = abs(newRect.y - obj->y);
+            uint8 actualDir = DIRECTION_NONE;
+            bool definiteWallCollision = false;
+
+            if(dirx && diry)
+                pdia = _layerMgr->GetNonCollidingPoint(obj, direction, 1 + (uint32)std::max(distx, disty));
+            else
+                pdia.invalidate();
+
+            if(dirx && _layerMgr->CanMoveToDirection(obj, dirx))
+                plr = _layerMgr->GetNonCollidingPoint(obj, dirx, 1 + (uint32) distx);
+            else
+                plr.invalidate();
+
+            if(diry && _layerMgr->CanMoveToDirection(obj, diry))
+                pud = _layerMgr->GetNonCollidingPoint(obj, diry, 1 + (uint32) disty);
+            else
+                pud.invalidate();
+
+            if(pdia.valid() && pdia != pcur)
+            {
+                obj->x = float(pdia.x);
+                obj->y = float(pdia.y);
+                actualDir = dirx | diry;
+            }
+            else
+            {
+                if(pud.valid())
+                {
+                    float oldyy = obj->y;
+                    obj->y = newRect.y;
+                    // this is a hack and seems necessary, because otherwise the gravity makes things
+                    // slide through walls and whatnot. but we have to force this new position,
+                    // because if we just ignore this, objects will float 1 pixel above the wall.
+                    if(_layerMgr->CollisionWith(obj))
+                    {
+                        obj->y = pud.y; 
+                        definiteWallCollision = true;
+                    }
+                    actualDir = diry;
+                }
+                else if(plr.valid())
+                {
+                    obj->x = newRect.x;
+                    actualDir = dirx;
+                }
+            }
+
+            if(!actualDir)
+            {
+                if(!phys._wallTouched)
+                {
+                    if(obj->x < phys._lastx)
+                        actualDir |= DIRECTION_LEFT;
+                    else if(obj->x > phys._lastx)
+                        actualDir |= DIRECTION_RIGHT;
+                    if(obj->y < phys._lasty)
+                        actualDir |= DIRECTION_UP;
+                    else if(obj->y > phys._lasty)
+                        actualDir |= DIRECTION_DOWN;
+                }
+                phys._wallTouched = false;
+            }
+
+            if(definiteWallCollision || (actualDir /*&& Point((uint32)obj->x, (uint32)obj->y) != pcur*/ && !_layerMgr->CanMoveToDirection(obj, actualDir)))
+            {
+                obj->OnTouchWall(actualDir, phys.xspeed, phys.yspeed); // if we are going right, the wall hits us right...
+                phys._wallTouched = true;
+            }
+
+            // -- end of messy part --
+
+            // now check where we can move from this position
+            if(dirx && !_layerMgr->CanMoveToDirection(obj, dirx))
+            {
+                phys.xspeed *= -(dirx & DIRECTION_LEFT ? phys.lbounce : phys.rbounce);
+            }
+            if(diry && !_layerMgr->CanMoveToDirection(obj, diry))
+            {
+                phys.yspeed *= -(diry & DIRECTION_UP ? phys.ubounce : phys.dbounce);
+            }
         }
     }
-    else // just moving in one direction (the check for this was already done above)
-    {
-        if(phys.xspeed)
-            obj->x = newx;
-        if(phys.yspeed)
-            obj->y = newy;
-    }
 
-    // oops, newly selected position is somewhere inside a wall, find nearest valid spot
-    if(direction && _layerMgr->CollisionWith(obj))
-    {
-        obj->x = oldx;
-        obj->y = oldy;
 
-        Point np = _layerMgr->GetClosestNonCollidingPoint(obj, direction);
-
-        obj->x = float(np.x);
-        obj->y = float(np.y);
-
-        if(int32(oldx) != np.x || int32(oldy) != np.y)
-            obj->OnTouchWall(direction); // if we are going right, the wall hits us right...
-
-        // now check where we can move from this position
-        if(dirx && !_layerMgr->CanMoveToDirection(obj, dirx))
-        {
-            phys.xspeed *= -(dirx & DIRECTION_LEFT ? phys.lbounce : phys.rbounce);
-        }
-        if(diry && !_layerMgr->CanMoveToDirection(obj, diry))
-        {
-            phys.yspeed *= -(diry & DIRECTION_UP ? phys.ubounce : phys.dbounce);
-        }
-    }
-
-    if(begin_x != int32(obj->x) || begin_y != int32(obj->y))
+    if(begin_ix != int32(obj->x) || begin_iy != int32(obj->y))
     {
         obj->UpdateAnchor();
         obj->SetMoved(true);
     }
+
+    phys._lastx = begin_x;
+    phys._lasty = begin_y;
 }

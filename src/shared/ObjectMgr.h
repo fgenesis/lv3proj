@@ -38,6 +38,8 @@ public:
     inline void SetPhysicsMgr(PhysicsMgr *pm) { _physMgr = pm; }
     inline void SetLayerMgr(LayerMgr *layers) {_layerMgr = layers; }
 
+    void dbg_setcoll(bool b);
+
 protected:
     uint32 _curId;
     ObjectMap _store;

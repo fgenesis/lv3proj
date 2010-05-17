@@ -70,7 +70,7 @@ public:
     void RemoveFromCollisionMap(Object *obj);
     bool CollisionWith(BaseRect *rect, int32 skip = 4, uint8 flags = LCF_ALL); // check if a rectangle overlaps with at least one solid pixel in our collision map.
     // when calling this function, we assume there is NO collision yet (check new position with CollisionWith() before!)
-    Point GetClosestNonCollidingPoint(BaseRect *rect, uint8 direction);
+    Point GetNonCollidingPoint(BaseRect *rect, uint8 direction, uint32 maxdist = -1);
     uint32 CanMoveToDirection(BaseRect *rect, uint8 direction, uint32 pixels = 1); // returns the amount of pixels until the object hits the wall, up to [pixels]
     uint32 CanMoveToDirection(BaseRect *rect, MovementDirectionInfo& mdi, uint32 pixels = 1);
     bool CanFallDown(Point anchor, uint32 arealen);

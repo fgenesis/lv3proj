@@ -20,7 +20,7 @@ class ActionObject from Object
         if self.sound2: self._sound2 = Sound(self.sound2)
     end
     
-    function OnTouch(side, who)
+    function OnTouchedBy(side, who)
         if who.type != OBJTYPE_PLAYER: return
         if not who.RegisterActionHandler(self.HandleAction)
             > "Huh?! ActionObject::OnTouch() failed to register (", who, ")"

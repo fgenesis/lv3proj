@@ -53,7 +53,7 @@ class PlayerEx from Player
     end
     
     function UpdateAnim()
-        if self.phys.yspeed or self.CanFallDown() // TODO: ladder climbing etc
+        if self.CanFallDown() // TODO: ladder climbing etc
             self.AnimFall()
         elif self.ownSpeedX
             if self.CanMoveToDir(self.movingDir)
@@ -242,8 +242,8 @@ class PlayerEx from Player
     end
     
     
-    function OnTouch(side, who)
-        //> "PlayerEx::OnTouch()"
+    function OnTouchedBy(side, who)
+        //> "PlayerEx::OnTouchedBy(", side, ", ", who, ")"
         select who
             case Player, Unit
                 return false //can move through us
@@ -251,12 +251,13 @@ class PlayerEx from Player
         return false // TODO: what here??
     end
     
-    function OnEnter(side, who)
-        //> "PlayerEx::OnEnter()"
+    function OnEnteredBy(side, who)
+        //> "PlayerEx::OnEnteredBy(", side, ", ", who, ")"
     end
     
-    function OnTouchWall(side)
-        if side == SIDE_BOTTOM: Sound("land3.ogg").Play() // TODO: this sound is different for every viking
+    function OnTouchWall(side, xs, ys)
+        //> @ "side: $side, xs: $xs, ys: $ys"
+        if side && SIDE_BOTTOM and abs(ys) > 40.0 and not self.CanMoveToDir(DIRECTION_DOWN): Sound("land3.ogg").Play() // TODO: this sound is different for every viking
     end
     
     // Interface used by ActionObject

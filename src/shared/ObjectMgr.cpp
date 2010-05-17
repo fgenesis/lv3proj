@@ -124,26 +124,24 @@ void ObjectMgr::Update(uint32 ms)
         ActiveRect *base = (ActiveRect*)it->second;
 
         // collision detection (object vs object)
-        if(base->MustDie() || !base->IsCollisionEnabled())
+        if(base->MustDie() || !base->IsCollisionEnabled() || !base->HasMoved())
             continue;
 
         // i guess this will be very slow for MANY objects in the game... have to see how this works out
         for(ObjectMap::iterator jt = _store.begin(); jt != _store.end(); jt++)
         {
             ActiveRect *other = (ActiveRect*)jt->second;
-            // never calculate collision with self; and only calc if at least one of both objects has moved.
-            if(base == other || other->MustDie() || !other->IsCollisionEnabled() || !(base->HasMoved() || other->HasMoved()))
+            // never calculate collision with self, invalid, or non-colliding objects
+            if(base == other || other->MustDie() || !other->IsCollisionEnabled())
+                continue;
+            // skip solid objects, as these are handled in the physics system.
+            if(other->GetType() >= OBJTYPE_OBJECT && ((Object*)other)->IsBlocking())
                 continue;
 
-            // first, trigger collision with the object that has moved.
+            // <base> is the object that has moved, trigger collision from it.
             if(uint8 side = base->CollisionWith(other))
             {
                 HandleObjectCollision(base, other, side);
-            }
-            // if they STILL collide after that, trigger collision from other object
-            if(uint8 side = other->CollisionWith(base))
-            {
-                HandleObjectCollision(other, base, side);
             }
         }
     }
@@ -169,8 +167,10 @@ void ObjectMgr::Update(uint32 ms)
 // <base> is the object that has moved, usually; <side> is <base's> side where <other> collided with it
 void ObjectMgr::HandleObjectCollision(ActiveRect *base, ActiveRect *other, uint8 side)
 {
-    // if OnTouch() returns true, movement should be stopped and remain "touching" (= no overlap should occur)
-    if(base->OnTouch(side, other))
+    // if one of the 2 functions returns true, movement should be stopped and remain "touching" (= no overlap should occur)
+    bool touchResult = base->OnTouch(side, other);
+    bool touchedByResult = other->OnTouchedBy(InvertSide(side), base);
+    if(touchResult || touchedByResult)
     {
         // we should only move objects around, since rects are considered static unless manually moved
         if(base->GetType() >= OBJTYPE_OBJECT)
@@ -187,12 +187,14 @@ void ObjectMgr::HandleObjectCollision(ActiveRect *base, ActiveRect *other, uint8
                 base->x = xold;
                 base->y = yold;
                 base->OnEnter(side, other);
+                other->OnEnteredBy(InvertSide(side), base);
             }
         }
     }
     else
     {
         base->OnEnter(side, other);
+        other->OnEnteredBy(InvertSide(side), base);
     }
 }
 
@@ -235,5 +237,19 @@ void ObjectMgr::RenderBBoxes(void)
         r.h = br.h;
         r.w = br.w;
         SDLfunc_drawRectangle(_engine->GetSurface(), r, 0xDF, 0xDF, 0xDF, 0);
+    }
+}
+
+void ObjectMgr::dbg_setcoll(bool b)
+{
+    for(ObjectMap::iterator it = _store.begin(); it != _store.end(); it++)
+    {
+        if(it->second->GetType() >= OBJTYPE_OBJECT)
+        {
+            if(b)
+                _layerMgr->UpdateCollisionMap((Object*)it->second);
+            else
+                _layerMgr->RemoveFromCollisionMap((Object*)it->second);
+        }
     }
 }

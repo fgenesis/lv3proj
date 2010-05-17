@@ -124,16 +124,6 @@ int main(int argc, char *argv[])
     std::string errstr;
     bool loaded, result = false;
 
-    /*
-#ifdef _DEBUG
-    //argc = 4;
-    //char *argsd[] = {"lvpakd", "a", "test.lvpa", "zlib1.dll"};
-    argc = 3;
-    char *argsd[] = {"lvpakd", "l", "zz.lvpa"};
-    argv = argsd;
-#endif
-    */
-
     if(!parsecmd(argc, argv, mode, level, solid, archive, files, relPath))
     {
         return 2;

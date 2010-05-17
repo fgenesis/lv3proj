@@ -4,6 +4,8 @@ class Block from Object
     
     gfx = nil
     fallSpeed = 256
+    pushSpeed = 38
+    pushFriction = 380
     
     init
         self._sound = Sound("blockfall.ogg")
@@ -19,45 +21,60 @@ class Block from Object
         // init physics
         p = self.phys // note that p is a reference automatically, and all fields initialized with 0
         p.ymaxspeed = self.fallSpeed
+        p.xmaxspeed = self.pushSpeed
+        p.xfriction = self.pushFriction
         self.SetAffectedByPhysics(true)
     end
     
-    function OnTouch(side, who)
-        //> "Block: OnTouch(", side, ", ", who, ")"
+    function OnTouchedBy(side, who)
+        //> "Block: OnTouchedBy(", side, ", ", who, ")"
+        if not (side && SIDE_FLAG_SOLID): DbgBreak()
         
-        // someone pushing us?
-        if side && SIDE_FLAG_SOLID // indication that this call was invoked from the physics mgr, and is not a "normal" collision
-            side &= SIDE_ALL // remove the flag
-            if who.type >= OBJTYPE_PLAYER
-                if side == SIDE_LEFT // pushing from left, move to right
-                    if self.CanMoveToDir(DIRECTION_RIGHT)
-                        self.x += 1
-                        return true
-                    end
-                elif side == SIDE_RIGHT // pushing from right, move to left
-                    if self.CanMoveToDir(DIRECTION_LEFT)
-                        self.x -= 1
-                        return true
-                    end
+        if who.type >= OBJTYPE_PLAYER
+            if side && SIDE_LEFT // pushing from left, move to right
+                if self.CanMoveToDir(DIRECTION_RIGHT)
+                    //self.x += 1
+                    //who.x += 1
+                    self.phys.xspeed = self.pushSpeed;
+                    return true
+                end
+            elif side && SIDE_RIGHT // pushing from right, move to left
+                if self.CanMoveToDir(DIRECTION_LEFT)
+                    //self.x -= 1
+                    //who.x -= 1
+                    self.phys.xspeed = -self.pushSpeed;
+                    return true
                 end
             end
         end
         
-        return who.IsBlocking(InvertSide(side))
+        return true
+    end
+    
+    function OnTouch(side, who)
+        //> "Block: OnTouch(", side, ", ", who, ")"
+        return false
     end
     
     function OnEnter(side, who)
         //> "Block: OnEnter(", side, ", ", who, ")"
-        select who
-            case PlayerEx
-                //if not who.CanMoveToDir(side) // this is a bit buggy... "teleport bug" again
-                    who.Kill(DEATH_CRUSH)
-                //end
+        if side && (SIDE_TOP || SIDE_BOTTOM)
+            select who
+                case PlayerEx
+                    //if not who.CanMoveToDir(side) // this is a bit buggy... "teleport bug" again
+                        who.Kill(DEATH_CRUSH)
+                    //end
+            end
         end
     end
     
-    function OnTouchWall(side)
-        if side && (SIDE_BOTTOM || SIDE_TOP): if self._sound: self._sound.Play()
+    function OnTouchWall(side, xs, ys)
+        //> "Block::OnTouchWall(", side, ", ", xs, ", ", ys, ")"
+        if side && (SIDE_BOTTOM || SIDE_TOP) and abs(ys) > 60.0
+            if self._sound
+                self._sound.Play()
+            end
+        end
     end
 
     

@@ -95,9 +95,6 @@ void LayerMgr::Render(void)
     
     if(engine->HasDebugFlag(EDBG_SHOW_BBOXES))
         omgr->RenderBBoxes();
-
-
-
 }
 
 void LayerMgr::Update(uint32 curtime)
@@ -217,7 +214,7 @@ void LayerMgr::UpdateCollisionMap(uint32 x, uint32 y) // this x and y are tile p
 // TODO: this will ASSERT fail if an object moves out of the screen, fix this
 void LayerMgr::RemoveFromCollisionMap(Object *obj)
 {
-    if(!obj->IsBlocking() && (obj->_oldLayerRect.w == 0 || obj->_oldLayerRect.h == 0))
+    if(!obj->IsBlocking() || obj->_oldLayerRect.w == 0 || obj->_oldLayerRect.h == 0)
         return;
     int32 xoffs = obj->_oldLayerRect.x;
     int32 yoffs = obj->_oldLayerRect.y;
@@ -237,15 +234,13 @@ void LayerMgr::RemoveFromCollisionMap(Object *obj)
 // TODO: this will ASSERT fail if an object moves out of the screen, fix this
 void LayerMgr::UpdateCollisionMap(Object *obj)
 {
-    if(!obj->IsBlocking() && (obj->_oldLayerRect.w == 0 || obj->_oldLayerRect.h == 0))
-        return;
-    int32 ix = int32(obj->x);
-    int32 iy = int32(obj->y);
-    int32 x,y;
-
     // set LCF_BLOCKING_OBJECT in the current rect of the object
     if(obj->IsBlocking())
     {
+        int32 ix = int32(obj->x);
+        int32 iy = int32(obj->y);
+        int32 x,y;
+
         DEBUG(ASSERT(ix >= 0 && iy >= 0));
         for(y = 0; y < int32(obj->h); ++y)
         {
@@ -357,13 +352,13 @@ uint32 LayerMgr::CanMoveToDirection(BaseRect *rect, MovementDirectionInfo& mdi, 
     return moveable;
 }
 
-Point LayerMgr::GetClosestNonCollidingPoint(BaseRect *rect, uint8 direction)
+Point LayerMgr::GetNonCollidingPoint(BaseRect *rect, uint8 direction, uint32 maxdist /* = -1 */)
 {
     DEBUG(ASSERT(direction));
     MovementDirectionInfo mdi(*rect, direction);
     BaseRect r = rect->cloneRect();
     int32 moveable;
-    if(moveable = (int32)CanMoveToDirection(&r, mdi, uint32(-1) )) // try to move as far as possible
+    if(moveable = (int32)CanMoveToDirection(&r, mdi, maxdist)) // try to move as far as possible
     {
         r.MoveRelative(mdi.xstep * moveable, mdi.ystep * moveable);
     }

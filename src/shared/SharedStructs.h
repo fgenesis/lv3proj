@@ -1,15 +1,32 @@
 #ifndef SHAREDSTRUCTS_H
 #define SHAREDSTRUCTS_H
-
+#include <limits.h>
 #include "SharedDefines.h"
 
 struct Point
 {
     Point() : x(0), y(0) {}
     Point(int32 x_, int32 y_) : x(x_), y(y_) {}
-    int32 x;
-    int32 y;
+    int32 x, y;
+
+    inline bool operator==(Point& p) { return x == p.x && y == p.y; }
+    inline bool operator!=(Point& p) { return !(x == p.x && y == p.y); }
+    void invalidate(void) { x = y = INT_MIN; }
+    bool valid(void) { return x != INT_MIN && y != INT_MIN; }
 };
+
+struct FPoint
+{
+    FPoint() : x(0), y(0) {}
+    FPoint(float x_, float y_) : x(x_), y(y_) {}
+    float x, y;
+
+    inline bool operator==(Point& p) { return x == p.x && y == p.y; }
+    inline bool operator!=(Point& p) { return !(x == p.x && y == p.y); }
+    void invalidate(void) { *((int*)&x) = *((int*)&y) = 0xFF800000; } // 0xFF800000 == -1.#INF00
+    bool valid(void) { return *((int*)&x) != 0xFF800000 && *((int*)&y) != 0xFF800000; }
+};
+
 
 // basic rectangle class, provides interfaces, but does not have any object properties
 class BaseRect
@@ -80,11 +97,9 @@ struct MovementDirectionInfo
     int32 ystep;
     int32 xoffs;
     int32 yoffs;
-    //uint8 direction;
 
     MovementDirectionInfo(BaseRect& rect, uint8 d)
     {
-        //direction = d;
         xstep = 0;
         ystep = 0;
         xoffs = 0;
