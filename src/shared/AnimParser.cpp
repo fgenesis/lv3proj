@@ -138,24 +138,14 @@ Anim *ParseAnimData(char *strbuf, char *filename)
 
 Anim *LoadAnimFile(char* fn)
 {
-    FILE *fh = fopen(fn, "r");
-    if(!fh)
+    memblock *mb = resMgr.LoadTextFile(fn);
+    if(!mb)
     {
         logerror("LoadAnimFile: Failed to open '%s'", fn);
         return NULL;
     }
 
-    fseek(fh, 0, SEEK_END);
-    uint32 size = ftell(fh);
-    rewind(fh);
-
-    char *buf = new char[size];
-    uint32 bytes = fread(buf, 1, size, fh);
-    ASSERT(bytes <= size);
-    buf[bytes] = 0;
-    fclose(fh);
-
-    Anim *ani = ParseAnimData(buf, fn);
-    delete [] buf;
+    Anim *ani = ParseAnimData((char*)mb->ptr, fn);
+    resMgr.Drop(mb);
     return ani;
 }
