@@ -142,7 +142,7 @@ class WinObject(level) from Object
         self.SetBBox(0,0,16,16)
         self._lvl = level
     end
-    function OnTouch(side, who)
+    function OnTouchedBy(side, who)
         select who
             case Player
                 WinLevel(self._lvl)
@@ -369,7 +369,7 @@ lvl.Init()
 
 PlayerAliveCheck(lvl.player)
 
-Game.SetMusicVolume(80)
+Game.SetMusicVolume(70)
 Game.PlayMusic("lv1_snes_ship.ogg")
 
 

@@ -38,7 +38,7 @@ img = ImageObject("sprites/lv3logo.png")
 CallScheduler.Schedule(img.remove, 4000)
 
 blk = IronBlock()
-blk.SetPos(422,36)
+blk.SetPos(424,36)
 
 blk2 = IronBlock()
 blk2.SetPos(356,38)
@@ -52,8 +52,8 @@ blk4.SetPos(495,299)
 blk5 = IronBlock()
 blk5.SetPos(536,320)
 
-Game.SetMusicVolume(80)
-Game.PlayMusic("lv1_snes_ship.ogg")
+//Game.SetMusicVolume(80)
+//Game.PlayMusic("lv1_snes_ship.ogg")
 
 
 
@@ -69,7 +69,7 @@ end
 RegisterRawInputHook("DoSomeResets", .[DoSomeResets olaf SDLK.TAB] )
 RegisterRawInputHook("DisableInputOn", .[DisableInputOn SDLK.END])
 RegisterRawInputHook("CycleGravityOn", .[CycleGravityOn SDLK.PAGEDOWN])
-RegisterRawInputHook("ToggleOlafBounceOn", .[ToggleOlafBounceOn SDLK.PAGEUP])
+RegisterRawInputHook("ToggleBounceOn", .[ToggleBounceOn olaf SDLK.PAGEUP])
 RegisterRawInputHook("ToggleGodmode", .[ToggleGodmode olaf SDLK.COMMA])
 RegisterRawInputHook("ResetBlockTest", .[ResetBlockTest blk SDLK.m])
 //RegisterRawInputHook("RemovePlayerTest", .[RemovePlayerTest olaf SDLK.q])
@@ -107,12 +107,12 @@ function CycleGravityOn(k, e)
     end
 end
 
-function ToggleOlafBounceOn(k, e)
+function ToggleBounceOn(who, k, e)
     ty, src, which, value = e
     if ty == EVENT_TYPE_KEYBOARD and which == k and value != 0
-        p = olaf.phys
+        p = who.phys
         p.dbounce = p.dbounce ? 0 : 0.6
-        > "Olaf bounce is now: ", p.dbounce
+        > who, " bounce is now: ", p.dbounce
     end
 end
 
