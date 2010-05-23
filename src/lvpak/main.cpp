@@ -289,7 +289,8 @@ int main(int argc, char *argv[])
     if(relPath.length() && relPath[relPath.length() - 1] != '/')
         relPath += '/';
 
-    buildFileList(files, listfile.c_str(), relPath.c_str());
+    if(listfile.length())
+        buildFileList(files, listfile.c_str(), relPath.c_str());
 
     CRC32::GenTab();
 
@@ -386,10 +387,14 @@ int main(int argc, char *argv[])
             result = f.AllGood();
             printf("%s", result ? "File is OK\n" : "File is damaged, use 'lvpak l' to list\n");
             break;
+
+        default:
+            printf("Unsupported mode: '%c'\n", mode);
+            result = false;
     }
 
     if(errstr.length())
-        printf("%s", errstr.c_str());
+        printf("%s\n", errstr.c_str());
 
 
     f.Clear();

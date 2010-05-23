@@ -1,7 +1,9 @@
 #include sfx/basepak.listfile
 #include gfx/basepak.listfile
 #include music/basepak.listfile
-#include scripts/basepak.listfile
-#include levels/basepak.listfile
+##include scripts/basepak.listfile
+##include levels/basepak.listfile
 
+-s make_basepak.bat
+-s unpack_basepak.bat
 -s basepak.listfile
