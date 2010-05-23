@@ -1,0 +1,1 @@
+-p gfx/misc -s breakable.png fail.png noimage32.png noimage.png trigger.png win.png-p gfx/misc basepak.listfile

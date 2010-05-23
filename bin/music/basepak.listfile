@@ -1,0 +1,5 @@
+-p music lv1_snes_ship.ogg
+-p music lv1_amiga_intro.ogg
+
+-p music -s music.prop
+-p music -s basepak.listfile

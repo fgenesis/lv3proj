@@ -8,3 +8,5 @@
 # Compiled falcon scripts
 *.fam
 
+# generated container files
+*.lvpa

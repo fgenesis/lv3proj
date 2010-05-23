@@ -1,0 +1,15 @@
+
+-p sfx -s basepak.listfile 
+
+
+-p sfx -s blockbreak.ogg
+-p sfx -s collect.ogg
+-p sfx -s menuaccept.ogg
+-p sfx -s use.ogg
+-p sfx -s blockfall.ogg
+-p sfx -s crush.ogg
+-p sfx -s klaxonloop.ogg
+-p sfx -s windup.ogg
+-p sfx -s button.ogg
+-p sfx -s elecbuzz.ogg
+-p sfx -s land3.ogg

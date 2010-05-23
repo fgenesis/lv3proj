@@ -2,9 +2,19 @@
 #include "LVPAFile.h"
 #include "Crc32.h"
 
+struct FilenameWithProps
+{
+    FilenameWithProps(std::string& s) : compr(LVPA_DEFAULT_LEVEL), solid(false), fn(s), algo(LVPAPACK_DEFAULT) {}
+    std::string fn;
+    std::string relPath;
+    int8 compr; // level, -1 for default
+    bool solid;
+    uint8 algo;
+};
+
 void usage(void)
 {
-    printf("lvpak [-flags] [MODE] archive [file, ..]\n"
+    printf("lvpak [-flags] MODE archive [file, ..]\n"
            "\n"
            "Modes:\n"
            "  a - append to archive or create new\n"
@@ -18,7 +28,9 @@ void usage(void)
            "\n"
            "Flags:\n"
            "  -p PATH - use PATH as relative path to prepend each file\n"
+           /*"  -P PATH - override full path\n"*/
            "  -c# - compression level, in range [0..9]\n"
+           "  -l FILE - use a listfile\n",
            //"  -f - force operation (e.g. extract files although CRCs differ)"
            "\n"
            "<archive> is the archive file to create/modify/read\n"
@@ -35,9 +47,9 @@ void unknown(char *what)
     printf("Unknown parameter: '%s'\n", what);
 }
 
-bool parsecmd(int argc, char *argv[], uint8& mode, uint8& level, bool& solid, std::string& archive, std::list<std::string>& files, std::string& relPath)
+bool parsecmd(int argc, char *argv[], uint8& mode, uint8& level, bool& solid, std::string& listfile, std::string& archive, std::list<FilenameWithProps>& files, std::string& relPath)
 {
-    if(argc < 3)
+    if(argc < 3 && !mode)
     {
         usage();
         return false;
@@ -57,6 +69,7 @@ bool parsecmd(int argc, char *argv[], uint8& mode, uint8& level, bool& solid, st
                     if(i+1 < argc)
                     {
                         relPath = argv[++i];
+                        _FixFileName(relPath);
                     }
                     else
                     {
@@ -81,6 +94,18 @@ bool parsecmd(int argc, char *argv[], uint8& mode, uint8& level, bool& solid, st
                     solid = true;
                     break;
 
+                case 'l':
+                    if(i+1 < argc)
+                    {
+                        listfile = argv[++i];
+                    }
+                    else
+                    {
+                        printf("Error: -l expects a listfile name\n");
+                        return false;
+                    }
+                    break;
+
 
                 default:
                     unknown(argv[i]);
@@ -99,7 +124,7 @@ bool parsecmd(int argc, char *argv[], uint8& mode, uint8& level, bool& solid, st
             if(archive.empty())
                 archive = argv[i];
             else
-                files.push_back(argv[i]);
+                files.push_back(FilenameWithProps(std::string(argv[i])));
         }
         else
         {
@@ -113,6 +138,129 @@ bool parsecmd(int argc, char *argv[], uint8& mode, uint8& level, bool& solid, st
 
 }
 
+// modifies the input string, beware!
+// argc_max is how many args we can max. parse.
+uint32 splitline(char *str, uint32 argc_max, char **argv)
+{
+    char *s = str;
+    uint32 pos = 0;
+    bool inquot = false;
+
+    // strip initial whitespace
+    while(*s == ' ')
+        *s++ = 0;
+
+    char *goodpos = s;
+
+    while(*s && pos < argc_max)
+    {
+        if(*s == '\"')
+        {
+            inquot = !inquot;
+            *s = 0;
+        }
+        else if(!inquot && *s == ' ')
+        {
+            while(*s == ' ')
+                *s = 0;
+            argv[pos++] = goodpos;
+            goodpos = s + 1;
+        }
+        ++s;
+    }
+
+    // last part with possibly no whitespace at end
+    if(goodpos != s + 1)
+        argv[pos++] = goodpos;
+
+    return pos;
+}
+
+void buildFileList(std::list<FilenameWithProps>& files, const char *listfile, const char *relPath)
+{
+    FILE *fh = fopen(listfile, "r");
+    if(!fh)
+    {
+        printf("Failed to open listfile '%s'\n", listfile);
+        return;
+    }
+
+    uint32 size;
+
+    fseek(fh, 0, SEEK_END);
+    size = ftell(fh);
+    fseek(fh, 0 , SEEK_SET);
+
+    if(!size)
+    {
+        fclose(fh);
+        return;
+    }
+
+    char *buf = new char[size + 1];
+    buf[size] = 0;
+    uint32 bytesRead = fread(buf, 1, size, fh);
+    buf[bytesRead] = 0;
+    fclose(fh);
+
+    for(uint32 pos = 0; pos < size; pos++)
+    {
+        char *ptr = &buf[pos];
+        for( ; pos < size && buf[pos] != 10 && buf[pos] != 13; pos++); // empty loop
+
+        buf[pos] = 0;
+        if(uint32 len = strlen(ptr))
+        {
+            if(ptr[0] == '#')
+            {
+                if(len > 9 && !memcmp("include ", &ptr[1], 8)) // check for '#include FILENAME'
+                {
+                    std::string path(relPath);
+                    path += _PathStripLast(&ptr[9]);
+                    std::string subListFile(path);
+                    subListFile += _PathToFileName(&ptr[9]);
+                    buildFileList(files, subListFile.c_str(), path.c_str());
+                }
+                continue;
+            }
+            char *argv[256];
+            argv[0] = "";
+            uint32 used = 1 + splitline(ptr, 255, &argv[1]); // +1 because of argv[0] - we dont need the exe file name here so we leave it blank
+
+            uint8 level = LVPA_DEFAULT_LEVEL;
+            bool solid = false;
+            std::string dummy, fake_archive;
+            std::string relPathExtra;
+            std::list<FilenameWithProps> filesList;
+            uint8 mode = 'a';
+            if(parsecmd(used, argv, mode, level, solid, dummy, fake_archive, filesList, relPathExtra))
+            {
+                filesList.push_front(fake_archive); // it gets parsed as archive name (first filename) but here it should specify the fist file instead
+
+                // add trailing '/' if necessary
+                if(relPathExtra.length() && relPathExtra[relPathExtra.length() - 1] != '/')
+                    relPathExtra += '/';
+
+                for(std::list<FilenameWithProps>::iterator it = filesList.begin(); it != filesList.end(); it++)
+                {
+                    FilenameWithProps fp(relPath + it->fn);
+                    //fp.compr = level; // TODO: this is for later!
+                    fp.solid = solid;
+                    fp.relPath = relPathExtra;
+                    files.push_back(fp);
+                }
+            }
+            else
+            {
+                printf("Malformed listfile line: '%s'\n", ptr);
+                continue;
+            }
+        }
+    }
+
+    delete [] buf;
+}
+
 
 int main(int argc, char *argv[])
 {
@@ -120,12 +268,19 @@ int main(int argc, char *argv[])
     std::string archive, relPath;
     uint8 mode = 0, level = 3;
     bool solid = false;
-    std::list<std::string> files;
+    std::list<FilenameWithProps> files;
     std::string errstr;
+    std::string listfile;
     bool loaded, result = false;
 
-    if(!parsecmd(argc, argv, mode, level, solid, archive, files, relPath))
+    if(!parsecmd(argc, argv, mode, level, solid, listfile, archive, files, relPath))
     {
+        return 2;
+    }
+
+    if(archive.empty())
+    {
+        printf("No target archive file specified!\n");
         return 2;
     }
 
@@ -133,6 +288,8 @@ int main(int argc, char *argv[])
 
     if(relPath.length() && relPath[relPath.length() - 1] != '/')
         relPath += '/';
+
+    buildFileList(files, listfile.c_str(), relPath.c_str());
 
     CRC32::GenTab();
 
@@ -159,6 +316,8 @@ int main(int argc, char *argv[])
                     h.good ? "" : " (ERROR)");
                 f.Free((char*)h.filename.c_str());
             }
+            printf("Total compression ratio: %u -> %u (%.2f%%)\n", f.GetRealSize(), f.GetPackedSize(),
+                 float(f.GetPackedSize()) / float(f.GetRealSize()) * 100.0f);
             result = true;
             break;
         }
@@ -170,12 +329,12 @@ int main(int argc, char *argv[])
                 errstr = "Add mode: no files given\n";
                 break;
             }
-            for(std::list<std::string>::iterator it = files.begin(); it != files.end(); it++)
+            for(std::list<FilenameWithProps>::iterator it = files.begin(); it != files.end(); it++)
             {
-                FILE *fh = fopen(it->c_str(), "rb");
+                FILE *fh = fopen(it->fn.c_str(), "rb");
                 if(!fh)
                 {
-                    printf("Add mode: file not found: '%s'\n", it->c_str());
+                    printf("Add mode: file not found: '%s'\n", it->fn.c_str());
                     continue;
                 }
                 fseek(fh, 0, SEEK_END);
@@ -185,11 +344,14 @@ int main(int argc, char *argv[])
                 fread(buf, s, 1, fh);
                 fclose(fh);
                 uint8 flags = LVPAFLAG_PACKED;
-                if(solid)
+                if(it->solid || solid) // TODO: make listfile setting higher priority?
                     flags |= LVPAFLAG_SOLID;
-                f.Add((char*)(relPath + *it).c_str(), memblock(buf, s), LVPAFileFlags(flags));
+                std::string finalFileName = relPath + it->relPath + _PathToFileName(it->fn);
+                f.Add((char*)finalFileName.c_str(), memblock(buf, s), LVPAFileFlags(flags));
             }
             result = f.Save(level);
+            printf("Total compression ratio: %u -> %u (%.2f%%)\n", f.GetRealSize(), f.GetPackedSize(),
+                float(f.GetPackedSize()) / float(f.GetRealSize()) * 100.0f);
             break;
         }
 
@@ -201,7 +363,15 @@ int main(int argc, char *argv[])
                 break;
             }
             if(f.AllGood())
+            {
+                printf("Before repacking: %u -> %u (%.2f%%)\n", f.GetRealSize(), f.GetPackedSize(),
+                    float(f.GetPackedSize()) / float(f.GetRealSize()) * 100.0f);
+
                 result = f.Save(level);
+
+                printf("After repacking: %u -> %u (%.2f%%)\n", f.GetRealSize(), f.GetPackedSize(),
+                    float(f.GetPackedSize()) / float(f.GetRealSize()) * 100.0f);
+            }
             else
                 printf("File is damaged, not repacking.");
         }
