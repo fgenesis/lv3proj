@@ -386,6 +386,14 @@
 					RelativePath=".\shared\LVPAFile.h"
 					>
 				</File>
+				<File
+					RelativePath=".\shared\LVPAFileStore.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\LVPAFileStore.h"
+					>
+				</File>
 			</Filter>
 			<Filter
 				Name="LZMA"

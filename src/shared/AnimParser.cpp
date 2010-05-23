@@ -11,12 +11,12 @@ Anim *ParseAnimData(char *strbuf, char *filename)
     uint32 linenum = 0; // line number
     std::string anim_name;
     bool finished_block = true;
-    StrSplit(strbuf, "\n", lines, true);
+    StrSplit(strbuf, "\n\x0d\x0a", lines, true);
     for(std::vector<std::string>::iterator lin = lines.begin(); lin != lines.end(); lin++)
     {
         linenum++;
         std::string line = *lin;
-        if(line.length() < 3)
+        if(line.length() < 1)
             continue;
 
         // strip comments if there are any

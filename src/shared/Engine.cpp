@@ -7,6 +7,7 @@
 #include "Engine.h"
 #include "PhysicsSystem.h"
 #include "ObjectMgr.h"
+#include "Crc32.h"
 
 
 volatile uint32 Engine::s_curFrameTime; // game time
@@ -17,6 +18,8 @@ Engine::Engine()
 _debugFlags(EDBG_NONE)
 {
     log("Game Engine start.");
+    CRC32::GenTab();
+
     _layermgr = new LayerMgr(this);
     _fpsclock = s_lastFrameTime = clock();
     s_curFrameTime = 0;

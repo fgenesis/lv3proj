@@ -12,6 +12,8 @@
 #include "FalconGameModule.h"
 #include "SharedDefines.h"
 
+#include "LVPAFile.h"
+
 GameEngine::GameEngine()
 : Engine()
 {
@@ -49,6 +51,11 @@ bool GameEngine::Setup(void)
 {
     // initialize the falcon scripting engine & VM
     Falcon::Engine::Init();
+
+    // TEST - setup a container file
+    LVPAFile *sfxc = new LVPAFile;
+    if(sfxc->LoadFrom("basepak.lvpa", LVPALOAD_SOLID))
+        resMgr.GetVFS().Add(sfxc);
 
     // load the initialization script
     memblock *mb = resMgr.LoadTextFile("scripts/init.fal");

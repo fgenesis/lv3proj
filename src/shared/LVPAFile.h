@@ -23,6 +23,20 @@ enum LVPALoadFlags
     LVPALOAD_ALL      = 0xFF  // load all files
 };
 
+enum LVPAAlgorithms
+{
+    LVPAPACK_LZMA,
+    LVPAPACK_LZO1X, // NYI, planned for later
+
+    LVPAPACK_DEFAULT = 0xFF // select the one used for the global block
+};
+
+// default compression level used if nothing else is specified [0..9]
+#define LVPA_DEFAULT_LEVEL 3
+
+// each buffer allocated for files gets this amount of extra bytes (for pure text files that need to end with \0, for example
+#define LVPA_EXTRA_BUFSIZE 4
+
 typedef std::map<std::string, uint32> LVPAIndexMap;
 
 struct LVPAMasterHeader
@@ -36,6 +50,7 @@ struct LVPAMasterHeader
     uint32 hdrCrc; // checksum for the unpacked headers
     uint32 hdrEntries; // amount of LVPAFileHeaders
     uint32 dataOffs; // absolute offset where the data blocks start
+    uint8 algo; // algorithm used to compress the headers
     uint8 packProps; // LZMA props that were used for header compression
 };
 
@@ -46,9 +61,10 @@ struct LVPAFileHeader
     uint32 realSize; // unpacked size of the file, for array allocation
     uint32 crc; // checksum for the unpacked data block
     uint8 flags; // see LVPAFileFlags
+    uint8 algo; // algorithm used to compress this file
     uint8 props; // LZMA props that were used for compression
 
-    // calculated during load
+    // calculated during load, or only required for saving
     uint32 offset; // absolute offset in the file where the data block starts
     memblock data;
     bool good;
@@ -62,23 +78,28 @@ public:
     LVPAFile();
     ~LVPAFile();
     bool LoadFrom(const char *fn, LVPALoadFlags loadFlags);
-    bool Save(uint32 compression);
-    bool SaveAs(const char *fn, uint32 compression);
+    virtual bool Save(uint32 compression = LVPA_DEFAULT_LEVEL, uint8 algo = LVPAPACK_DEFAULT);
+    virtual bool SaveAs(const char *fn, uint32 compression = LVPA_DEFAULT_LEVEL, uint8 algo = LVPAPACK_DEFAULT);
 
-    void Add(char *fn, memblock mb, LVPAFileFlags flags); // adds a file, overwriting an existing one
-    memblock Remove(char *fn); // removes a file from the container and returns its memblock
-    bool Delete(char *fn); // removes a file from the container and frees up memory. returns false if the file was not found.
-    memblock Get(char *fn);
+    virtual void Add(const char *fn, memblock mb, LVPAFileFlags flags, uint8 algo = LVPAPACK_DEFAULT); // adds a file, overwriting if exists
+    virtual memblock Remove(const char *fn); // removes a file from the container and returns its memblock
+    memblock Get(const char *fn);
     void Clear(void); // free all
-    void Free(char *fn);
-    
+    virtual bool Delete(const char *fn); // removes a file from the container and frees up memory. returns false if the file was not found.
+    void Free(const char *fn); // frees the memory associated with a file, leaving it in the container. if requested again, it will be loaded from disk.
+    void Drop(const char *fn); // drops our reference to the file, so it will be loaded again from disk if required.
 
     inline uint32 Count(void) { return _indexes.size(); }
     inline uint32 HeaderCount(void) { return _headers.size(); }
-    inline bool HasFile(char *fn) { return Get(fn).ptr; };
+    bool HasFile(const char *fn);
+    const char *GetMyName(void) { return _ownName.c_str(); }
 
     bool AllGood(void);
     const LVPAFileHeader GetFileInfo(uint32 i);
+
+    // for stats. note: only call these directly after load/save, and NOT after files were added/removed!
+    inline uint32 GetRealSize(void) { return _realSize; }
+    uint32 GetPackedSize(void) { return _packedSize; }
 
 
 private:
@@ -87,12 +108,22 @@ private:
     LVPAIndexMap _indexes;
     std::vector<LVPAFileHeader> _headers;
     FILE *_handle;
+    uint32 _realSize, _packedSize; // for stats
 
     memblock _LoadFile(LVPAFileHeader& h);
     bool _OpenFile(void);
     void _CloseFile(void);
     void _CreateIndexes(void);
 
+};
+
+class LVPAFileReadOnly : public LVPAFile
+{
+    virtual bool Save(uint32 compression = LVPA_DEFAULT_LEVEL, uint8 algo = LVPAPACK_DEFAULT) { return false; }
+    virtual bool SaveAs(const char *fn, uint32 compression = LVPA_DEFAULT_LEVEL, uint8 algo = LVPAPACK_DEFAULT) { return false; }
+    memblock Remove(char *fn) { return Get(fn); }
+    bool Delete(char *fn) { return false; }
+    void Add(char *fn, memblock mb, LVPAFileFlags flags) {}
 };
 
 

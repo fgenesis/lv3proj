@@ -5,6 +5,8 @@
 #include <SDL/SDL.h>
 #include <SDL/SDL_mixer.h>
 
+#include "LVPAFileStore.h"
+
 struct Anim;
 
 
@@ -38,6 +40,8 @@ public:
     template <class T> inline void Drop(T *ptr) { _DecRef((void*)ptr); }
     void DropUnused(void);
 
+    inline LVPAFileStore& GetVFS(void) { return _vfs; }
+
     SDL_Surface *LoadImg(char *name);
     Anim *LoadAnim(char *name);
     Mix_Music *LoadMusic(char *name);
@@ -65,6 +69,7 @@ private:
     PtrCountMap _ptrmap;
     FileRefMap _frmap;
     PropMap _fprops;
+    LVPAFileStore _vfs;
 };
 
 
