@@ -12,7 +12,7 @@ enum LVPAMasterFlags
 enum LVPAFileFlags
 {
     LVPAFLAG_NONE     = 0x00,
-    LVPAFLAG_PACKED   = 0x01, // file is packed (LZMA)
+    LVPAFLAG_PACKED   = 0x01, // file is packed (LZMA, etc)
     LVPAFLAG_SOLID    = 0x02 // file is in the solid block
 };
 
@@ -31,8 +31,21 @@ enum LVPAAlgorithms
     LVPAPACK_DEFAULT = 0xFF // select the one used for the global block
 };
 
+enum LVPACompressionLevels
+{
+    LVPACOMP_NONE = 0, // just store
+    LVPACOMP_FASTEST = 1, // very fast, low memory
+    LVPACOMP_FAST = 2,
+    LVPACOMP_NORMAL = 3, // quite fast and good compression
+    LVPACOMP_GOOD = 5,
+    LVPACOMP_BETTER = 7,
+    LVPACOMP_ULTRA = 9, // slow, VERY memory intensive
+
+    LVPACOMP_INHERIT = 0xFF // use whatever is used for the solid block
+};
+
 // default compression level used if nothing else is specified [0..9]
-#define LVPA_DEFAULT_LEVEL 3
+#define LVPA_DEFAULT_LEVEL LVPACOMP_NORMAL
 
 // each buffer allocated for files gets this amount of extra bytes (for pure text files that need to end with \0, for example
 #define LVPA_EXTRA_BUFSIZE 4
@@ -51,6 +64,7 @@ struct LVPAMasterHeader
     uint32 hdrEntries; // amount of LVPAFileHeaders
     uint32 dataOffs; // absolute offset where the data blocks start
     uint8 algo; // algorithm used to compress the headers
+    // level is not explicitly stored
     uint8 packProps; // LZMA props that were used for header compression
 };
 
@@ -62,6 +76,7 @@ struct LVPAFileHeader
     uint32 crc; // checksum for the unpacked data block
     uint8 flags; // see LVPAFileFlags
     uint8 algo; // algorithm used to compress this file
+    uint8 level; // compression level used. default: LVPACOMP_INHERIT
     uint8 props; // LZMA props that were used for compression
 
     // calculated during load, or only required for saving
@@ -78,10 +93,11 @@ public:
     LVPAFile();
     ~LVPAFile();
     bool LoadFrom(const char *fn, LVPALoadFlags loadFlags);
-    virtual bool Save(uint32 compression = LVPA_DEFAULT_LEVEL, uint8 algo = LVPAPACK_DEFAULT);
-    virtual bool SaveAs(const char *fn, uint32 compression = LVPA_DEFAULT_LEVEL, uint8 algo = LVPAPACK_DEFAULT);
+    virtual bool Save(uint8 compression = LVPA_DEFAULT_LEVEL, uint8 algo = LVPAPACK_DEFAULT);
+    virtual bool SaveAs(const char *fn, uint8 compression = LVPA_DEFAULT_LEVEL, uint8 algo = LVPAPACK_DEFAULT);
 
-    virtual void Add(const char *fn, memblock mb, LVPAFileFlags flags, uint8 algo = LVPAPACK_DEFAULT); // adds a file, overwriting if exists
+    virtual void Add(const char *fn, memblock mb, LVPAFileFlags flags, uint8 algo = LVPAPACK_DEFAULT,
+        uint8 level = LVPACOMP_INHERIT); // adds a file, overwriting if exists
     virtual memblock Remove(const char *fn); // removes a file from the container and returns its memblock
     memblock Get(const char *fn);
     void Clear(void); // free all
@@ -119,11 +135,11 @@ private:
 
 class LVPAFileReadOnly : public LVPAFile
 {
-    virtual bool Save(uint32 compression = LVPA_DEFAULT_LEVEL, uint8 algo = LVPAPACK_DEFAULT) { return false; }
-    virtual bool SaveAs(const char *fn, uint32 compression = LVPA_DEFAULT_LEVEL, uint8 algo = LVPAPACK_DEFAULT) { return false; }
+    virtual bool Save(uint8 compression = LVPA_DEFAULT_LEVEL, uint8 algo = LVPAPACK_DEFAULT) { return false; }
+    virtual bool SaveAs(const char *fn, uint8 compression = LVPA_DEFAULT_LEVEL, uint8 algo = LVPAPACK_DEFAULT) { return false; }
     memblock Remove(char *fn) { return Get(fn); }
     bool Delete(char *fn) { return false; }
-    void Add(char *fn, memblock mb, LVPAFileFlags flags) {}
+    virtual void Add(const char *fn, memblock mb, LVPAFileFlags flags, uint8 algo = LVPAPACK_DEFAULT, uint8 level = LVPACOMP_INHERIT);
 };
 
 

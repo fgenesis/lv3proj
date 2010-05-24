@@ -4,10 +4,10 @@
 
 struct FilenameWithProps
 {
-    FilenameWithProps(std::string& s) : compr(LVPA_DEFAULT_LEVEL), solid(false), fn(s), algo(LVPAPACK_DEFAULT) {}
+    FilenameWithProps(std::string& s) : level(LVPACOMP_INHERIT), solid(false), fn(s), algo(LVPAPACK_DEFAULT) {}
     std::string fn;
     std::string relPath;
-    int8 compr; // level, -1 for default
+    uint8 level; // LVPACOMP_INHERIT for default
     bool solid;
     uint8 algo;
 };
@@ -28,7 +28,7 @@ void usage(void)
            "\n"
            "Flags:\n"
            "  -p PATH - use PATH as relative path to prepend each file\n"
-           /*"  -P PATH - override full path\n"*/
+           //"  -P PATH - override full path\n"
            "  -c# - compression level, in range [0..9]\n"
            "  -l FILE - use a listfile\n",
            //"  -f - force operation (e.g. extract files although CRCs differ)"
@@ -79,11 +79,11 @@ bool parsecmd(int argc, char *argv[], uint8& mode, uint8& level, bool& solid, st
                     break;
 
                 case 'c':
-                    level = -1;
+                    level = 10; // invalid setting, use as marker
                     if(l > 2)
                         level = argv[i][2] - '0'; // one-char atoi()
 
-                    if(level > 9)
+                    if(level > 9 && level != LVPACOMP_INHERIT)
                     {
                         printf("Error: -c expects a number in [0..9]\n");
                         return false;
@@ -227,7 +227,7 @@ void buildFileList(std::list<FilenameWithProps>& files, const char *listfile, co
             argv[0] = "";
             uint32 used = 1 + splitline(ptr, 255, &argv[1]); // +1 because of argv[0] - we dont need the exe file name here so we leave it blank
 
-            uint8 level = LVPA_DEFAULT_LEVEL;
+            uint8 level = LVPACOMP_INHERIT;
             bool solid = false;
             std::string dummy, fake_archive;
             std::string relPathExtra;
@@ -244,7 +244,7 @@ void buildFileList(std::list<FilenameWithProps>& files, const char *listfile, co
                 for(std::list<FilenameWithProps>::iterator it = filesList.begin(); it != filesList.end(); it++)
                 {
                     FilenameWithProps fp(relPath + it->fn);
-                    //fp.compr = level; // TODO: this is for later!
+                    fp.level = level;
                     fp.solid = solid;
                     fp.relPath = relPathExtra;
                     files.push_back(fp);
@@ -309,9 +309,16 @@ int main(int argc, char *argv[])
             for(uint32 i = 0; i < f.HeaderCount(); ++i)
             {
                 const LVPAFileHeader& h = f.GetFileInfo(i);
-                printf("[%c%c] '%s' (%.2f%%)%s\n",
+                char lvlc;
+                switch(h.level)
+                {
+                    case LVPACOMP_INHERIT: lvlc = 'i'; break;
+                    default:               lvlc = '0' + h.level;
+                }
+                printf("[%c%c,%c] '%s' (%.2f%%)%s\n",
                     h.flags & LVPAFLAG_PACKED ? 'P' : '-',
                     h.flags & LVPAFLAG_SOLID ? 'S' : '-',
+                    lvlc,
                     h.filename.c_str(),
                     (float(h.packedSize) / float(h.realSize)) * 100.0f,
                     h.good ? "" : " (ERROR)");
@@ -348,7 +355,7 @@ int main(int argc, char *argv[])
                 if(it->solid || solid) // TODO: make listfile setting higher priority?
                     flags |= LVPAFLAG_SOLID;
                 std::string finalFileName = relPath + it->relPath + _PathToFileName(it->fn);
-                f.Add((char*)finalFileName.c_str(), memblock(buf, s), LVPAFileFlags(flags));
+                f.Add((char*)finalFileName.c_str(), memblock(buf, s), LVPAFileFlags(flags), LVPAPACK_DEFAULT, it->level);
             }
             result = f.Save(level);
             printf("Total compression ratio: %u -> %u (%.2f%%)\n", f.GetRealSize(), f.GetPackedSize(),
@@ -367,6 +374,10 @@ int main(int argc, char *argv[])
             {
                 printf("Before repacking: %u -> %u (%.2f%%)\n", f.GetRealSize(), f.GetPackedSize(),
                     float(f.GetPackedSize()) / float(f.GetRealSize()) * 100.0f);
+                if(level == LVPACOMP_NONE)
+                    printf("Repacking as uncompressed\n");
+                else
+                    printf("Repacking with level %d\n", level);
 
                 result = f.Save(level);
 

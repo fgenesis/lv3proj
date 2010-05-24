@@ -45,6 +45,7 @@ ByteBuffer &operator >> (ByteBuffer& bb, LVPAFileHeader& h)
     bb >> h.crc;
     bb >> h.flags;
     bb >> h.algo;
+    bb >> h.level;
     bb >> h.props;
     return bb;
 }
@@ -58,6 +59,7 @@ ByteBuffer &operator << (ByteBuffer& bb, LVPAFileHeader& h)
     bb << h.flags;
     //bb << h.algo; // TODO: after implementing other algos, uncomment
     bb << uint8(LVPAPACK_LZMA);
+    bb << h.level;
     bb << h.props;
     return bb;
 }
@@ -106,7 +108,8 @@ void LVPAFile::_CloseFile(void)
     }
 }
 
-void LVPAFile::Add(const char *fn, memblock mb, LVPAFileFlags flags, uint8 algo /* = LVPAPACK_DEFAULT */)
+void LVPAFile::Add(const char *fn, memblock mb, LVPAFileFlags flags, uint8 algo /* = LVPAPACK_DEFAULT */,
+                   uint8 level /* = LVPACOMP_INHERIT */)
 {
     LVPAIndexMap::iterator it = _indexes.find(fn);
     if(it == _indexes.end())
@@ -116,6 +119,7 @@ void LVPAFile::Add(const char *fn, memblock mb, LVPAFileFlags flags, uint8 algo 
         hdr.flags = flags;
         hdr.filename = fn;
         hdr.algo = algo;
+        hdr.level = level;
         hdr.good = true;
         _headers.push_back(hdr);
         _indexes[fn] = _headers.size() - 1; // save the index of the hdr we just added
@@ -128,6 +132,7 @@ void LVPAFile::Add(const char *fn, memblock mb, LVPAFileFlags flags, uint8 algo 
         hdrRef.data = mb;
         hdrRef.flags = flags;
         hdrRef.algo = algo;
+        hdrRef.level = level;
         hdrRef.good = true;
     }
 }
@@ -373,12 +378,12 @@ bool LVPAFile::LoadFrom(const char *fn, LVPALoadFlags loadFlags)
     return true;
 }
 
-bool LVPAFile::Save(uint32 compression, uint8 algo /* = LVPAPACK_DEFAULT */)
+bool LVPAFile::Save(uint8 compression, uint8 algo /* = LVPAPACK_DEFAULT */)
 {
     return SaveAs(_ownName.c_str(), compression);
 }
 
-bool LVPAFile::SaveAs(const char *fn, uint32 compression, uint8 algo /* = LVPAPACK_DEFAULT */)
+bool LVPAFile::SaveAs(const char *fn, uint8 compression /* = LVPA_DEFAULT_LEVEL */, uint8 algo /* = LVPAPACK_DEFAULT */)
 {
     // close the file if already open, to allow overwriting
     _CloseFile();
@@ -386,6 +391,10 @@ bool LVPAFile::SaveAs(const char *fn, uint32 compression, uint8 algo /* = LVPAPA
     FILE *outfile = fopen(fn, "wb");
     if(!outfile)
         return false;
+
+    // this is an invalid setting for the solid block
+    if(compression == LVPACOMP_INHERIT)
+        compression = LVPA_DEFAULT_LEVEL;
 
     LVPAMasterHeader masterHdr;
     memset(&masterHdr, 0, sizeof(LVPAMasterHeader));
@@ -418,8 +427,6 @@ bool LVPAFile::SaveAs(const char *fn, uint32 compression, uint8 algo /* = LVPAPA
         CRC32 crc;
         crc.Update(h.data.ptr, h.data.size);
         crc.Finalize();
-        if(h.algo == LVPAPACK_DEFAULT)
-            h.algo = algo;
         h.crc = crc.Result();
 
         // for stats
@@ -452,11 +459,13 @@ bool LVPAFile::SaveAs(const char *fn, uint32 compression, uint8 algo /* = LVPAPA
             crc.Finalize();
             solidHeader.crc = crc.Result();
         }
-        zsolid.Compress(compression);
-        solidHeader.flags = zsolid.Compressed() ? LVPAHDR_PACKED : LVPAHDR_NONE;
+        if(compression != LVPACOMP_NONE)
+            zsolid.Compress(compression);
+        solidHeader.flags = zsolid.Compressed() ? LVPAFLAG_PACKED : LVPAFLAG_NONE;
         solidHeader.packedSize = zsolid.size();
         solidHeader.props = zsolid.GetEncodedProps();
         solidHeader.algo = algo;
+        solidHeader.level = compression;
         // solidHeader.filename = "" // has that value by default
         solidHeader.offset = ftell(outfile);
         DEBUG(logdebug("solid block offset: %u", solidHeader.offset));
@@ -480,20 +489,24 @@ bool LVPAFile::SaveAs(const char *fn, uint32 compression, uint8 algo /* = LVPAPA
         if( !(h.flags & LVPAFLAG_SOLID) )
         {
             h.offset = ftell(outfile);
-            DEBUG(logdebug("'%s' offset: %u", h.filename.c_str(), h.offset));
-            if(h.flags & LVPAFLAG_PACKED)
+            uint8 lvl = (h.level == LVPACOMP_INHERIT ? compression : h.level);
+
+            DEBUG(logdebug("'%s' offset: %u level: %u", h.filename.c_str(), h.offset, h.level));
+
+            if(lvl != LVPACOMP_NONE)
             {
                 LZMACompressor compr;
                 compr.append(h.data.ptr, h.data.size);
-                compr.Compress(compression);
-                if(!compr.Compressed())
-                    h.flags &= ~LVPAFLAG_PACKED;
+                compr.Compress(lvl);
+                if(compr.Compressed())
+                    h.flags |= LVPAFLAG_PACKED;
                 h.packedSize = compr.size();
                 h.props = compr.GetEncodedProps();
                 fwrite(compr.contents(), compr.size(), 1, outfile);
             }
             else
             {
+                h.flags &= ~LVPAFLAG_PACKED; // not packed
                 h.props = 0;
                 fwrite(h.data.ptr, h.data.size, 1, outfile);
             }
@@ -511,14 +524,15 @@ bool LVPAFile::SaveAs(const char *fn, uint32 compression, uint8 algo /* = LVPAPA
     masterHdr.hdrEntries = _headers.size() + (solidSize ? 1 : 0);
     masterHdr.hdrCrc = hcrc.Result();
     masterHdr.realHdrSize = zhdr.size();
-    zhdr.Compress(compression);
+    if(compression != LVPACOMP_NONE)
+        zhdr.Compress(compression);
     masterHdr.algo = algo;
     masterHdr.packProps = zhdr.GetEncodedProps();
     masterHdr.packedHdrSize = zhdr.size();
     masterHdr.flags = zhdr.Compressed() ? LVPAHDR_PACKED : LVPAHDR_NONE;
     masterHdr.version = gVersion;
     masterHdr.hdrOffset = ftell(outfile);
-    masterHdr.dataOffs = solidSize ? solidHeader.offset : 4 + sizeof(LVPAMasterHeader);
+    masterHdr.dataOffs = solidSize ? solidHeader.offset : 4 + sizeof(LVPAMasterHeader); // +4 for "LVPA"
     DEBUG(logdebug("master data offset: %u", masterHdr.dataOffs));
     DEBUG(logdebug("master header offset: %u", masterHdr.hdrOffset));
     fwrite(zhdr.contents(), zhdr.size(), 1, outfile);
