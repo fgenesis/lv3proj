@@ -1,2 +1,2 @@
 
-Game.LoadPropsInDir("music")
+Game.LoadPropFile("music/music.prop")

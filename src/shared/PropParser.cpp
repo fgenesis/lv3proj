@@ -8,10 +8,10 @@ void ParsePropData(char *strbuf, char *dn)
     std::vector<std::string> lines;
     uint32 cpos; // comment?
     std::string file_name;
-    StrSplit(strbuf, "\n", lines);
+    StrSplit(strbuf, "\n\x0a\x0d", lines);
     for(std::vector<std::string>::iterator lin = lines.begin(); lin != lines.end(); lin++)
     {
-        if(lin->length() < 3)
+        if(lin->length() < 3) // must have at least 3 chars per line: 'a=b' is valid, 'a=' is not
             continue;
 
         // strip comments if there are any
@@ -40,40 +40,26 @@ void ParsePropData(char *strbuf, char *dn)
         {
             std::string key = lin->substr(0, eqpos);
             resMgr.SetPropForFile((char*)file_name.c_str(), (char*)key.c_str(), (char*)lin->c_str() + eqpos + 1);
+            logdebug("Prop '%s=%s' for '%s'", key.c_str(), (char*)lin->c_str() + eqpos + 1, file_name.c_str());
         }
     }
 }
 
 // loads a .prop file and assigns its content to the ResourceMgr
-void LoadPropFile(char* fn, char *dn)
+void LoadPropFile(char* fn) // filename, directory name
 {
-    // TODO: clean this mess up a little
-    uint32 dn_len = dn ? strlen(dn) : 0;
-    bool endslash = dn[dn_len - 1] == '/';
-    std::string fixdn(dn);
-    if(!endslash)
-        fixdn += '/';
-    std::string fullfn(fixdn);
-    fullfn += fn;
+    std::string dirname = _PathStripLast(fn);
+    if(dirname[dirname.length() - 1] != '/')
+        dirname += '/';
 
-    FILE *fh = fopen(fullfn.c_str(), "r");
-    if(!fh)
+    memblock *mb = resMgr.LoadTextFile(fn);
+    if(!mb)
     {
         logerror("LoadPropFile: Failed to open '%s'", fn);
         return;
     }
-    logdebug("LoadPropFile: '%s' (%s)", fn, dn);
+    logdebug("LoadPropFile: '%s' (%s)", fn, dirname.c_str());
 
-    fseek(fh, 0, SEEK_END);
-    uint32 size = ftell(fh);
-    rewind(fh);
-
-    char *buf = new char[size];
-    uint32 bytes = fread(buf, 1, size, fh);
-    ASSERT(bytes <= size);
-    buf[bytes] = 0;
-    fclose(fh);
-
-    ParsePropData(buf, (char*)fixdn.c_str());
-    delete [] buf;
+    ParsePropData((char*)mb->ptr, (char*)dirname.c_str());
+    resMgr.Drop(mb);
 }

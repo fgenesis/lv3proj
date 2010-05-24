@@ -13,6 +13,7 @@
 #include "SoundCore.h"
 #include "PhysicsSystem.h"
 #include "AsciiLevelParser.h"
+#include "PropParser.h"
 
 #include "FalconBaseModule.h"
 #include "FalconObjectModule.h"
@@ -171,11 +172,11 @@ FALCON_FUNC fal_Game_Exit(Falcon::VMachine *vm)
     g_engine_ptr->Quit();
 }
 
-FALCON_FUNC fal_Game_LoadPropsInDir(Falcon::VMachine *vm)
+FALCON_FUNC fal_Game_LoadPropFile(Falcon::VMachine *vm)
 {
-    FALCON_REQUIRE_PARAMS_EXTRA(1, "S path");
+    FALCON_REQUIRE_PARAMS_EXTRA(1, "S filename");
     Falcon::AutoCString cstr(vm->param(0)->asString());
-    resMgr.LoadPropsInDir((char*)cstr.c_str());
+    LoadPropFile((char*)cstr.c_str());
 }
 
 FALCON_FUNC fal_Game_CreateCollisionMap(Falcon::VMachine *vm)
@@ -272,7 +273,7 @@ Falcon::Module *FalconGameModule_create(void)
     m->addClassMethod(clsGame, "SetPlayerCount", fal_Game_SetPlayerCount);
     m->addClassMethod(clsGame, "LoadLevel", fal_Game_LoadLevel);
     m->addClassMethod(clsGame, "Exit", fal_Game_Exit);
-    m->addClassMethod(clsGame, "LoadPropsInDir", fal_Game_LoadPropsInDir);
+    m->addClassMethod(clsGame, "LoadPropFile", fal_Game_LoadPropFile);
     m->addClassMethod(clsGame, "CreateCollisionMap", fal_Game_CreateCollisionMap);
     m->addClassMethod(clsGame, "UpdateCollisionMap", fal_Game_UpdateCollisionMap);
     m->addConstant("MAX_VOLUME", Falcon::int64(MIX_MAX_VOLUME));

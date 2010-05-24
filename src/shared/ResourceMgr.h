@@ -51,7 +51,6 @@ public:
     void SetPropForFile(char *fn, char *prop, char *what);
     std::string GetPropForFile(char *fn, char *prop);
     std::string GetPropForMusic(char *fn, char *prop) { return GetPropForFile((char*)(std::string("music/") + fn).c_str(), prop); }
-    void LoadPropsInDir(char *);
 
 private:
     inline void *_GetPtr(std::string& fn)

@@ -466,17 +466,6 @@ void ResourceMgr::SetPropForFile(char *fn, char *prop, char *what)
     fprop[prop] = what;
 }
 
-void ResourceMgr::LoadPropsInDir(char *dn)
-{
-    std::deque<std::string> fl = GetFileList(dn);
-    for(std::deque<std::string>::iterator it = fl.begin(); it != fl.end(); it++)
-    {
-        if(FileGetExtension(*it) == ".prop")
-            LoadPropFile((char*)it->c_str(), dn);
-    }
-}
-
-
 
 
 
