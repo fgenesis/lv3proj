@@ -294,8 +294,8 @@ Mix_Music *ResourceMgr::LoadMusic(char *name)
         {
             SDL_RWops *rwop = SDL_RWFromMem(vfile.mb.ptr, vfile.mb.size);
             music = Mix_LoadMUS_RW(rwop);
-            SDL_FreeRW(rwop);
-            vfile.src->Free(fn.c_str());
+            //SDL_FreeRW(rwop); // do NOT touch ANY memory associated with the music, otherwise it will segfault!
+            vfile.src->Drop(fn.c_str()); // we own this ptr now, drop from storage
         }
         else
         {   // if the file was not found in the virtual file system, try loading from disk
