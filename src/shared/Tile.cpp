@@ -55,6 +55,7 @@ AnimatedTile::AnimatedTile(Anim *a, const char *startwith /* = NULL*/)
 
 void AnimatedTile::SetFrame(uint32 frame)
 {
+    DEBUG(ASSERT(frame < curFrameStore->store.size()));
     curFrame = &(curFrameStore->store[frame]);
     nextupdate = Engine::GetCurFrameTime() + curFrame->frametime;
     curFrameIdx = frame;
@@ -71,6 +72,17 @@ void AnimatedTile::SetName(const char *name)
     if(am != ani->anims.end())
     {
         curFrameStore = &(am->second);
+
+        // list of frames is empty, but there may be a jump command to another frame
+        if(curFrameStore->store.empty())
+        {
+            if(curFrameStore->cmd.action == ANIMCMD_JUMP)
+                SetName(curFrameStore->cmd.param.c_str());
+            else
+                logerror("Tile '%s' framename '%s' does not contain any frames!", GetFilename(), name); 
+            return;
+        }
+
         SetFrame(0);
     }
     else

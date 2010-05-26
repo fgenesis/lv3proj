@@ -48,3 +48,5 @@
 -p gfx/sprites -s outlet3.png
 -p gfx/sprites -s outlet4.png
 -p gfx/sprites -s target.png
+-p gfx/sprites -s leverup.png
+-p gfx/sprites -s leverdown.png

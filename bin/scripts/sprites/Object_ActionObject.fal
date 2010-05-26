@@ -2,7 +2,7 @@ class ActionObject from Object
     
     gfx = nil
     maxdist = 0 // in pixels
-    sound = nil // sound played when the object is used (filenme string)
+    sound = nil // sound played when the object is used (filename string)
     sound2 = nil // sound played when the object is stopped beeing used (filenme string)
     
     _sound = nil // the actual Sound objects

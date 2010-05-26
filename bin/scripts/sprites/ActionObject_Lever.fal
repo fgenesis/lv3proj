@@ -1,0 +1,39 @@
+class Lever from ActionObject
+
+    gfx = "sprites/lever.anim"
+    sound = "lever.ogg"
+    onSwitch = nil
+    up = false // default is down
+    
+    function OnAction(who, state)
+        if not state: return false
+        self.Switch()
+        self.OnSwitch(who)
+        return true
+    end
+    
+    function Switch()
+        tile = self.GetSprite()
+        if self.up
+            tile.name = "swdown"
+            self.up = false
+        else
+            tile.name = "swup"
+            self.up = true
+        end
+    end
+    
+    function OnSwitch(who) // not up == down
+        if isCallable(self.onSwitch)
+            self.onSwitch(who, self, self.up)
+        else
+            > "Lever(", self.id, ")  was flipped ", (self.up ? "up" : "down"), " by ", who, " (no action)"
+        end
+    end
+    
+    function SetOnSwitch(func): self.onSwitch = func
+    
+    
+end
+
+export Lever

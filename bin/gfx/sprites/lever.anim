@@ -1,0 +1,16 @@
+[default]
+leverdown.png
+
+[up]
+leverup.png
+
+[down]
+leverdown.png
+
+# no animation on toggling, but could be done for other levers
+# to keep the names consistent these are added here also.
+[swup]
+j up
+
+[swdown]
+j down

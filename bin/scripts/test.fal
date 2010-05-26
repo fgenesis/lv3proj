@@ -163,7 +163,8 @@ tileInfoSetup = [
     "sprites/enx.anim"         => .[TFlag.ELECTRO    redcross     EN_cons                    3           5],
     "sprites/greyblock.png"    => .[TFlag.BREAK      breakable    nil                        0           nil],
     "sprites/bomb.png"         => .[TFlag.NONE       nil          BombObject                 0           3],
-    "sprites/button.png"       => .[TFlag.NONE       nil          Button                     1           3]
+    "sprites/button.png"       => .[TFlag.NONE       nil          Button                     1           3],
+    "sprites/leverdown.png"    => .[TFlag.NONE       nil          Lever                      0           3]
 ]
 
 buttonActions = .[
