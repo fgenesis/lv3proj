@@ -20,17 +20,17 @@ void usage(void)
            "  a - append to archive or create new\n"
            //"  d - create archive from directory\n"
            //"  D - same as d, but recursive\n"
-           //"  e - extract to current directory\n"
-           //"  x - extract with full path\n"
+           "  e - extract to current directory\n"
+           "  x - extract with full path\n"
            "  t - test archive\n"
            "  l - list files and mode\n"
            "  r - repack with a different compression level\n"
            "\n"
            "Flags:\n"
-           "  -p PATH - use PATH as relative path to prepend each file\n"
+           "  -p PATH - use PATH as relative path to prepend each file (modes: aex)\n"
            //"  -P PATH - override full path\n"
            "  -c# - compression level, in range [0..9]\n"
-           "  -l FILE - use a listfile\n",
+           "  -f FILE - use a listfile\n",
            //"  -f - force operation (e.g. extract files although CRCs differ)"
            "\n"
            "<archive> is the archive file to create/modify/read\n"
@@ -94,14 +94,14 @@ bool parsecmd(int argc, char *argv[], uint8& mode, uint8& level, bool& solid, st
                     solid = true;
                     break;
 
-                case 'l':
+                case 'f':
                     if(i+1 < argc)
                     {
                         listfile = argv[++i];
                     }
                     else
                     {
-                        printf("Error: -l expects a listfile name\n");
+                        printf("Error: -f expects a listfile name\n");
                         return false;
                     }
                     break;
@@ -297,6 +297,8 @@ int main(int argc, char *argv[])
     LVPAFile f;
     loaded = f.LoadFrom(archive.c_str(), LVPALOAD_ALL);
 
+    bool extractFullPath = false;
+
     switch(mode)
     {
         case 'l':
@@ -398,6 +400,56 @@ int main(int argc, char *argv[])
             result = f.AllGood();
             printf("%s", result ? "File is OK\n" : "File is damaged, use 'lvpak l' to list\n");
             break;
+
+        case 'x':
+            extractFullPath = true;
+            // fallthrough
+
+        case 'e':
+        {
+            if(!loaded)
+            {
+                errstr = "Error opening archive: '" + archive + "'";
+                break;
+            }
+            uint32 unpacked = 0;
+            CreateDirRec(relPath.c_str());
+            for(uint32 i = 0; i < f.HeaderCount(); ++i)
+            {
+                const LVPAFileHeader& h = f.GetFileInfo(i);
+                if(!h.good)
+                    continue;
+                std::string exfn(relPath);
+                if(extractFullPath)
+                {
+                    exfn += h.filename;
+                    CreateDirRec(_PathStripLast(exfn).c_str());
+                }
+                else
+                {
+                    exfn += _PathToFileName(h.filename);
+                }
+
+                FILE *exfh = fopen(exfn.c_str(), "wb");
+                if(!exfh)
+                {
+                    printf("Can't extract to file '%s'\n", exfn.c_str());
+                    continue;
+                }
+
+                uint32 bytes = fwrite(h.data.ptr, 1, h.data.size, exfh);
+                fclose(exfh);
+                if(bytes != h.data.size)
+                {
+                    printf("Warning: '%s' was not fully written (%u out of %u bytes)\n", exfn.c_str(), bytes, h.data.size);
+                    continue;
+                }
+                ++unpacked;
+            }
+            result = unpacked;
+            break;
+        }
+
 
         default:
             printf("Unsupported mode: '%c'\n", mode);

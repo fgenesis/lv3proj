@@ -240,6 +240,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\shared\MersenneTwister.h"
+				>
+			</File>
+			<File
 				RelativePath=".\shared\ObjectMgr.cpp"
 				>
 			</File>

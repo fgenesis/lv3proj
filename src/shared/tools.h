@@ -18,6 +18,7 @@ std::string toHexDump(uint8* array,uint32 size,bool spaces=true,uint32 per_line=
 std::deque<std::string> GetFileList(std::string);
 bool FileExists(std::string);
 bool CreateDir(const char*);
+bool CreateDirRec(const char*);
 uint32 getMSTime(void);
 uint32 getMSTimeDiff(uint32, uint32);
 uint32 GetFileSize(const char*);

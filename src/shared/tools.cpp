@@ -186,11 +186,25 @@ bool CreateDir(const char *dir)
 # ifdef _WIN32
 	result = ::CreateDirectory(dir,NULL);
 # else
-	// NOT tested for Linux!! whats the return value on success?
-	// TODO: fix me!
-	result = mkdir(dir,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+	result = !mkdir(dir,S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 #endif
 	return result;
+}
+
+bool CreateDirRec(const char *dir)
+{
+    bool result = true;
+    std::list<std::string> li;
+    StrSplit(dir, "/\\", li, false);
+    std::string d;
+    d.reserve(strlen(dir));
+    for(std::list<std::string>::iterator it = li.begin(); it != li.end(); it++)
+    {
+        d += *it;
+        result = CreateDir(d.c_str()) && result;
+        d += '/';
+    }
+    return result;
 }
 
 // current system time in ms
