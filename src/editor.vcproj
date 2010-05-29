@@ -128,7 +128,7 @@
 				BufferSecurityCheck="true"
 				EnableFunctionLevelLinking="false"
 				EnableEnhancedInstructionSet="2"
-				RuntimeTypeInfo="false"
+				RuntimeTypeInfo="true"
 				UsePrecompiledHeader="0"
 				ProgramDataBaseFileName="$(IntDir)\editor.pdb"
 				WarningLevel="3"
@@ -199,6 +199,22 @@
 			</File>
 			<File
 				RelativePath=".\editor\main.h"
+				>
+			</File>
+			<File
+				RelativePath=".\editor\SDLImageLoaderManaged.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\editor\SDLImageLoaderManaged.h"
+				>
+			</File>
+			<File
+				RelativePath=".\editor\SDLImageManaged.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\editor\SDLImageManaged.h"
 				>
 			</File>
 		</Filter>

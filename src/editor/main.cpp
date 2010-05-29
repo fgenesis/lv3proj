@@ -19,9 +19,25 @@ int main(int argc, char *argv[])
 
     EditorEngine editor;
 
-    editor.InitScreen(1000,600,0,SDL_RESIZABLE);
-    editor.SetTitle("Lost Vikings 3 Project - Level Editor");
-    editor.Setup();
-    editor.Run();
+    try
+    {
+        editor.InitScreen(1000,600,0,SDL_RESIZABLE);
+        editor.SetTitle("Lost Vikings 3 Project - Level Editor");
+        editor.Setup();
+        editor.Run();
+    }
+    catch(gcn::Exception ex)
+    {
+        logerror("An unhandled gcn::Exception occurred! Infos:");
+        logerror("File: %s:%u", ex.getFilename().c_str(), ex.getLine());
+        logerror("Function: %s", ex.getFunction().c_str());
+        logerror("Message: %s", ex.getMessage().c_str());
+        getchar();
+    }
+    catch(...)
+    {
+        logerror("Unhandled unknown Exception");
+        getchar();
+    }
     return 0;
 }

@@ -5,13 +5,15 @@
 #include "SoundCore.h"
 #include "AsciiLevelParser.h"
 #include "GuichanExt.h"
+#include "LVPAFile.h"
+#include "SDLImageLoaderManaged.h"
 #include "EditorEngine.h"
 
 
 EditorEngine::EditorEngine()
 : Engine()
 {
-    _gcnImgLoader = new gcn::SDLImageLoader();
+    _gcnImgLoader = new gcn::SDLImageLoaderManaged();
     _gcnGfx = new gcn::SDLGraphics();
     _gcnInput = new gcn::SDLInput();
     _gcnGui = new gcn::Gui();
@@ -40,17 +42,18 @@ EditorEngine::~EditorEngine()
 
 bool EditorEngine::Setup(void)
 {
+    // setup the VFS and the container to read from
+    LVPAFile *basepak = new LVPAFile();
+    basepak->LoadFrom("basepak.lvpa", LVPALOAD_SOLID);
+    resMgr.GetVFS().AddFront(basepak);
+
     _gcnGui->setGraphics(_gcnGfx);
     _gcnGui->setInput(_gcnInput);
     _gcnGfx->setTarget(GetSurface());
     gcn::Image::setImageLoader(_gcnImgLoader);
 
-    // blah.. test
-    //resMgr.LoadPropsInDir("music");
-    //sndCore.PlayMusic("lv1_amiga_intro.ogg");
-
     _gcnGui->setTop(_topWidget);
-    _gcnFont = new gcn::ImageFont("gfx/fixedfont.png", " abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789");
+    _gcnFont = new gcn::ImageFont("font/fixedfont.png", " abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789");
     gcn::Widget::setGlobalFont(_gcnFont);
 
     _layermgr->Clear();
