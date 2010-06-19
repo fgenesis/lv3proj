@@ -33,8 +33,6 @@ protected:
     virtual void _Process(uint32 ms);
     virtual void _Render(void);
 
-    AppFalconGame *falcon;
-
     uint32 _playerCount;
 
     // TEMP: for debugging/testing

@@ -15,7 +15,9 @@ AppFalcon::AppFalcon(Engine *e)
     mloader.compileInMemory(true);
     mloader.alwaysRecomp(true);
     mloader.saveModules(false);
+    mloader.delayRaise(true);
     FalconObjectModule_SetEnginePtr(e);
+    FalconBaseModule_SetEnginePtr(e);
 }
 
 AppFalcon::~AppFalcon()
@@ -29,7 +31,7 @@ bool AppFalcon::Init(char *initscript /* = NULL */)
     vm = new Falcon::VMachine();
     vm->launchAtLink(false);
     _LoadModules();
-    return initscript ? EmbedStringAsModule(initscript, "initscript") : true;
+    return initscript ? EmbedStringAsModule(initscript, "initscript", false, true, true) : true;
 }
 
 void AppFalcon::DeleteVM(void)
@@ -49,7 +51,8 @@ void AppFalcon::_LoadModules(void)
     vm->link( FalconObjectModule_create() );
 }
 
-bool AppFalcon::EmbedStringAsModule(char *str, char *modName)
+bool AppFalcon::EmbedStringAsModule(char *str, char *modName, bool throw_ /* = false */,
+                                    bool launchLink /* = false */, bool launchExplicit /* = false */)
 {
     if(!str || str[0] == '\0')
         return false;
@@ -57,30 +60,37 @@ bool AppFalcon::EmbedStringAsModule(char *str, char *modName)
     Falcon::StringStream input( str );
     Falcon::TranscoderEOL trans(&input, false);
 
-    Falcon::Runtime rt(&mloader);
+    Falcon::Runtime rt(&mloader, vm);
+    rt.hasMainModule( launchExplicit );
 
     Falcon::Module *m = NULL;
+
+    bool execAtLink = vm->launchAtLink();
 
     try
     {
         m = mloader.loadSource( &trans, modName, modName );
-    }
-    catch(Falcon::Error *err)
-    {
-        Falcon::AutoCString edesc( err->toString() );
-        logerror("AppFalcon::EmbedStringAsModule(%s): %s", modName, edesc.c_str());
-        err->decref();
-        return false;
-    }
 
-    try
-    {
         rt.addModule(m);
+        vm->launchAtLink(launchLink);
         vm->link(&rt);
-        vm->launch();
+        if(launchExplicit)
+            vm->launch();
+        vm->launchAtLink( execAtLink );
     }
     catch(Falcon::Error *err)
     {
+        vm->launchAtLink( execAtLink );
+        if(throw_)
+        {
+            Falcon::CodeError *ce = new Falcon::CodeError( Falcon::ErrorParam( Falcon::e_loaderror, __LINE__ ).
+                extra( modName ) );
+
+            ce->appendSubError(err);
+            err->decref();
+
+            throw ce;
+        }
         Falcon::AutoCString edesc( err->toString() );
         logerror("AppFalcon::EmbedStringAsModule(%s): %s", modName, edesc.c_str());
         err->decref();

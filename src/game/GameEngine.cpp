@@ -65,7 +65,7 @@ bool GameEngine::Setup(void)
 
     mb = resMgr.LoadTextFile("scripts/test.fal");
     ASSERT(mb);
-    falcon->EmbedStringAsModule((char*)mb->ptr, "testscript");
+    falcon->EmbedStringAsModule((char*)mb->ptr, "testscript", false, true, true);
     resMgr.Drop(mb);
 
     return true;

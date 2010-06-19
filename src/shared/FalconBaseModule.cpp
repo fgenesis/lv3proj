@@ -1,11 +1,21 @@
 #include <falcon/engine.h>
 #include "common.h"
 #include "SharedDefines.h"
+#include "Engine.h"
 #include "AppFalcon.h"
 #include "FalconBaseModule.h"
 #include "SoundCore.h"
+#include "ResourceMgr.h"
 
 #include "UndefUselessCrap.h"
+
+Engine *g_engine_ptr_ = NULL;
+
+void FalconBaseModule_SetEnginePtr(Engine *eng)
+{
+    g_engine_ptr_ = eng;
+}
+
 
 FALCON_FUNC fal_NullFunc(Falcon::VMachine *)
 {
@@ -28,6 +38,39 @@ void forbidden_init(Falcon::VMachine *vm)
 
 FALCON_FUNC fal_include_ex( Falcon::VMachine *vm )
 {
+    Falcon::Item *i_file = vm->param(0);
+    Falcon::Item *i_path = vm->param(2);
+    if( !i_file || !i_file->isString()
+        || (i_path != 0 && !(i_path->isString() || i_path->isNil()))
+        )
+    {
+        throw new Falcon::ParamError(
+            Falcon::ErrorParam( Falcon::e_inv_params, __LINE__ )
+            .origin(Falcon::e_orig_runtime)
+            .extra( "S" ) );
+    }
+
+    Falcon::AutoCString cstr_fn(i_file->asString());
+    Falcon::AutoCString cstr_path(i_path->asString());
+    std::string fullpath(cstr_path.c_str());
+    _FixFileName(fullpath);
+    if(fullpath[fullpath.length() - 1] != '/')
+        fullpath += '/';
+    fullpath += cstr_fn.c_str();
+    memblock *mb = resMgr.LoadTextFile((char*)fullpath.c_str());
+    if(!mb)
+    {
+        vm->retval(false);
+        return;
+    }
+    std::string modName = cstr_fn.c_str();
+    bool result = g_engine_ptr_->falcon->EmbedStringAsModule((char*)mb->ptr, (char*)modName.c_str(), true, true, false);
+
+    vm->retval(result);
+
+
+    // OLD CODE
+    /*
     Falcon::Item *i_file = vm->param(0);
     Falcon::Item *i_enc = vm->param(1);
     Falcon::Item *i_path = vm->param(2);
@@ -114,6 +157,7 @@ FALCON_FUNC fal_include_ex( Falcon::VMachine *vm )
         vm->launchAtLink( execAtLink );
         throw ce;
     }
+    */
 }
 
 fal_Sound::fal_Sound(SoundFile *sf)

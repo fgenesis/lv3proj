@@ -14,7 +14,7 @@ public:
     void DeleteVM(void);
     void SetModulePath(char *dir) { _modulePath = dir; }
     inline Falcon::VMachine *GetVM(void) { return vm; }
-    bool EmbedStringAsModule(char *str, char *modName);
+    bool EmbedStringAsModule(char *str, char *modName, bool throw_ = false, bool launch = false, bool launchExplicit = false);
 
 protected:
     virtual void _LoadModules(void);

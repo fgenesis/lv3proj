@@ -9,6 +9,7 @@
 class LayerMgr;
 class ObjectMgr;
 class PhysicsMgr;
+class AppFalcon;
 
 enum EngineDebugFlags
 {
@@ -64,6 +65,7 @@ public:
 
     ObjectMgr *objmgr;
     PhysicsMgr *physmgr;
+    AppFalcon *falcon;
 
 protected:
 
