@@ -56,7 +56,7 @@ public:
         return r;
     }
 
-    inline void BaseRect::SetBBox(float x_, float y_, uint32 w_, uint32 h_)
+    inline void SetBBox(float x_, float y_, uint32 w_, uint32 h_)
     {
         this->x = x_;
         this->y = y_;
@@ -64,13 +64,13 @@ public:
         this->h = h_;
     }
 
-    inline void BaseRect::SetPos(float x_, float y_)
+    inline void SetPos(float x_, float y_)
     {
         this->x = x_;
         this->y = y_;
     }
 
-    inline void BaseRect::MoveRelative(float xr, float yr)
+    inline void MoveRelative(float xr, float yr)
     {
         this->x += xr;
         this->y += yr;

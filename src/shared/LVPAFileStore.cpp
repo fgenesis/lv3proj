@@ -1,6 +1,6 @@
 #include "common.h"
 #include "LVPAFile.h"
-#include "LVPAFIleStore.h"
+#include "LVPAFileStore.h"
 
 void LVPAFileStore::FreeAll(void)
 {

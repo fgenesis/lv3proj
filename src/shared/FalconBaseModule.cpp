@@ -219,7 +219,7 @@ FALCON_FUNC fal_Sound_IsPlaying( Falcon::VMachine *vm )
 
 FALCON_FUNC fal_debug_break( Falcon::VMachine *vm )
 {
-    __asm nop; // set a breakpoint here and call the function from falcon
+    vm = NULL; // do nothing. set a breakpoint here and call the function from falcon
 }
 
 FALCON_FUNC fal_InvertSide( Falcon::VMachine *vm )

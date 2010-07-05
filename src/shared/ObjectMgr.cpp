@@ -231,7 +231,7 @@ void ObjectMgr::RenderBBoxes(void)
     SDL_Rect r;
     for(ObjectMap::iterator it = _store.begin(); it != _store.end(); it++)
     {
-        BaseRect& br = ((ActiveRect*)it->second)->cloneRect();
+        BaseRect br = ((ActiveRect*)it->second)->cloneRect();
         r.x = int32(br.x);
         r.y = int32(br.y);
         r.h = br.h;
