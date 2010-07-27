@@ -1,0 +1,31 @@
+set(libpng_SRC
+adler32.c
+compress.c
+crc32.c
+deflate.c
+gzio.c
+infback.c
+inffast.c
+inflate.c
+inftrees.c
+png.c
+pngerror.c
+pngget.c
+pngmem.c
+pngpread.c
+pngread.c
+pngrio.c
+pngrtran.c
+pngrutil.c
+pngset.c
+pngtrans.c
+pngwio.c
+pngwrite.c
+pngwtran.c
+pngwutil.c
+trees.c
+uncompr.c
+zutil.c
+)
+# include_directories (${LOSTVIKINGS3_SOURCE_DIR}/src/include) 
+add_library(png ${libpng_SRC})
