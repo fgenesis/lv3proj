@@ -143,18 +143,6 @@ FALCON_FUNC fal_Game_SetMusicVolume(Falcon::VMachine *vm)
     sndCore.SetMusicVolume(vm->param(0)->forceInteger());
 }
 
-FALCON_FUNC fal_Game_GetPlayerCount(Falcon::VMachine *vm)
-{
-    vm->retval(Falcon::int32(g_engine_ptr->GetPlayerCount()));
-}
-
-FALCON_FUNC fal_Game_SetPlayerCount(Falcon::VMachine *vm)
-{
-    FALCON_REQUIRE_PARAMS(1);
-    uint32 p = vm->param(0)->forceInteger();
-    g_engine_ptr->SetPlayerCount(p);
-}
-
 FALCON_FUNC fal_Game_LoadLevel(Falcon::VMachine *vm)
 {
     FALCON_REQUIRE_PARAMS_EXTRA(1,"S filename");
@@ -269,8 +257,6 @@ Falcon::Module *FalconGameModule_create(void)
     m->addClassMethod(clsGame, "GetMusicVolume", fal_Game_GetMusicVolume);
     m->addClassMethod(clsGame, "PlayMusic", fal_Game_PlayMusic);
     m->addClassMethod(clsGame, "StopMusic", fal_Game_PlayMusic);
-    m->addClassMethod(clsGame, "GetPlayerCount", fal_Game_GetPlayerCount);
-    m->addClassMethod(clsGame, "SetPlayerCount", fal_Game_SetPlayerCount);
     m->addClassMethod(clsGame, "LoadLevel", fal_Game_LoadLevel);
     m->addClassMethod(clsGame, "Exit", fal_Game_Exit);
     m->addClassMethod(clsGame, "LoadPropFile", fal_Game_LoadPropFile);

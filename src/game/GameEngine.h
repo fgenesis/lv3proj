@@ -24,16 +24,12 @@ public:
     virtual bool Setup(void);
     virtual void Quit(void);
     virtual void Shutdown(void);
-    
-    inline uint32 GetPlayerCount(void) { return _playerCount; }
-    inline void SetPlayerCount(uint32 c) { _playerCount = c; }
+
 
 protected:
 
     virtual void _Process(uint32 ms);
     virtual void _Render(void);
-
-    uint32 _playerCount;
 
     // TEMP: for debugging/testing
 #ifdef _DEBUG

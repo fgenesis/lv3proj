@@ -19,8 +19,6 @@ GameEngine::GameEngine()
 {
     falcon = new AppFalconGame(this);
 
-    _playerCount = 1;
-
     // test
 #ifdef _DEBUG
     SetDebugFlag(EDBG_SHOW_BBOXES);
