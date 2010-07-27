@@ -1,3 +1,8 @@
+
+/** \file
+Base module file, providing some engine core function bindings
+*/
+
 #include <falcon/engine.h>
 #include "common.h"
 #include "SharedDefines.h"
@@ -8,6 +13,16 @@
 #include "ResourceMgr.h"
 
 #include "UndefUselessCrap.h"
+
+/*#
+@module module_base base
+@brief Contains bindings to core functions of the engine
+
+This module provides bindings to engine core functions and classes,
+shared across the game and the editor.
+
+@beginmodule module_base
+*/
 
 Engine *g_engine_ptr_ = NULL;
 
@@ -36,6 +51,18 @@ void forbidden_init(Falcon::VMachine *vm)
     throw new Falcon::AccessError( Falcon::ErrorParam( Falcon::e_noninst_cls ) );
 }
 
+/*#
+@function include_ex
+@ingroup functions
+@brief Include a falcon source file
+@param file Filename to load, without path
+@param nil Not used.
+@param path Path where to load the file from
+
+This function is similar to the original include() function present in Falcon,
+but can only load source files (.fal).
+Files inside container files can also be loaded by this function.
+*/
 FALCON_FUNC fal_include_ex( Falcon::VMachine *vm )
 {
     Falcon::Item *i_file = vm->param(0);
@@ -160,6 +187,25 @@ FALCON_FUNC fal_include_ex( Falcon::VMachine *vm )
     */
 }
 
+/*#
+@class Sound
+@brief Sound clips that can be directly played.
+@param filename : Name of the file to load, in directory 'sfx/' or a subdirectory.
+
+The Sound class supports the following file formats: OGG, WAV.
+
+If the file was not found or loading failed, @b nil is returned instead of a valid object.
+
+Example use: Play file "sfx/button.ogg"
+@code
+    s = Sound("button.ogg")
+    s.Play()
+    // or alternatively
+    Sound("button.ogg").Play()
+@endcode
+
+*/
+
 fal_Sound::fal_Sound(SoundFile *sf)
 : _snd(sf)
 {
@@ -185,18 +231,33 @@ FALCON_FUNC fal_Sound_init( Falcon::VMachine *vm )
     vm->self().asObject()->setUserData(new fal_Sound(snd));
     snd->ref--;
 }
-
+/*#
+@method Play Sound
+@brief Plays a sound
+@note A sound can be played multiple times, and overlapping.
+*/
 FALCON_FUNC fal_Sound_Play( Falcon::VMachine *vm )
 {
     fal_Sound *self = (fal_Sound*)vm->self().asObject()->getUserData();
     self->GetSound()->Play();
 }
+/*#
+@method Stop Sound
+@brief Stops sound playback
+@note If Play() was called multiple times, only the last started playback is stopped.
+*/
 FALCON_FUNC fal_Sound_Stop( Falcon::VMachine *vm )
 {
     fal_Sound *self = (fal_Sound*)vm->self().asObject()->getUserData();
     self->GetSound()->Stop();
 }
 
+/*#
+@method SetVolume Sound
+@brief Adjusts sound volume [0..128]
+@param volume Can be in range 0 (muted) to 128 (loudest)
+@note This will change the volume of all sounds currently played by this object.
+*/
 FALCON_FUNC fal_Sound_SetVolume( Falcon::VMachine *vm )
 {
     FALCON_REQUIRE_PARAMS_EXTRA(1, "N");
@@ -205,23 +266,44 @@ FALCON_FUNC fal_Sound_SetVolume( Falcon::VMachine *vm )
     self->GetSound()->SetVolume(vol);
 }
 
+/*#
+@method GetVolume Sound
+@brief Retrieve sound volume [0..128]
+*/
 FALCON_FUNC fal_Sound_GetVolume( Falcon::VMachine *vm )
 {
     fal_Sound *self = (fal_Sound*)vm->self().asObject()->getUserData();
     vm->retval((Falcon::int64)self->GetSound()->GetVolume());
 }
 
+/*#
+@method IsPlaying Sound
+@brief Checks if this sound is playing on at least one channel
+*/
 FALCON_FUNC fal_Sound_IsPlaying( Falcon::VMachine *vm )
 {
     fal_Sound *self = (fal_Sound*)vm->self().asObject()->getUserData();
     vm->retval(self->GetSound()->IsPlaying());
 }
+/*#
+@function DbgBreak
+@brief For debugging, should not be used
 
+Set a breakpoint in C++ source in this function binding and break into the debugger when this fruntion is called, whewt!
+*/
 FALCON_FUNC fal_debug_break( Falcon::VMachine *vm )
 {
     vm = NULL; // do nothing. set a breakpoint here and call the function from falcon
 }
 
+/*#
+@function InvertSide
+@param dir Direction or side
+@brief Returns the opposite of a side or direction
+
+Convenience function returning the opposite of DIRECTION_* and SIDE_* constants,
+e.g. SIDE_LEFT gets SIDE_RIGHT, or DIRECTION_UPRIGHT gets DIRECTION_DOWNLEFT, and so on.
+*/
 FALCON_FUNC fal_InvertSide( Falcon::VMachine *vm )
 {
     FALCON_REQUIRE_PARAMS(1);
