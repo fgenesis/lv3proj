@@ -139,7 +139,7 @@ class LVPAFileReadOnly : public LVPAFile
     virtual bool SaveAs(const char *fn, uint8 compression = LVPA_DEFAULT_LEVEL, uint8 algo = LVPAPACK_DEFAULT) { return false; }
     memblock Remove(char *fn) { return Get(fn); }
     bool Delete(char *fn) { return false; }
-    virtual void Add(const char *fn, memblock mb, LVPAFileFlags flags, uint8 algo = LVPAPACK_DEFAULT, uint8 level = LVPACOMP_INHERIT);
+    virtual void Add(const char *fn, memblock mb, LVPAFileFlags flags, uint8 algo = LVPAPACK_DEFAULT, uint8 level = LVPACOMP_INHERIT) {};
 };
 
 
