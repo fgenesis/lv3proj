@@ -11,8 +11,10 @@ Base module file, providing some engine core function bindings
 #include "FalconBaseModule.h"
 #include "SoundCore.h"
 #include "ResourceMgr.h"
+#include "LVPAFile.h"
 
 #include "UndefUselessCrap.h"
+
 
 /*#
 @module module_base base
@@ -311,6 +313,93 @@ FALCON_FUNC fal_InvertSide( Falcon::VMachine *vm )
     vm->retval((Falcon::int64)InvertSide(side));
 }
 
+/*#
+@method VFS AddPath
+@param path Relative directory name
+@brief Merges a directory into the virtual file system tree
+
+After adding a path, its files and sub-directories can be accessed like if they were
+in the root directory.
+*/
+FALCON_FUNC fal_VFS_AddPath( Falcon::VMachine *vm )
+{
+    FALCON_REQUIRE_PARAMS_EXTRA(1, "S");
+    if(!vm->param(0)->isString())
+    {
+        throw new Falcon::ParamError(Falcon::ErrorParam( Falcon::e_inv_params, __LINE__ )
+            .extra("S") );
+    }
+    Falcon::String *path = vm->param(0)->asString();
+    Falcon::AutoCString cstr(path);
+    vm->retval(resMgr.vfs.AddPath(cstr.c_str()));
+}
+
+/*#
+@method VFS AddContainer
+@param filename Container (.lvpa) file to load
+@brief Merges the contents of a container file into the virtual file system tree
+
+After adding a container, its files and sub-directories can be accessed like if they were
+in the root directory on the file system.
+*/
+FALCON_FUNC fal_VFS_AddContainer( Falcon::VMachine *vm )
+{
+    FALCON_REQUIRE_PARAMS_EXTRA(1, "S [, N]");
+    if(!vm->param(0)->isString())
+    {
+        throw new Falcon::ParamError(Falcon::ErrorParam( Falcon::e_inv_params, __LINE__ )
+            .extra("S [, N]") );
+    }
+    Falcon::String *path = vm->param(0)->asString();
+    Falcon::AutoCString cstr(path);
+
+    LVPALoadFlags mode = LVPALOAD_NONE;
+    if(vm->paramCount() > 1)
+    {
+        switch(vm->param(0)->forceInteger())
+        {
+            case 1: mode = LVPALOAD_ALL; break;
+            case 2: mode = LVPALOAD_SOLID; break;
+        }
+    }
+
+    LVPAFile *lvpa = new LVPAFileReadOnly;
+    if(!lvpa->LoadFrom(cstr.c_str(), mode))
+    {
+        delete lvpa;
+        vm->retval(false);
+        return;
+    }
+
+    vm->retval(resMgr.vfs.AddContainer(lvpa, true));
+}
+
+/*#
+@method VFS Clear
+@brief Resets the virtual file system tree to its initial state
+
+This drops all custom paths or containers added.
+*/
+FALCON_FUNC fal_VFS_Clear( Falcon::VMachine *vm )
+{
+    resMgr.vfs.Prepare(true);
+}
+
+/*#
+@method VFS Reload
+@brief Reloads all files contained in the virtual file system and refreshes files on disk
+
+This should be called if files or directories on the file system were added or removed,
+to refresh the virtual file system tree.
+*/
+FALCON_FUNC fal_VFS_Reload( Falcon::VMachine *vm )
+{
+    // TODO: make this reload mounted subdirs too...?
+    resMgr.vfs.LoadFileSysRoot();
+    resMgr.vfs.Reload();
+}
+
+
 Falcon::Module *FalconBaseModule_create(void)
 {
     Falcon::Module *m = new Falcon::Module;
@@ -322,6 +411,13 @@ Falcon::Module *FalconBaseModule_create(void)
     m->addClassMethod(clsSound, "SetVolume", fal_Sound_SetVolume);
     m->addClassMethod(clsSound, "GetVolume", fal_Sound_GetVolume);
     m->addClassMethod(clsSound, "IsPlaying", fal_Sound_IsPlaying);
+
+    Falcon::Symbol *symVFS = m->addSingleton("VFS");
+    Falcon::Symbol *clsVFS = symVFS->getInstance();
+    m->addClassMethod(clsVFS, "AddPath", fal_VFS_AddPath);
+    m->addClassMethod(clsVFS, "AddContainer", fal_VFS_AddContainer);
+    m->addClassMethod(clsVFS, "Clear", fal_VFS_Clear);
+    m->addClassMethod(clsVFS, "Reload", fal_VFS_Reload);
 
     m->addExtFunc("include_ex", fal_include_ex);
     m->addExtFunc("DbgBreak", fal_debug_break);

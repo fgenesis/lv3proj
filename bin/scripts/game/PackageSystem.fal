@@ -1,0 +1,20 @@
+/*
+Package system script.
+Uses the VFS class provided by the engine to make package management easier
+*/
+
+class PackageSystem
+
+    init
+        raise "This class is a singleton and should not be instanced!"
+    end
+    
+    // load a .lvpa file in directory "packages", or a subdir with that name
+    function Load(fn)
+        from_cont = VFS.AddContainer("packages/" + fn + ".lvpa")
+        from_dir = VFS.AddPath("packages/" + fn)
+        return (from_dir or from_cont)
+    end
+end
+
+export
