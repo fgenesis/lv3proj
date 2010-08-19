@@ -2,10 +2,16 @@
 #include "Crc32.h"
 
 uint32 CRC32::_tab[256];
+bool CRC32::_notab = true;
 
 CRC32::CRC32()
 : _crc(0xFFFFFFFF)
 {
+    if(_notab)
+    {
+        GenTab();
+        _notab = false;
+    }
 }
 
 void CRC32::GenTab(void)

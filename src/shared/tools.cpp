@@ -167,6 +167,60 @@ std::deque<std::string> GetFileList(std::string path)
     return files;
 }
 
+std::deque<std::string> GetDirList(std::string path, bool recursive /* = false */)
+{
+    std::deque<std::string> dirs;
+
+    if(path.at(path.length()-1)!='/')
+        path += "/";
+
+    std::string search = path + "*.*"; 
+    const char *p = search.c_str();
+    WIN32_FIND_DATA fil;
+    HANDLE hFil=FindFirstFile(p,&fil);
+    if(hFil!=INVALID_HANDLE_VALUE)
+    {
+        if( fil.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY )
+        {
+            std::string s = path + std::string(fil.cFileName);
+            if(!(!strcmp(fil.cFileName, ".") || !strcmp(fil.cFileName, "..")))
+            {
+                dirs.push_back(s);
+
+                if(recursive)
+                {
+                    std::deque<std::string>& newdirs = GetDirList(s);
+                    for(std::deque<std::string>::iterator it = newdirs.begin(); it != newdirs.end(); it++)
+                    {
+                        dirs.push_back(*it);
+                    }
+                }
+            }
+        }
+        while(FindNextFile(hFil,&fil))
+        {
+            if( fil.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY )
+            {
+                if(!strcmp(fil.cFileName, ".") || !strcmp(fil.cFileName, ".."))
+                    continue;
+                std::string s = path + std::string(fil.cFileName);
+                dirs.push_back(s);
+
+                if(recursive)
+                {
+                    std::deque<std::string>& newdirs = GetDirList(s);
+                    for(std::deque<std::string>::iterator it = newdirs.begin(); it != newdirs.end(); it++)
+                    {
+                        dirs.push_back(*it);
+                    }
+                }
+            }
+        }
+    }
+
+    return dirs;
+}
+
 bool FileExists(std::string fn)
 {
 	std::fstream f;

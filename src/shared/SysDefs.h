@@ -53,6 +53,8 @@
 #if COMPILER == COMPILER_MICROSOFT
     #define I64FMT "%016I64X"
     #define I64FMTD "%I64u"
+    #define I64LIT(x) (x ## i64)
+    #define UI64LIT(x) (x ## ui64)
     #define snprintf _snprintf
     //#define vsnprintf _vsnprintf
     //#define atoll __atoi64
@@ -70,6 +72,8 @@
     #define strnicmp strncasecmp
     #define I64FMT "%016llX"
     #define I64FMTD "%llu"
+    #define I64LIT(x) (x ## LL)
+    #define UI64LIT(x) (x ## ULL)
     typedef long long int64;
     typedef long int32;
     typedef short int16;

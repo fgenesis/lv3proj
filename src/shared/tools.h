@@ -16,6 +16,7 @@ std::string stringToLower(std::string);
 uint64 toInt(std::string);
 std::string toHexDump(uint8* array,uint32 size,bool spaces=true,uint32 per_line=0);
 std::deque<std::string> GetFileList(std::string);
+std::deque<std::string> GetDirList(std::string, bool recursive = false);
 bool FileExists(std::string);
 bool CreateDir(const char*);
 bool CreateDirRec(const char*);

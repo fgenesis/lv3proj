@@ -292,8 +292,6 @@ int main(int argc, char *argv[])
     if(listfile.length())
         buildFileList(files, listfile.c_str(), relPath.c_str());
 
-    CRC32::GenTab();
-
     LVPAFile f;
     loaded = f.LoadFrom(archive.c_str(), LVPALOAD_ALL);
 

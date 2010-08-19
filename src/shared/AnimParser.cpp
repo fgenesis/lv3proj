@@ -135,17 +135,3 @@ Anim *ParseAnimData(char *strbuf, char *filename)
     ani->filename = filename;
     return ani;
 }
-
-Anim *LoadAnimFile(char* fn)
-{
-    memblock *mb = resMgr.LoadTextFile(fn);
-    if(!mb)
-    {
-        logerror("LoadAnimFile: Failed to open '%s'", fn);
-        return NULL;
-    }
-
-    Anim *ani = ParseAnimData((char*)mb->ptr, fn);
-    resMgr.Drop(mb);
-    return ani;
-}

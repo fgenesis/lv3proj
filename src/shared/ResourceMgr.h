@@ -5,7 +5,7 @@
 #include <SDL/SDL.h>
 #include <SDL/SDL_mixer.h>
 
-#include "LVPAFileStore.h"
+#include "VFSHelper.h"
 
 struct Anim;
 
@@ -40,8 +40,6 @@ public:
     template <class T> inline void Drop(T *ptr) { _DecRef((void*)ptr); }
     void DropUnused(void);
 
-    inline LVPAFileStore& GetVFS(void) { return _vfs; }
-
     SDL_Surface *LoadImg(char *name);
     Anim *LoadAnim(char *name);
     Mix_Music *LoadMusic(char *name);
@@ -51,6 +49,8 @@ public:
     void SetPropForFile(char *fn, char *prop, char *what);
     std::string GetPropForFile(char *fn, char *prop);
     std::string GetPropForMusic(char *fn, char *prop) { return GetPropForFile((char*)(std::string("music/") + fn).c_str(), prop); }
+
+    VFSHelper vfs;
 
 private:
     inline void *_GetPtr(std::string& fn)
@@ -68,7 +68,6 @@ private:
     PtrCountMap _ptrmap;
     FileRefMap _frmap;
     PropMap _fprops;
-    LVPAFileStore _vfs;
 };
 
 

@@ -43,9 +43,11 @@ EditorEngine::~EditorEngine()
 bool EditorEngine::Setup(void)
 {
     // setup the VFS and the container to read from
-    LVPAFile *basepak = new LVPAFile();
+    LVPAFile *basepak = new LVPAFileReadOnly;
     basepak->LoadFrom("basepak.lvpa", LVPALOAD_SOLID);
-    resMgr.GetVFS().AddFront(basepak);
+    resMgr.vfs.LoadBase(basepak, true);
+    resMgr.vfs.LoadFileSysRoot();
+    resMgr.vfs.Prepare();
 
     _gcnGui->setGraphics(_gcnGfx);
     _gcnGui->setInput(_gcnInput);

@@ -18,7 +18,6 @@ Engine::Engine()
 _debugFlags(EDBG_NONE)
 {
     log("Game Engine start.");
-    CRC32::GenTab();
 
     _layermgr = new LayerMgr(this);
     _fpsclock = s_lastFrameTime = clock();

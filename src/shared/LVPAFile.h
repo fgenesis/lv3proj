@@ -100,6 +100,7 @@ public:
         uint8 level = LVPACOMP_INHERIT); // adds a file, overwriting if exists
     virtual memblock Remove(const char *fn); // removes a file from the container and returns its memblock
     memblock Get(const char *fn);
+    memblock Get(uint32 index);
     void Clear(void); // free all
     virtual bool Delete(const char *fn); // removes a file from the container and frees up memory. returns false if the file was not found.
     void Free(const char *fn); // frees the memory associated with a file, leaving it in the container. if requested again, it will be loaded from disk.

@@ -50,10 +50,12 @@ bool GameEngine::Setup(void)
     // initialize the falcon scripting engine & VM
     Falcon::Engine::Init();
 
-    // TEST - setup a container file
-    LVPAFile *sfxc = new LVPAFileReadOnly;
-    if(sfxc->LoadFrom("basepak.lvpa", LVPALOAD_SOLID))
-        resMgr.GetVFS().AddFront(sfxc);
+    // setup the VFS and the container to read from
+    LVPAFile *basepak = new LVPAFileReadOnly;
+    basepak->LoadFrom("basepak.lvpa", LVPALOAD_SOLID);
+    resMgr.vfs.LoadBase(basepak, true);
+    resMgr.vfs.LoadFileSysRoot();
+    resMgr.vfs.Prepare();
 
     // load the initialization script
     memblock *mb = resMgr.LoadTextFile("scripts/init.fal");

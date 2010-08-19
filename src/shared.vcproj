@@ -390,14 +390,6 @@
 					RelativePath=".\shared\LVPAFile.h"
 					>
 				</File>
-				<File
-					RelativePath=".\shared\LVPAFileStore.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\shared\LVPAFileStore.h"
-					>
-				</File>
 			</Filter>
 			<Filter
 				Name="LZMA"
@@ -472,6 +464,50 @@
 				>
 				<File
 					RelativePath=".\shared\ByteConverter.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="VFS"
+				>
+				<File
+					RelativePath=".\shared\VFSDir.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\VFSDir.h"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\VFSDirLVPA.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\VFSDirLVPA.h"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\VFSFile.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\VFSFile.h"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\VFSFileLVPA.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\VFSFileLVPA.h"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\VFSHelper.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\VFSHelper.h"
 					>
 				</File>
 			</Filter>

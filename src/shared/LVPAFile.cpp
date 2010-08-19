@@ -168,13 +168,18 @@ bool LVPAFile::HasFile(const char  *fn)
     return it != _indexes.end();
 }
 
-memblock LVPAFile::Get(const char  *fn)
+memblock LVPAFile::Get(const char *fn)
 {
     LVPAIndexMap::iterator it = _indexes.find(fn);
     if(it == _indexes.end())
         return memblock();
 
-    LVPAFileHeader& hdrRef = _headers[it->second];
+    return Get(it->second);
+}
+
+memblock LVPAFile::Get(uint32 index)
+{
+    LVPAFileHeader& hdrRef = _headers[index];
     if(hdrRef.data.ptr) // already loaded, good
         return hdrRef.data;
 
@@ -275,6 +280,7 @@ bool LVPAFile::LoadFrom(const char *fn, LVPALoadFlags loadFlags)
         if(crc.Result() != masterHdr.hdrCrc)
         {
             logerror("CRC mismatch, header is damaged (crc: %X)", crc.Result());
+            _CloseFile();
             return false;
         }
     }

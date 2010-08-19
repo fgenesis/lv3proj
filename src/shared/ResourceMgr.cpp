@@ -8,7 +8,9 @@
 #include "AnimParser.h"
 #include "PropParser.h"
 
-#include "LVPAFile.h"
+#include "VFSHelper.h"
+#include "VFSFile.h"
+
 
 ResourceMgr::~ResourceMgr()
 {
@@ -20,7 +22,6 @@ ResourceMgr::~ResourceMgr()
     {
         DEBUG(logerror("ResourceMgr: Ptr not unloaded: "PTRFMT" count %u", it->first, it->second));
     }
-    _vfs.FreeAll();
 }
 
 void ResourceMgr::DropUnused(void)
@@ -148,7 +149,7 @@ SDL_Surface *ResourceMgr::LoadImg(char *name)
     SDL_Surface *img = (SDL_Surface*)_GetPtr(origfn);
     if(!img)
     {
-        LVPAFileStore::File vfile;
+        VFSFile *vf = NULL;
 
         // we got additional properties
         if(fn != origfn)
@@ -203,18 +204,11 @@ SDL_Surface *ResourceMgr::LoadImg(char *name)
         }
         else // nothing special, just load image normally
         {
-            // first, try loading from disk
-            img = IMG_Load(fn.c_str());
-
-            if(!img) // not found? load from VFS
+            vf = vfs.GetFile(fn.c_str());
+            if(vf && vf->size())
             {
-                vfile = _vfs.Get(fn.c_str());
-                if(vfile.mb.ptr)
-                {
-                    SDL_RWops *rwop = SDL_RWFromMem(vfile.mb.ptr, vfile.mb.size);
-                    img = IMG_Load_RW(rwop, 1);
-                    vfile.src->Free(fn.c_str());
-                }
+                SDL_RWops *rwop = SDL_RWFromMem((void*)vf->getBuf(), vf->size());
+                img = IMG_Load_RW(rwop, 1); // auto-free RWops
             }
         }
         if(!img)
@@ -230,11 +224,8 @@ SDL_Surface *ResourceMgr::LoadImg(char *name)
             SDL_FreeSurface(img);
             img = newimg;
         }
-        if(vfile.mb.ptr)
-            logdebug("LoadImg: '%s' [VFS: %s]" , origfn.c_str(), vfile.src->GetMyName());
-        else
-            logdebug("LoadImg: '%s' [disk/mem]" , origfn.c_str());
-        
+
+        logdebug("LoadImg: '%s' [%s]" , origfn.c_str(), vf ? vf->getSource() : "*");
     }
 
     _SetPtr(origfn, (void*)img);
@@ -253,25 +244,21 @@ Anim *ResourceMgr::LoadAnim(char *name)
     Anim *ani = (Anim*)_GetPtr(fn);
     if(!ani)
     {
-        LVPAFileStore::File vfile;
-
-        // first, try loading from disk
-        ani = LoadAnimFile((char*)fn.c_str());
-
-        if(!ani) // not found? load from VFS
+        // a .anim file is just a text file, so we use the internal text file loader
+        memblock *mb = resMgr.LoadTextFile((char*)fn.c_str());
+        if(!mb)
         {
-            LVPAFileStore::File vfile = _vfs.Get(fn.c_str());
-            if(vfile.mb.ptr)
-            {
-                ani = ParseAnimData((char*)vfile.mb.ptr, (char*)fn.c_str());
-                vfile.src->Free(fn.c_str());
-            }
+            logerror("LoadAnimFile: Failed to open '%s'", fn.c_str());
+            return NULL;
+        }
 
-            if(!ani)
-            {
-                logerror("LoadAnim failed: '%s'", fn.c_str());
-                return NULL;
-            }
+        ani = ParseAnimData((char*)mb->ptr, (char*)fn.c_str());
+        resMgr.Drop(mb);
+
+        if(!ani)
+        {
+            logerror("LoadAnimFile: Failed to parse '%s'", fn.c_str());
+            return NULL;
         }
 
         // load all additional files referenced in this .anim file
@@ -284,10 +271,7 @@ Anim *ResourceMgr::LoadAnim(char *name)
                 af->callback.ptr(af->surface); // register callback for auto-deletion
             }
 
-        if(vfile.mb.ptr)
-            logdebug("LoadAnim: '%s' [VFS: %s]" , name, vfile.src->GetMyName());
-        else
-            logdebug("LoadAnim: '%s' [disk/mem]" , name);
+         logdebug("LoadAnim: '%s' [%s]" , name, vfs.GetFile(fn.c_str())->getSource()); // the file must exist
     }
 
     _SetPtr(fn, (void*)ani);
@@ -304,33 +288,21 @@ Mix_Music *ResourceMgr::LoadMusic(char *name)
     Mix_Music *music = (Mix_Music*)_GetPtr(fn);
     if(!music)
     {
-        LVPAFileStore::File vfile;
-
-        // first, try to load from disk
-        music = Mix_LoadMUS((char*)fn.c_str());
-
-        if(!music) // not found? load from VFS
+        VFSFile *vf = vfs.GetFile(fn.c_str());
+        if(vf && vf->size() )
         {
-            vfile = _vfs.Get(fn.c_str());
-            if(vfile.mb.ptr)
-            {
-                SDL_RWops *rwop = SDL_RWFromMem(vfile.mb.ptr, vfile.mb.size);
-                music = Mix_LoadMUS_RW(rwop);
-                //SDL_FreeRW(rwop); // do NOT touch ANY memory associated with the music, otherwise it will segfault!
-                vfile.src->Drop(fn.c_str()); // we own this ptr now, drop from storage
-            }
+            SDL_RWops *rwop = SDL_RWFromMem((void*)vf->getBuf(), vf->size());
+            // TODO: copy buf?
+            music = Mix_LoadMUS_RW(rwop);
+        }
 
-            if(!music)
-            {
-                logerror("LoadMusic failed: '%s'", fn.c_str());
-                return NULL;
-            }
+        if(!music)
+        {
+            logerror("LoadMusic failed: '%s'", fn.c_str());
+            return NULL;
         }
         
-        if(vfile.mb.ptr)
-            logdebug("LoadMusic: '%s' [VFS: %s]" , name, vfile.src->GetMyName());
-        else
-            logdebug("LoadMusic: '%s' [disk/mem]" , name);
+        logdebug("LoadMusic: '%s' [%s]" , name, vf->getSource());
     }
 
     _SetPtr(fn, (void*)music);
@@ -347,20 +319,11 @@ Mix_Chunk *ResourceMgr::LoadSound(char *name)
     Mix_Chunk *sound = (Mix_Chunk*)_GetPtr(fn);
     if(!sound)
     {
-        LVPAFileStore::File vfile;
-
-        // first, try loading from disk
-        sound = Mix_LoadWAV((char*)fn.c_str());
-
-        if(!sound) // not found? load from VFS
+        VFSFile *vf = vfs.GetFile(fn.c_str());
+        if(vf)
         {
-            vfile = _vfs.Get(fn.c_str());
-            if(vfile.mb.ptr)
-            {
-                SDL_RWops *rwop = SDL_RWFromMem(vfile.mb.ptr, vfile.mb.size);
-                sound = Mix_LoadWAV_RW(rwop, 1);
-                vfile.src->Free(fn.c_str());
-            }
+            SDL_RWops *rwop = SDL_RWFromMem((void*)vf->getBuf(), vf->size());
+            sound = Mix_LoadWAV_RW(rwop, 1);
         }
 
         if(!sound)
@@ -369,10 +332,7 @@ Mix_Chunk *ResourceMgr::LoadSound(char *name)
             return NULL;
         }
 
-        if(vfile.mb.ptr)
-            logdebug("LoadSound: '%s' [VFS: %s]" , name, vfile.src->GetMyName());
-        else
-            logdebug("LoadSound: '%s' [disk/mem]" , name);
+        logdebug("LoadSound: '%s' [%s]" , name, vf->getSource());
     }
 
     _SetPtr(fn, (void*)sound);
@@ -388,46 +348,32 @@ memblock *ResourceMgr::LoadFile(char *name)
     memblock *mb = (memblock*)_GetPtr(fn);
     if(!mb)
     {
-        LVPAFileStore::File vfile;
-
-        // first, try loading from disk
-        FILE *fh = fopen(name, "rb");
-        if(fh)
+        VFSFile *vf = vfs.GetFile(fn.c_str());
+        uint32 size;
+        if(vf && (size = vf->size()) )
         {
-            fseek(fh, 0, SEEK_END);
-            uint32 size = ftell(fh);
-            rewind(fh);
-
-            if(size) // do not accept empty files, and search in VFS instead
+            mb = new memblock(new uint8[size], size);
+            if(!vf->isopen()) // should already be open because calling size(), but we can never know where we will load from later on
             {
-                mb = new memblock(new uint8[size], size);
-                fread(mb->ptr, 1, size, fh);
+                vf->open();
+                vf->read((char*)mb->ptr, mb->size);
+                vf->close();
             }
-
-            fclose(fh);
-        }
-
-        if(!mb)
-        {
-            vfile = _vfs.Get(fn.c_str());
-            if(vfile.mb.ptr)
+            else
             {
-                mb = new memblock(vfile.mb.ptr, vfile.mb.size);
-                // TODO: not sure if it should be kept or dropped; needs investigation
-                vfile.src->Drop(fn.c_str()); // we own this ptr now, drop from storage
-            }
-
-            if(!mb)
-            {
-                logerror("LoadFile failed: '%s'", name);
-                return NULL;
+                uint64 pos = vf->getpos();
+                vf->seek(0);
+                vf->read((char*)mb->ptr, mb->size);
+                vf->seek(pos);
             }
         }
-
-        if(vfile.mb.ptr)
-            logdebug("LoadFile: '%s' [VFS: %s]" , name, vfile.src->GetMyName());
         else
-            logdebug("LoadFile: '%s' [disk/mem]" , name);
+        {
+            logerror("LoadFile failed: '%s'", name);
+            return NULL;
+        }
+
+        logdebug("LoadFile: '%s' [%s]" , name, vf->getSource());
     }
 
     _SetPtr(fn, (void*)mb);
@@ -442,52 +388,36 @@ memblock *ResourceMgr::LoadTextFile(char *name)
     memblock *mb = (memblock*)_GetPtr(fn);
     if(!mb)
     {
-        LVPAFileStore::File vfile;
-
-        FILE *fh = fopen(name, "r");
-        if(fh)
+        VFSFile *vf = vfs.GetFile(fn.c_str());
+        if(vf)
         {
-            fseek(fh, 0, SEEK_END);
-            uint32 size = ftell(fh);
-            rewind(fh);
-
-            if(size)
+            if(vf->isopen())
+                vf->close();
+            uint32 size = vf->size();
+            if(size && vf->open(NULL, "r"))
             {
-                mb = new memblock(new uint8[size], size);
+                mb = new memblock(new uint8[size + 4], size); // extra padding
                 uint8 *writeptr = mb->ptr;
                 uint32 realsize = 0;
-                while(!feof(fh))
+                while(!vf->iseof())
                 {
-                    int bytes = fread(writeptr, 1, 0x800, fh);
+                    int bytes = vf->read((char*)writeptr, 0x800);
                     writeptr += bytes;
                     realsize += bytes;
                 }
-                memset(writeptr, 0, mb->size - realsize); // zero out remaining space
+                memset(writeptr, 0, size - realsize + 4); // zero out remaining space
                 mb->size = realsize;
+                vf->close();
             }
-            fclose(fh);
         }
 
         if(!mb)
         {
-            vfile = _vfs.Get(fn.c_str());
-            if(vfile.mb.ptr)
-            {
-                mb = new memblock(vfile.mb.ptr, vfile.mb.size);
-                vfile.src->Drop(fn.c_str()); // we own this ptr now, drop from storage
-            }
-
-            if(!mb)
-            {
-                logerror("LoadTextFile failed: '%s'", name);
-                return NULL;
-            }
+            logerror("LoadTextFile failed: '%s'", name);
+            return NULL;
         }
 
-        if(vfile.mb.ptr)
-            logdebug("LoadTextFile: '%s' [VFS: %s]" , name, vfile.src->GetMyName());
-        else
-            logdebug("LoadTextFile: '%s' [disk/mem]" , name);
+        logdebug("LoadTextFile: '%s' [%s]" , name, vf->getSource());
     }
 
     _SetPtr(fn, (void*)mb);
