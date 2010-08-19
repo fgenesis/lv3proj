@@ -30,7 +30,7 @@ void VFSHelper::_delete(void)
     }
     for(std::list<VFSDir*>::iterator it = vlist.begin(); it != vlist.end(); it++)
         (*it)->ref--;
-    for(std::list<LVPAFile*>::iterator it = lvpalist.begin(); it != lvpalist.end(); it++)
+    for(std::set<LVPAFile*>::iterator it = lvpalist.begin(); it != lvpalist.end(); it++)
         delete *it;
     vlist.clear();
     lvpalist.clear();
@@ -109,7 +109,7 @@ bool VFSHelper::AddContainer(LVPAFile *f, bool deleteLater)
     {
         AddVFSDir(vfs);
         if(deleteLater)
-            lvpalist.push_back(f);
+            lvpalist.insert(f);
     }
     else if(deleteLater)
         delete f; // loading unsucessful, delete now

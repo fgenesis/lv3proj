@@ -1,6 +1,8 @@
 #ifndef VFSHELPER_H
 #define VFSHELPER_H
 
+#include <set>
+
 class VFSDir;
 class VFSFile;
 class LVPAFile;
@@ -27,7 +29,7 @@ protected:
     VFSDir *vRoot; // contains all basic files necessary to load other files
     VFSDir *filesysRoot; // local files on disk (root dir)
     std::list<VFSDir*> vlist; // all other files added later
-    std::list<LVPAFile*> lvpalist; // LVPA files delayed for deletion, required here
+    std::set<LVPAFile*> lvpalist; // LVPA files delayed for deletion, required here
     LVPAFile *lvpabase;
 
     VFSDir *merged; // contains the merged virtual/actual file system tree
