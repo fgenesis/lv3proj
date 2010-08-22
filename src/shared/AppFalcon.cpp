@@ -31,7 +31,7 @@ bool AppFalcon::Init(char *initscript /* = NULL */)
     vm = new Falcon::VMachine();
     vm->launchAtLink(false);
     _LoadModules();
-    return initscript ? EmbedStringAsModule(initscript, "initscript", false, true, true) : true;
+    return initscript ? EmbedStringAsModule(initscript, "initscript", false, true) : true;
 }
 
 void AppFalcon::DeleteVM(void)
@@ -52,7 +52,7 @@ void AppFalcon::_LoadModules(void)
 }
 
 bool AppFalcon::EmbedStringAsModule(char *str, char *modName, bool throw_ /* = false */,
-                                    bool launchLink /* = false */, bool launchExplicit /* = false */)
+                                    bool launch /* = false */)
 {
     if(!str || str[0] == '\0')
         return false;
@@ -61,26 +61,26 @@ bool AppFalcon::EmbedStringAsModule(char *str, char *modName, bool throw_ /* = f
     Falcon::TranscoderEOL trans(&input, false);
 
     Falcon::Runtime rt(&mloader, vm);
-    rt.hasMainModule( launchExplicit );
 
     Falcon::Module *m = NULL;
-
-    bool execAtLink = vm->launchAtLink();
 
     try
     {
         m = mloader.loadSource( &trans, modName, modName );
 
         rt.addModule(m);
-        vm->launchAtLink(launchLink);
-        vm->link(&rt);
-        if(launchExplicit)
-            vm->launch();
-        vm->launchAtLink( execAtLink );
+        Falcon::LiveModule *livemod = vm->link(&rt);
+        if(launch)
+        {
+            Falcon::Item *mainItem = livemod->findModuleItem("__main__");
+            if(mainItem)
+            {
+                vm->callItemAtomic(*mainItem, 0);
+            }
+        }
     }
     catch(Falcon::Error *err)
     {
-        vm->launchAtLink( execAtLink );
         if(throw_)
         {
             Falcon::CodeError *ce = new Falcon::CodeError( Falcon::ErrorParam( Falcon::e_loaderror, __LINE__ ).

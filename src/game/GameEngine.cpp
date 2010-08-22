@@ -63,11 +63,6 @@ bool GameEngine::Setup(void)
     falcon->Init((char*)mb->ptr);
     resMgr.Drop(mb);
 
-    mb = resMgr.LoadTextFile("scripts/test.fal");
-    ASSERT(mb);
-    falcon->EmbedStringAsModule((char*)mb->ptr, "testscript", false, true, true);
-    resMgr.Drop(mb);
-
     return true;
 }
 
@@ -83,7 +78,7 @@ void GameEngine::OnKeyDown(SDLKey key, SDLMod mod)
 
     // pass keypress to Falcon
     // TODO: cache this on init and call then without invoking findGlobalItem() all the time
-    Falcon::Item *item = falcon->GetVM()->findGlobalItem("EventHandler");
+    Falcon::Item *item = falcon->GetVM()->findGlobalItem("InputEventHandler");
     if(item && item->isCallable())
     {
         try
@@ -111,7 +106,7 @@ void GameEngine::OnKeyUp(SDLKey key, SDLMod mod)
 
     // pass keypress to Falcon
     // TODO: cache this on init and call then without invoking findGlobalItem() all the time
-    Falcon::Item *item = falcon->GetVM()->findGlobalItem("EventHandler");
+    Falcon::Item *item = falcon->GetVM()->findGlobalItem("InputEventHandler");
     if(item && item->isCallable())
     {
         try
@@ -139,7 +134,7 @@ void GameEngine::OnJoystickEvent(uint32 type, uint32 device, uint32 id, int32 va
 
     // pass joystick event to Falcon
     // TODO: cache this on init and call then without invoking findGlobalItem() all the time
-    Falcon::Item *item = falcon->GetVM()->findGlobalItem("EventHandler");
+    Falcon::Item *item = falcon->GetVM()->findGlobalItem("InputEventHandler");
     if(item && item->isCallable())
     {
         uint32 evt;

@@ -57,7 +57,7 @@ void ResourceMgr::_IncRef(void *ptr, ResourceType rt)
         _ptrmap[ptr] = ResStruct(rt);
 }
 
-void ResourceMgr::_DecRef(void *ptr)
+void ResourceMgr::_DecRef(void *ptr, bool del /* = false */)
 {
     DEBUG(ASSERT(ptr != NULL));
     PtrCountMap::iterator it = _ptrmap.find(ptr);
@@ -70,6 +70,11 @@ void ResourceMgr::_DecRef(void *ptr)
         if( !(--(it->second.count)) )
         {
             DEBUG(logdebug("ResourceMgr::_DecRef("PTRFMT") - now UNUSED (type %u)", ptr, it->second.count, it->second.rt));
+            if(del)
+            {
+                _Delete(ptr, it->second.rt);
+                _ptrmap.erase(it);
+            }
             return;
         }
         else

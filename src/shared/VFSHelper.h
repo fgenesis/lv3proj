@@ -20,6 +20,7 @@ public:
     void Prepare(bool clear = true);
     void Reload(void);
     VFSFile *GetFile(const char *fn);
+    VFSDir *GetDir(const char* dn);
 
 
 protected:

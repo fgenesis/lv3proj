@@ -10,7 +10,7 @@ AsciiLevel *ParseAsciiLevel(char *strbuf)
     std::vector<std::string> lines, files;
     std::string line;
     uint8 tiletype;
-    StrSplit(strbuf, "\n", lines);
+    StrSplit(strbuf, "\n\r", lines);
 
     std::vector<std::string>::iterator lin = lines.begin();
 

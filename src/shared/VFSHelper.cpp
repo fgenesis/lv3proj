@@ -129,3 +129,8 @@ VFSFile *VFSHelper::GetFile(const char *fn)
 {
     return merged->getFile(fn);
 }
+
+VFSDir *VFSHelper::GetDir(const char* dn)
+{
+    return merged->getDir(dn);
+}

@@ -12,6 +12,10 @@ Base module file, providing some engine core function bindings
 #include "SoundCore.h"
 #include "ResourceMgr.h"
 #include "LVPAFile.h"
+#include "VFSHelper.h"
+#include "VFSDir.h"
+#include "VFSFile.h"
+#include "Crc32.h"
 
 #include "UndefUselessCrap.h"
 
@@ -92,101 +96,23 @@ FALCON_FUNC fal_include_ex( Falcon::VMachine *vm )
         vm->retval(false);
         return;
     }
-    std::string modName = cstr_fn.c_str();
-    bool result = g_engine_ptr_->falcon->EmbedStringAsModule((char*)mb->ptr, (char*)modName.c_str(), true, true, false);
+    CRC32 crc;
+    crc.Update(mb->ptr, mb->size);
+    crc.Finalize();
+    char crcbuf[8+2+1]; // 8 chars for CRC, 2 for '{}', 1 nul
+    sprintf(crcbuf, "{%X}", crc.Result());
+    std::string modName(crcbuf);
+    modName += cstr_fn.c_str();
+
+    // duplicate the string early, then drop the loaded file, forgetting about its content.
+    // this is necessary if a file loads a file with the same name in the same path
+    // (package.fal of package A loading package.fal of package B, for example)
+    // otherwise, the script would load + call itself infinitely
+    std::string dup((char*)mb->ptr);
+    resMgr.Drop(mb, true);
+    bool result = g_engine_ptr_->falcon->EmbedStringAsModule((char*)dup.c_str(), (char*)modName.c_str(), true, true);
 
     vm->retval(result);
-
-
-    // OLD CODE
-    /*
-    Falcon::Item *i_file = vm->param(0);
-    Falcon::Item *i_enc = vm->param(1);
-    Falcon::Item *i_path = vm->param(2);
-    Falcon::Item *i_syms = vm->param(3);
-
-    if( i_file == 0 || ! i_file->isString()
-        || (i_syms != 0 && ! (i_syms->isDict() || i_syms->isNil())  )
-        || (i_enc != 0 && !(i_enc->isString() || i_enc->isNil()) )
-        || (i_path != 0 && !(i_path->isString() || i_path->isNil()) )
-        )
-    {
-        throw new Falcon::ParamError(
-            Falcon::ErrorParam( Falcon::e_inv_params, __LINE__ )
-            .origin(Falcon::e_orig_runtime)
-            .extra( "S,[S],[S],[D]" ) );
-    }
-
-    // create the loader/runtime pair.
-    Falcon::ModuleLoader cpl( i_path == 0 || i_path->isNil() ? vm->appSearchPath() : Falcon::String(*i_path->asString()) );
-    cpl.delayRaise(true);
-    cpl.compileTemplate(false);
-    cpl.compileInMemory(true);
-    cpl.alwaysRecomp(true);
-    cpl.saveModules(false);
-    Falcon::Runtime rt( &cpl, vm );
-    rt.hasMainModule( false );
-
-    // minimal config
-    if ( i_enc != 0 && ! i_enc->isNil() )
-    {
-        cpl.sourceEncoding( *i_enc->asString() );
-    }
-
-    bool execAtLink = vm->launchAtLink();
-
-    //! Copy the filename so to be sure to display it correctly in an eventual error.
-    Falcon::String fileName = *i_file->asString();
-    fileName.bufferize();
-
-    // load and link
-    try
-    {
-        rt.loadFile( fileName, false );
-        vm->launchAtLink( i_syms == 0 || i_syms->isNil() );
-        Falcon::LiveModule *lmod = vm->link( &rt );
-
-        // shall we read the symbols?
-        if( lmod != 0 && ( i_syms != 0 && i_syms->isDict() ) )
-        {
-            Falcon::CoreDict *dict = i_syms->asDict();
-
-            // traverse the dictionary
-            Falcon::Iterator iter( &dict->items() );
-            while( iter.hasCurrent() )
-            {
-                // if the key is a string and a corresponding item is found...
-                Falcon::Item *ival;
-                if ( iter.getCurrentKey().isString() &&
-                    ( ival = lmod->findModuleItem( *iter.getCurrentKey().asString() ) ) != 0 )
-                {
-                    // copy it locally
-                    iter.getCurrent() = *ival;
-                }
-                else {
-                    iter.getCurrent().setNil();
-                }
-
-                iter.next();
-            }
-        }
-
-        // reset launch status
-        vm->launchAtLink( execAtLink );
-    }
-    catch(Falcon::Error* err)
-    {
-        Falcon::CodeError *ce = new Falcon::CodeError( Falcon::ErrorParam( Falcon::e_loaderror, __LINE__ ).
-            extra( fileName ) );
-
-        ce->appendSubError(err);
-        err->decref();
-
-        // reset launch status
-        vm->launchAtLink( execAtLink );
-        throw ce;
-    }
-    */
 }
 
 /*#
@@ -399,6 +325,89 @@ FALCON_FUNC fal_VFS_Reload( Falcon::VMachine *vm )
     resMgr.vfs.Reload();
 }
 
+/*#
+@method VFS GetDirList
+@brief Returns all subdirectories in a directory
+@return An array of strings with the names of the subdirectories of the given directory,
+or @b nil if the directory doesn't exist.
+*/
+FALCON_FUNC fal_VFS_GetDirList( Falcon::VMachine *vm )
+{
+    FALCON_REQUIRE_PARAMS_EXTRA(1, "S directory");
+    Falcon::Item *arg = vm->param(0);
+    if(!arg->isString())
+    {
+        throw new Falcon::ParamError(Falcon::ErrorParam( Falcon::e_inv_params, __LINE__ )
+            .extra("S") );
+    }
+    Falcon::AutoCString cstr(arg->asString());
+    VFSDir *vd = resMgr.vfs.GetDir(cstr.c_str());
+    if(!vd)
+    {
+        vm->retnil();
+        return;
+    }
+
+    Falcon::CoreArray *arr = new Falcon::CoreArray(vd->_subdirs.size());
+    for(VFSDirMap::iterator it = vd->_subdirs.begin(); it != vd->_subdirs.end(); it++)
+    {
+        arr->append(new Falcon::CoreString(it->second->name()));
+    }
+
+    vm->retval(arr);
+}
+
+/*#
+@method VFS GetFileList
+@brief Returns all files in a directory
+@return An array of strings with the names of the files of the given directory,
+or @b nil if the directory doesn't exist.
+*/
+FALCON_FUNC fal_VFS_GetFileList( Falcon::VMachine *vm )
+{
+    FALCON_REQUIRE_PARAMS_EXTRA(1, "S directory");
+    Falcon::Item *arg = vm->param(0);
+    if(!arg->isString())
+    {
+        throw new Falcon::ParamError(Falcon::ErrorParam( Falcon::e_inv_params, __LINE__ )
+            .extra("S") );
+    }
+    Falcon::AutoCString cstr(arg->asString());
+    VFSDir *vd = resMgr.vfs.GetDir(cstr.c_str());
+    if(!vd)
+    {
+        vm->retnil();
+        return;
+    }
+
+    Falcon::CoreArray *arr = new Falcon::CoreArray(vd->_subdirs.size());
+    for(VFSFileMap::iterator it = vd->_files.begin(); it != vd->_files.end(); it++)
+    {
+        arr->append(new Falcon::CoreString(it->second->name()));
+    }
+
+    vm->retval(arr);
+}
+
+/*#
+@method VFS HasFile
+@brief Checks if a file exists in the VFS
+@return True if the file is found, false if not
+*/
+FALCON_FUNC fal_VFS_HasFile( Falcon::VMachine *vm )
+{
+    FALCON_REQUIRE_PARAMS_EXTRA(1, "S directory");
+    Falcon::Item *arg = vm->param(0);
+    if(!arg->isString())
+    {
+        throw new Falcon::ParamError(Falcon::ErrorParam( Falcon::e_inv_params, __LINE__ )
+            .extra("S") );
+    }
+    Falcon::AutoCString cstr(arg->asString());
+    bool result = resMgr.vfs.GetFile(cstr.c_str());
+    vm->retval(result);
+}
+
 
 Falcon::Module *FalconBaseModule_create(void)
 {
@@ -418,6 +427,9 @@ Falcon::Module *FalconBaseModule_create(void)
     m->addClassMethod(clsVFS, "AddContainer", fal_VFS_AddContainer);
     m->addClassMethod(clsVFS, "Clear", fal_VFS_Clear);
     m->addClassMethod(clsVFS, "Reload", fal_VFS_Reload);
+    m->addClassMethod(clsVFS, "GetDirList", fal_VFS_GetDirList);
+    m->addClassMethod(clsVFS, "GetFileList", fal_VFS_GetFileList);
+    m->addClassMethod(clsVFS, "HasFile", fal_VFS_HasFile);
 
     m->addExtFunc("include_ex", fal_include_ex);
     m->addExtFunc("DbgBreak", fal_debug_break);

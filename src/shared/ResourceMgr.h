@@ -37,7 +37,7 @@ class ResourceMgr
 public:
     ~ResourceMgr();
 
-    template <class T> inline void Drop(T *ptr) { _DecRef((void*)ptr); }
+    template <class T> inline void Drop(T *ptr, bool del = false) { _DecRef((void*)ptr, del); }
     void DropUnused(void);
 
     SDL_Surface *LoadImg(char *name);
@@ -63,7 +63,7 @@ private:
         _frmap[fn] = ptr;
     }
     void _IncRef(void *ptr, ResourceType rt);
-    void _DecRef(void *ptr);
+    void _DecRef(void *ptr, bool del = false);
     void _Delete(void *ptr, ResourceType rt);
     PtrCountMap _ptrmap;
     FileRefMap _frmap;
