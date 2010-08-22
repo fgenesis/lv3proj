@@ -1,0 +1,138 @@
+/* KeyMap.fal - Provides a virtual SNES keypad.
+Serves as an abstraction layer for raw input as delivered by the engine.
+Processes both keyboard and joystick input.
+*/
+
+// some helper functions
+function IsJoystickAxisLeftOrUp(val):    return (val <= -JOSTICK_AXIS_THRESHOLD)
+function IsJoystickAxisRightOrDown(val): return (val >= JOSTICK_AXIS_THRESHOLD)
+
+// these help in selecting the correct array required as 3rd parameter for KeyMap.Bind()
+function AxisLeft(axis):  return [axis, true]
+function AxisRight(axis): return [axis, false]
+function AxisUp(axis):    return [axis, true]
+function AxisDown(axis):  return [axis, false]
+
+class SNESKeyMap
+
+    static binds = nil
+    static joystickState = nil
+    static disabled = false
+    static hooks = nil
+    
+    init
+        raise "This class should not be instanced."
+    end
+
+    // for joystick axes, which must be an array like this: [int axisID, bool leftOrUp]
+    function Bind(ty, src, which, vkey, player)
+        if(ty == EVENT_TYPE_JOYSTICK_AXIS and len(which) != 2)
+            raise "KeyMap: Cannot bind non-array type to joystick axis event! Arg #3 must be like this: [int axisID, bool leftOrUp]"
+        end
+        self.binds[ .[ty src which] ] = .[vkey player]
+    end
+    
+    function Unbind(ty, src, which)
+        self.binds -= .[ty src which]
+    end
+    
+    // to be called
+    function Cleanup()
+        dictClear(self.joystickState)
+    end
+    
+    function Translate(ty, src, which, value)
+        if self.disabled: return nil
+        // jostick axis: translate possibly analog axes into digital (pressed/not pressed)
+        // value is between -32768 (left or up) and 32767 (bottom or right)
+        // since left and right on the same axis are only different in its value, we have do do a little trickery
+        // to be able to distinguish between the current axis, left and right; and then select the proper vkeys.
+        if(ty == EVENT_TYPE_JOYSTICK_AXIS)
+            if IsJoystickAxisLeftOrUp(value)
+                value = 1
+            elif IsJoystickAxisRightOrDown(value)
+                value = 2
+            else // nothing was pressed on this axis (so we guess it was released)
+                value = 0
+                // further processing below
+            end      
+            
+            if(iter = dictFind(self.joystickState, .[src which] ))
+                oldval = iter.value()
+                if(oldval == value) // some values changed, but still same state, nothing to process
+                    return
+                else // new state
+                    self.joystickState[ .[src which] ] = value
+                end
+            else // initial state
+                self.joystickState[ .[src which] ] = value
+            end
+            
+            if (value == 0) // if value is 0, the axis WAS pressed before and just got released.
+                            //we can safely assume that 'oldval' exists.
+                    if(oldval == 1)
+                        which = .[which true] // left or up
+                    elif(oldval == 2)
+                        which = .[which false] // right or down
+                    else
+                        > "ERROR: KeyMap: Axis released, but no old state"
+                        return
+                    end
+            elif(value == 1)
+                which = .[which true] // left or up
+            elif(value == 2)
+                which = .[which false] // right or down
+                value = 1 // only 0 or 1 allowed
+            end
+        end
+        
+        // process virtual key lookup
+        if(iter = dictFind(self.binds, .[ty src which] ))
+            vkey, player = iter.value()
+            retval = .[vkey player value]
+            return retval
+        end
+        return nil
+    end
+    
+    function ProcessHooks(e)
+        // ty: type (keyboard, joystick button, joystick axis)
+        // src: device #nr (joystick). keyboard is always 0.
+        // which: key, button, axis or hat #id
+        // value: pressed(1) or released(0) for keyboard, 0-255 for joystick axis
+        ty, src, which, value = e
+        key = self.Translate(ty, src, which, value)
+        if key
+            for who,func in self.hooks
+                func(key)
+            end
+        end
+    end
+    
+    function RegisterInputHook(who,func)
+        self.hooks[who] = func
+    end
+
+    function UnregisterInputHook(who)
+        self.hooks -= who
+    end
+
+    function GetInputHook(who)
+        iter = dictFind(self.hooks, who)
+        if iter: return iter.value()
+        return nil
+    end
+
+    function ClearInputHooks()
+        self.hooks.clear()
+    end
+
+end
+
+SNESKeyMap.binds = [ => ]
+SNESKeyMap.joystickState = [ => ]
+SNESKeyMap.hooks = [ => ]
+
+RegisterRawInputHook("SNESKeyMap", SNESKeyMap.ProcessHooks)
+
+export

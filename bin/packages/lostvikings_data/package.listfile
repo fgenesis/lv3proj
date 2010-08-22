@@ -1,0 +1,6 @@
+#include gfx/package.listfile
+#include sfx/package.listfile
+#include music/package.listfile
+#include scripts/package.listfile
+
+-s package.listfile

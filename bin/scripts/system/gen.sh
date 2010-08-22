@@ -1,0 +1,1 @@
+for e in `ls -1`; do echo "-p scripts/system -s $e"; done > basepak.listfile

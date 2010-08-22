@@ -1,0 +1,4 @@
+#include levels/package.listfile
+#include scripts/package.listfile
+
+-s package.listfile

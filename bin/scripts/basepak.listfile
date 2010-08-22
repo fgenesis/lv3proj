@@ -1,0 +1,3 @@
+#include system/basepak.listfile
+
+-s -p scripts init.fal basepak.listfile

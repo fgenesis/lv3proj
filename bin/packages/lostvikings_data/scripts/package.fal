@@ -1,0 +1,6 @@
+
+loader = ScriptLoader()
+loader.AddDir("game")
+loader.AddDir("sprites")
+// ...
+loader.DoLoad()

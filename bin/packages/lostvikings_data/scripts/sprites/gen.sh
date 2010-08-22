@@ -1,0 +1,1 @@
+for e in `ls -1`; do echo "-p scripts/sprites -s $e"; done > package.listfile

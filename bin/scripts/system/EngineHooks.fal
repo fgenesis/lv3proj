@@ -1,0 +1,79 @@
+
+// InputEventHandler() input hooks
+_rawhooks = [ => ]
+
+// GameUpdate() hooks
+_uphooks = [ => ]
+
+// --- called by core whenever input occurs ---
+function InputEventHandler(e)
+    global _rawhooks
+    //> @ "EVENT DEBUG: ty:$ty, src:$src, which:$which, value:$value"
+    
+    for name,func in _rawhooks
+        try
+            func(e)
+        catch in err
+            > "ERROR: InputEventHandler(): unhandled exception in hook '", name, "'"
+            inspect(func)
+            > err
+        end
+    end
+end
+
+function RegisterRawInputHook(who,func)
+    global _rawhooks
+    if not isCallable(func): raise "RegisterRawInputHook(): func for '" + who + "' not callable, is: " + func
+    _rawhooks[who] = func
+end
+
+function UnregisterRawInputHook(who)
+    global _rawhooks
+    _rawhooks -= who
+end
+
+function GetRawInputHook(who)
+    global _rawhooks
+    iter = dictFind(_rawhooks, who)
+    if iter: return iter.value()
+    return nil
+end
+
+
+// called by the core on every loop
+function GameUpdate(ms)
+    global _uphooks
+    
+    // process registered functions. if one returns true, remove from list
+    for name, func in _uphooks
+        rm = false
+        try
+            if func(ms): continue dropping
+        catch in err
+            > "ERROR: GameUpdate(): unhandled exception in hook '", name, "'"
+            inspect(func)
+            > err
+            > "---> Dropping hook to prevent further console spam"
+            continue dropping
+        end
+    end
+end
+
+function RegisterUpdateHook(who, func)
+    global _uphooks
+    if not isCallable(func): raise "RegisterUpdateHook(): func for '" + who + "' not callable, is: " + func
+    _uphooks[who] = func
+end
+
+function UnregisterUpdateHook(who)
+    global _uphooks
+    _uphooks -= who
+end
+
+
+
+export GameUpdate
+export RegisterUpdateHook, UnregisterUpdateHook
+
+export InputEventHandler
+export RegisterRawInputHook, UnregisterRawInputHook, GetRawInputHook

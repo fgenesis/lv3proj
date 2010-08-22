@@ -1,0 +1,5 @@
+#include font/package.listfile
+#include ship/package.listfile
+#include sprites/package.listfile
+
+-p gfx -s package.listfile

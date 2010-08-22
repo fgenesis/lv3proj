@@ -1,0 +1,26 @@
+
+// an enum didnt work here... hmm wtf
+// these are the keys like the SNES uses them
+//enum GameVirtualKeys
+ KeyUP     = 1
+ KeyDOWN   = 2
+ KeyLEFT   = 3
+ KeyRIGHT  = 4
+ KeyA      = 5
+ KeyB      = 6
+ KeyX      = 7
+ KeyY      = 8
+ KeyL      = 9
+ KeyR      = 10
+ KeySTART  = 11
+ KeySELECT = 12
+ 
+ SNESKeyMAX    = 13 // for array size, don't use. Can be used if other keys should be added by other packages
+//end
+
+// info: joystick axis values min/max -- almost 0: centered, -32768: left/up, +32767: right/down
+// this value defines when an axis triggers a virtual button press - useful for analog joysticks/gamepads.
+// decrease for higher sensivity, increase for lower sensivity.
+JOSTICK_AXIS_THRESHOLD = 10000
+
+export

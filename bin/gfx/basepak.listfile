@@ -1,7 +1,1 @@
-#include font/basepak.listfile
-#include misc/basepak.listfile
-#include ship/basepak.listfile
-#include sprites/basepak.listfile
-#include water/basepak.listfile
-
--p gfx -s basepak.listfile
+#include font/basepak.listfile#include water/basepak.listfile#include misc/basepak.listfile

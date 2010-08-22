@@ -1,0 +1,88 @@
+/*
+ * The PlayerController takes care of receiving vkey input and forwarding it to the currently selected/active player.
+ * In case of multiplayer, forward the input to the correct player.
+ * Also handle switching between player objects
+*/
+
+class PlayerController
+    
+    _playerReg = nil
+    _activeChar = nil
+    
+    init
+        self._playerReg = [] // player object registry. countains all selectable players in the order they were added
+        self._activeChar = [] // index: human player number, value: currently controlled player or nil
+        
+    end
+    
+    function register()
+        SNESKeyMap.RegisterInputHook(self, self.OnInput)
+    end
+    
+    function unregister()
+        SNESKeyMap.UnregisterInputHook(self)
+    end
+    
+    function Add(who)
+        self._playerReg += who
+        self._activeChar += nil
+    end
+    
+    function Remove(who)
+        arrayDel(self._playerReg, who)
+        pos = arrayFind(self._activeChar, who)
+        if pos >= 0: self._activeChar[pos] = nil
+    end
+    
+    // active a player object for a human player, so that all input from this person is forwarded to the player class object
+    // @params:
+    //    playerNum: which human player (in case of multiplayer), starts with 1.
+    //    who: player class object
+    function Assign(playerNum, who)
+        if not who
+            self._activeChar[playerNum - 1] = nil
+        elif who in self._playerReg
+            self._activeChar[playerNum - 1] = who
+        else
+            > "ERROR: PlayerController::AssignPlayer(): '", who, "' not registered!"
+        end
+    end
+    
+    // switches a player to next or previous available one
+    // @params: playerNum: human player number to switch; direction: 0 - left, 1 - right
+    function SwitchPlayer(playerNum, direction)
+        cur = self._activeChar[playerNum - 1]
+        if not cur
+            > "PlayerController::SwitchPlayer(): can't switch player for #", playerNum, ", not active right now"
+            return
+        end
+        pos = arrayFind(self._playerReg, cur)
+        if (pos < 0) // this should never happen o_O
+            > "ERROR: PlayerController::SwitchPlayer(): currently active player was not registered!"
+            return
+        end
+        pos = climit(pos + (direction ? -1 : 1), 0, len(self._playerReg) - 1)
+        self.Assign(self._playerReg[pos], playerNum)
+    end
+    
+    function OnInput(inp)
+        vkey, pl, val = inp
+
+        switch(vkey)
+            case KeyL
+                if val: self.SwitchPlayer(pl, 0)
+                
+            case KeyR
+                if val: self.SwitchPlayer(pl, 1)
+                
+            default
+                who = self._activeChar[pl - 1]          
+                if(who): who.OnInput(vkey, val)
+        end
+    end
+        
+end
+
+
+export PlayerController
+

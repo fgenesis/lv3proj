@@ -1,0 +1,1 @@
+-p gfx/ship -s 2blockh1.png 2blockh2.png block1.png block1test.png broken.png girder1.png girder2.png-p gfx/ship -s ladder1.png ladder2.png laddertop1.png laddertop2.png-p gfx/ship -s package.listfile
