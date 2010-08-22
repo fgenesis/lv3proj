@@ -20,6 +20,7 @@ VFSFileLVPA::~VFSFileLVPA()
 
 bool VFSFileLVPA::open(const char *fn /* = NULL */, char *mode /* = NULL */)
 {
+    _pos = 0;
     return true; // does not have to be opened
 }
 
