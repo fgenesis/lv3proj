@@ -1,1 +1,4 @@
-#include levels/package.listfile-s -p scripts package.fal package.listfile
+#include levels/package.listfile
+#include benchmark/package.listfile
+
+-s -p scripts package.fal package.listfile

@@ -2,7 +2,8 @@
 PackageSystem.Load("lostvikings_data")
 
 function LoadFinal()
-     if not ScriptLoader.LoadFile("test.fal", "levels"): raise "OOOPS!"
+    if not ScriptLoader.LoadFile("test.fal", "levels"): raise "OOOPS!"
+    ScriptLoader.LoadDir("benchmark")
 end
 
 PackageSystem.RunAfterLoad(LoadFinal)

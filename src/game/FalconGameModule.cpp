@@ -103,6 +103,15 @@ FALCON_FUNC fal_Screen_CreateInfoLayer(Falcon::VMachine *vm)
     lm->CreateInfoLayer();
 }
 
+FALCON_FUNC fal_Screen_GetSurface(Falcon::VMachine *vm)
+{
+    Falcon::CoreClass *cls = vm->findWKI("Surface")->asClass();
+    fal_Surface *fs = Falcon::dyncast<fal_Surface*>(fal_Surface::factory(cls, NULL, false));
+    fs->surface = g_engine_ptr->GetSurface();
+    fs->adopted = true;
+    vm->retval(fs);
+}
+
 FALCON_FUNC fal_Game_GetTime(Falcon::VMachine *vm)
 {
     vm->retval(Falcon::int64(g_engine_ptr->GetCurFrameTime()));
@@ -242,6 +251,7 @@ Falcon::Module *FalconGameModule_create(void)
     m->addClassMethod(clsScreen, "SetTileInfo", &fal_Screen_SetTileInfo);
     m->addClassMethod(clsScreen, "GetTileInfo", &fal_Screen_GetTileInfo);
     m->addClassMethod(clsScreen, "CreateInfoLayer", &fal_Screen_CreateInfoLayer);
+    m->addClassMethod(clsScreen, "GetSurface", &fal_Screen_GetSurface);
 
     Falcon::Symbol *symPhysics = m->addSingleton("Physics");
     Falcon::Symbol *clsPhysics = symPhysics->getInstance();

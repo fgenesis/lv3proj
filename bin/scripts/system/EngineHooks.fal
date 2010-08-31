@@ -5,6 +5,9 @@ _rawhooks = [ => ]
 // GameUpdate() hooks
 _uphooks = [ => ]
 
+// PostRender() hooks
+_rhooks = []
+
 // --- called by core whenever input occurs ---
 function InputEventHandler(e)
     global _rawhooks
@@ -70,6 +73,35 @@ function UnregisterUpdateHook(who)
     _uphooks -= who
 end
 
+// called by the core after every rendering
+function PostRender()
+    global _rhooks
+    
+    // process registered functions. if one returns true, remove from list
+    for func in _rhooks
+        try
+            func()
+        catch in err
+            > "ERROR: PostRender(): unhandled exception in a hook:"
+            > func
+            > err
+            > "---> Dropping hook to prevent further console spam"
+            continue dropping
+        end
+    end
+end
+
+function RegisterRenderHook(func)
+    global _rhooks
+    if not isCallable(func): raise "RegisterRenderHook(): '" + func + "' not callable!"
+    arrayAdd(_rhooks, func)
+end
+
+function UnregisterRenderHook(func)
+    global _rhooks
+    arrayDel(_rhooks, func)
+end
+
 
 
 export GameUpdate
@@ -77,3 +109,6 @@ export RegisterUpdateHook, UnregisterUpdateHook
 
 export InputEventHandler
 export RegisterRawInputHook, UnregisterRawInputHook, GetRawInputHook
+
+export PostRender
+export RegisterRenderHook, UnregisterRenderHook

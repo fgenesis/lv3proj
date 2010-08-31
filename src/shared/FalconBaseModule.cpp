@@ -17,6 +17,11 @@ Base module file, providing some engine core function bindings
 #include "VFSFile.h"
 #include "Crc32.h"
 
+// graphics/SDL related
+#include <SDL/SDL.h>
+#include <SDL/SDL_image.h>
+#include "SDL_func.h"
+
 #include "UndefUselessCrap.h"
 
 
@@ -408,6 +413,147 @@ FALCON_FUNC fal_VFS_HasFile( Falcon::VMachine *vm )
     vm->retval(result);
 }
 
+fal_Surface::fal_Surface(const Falcon::CoreClass* generator)
+: Falcon::FalconObject( generator )
+{
+}
+
+bool fal_Surface::finalize()
+{
+    if(!adopted)
+        SDL_FreeSurface(surface);
+    return false; // this tells the GC to call the destructor
+}
+
+Falcon::FalconObject *fal_Surface::clone(void) const
+{
+    return NULL; // TODO: implement this!
+}
+
+Falcon::CoreObject *fal_Surface::factory( const Falcon::CoreClass *cls, void *user_data, bool )
+{
+    return new fal_Surface(cls);
+}
+
+bool fal_Surface::setProperty( const Falcon::String &prop, const Falcon::Item &value )
+{
+    return false;
+}
+
+bool fal_Surface::getProperty( const Falcon::String &prop, Falcon::Item &ret ) const
+{
+    if(prop == "w")          { ret = surface->w; return true; }
+    else if(prop == "h")     { ret = surface->h; return true; }
+    else if(prop == "ptr")   { ret = (uint64)surface->pixels; return true; }
+
+    return defaultProperty( prop, ret);
+}
+
+void fal_Surface::init( Falcon::VMachine *vm )
+{
+    FALCON_REQUIRE_PARAMS_EXTRA(2, "N, N");
+    int32 w = (uint32)vm->param(0)->forceInteger();
+    int32 h = (uint32)vm->param(1)->forceInteger();
+    if(!(w > 0 && h > 0))
+    {
+        throw new Falcon::ParamError(Falcon::ErrorParam( Falcon::e_inv_params, __LINE__ )
+            .extra("Width and Height must be > 0!") );
+    }
+    fal_Surface *self = Falcon::dyncast<fal_Surface*>( vm->self().asObject() );
+    SDL_Surface *vs = SDL_GetVideoSurface();
+    self->surface = SDL_CreateRGBSurface(SDL_SWSURFACE, w, h, vs->format->BitsPerPixel,
+        0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000); // TODO: fix this for big endian
+    self->adopted = false;
+}
+
+FALCON_FUNC fal_Surface_Pixel( Falcon::VMachine *vm )
+{
+    FALCON_REQUIRE_PARAMS_EXTRA(3, "N, N, N");
+    int32 x = (uint32)vm->param(0)->forceInteger();
+    int32 y = (uint32)vm->param(1)->forceInteger();
+    int32 c = (uint32)vm->param(2)->forceInteger();
+    fal_Surface *self = Falcon::dyncast<fal_Surface*>( vm->self().asObject() );
+    SDL_Surface *s = self->surface;
+    if(x < s->w && y < s->h)
+        SDLfunc_putpixel(s, x, y, c);
+}
+
+FALCON_FUNC fal_Surface_BlitTo( Falcon::VMachine *vm )
+{
+    FALCON_REQUIRE_PARAMS_EXTRA(1, "Surface [, A [, A [, B]]]]");
+    Falcon::Item *i_surface = vm->param(0);
+    if(!(i_surface->isObject() && i_surface->asObject()->derivedFrom("Surface")))
+    {
+        throw new Falcon::ParamError(Falcon::ErrorParam( Falcon::e_inv_params, __LINE__ )
+            .extra("Object is not a surface") );
+    }
+    SDL_Surface *src = (Falcon::dyncast<fal_Surface*>(vm->self().asObject()))->surface;
+    SDL_Surface *dst = (Falcon::dyncast<fal_Surface*>(i_surface->asObject()))->surface;
+
+    Falcon::Item *i_srcrect = vm->param(1);
+    Falcon::Item *i_dstrect = vm->param(2);
+    Falcon::Item *i_rawblit = vm->param(3);
+    bool rawblit = i_rawblit && i_rawblit->asBoolean();
+
+    Falcon::CoreArray *a_srcrect = NULL;
+    Falcon::CoreArray *a_dstrect = NULL;
+
+    SDL_Rect srcrect, dstrect;
+
+    if(i_srcrect)
+    {
+        if(i_srcrect->isArray() && (a_srcrect = i_srcrect->asArray())->length() >= 4)
+        {
+            srcrect.x = a_srcrect->at(0).forceIntegerEx();
+            srcrect.y = a_srcrect->at(1).forceIntegerEx();
+            srcrect.w = a_srcrect->at(2).forceIntegerEx();
+            srcrect.h = a_srcrect->at(3).forceIntegerEx();
+        }
+        else if(i_srcrect->isNil())
+        {
+            i_srcrect = NULL; // speeds up check below
+        }
+        else
+        {
+            throw new Falcon::ParamError(Falcon::ErrorParam( Falcon::e_inv_params, __LINE__ )
+                .extra("Srcrect must be array of length >= 4") );
+        }
+    }
+
+    if(i_dstrect)
+    {
+        if(i_dstrect->isArray() && (a_dstrect = i_dstrect->asArray())->length() >= 2)
+        {
+            dstrect.x = a_dstrect->at(0).forceIntegerEx();
+            dstrect.y = a_dstrect->at(1).forceIntegerEx();
+            // w and h are ignored by SDL
+        }
+        else if(i_dstrect->isNil())
+        {
+            i_dstrect = NULL; // speeds up check below
+        }
+        else
+        {
+            throw new Falcon::ParamError(Falcon::ErrorParam( Falcon::e_inv_params, __LINE__ )
+                .extra("Dstpos must be array of length >= 2") );
+        }
+    }
+
+    if(rawblit)
+    {
+        uint8 oalpha = src->format->alpha;
+        uint8 oflags = src->flags;
+        SDL_SetAlpha(src, 0, 0); 
+        SDL_BlitSurface(src, i_srcrect ? &srcrect : NULL, dst, i_dstrect ? &dstrect : NULL);
+        src->format->alpha = oalpha;
+        src->flags = oflags;
+    }
+    else
+    {
+        SDL_BlitSurface(src, i_srcrect ? &srcrect : NULL, dst, i_dstrect ? &dstrect : NULL);
+    }
+}
+
 
 Falcon::Module *FalconBaseModule_create(void)
 {
@@ -430,6 +576,12 @@ Falcon::Module *FalconBaseModule_create(void)
     m->addClassMethod(clsVFS, "GetDirList", fal_VFS_GetDirList);
     m->addClassMethod(clsVFS, "GetFileList", fal_VFS_GetFileList);
     m->addClassMethod(clsVFS, "HasFile", fal_VFS_HasFile);
+
+    Falcon::Symbol *clsSurface = m->addClass("Surface", fal_Surface::init);
+    clsSurface->setWKS(true);
+    clsSurface->getClassDef()->factory(&fal_Surface::factory);
+    m->addClassMethod(clsSurface, "Pixel", fal_Surface_Pixel);
+    m->addClassMethod(clsSurface, "BlitTo", fal_Surface_BlitTo);
 
     m->addExtFunc("include_ex", fal_include_ex);
     m->addExtFunc("DbgBreak", fal_debug_break);

@@ -2,6 +2,7 @@
 #define FALCON_BASE_MODULE_H
 
 class SoundFile;
+struct SDL_Surface;
 
 
 Falcon::Module *FalconBaseModule_create(void);
@@ -27,6 +28,25 @@ public:
 
 private:
     SoundFile *_snd;
+};
+
+class fal_Surface : public Falcon::FalconObject
+{
+public:
+    fal_Surface( const Falcon::CoreClass* generator );
+
+    static void init(Falcon::VMachine *vm);
+    static Falcon::CoreObject* factory( const Falcon::CoreClass *cls, void *user_data, bool );
+
+    Falcon::FalconObject *clone() const;
+    virtual bool finalize(void);
+
+    virtual bool setProperty( const Falcon::String &prop, const Falcon::Item &value );
+    virtual bool getProperty( const Falcon::String &prop, Falcon::Item &ret ) const;
+
+    SDL_Surface *surface;
+    bool adopted;
+
 };
 
 #endif
