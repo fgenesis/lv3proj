@@ -176,10 +176,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\shared\array2d.h"
-				>
-			</File>
-			<File
 				RelativePath=".\shared\AsciiLevelParser.cpp"
 				>
 			</File>
@@ -188,35 +184,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\shared\BitSet2d.h"
-				>
-			</File>
-			<File
-				RelativePath=".\shared\common.h"
-				>
-			</File>
-			<File
-				RelativePath=".\shared\DebugStuff.h"
-				>
-			</File>
-			<File
 				RelativePath=".\shared\Engine.cpp"
 				>
 			</File>
 			<File
 				RelativePath=".\shared\Engine.h"
-				>
-			</File>
-			<File
-				RelativePath=".\shared\Errors.h"
-				>
-			</File>
-			<File
-				RelativePath=".\shared\IMG_savepng.c"
-				>
-			</File>
-			<File
-				RelativePath=".\shared\IMG_savepng.h"
 				>
 			</File>
 			<File
@@ -233,10 +205,6 @@
 			</File>
 			<File
 				RelativePath=".\shared\log.h"
-				>
-			</File>
-			<File
-				RelativePath=".\shared\MemoryLeaks.h"
 				>
 			</File>
 			<File
@@ -284,18 +252,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\shared\SDL_func.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\shared\SDL_func.h"
-				>
-			</File>
-			<File
-				RelativePath=".\shared\SelfRefCounter.h"
-				>
-			</File>
-			<File
 				RelativePath=".\shared\SharedDefines.h"
 				>
 			</File>
@@ -312,10 +268,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\shared\SysDefs.h"
-				>
-			</File>
-			<File
 				RelativePath=".\shared\Tile.cpp"
 				>
 			</File>
@@ -329,18 +281,6 @@
 			</File>
 			<File
 				RelativePath=".\shared\TileLayer.h"
-				>
-			</File>
-			<File
-				RelativePath=".\shared\tools.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\shared\tools.h"
-				>
-			</File>
-			<File
-				RelativePath=".\shared\UndefUselessCrap.h"
 				>
 			</File>
 			<Filter
@@ -466,6 +406,10 @@
 					RelativePath=".\shared\ByteConverter.h"
 					>
 				</File>
+				<File
+					RelativePath=".\shared\SysDefs.h"
+					>
+				</File>
 			</Filter>
 			<Filter
 				Name="VFS"
@@ -508,6 +452,70 @@
 				</File>
 				<File
 					RelativePath=".\shared\VFSHelper.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="SDL"
+				>
+				<File
+					RelativePath=".\shared\IMG_savepng.c"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\IMG_savepng.h"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\SDL_func.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\SDL_func.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="framework"
+				>
+				<File
+					RelativePath=".\shared\array2d.h"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\BitSet2d.h"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\common.h"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\DebugStuff.h"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\Errors.h"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\MemoryLeaks.h"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\SelfRefCounter.h"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\tools.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\tools.h"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\UndefUselessCrap.h"
 					>
 				</File>
 			</Filter>

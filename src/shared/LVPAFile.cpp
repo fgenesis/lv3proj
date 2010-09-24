@@ -305,14 +305,14 @@ bool LVPAFile::LoadFrom(const char *fn, LVPALoadFlags loadFlags)
         {
             h.offset = solidOffs;
             solidOffs += h.packedSize;
-            DEBUG(logdebug("(S) '%s' offset: %u", h.filename.c_str(), h.offset));
+            DEBUG(logdebug("(S) '%s' bytes: %u offset: %u", h.filename.c_str(), h.packedSize, h.offset));
             
         }
         else
         {
             h.offset = dataStartOffs;
             dataStartOffs += h.packedSize; // next file starts where this one ended
-            DEBUG(logdebug("'%s' offset: %u", h.filename.c_str(), h.offset));
+            DEBUG(logdebug("'%s' bytes: %u offset: %u", h.filename.c_str(), h.packedSize, h.offset));
 
             // for stats (the solid block will also be covered here)
             _packedSize += h.packedSize;
@@ -614,7 +614,8 @@ memblock LVPAFile::_LoadFile(LVPAFileHeader& h)
     // check CRC32 for that file
     {
         CRC32 crc;
-        crc.Update((uint8*)buf.contents(), buf.size());
+        if(buf.size())
+            crc.Update((uint8*)buf.contents(), buf.size());
         crc.Finalize();
         if(crc.Result() != h.crc)
         {
@@ -625,7 +626,8 @@ memblock LVPAFile::_LoadFile(LVPAFileHeader& h)
     }
 
     memblock mb(new uint8[buf.size() + LVPA_EXTRA_BUFSIZE], buf.size());
-    buf.read(mb.ptr, buf.size());
+    if(buf.size())
+        buf.read(mb.ptr, buf.size());
     memset(mb.ptr + mb.size, 0, LVPA_EXTRA_BUFSIZE); // zero out extra space
 
     // file is unpacked & loaded, store it
