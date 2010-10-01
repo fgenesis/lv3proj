@@ -7,6 +7,7 @@
 #include "GuichanExt.h"
 #include "LVPAFile.h"
 #include "SDLImageLoaderManaged.h"
+#include "MapFile.h"
 #include "EditorEngine.h"
 
 
@@ -392,22 +393,8 @@ void EditorEngine::SetupInterfaceLayers(void)
         std::deque<std::string> files = GetFileList(std::string("gfx/") + *idir);
         for(std::deque<std::string>::iterator fi = files.begin(); fi != files.end(); fi++)
         {
-            BasicTile *tile = NULL;
-            if(FileGetExtension(*fi) == ".anim")
-            {
-                Anim *ani = resMgr.LoadAnim((char*)AddPathIfNecessary(*fi,*idir).c_str());
-                if(ani)
-                    tile = new AnimatedTile(ani);
-            }
-            else if(FileGetExtension(*fi) == ".png")
-            {
-                std::string fn = AddPathIfNecessary(*fi,*idir);
-                SDL_Surface *img = resMgr.LoadImg((char*)fn.c_str());
-                if(img)
-                {
-                    tile = new BasicTile(img, fn.c_str());
-                }
-            }
+            std::string fn(AddPathIfNecessary(*fi,*idir));
+            BasicTile *tile = AnimatedTile::New(fn.c_str());
 
             if(tile)
             {
@@ -465,6 +452,14 @@ void EditorEngine::action(const gcn::ActionEvent& actionEvent)
     else if(src == btnQuit)
     {
         _quit = true; // TODO: "Do you really want to...? YES DAMNIT!"
+    }
+    else if(src == btnSaveAs)
+    {
+        SaveCurrentMapAs("output.lvpm"); // TODO: show filename dialog
+    }
+    else if(src == btnLoad)
+    {
+        LoadMapFile("output.lvpm"); // TODO: show filename dialog
     }
 
 }
@@ -765,3 +760,21 @@ void EditorEngine::UpdateLayerButtonColors(void)
     }
 }
 
+void EditorEngine::SaveCurrentMapAs(const char *fn)
+{
+    MapFile::SaveAs(fn, _layermgr);
+}
+
+bool EditorEngine::LoadMapFile(const char *fn)
+{
+    memblock *mb = resMgr.LoadFile((char*)fn);
+    LayerMgr *mgr = MapFile::Load(mb, this);
+    resMgr.Drop(mb, true); // have to delete this file from memory immediately
+    if(!mgr)
+        return false;
+
+    delete _layermgr;
+    _layermgr = mgr;
+
+    return false;
+}

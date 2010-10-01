@@ -25,11 +25,13 @@ public:
     inline BasicTile *GetTile(uint32 x, uint32 y) { return tilearray(x,y); }
     inline uint32 GetArraySize(void) { return tilearray.size1d(); }
     inline uint32 GetPixelSize(void) { return GetArraySize() * 16; }
+    inline bool IsUsed(void) { return used; }
 
     bool visible;
     bool collision; // do collision checking against this layer for non-transparent areas
     uint32 xoffs;
     uint32 yoffs;
+    std::string name;
 
 protected:
     SDL_Surface *target; // where to render to - should be set to Engine::GetSurface()

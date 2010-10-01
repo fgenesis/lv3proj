@@ -133,6 +133,10 @@ protected:
     gcn::Button *btnLayers[LAYER_MAX];
     gcn::CheckBox *cbLayerVisible;
 
+private:
+    void SaveCurrentMapAs(const char *fn);
+    bool LoadMapFile(const char *fn);
+
 
 };
 

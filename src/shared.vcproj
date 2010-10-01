@@ -519,6 +519,18 @@
 					>
 				</File>
 			</Filter>
+			<Filter
+				Name="maps"
+				>
+				<File
+					RelativePath=".\shared\MapFile.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\MapFile.h"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="Header Files"

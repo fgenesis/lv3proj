@@ -38,7 +38,7 @@ class LayerMgr
 {
 public:
 
-    LayerMgr(Engine*);
+    LayerMgr(Engine *e);
     ~LayerMgr();
 
 

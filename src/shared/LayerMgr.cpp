@@ -12,7 +12,7 @@
 #include "UndefUselessCrap.h"
 
 
-LayerMgr::LayerMgr(Engine* e)
+LayerMgr::LayerMgr(Engine *e)
 : engine(e), _maxdim(0), _collisionMap(LCF_WALL)
 {
     for(uint32 i = 0; i < LAYER_MAX; ++i)
@@ -20,7 +20,7 @@ LayerMgr::LayerMgr(Engine* e)
 
 }
 
-TileLayer *LayerMgr::CreateLayer(bool collision, uint32 xoffs /* = 0 */, uint32 yoffs /* = 0 */)
+TileLayer *LayerMgr::CreateLayer(bool collision /* = false */, uint32 xoffs /* = 0 */, uint32 yoffs /* = 0 */)
 {
     ASSERT(_maxdim); // sanity check
 
