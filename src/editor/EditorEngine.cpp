@@ -773,6 +773,11 @@ bool EditorEngine::LoadMapFile(const char *fn)
     if(!mgr)
         return false;
 
+    // initialize missing layers
+    for(uint32 i = 0; i < LAYER_MAX; i++)
+        if(!mgr->GetLayer(i))
+            mgr->SetLayer(mgr->CreateLayer(), i);
+
     delete _layermgr;
     _layermgr = mgr;
 
