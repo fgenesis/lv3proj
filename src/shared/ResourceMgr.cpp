@@ -276,7 +276,7 @@ Anim *ResourceMgr::LoadAnim(char *name)
                 af->callback.ptr(af->surface); // register callback for auto-deletion
             }
 
-         logdebug("LoadAnim: '%s' [%s]" , name, vfs.GetFile(fn.c_str())->getSource()); // the file must exist
+         logdebug("LoadAnim: '%s' [%s]" , fn.c_str(), vfs.GetFile(fn.c_str())->getSource()); // the file must exist
     }
 
     _SetPtr(fn, (void*)ani);
@@ -355,30 +355,41 @@ memblock *ResourceMgr::LoadFile(char *name)
     {
         VFSFile *vf = vfs.GetFile(fn.c_str());
         uint32 size;
-        if(vf && (size = vf->size()) )
+        if(vf)
         {
-            mb = new memblock(new uint8[size], size);
-            if(!vf->isopen()) // should already be open because calling size(), but we can never know where we will load from later on
+            
+            if(!vf->isopen()) // file not open? open, read, and close.
             {
                 vf->open();
-                vf->read((char*)mb->ptr, mb->size);
-                vf->close();
+                size = vf->size();
+                if(size)
+                {
+                    mb = new memblock(new uint8[size], size);
+                    vf->read((char*)mb->ptr, size);
+                    vf->close();
+                }
             }
-            else
+            else // file already open? save pos, seek, read, restore pos.
             {
-                uint64 pos = vf->getpos();
-                vf->seek(0);
-                vf->read((char*)mb->ptr, mb->size);
-                vf->seek(pos);
+                size = vf->size();
+                if(size)
+                {
+                    mb = new memblock(new uint8[size], size);
+                    uint64 pos = vf->getpos();
+                    vf->seek(0);
+                    vf->read((char*)mb->ptr, size);
+                    vf->seek(pos);
+                }
             }
         }
-        else
+
+        if(!mb)
         {
             logerror("LoadFile failed: '%s'", name);
             return NULL;
         }
 
-        logdebug("LoadFile: '%s' [%s]" , name, vf->getSource());
+        logdebug("LoadFile: '%s' [%s], %u bytes" , name, vf->getSource(), size);
     }
 
     _SetPtr(fn, (void*)mb);

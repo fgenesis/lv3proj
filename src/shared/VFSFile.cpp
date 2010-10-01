@@ -43,12 +43,14 @@ bool VFSFileReal::open(const char *fn /* = NULL */, char *mode /* = NULL */)
     _setName(fn);
 
     _fh = fopen(_fullname.c_str(), mode ? mode : "rb");
+    if(!_fh)
+        return false;
 
     fseek(_fh, 0, SEEK_END);
     _size = getpos();
     fseek(_fh, 0, SEEK_SET);
 
-    return _fh;
+    return true;
 }
 
 bool VFSFileReal::isopen(void)
