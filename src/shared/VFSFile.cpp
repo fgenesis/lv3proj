@@ -127,8 +127,9 @@ uint64 VFSFileReal::size(void)
 {
     if(_size != VFSFile::npos64)
         return _size;
-
     open();
+    close();
+    // now size is known.
     return _size;
 }
 
