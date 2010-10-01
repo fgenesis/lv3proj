@@ -92,6 +92,18 @@ int main(int argc, char **argv)
     }
 
     char *file = argv[1];
+
+    uint32 xdim = 16, ydim = 16;
+
+    if(argc > 2)
+    {
+        xdim = atoi(argv[2]);
+        if(argc > 3)
+            ydim = atoi(argv[3]);
+        else
+            ydim = xdim;
+    }
+
     printf("Opening '%s'", file);
 
     SDL_Surface *image = IMG_Load(file);
@@ -104,18 +116,25 @@ int main(int argc, char **argv)
 
     IMG_SavePNG((char*)(dirname + "/source.png").c_str(), image, 9);
 
-    int maxx = image->w / 16;
-    int maxy = image->h / 16;
+    int maxx = image->w / xdim;
+    int maxy = image->h / ydim;
 
     SDL_Rect rect;
+    rect.w = xdim;
+    rect.h = ydim;
+
+    //uint8 oalpha = origin->format->alpha;
+    //uint8 oflags = origin->flags;
+    SDL_SetAlpha(image, 0, 0);
 
     for(int y = 0; y < maxy; ++y)
     {
-        rect.y = y * 16;
+        rect.y = y * ydim;
         for(int x = 0; x < maxx; ++x)
         {
-            SDL_Surface *tile = SDL_CreateRGBSurface(0, 16,16, 32, 0, 0, 0, 0);
-            rect.x = x * 16;
+            SDL_Surface *tile = SDL_CreateRGBSurface(image->flags, xdim, ydim, 32,
+                0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000); // TODO: fix this for big endian
+            rect.x = x * xdim;
             SDL_BlitSurface(image, &rect, tile, NULL);
             if(!addUniqueTile(x,y,tile,(char*)dirname.c_str()))
                 SDL_FreeSurface(tile);
