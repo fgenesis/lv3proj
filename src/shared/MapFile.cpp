@@ -62,11 +62,11 @@ void MapFile::Save(ByteBuffer *bufptr, LayerMgr *mgr)
                         else
                             usedId = it->second;
 
-                        layerbuf << usedId;
+                        layerbuf << uint16(usedId);
                     }
                     else // no tile there
                     {
-                        layerbuf << uint32(0);
+                        layerbuf << uint16(0);
                     }
 
 
@@ -202,7 +202,7 @@ LayerMgr *MapFile::LoadUnsafe(ByteBuffer *bufptr, Engine *engine)
         for(uint32 y = 0; y < height; y++)
             for(uint32 x = 0; x < width; x++)
             {
-                buf >> tileIdx;
+                tileIdx = buf.read<uint16>();
                 if(!tileIdx || tileIdx >= gfxStore.size())
                     continue;
 
