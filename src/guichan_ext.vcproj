@@ -170,6 +170,22 @@
 				RelativePath=".\guichan_ext\Panel.h"
 				>
 			</File>
+			<File
+				RelativePath=".\guichan_ext\SDLImageLoaderManaged.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\guichan_ext\SDLImageLoaderManaged.h"
+				>
+			</File>
+			<File
+				RelativePath=".\guichan_ext\SDLImageManaged.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\guichan_ext\SDLImageManaged.h"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"

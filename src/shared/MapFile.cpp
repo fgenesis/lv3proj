@@ -123,8 +123,23 @@ LayerMgr *MapFile::Load(memblock *mem, Engine *engine)
     return Load(&bb, engine);
 }
 
-
 LayerMgr *MapFile::Load(ByteBuffer *bufptr, Engine *engine)
+{
+    try
+    {
+        return LoadUnsafe(bufptr, engine);
+    }
+    catch(ByteBufferException ex)
+    {
+        logerror("MapFile::Load: Exception when loading file!");
+        logerror("ByteBufferException: action: '%s', rpos: %u, wpos: %u, cursize: %u, readsize: %u",
+            ex.action, ex.rpos, ex.wpos, ex.cursize, ex.readsize);
+    }
+    return NULL;
+}
+
+
+LayerMgr *MapFile::LoadUnsafe(ByteBuffer *bufptr, Engine *engine)
 {
     ByteBuffer& buf = *bufptr;
 

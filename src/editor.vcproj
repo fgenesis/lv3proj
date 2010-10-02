@@ -194,6 +194,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\editor\EventHandler.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\editor\GUIHandler.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\editor\main.cpp"
 				>
 			</File>
@@ -202,19 +210,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\editor\SDLImageLoaderManaged.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\editor\SDLImageLoaderManaged.h"
-				>
-			</File>
-			<File
-				RelativePath=".\editor\SDLImageManaged.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\editor\SDLImageManaged.h"
+				RelativePath=".\editor\MapFileHandler.cpp"
 				>
 			</File>
 		</Filter>
