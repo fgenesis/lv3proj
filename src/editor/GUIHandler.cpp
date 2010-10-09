@@ -99,8 +99,8 @@ void EditorEngine::SetupInterface(void)
     bgcol = gcn::Color(50,50,50,100);
     panel->setForegroundColor(fgcol);
     panel->setBackgroundColor(bgcol);
-    panel->setSize(8 * 16, freeHeight);
-    panel->SetMaxSlots(8, -1);
+    panel->setSize(tileboxCols * 16, freeHeight);
+    panel->SetMaxSlots(tileboxCols, -1);
     panel->addMouseListener(this);
 
     // the right tilebox panel must be added AFTER the main panel!
@@ -210,29 +210,7 @@ void EditorEngine::SetupInterfaceLayers(void)
     }
     wndTilesLayer->Resize(tilesmax);
 
-    // ##### TEMP TEST DEBUG STUFF ####
-    uint32 cnt = 0;
-    std::list<std::string> dirs;
-    dirs.push_back("ship");
-    dirs.push_back("sprites");
-    dirs.push_back("water");
-    for(std::list<std::string>::iterator idir = dirs.begin(); idir != dirs.end(); idir++)
-    {
-        std::deque<std::string> files = GetFileList(std::string("gfx/") + *idir);
-        for(std::deque<std::string>::iterator fi = files.begin(); fi != files.end(); fi++)
-        {
-            std::string fn(AddPathIfNecessary(*fi,*idir));
-            BasicTile *tile = AnimatedTile::New(fn.c_str());
-
-            if(tile)
-            {
-                wndTilesLayer->SetTile(cnt % (wndTilesLayer->GetArraySize() / 2), cnt / (wndTilesLayer->GetArraySize() / 2), tile);
-                panTileboxLayer->SetTile(cnt % 4, cnt / 4, tile);
-                cnt++;
-            }
-        }
-    }
-    // ### end debug stuff ###
+    FillUseableTiles();
 }
 
 gcn::Rectangle EditorEngine::Get16pxAlignedFrame(gcn::Rectangle rsrc)

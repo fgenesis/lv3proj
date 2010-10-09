@@ -213,6 +213,14 @@
 				RelativePath=".\editor\MapFileHandler.cpp"
 				>
 			</File>
+			<File
+				RelativePath=".\editor\SavedDataHandler.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\editor\TilesHandler.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"

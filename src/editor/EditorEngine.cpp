@@ -28,6 +28,7 @@ EditorEngine::EditorEngine()
 
 EditorEngine::~EditorEngine()
 {
+    SaveData();
     ClearWidgets();
 
     delete _topWidget;
@@ -60,6 +61,10 @@ bool EditorEngine::Setup(void)
     _layermgr->Clear();
     _layermgr->SetMaxDim(64);
 
+    // default config
+    tileboxCols = 8;
+
+    LoadData();
     SetupInterface();
     SetupEditorLayers();
 

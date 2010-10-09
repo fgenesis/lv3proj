@@ -49,6 +49,9 @@ public:
     virtual bool OnRawEvent(SDL_Event& evt);
     virtual void OnWindowResize(uint32 newx, uint32 newy);
 
+    void SaveData(void);
+    void LoadData(void);
+
     void ClearWidgets(void);
     void SetupInterface(void);
     void SetupInterfaceLayers(void);
@@ -61,6 +64,7 @@ public:
     void ToggleLayerVisible(uint32 layerId);
     void UpdateLayerButtonColors(void);
     void PanDrawingArea(int32 x, int32 y);
+    void FillUseableTiles(void);
 
     void SetActiveLayer(uint32 layerId);
 
@@ -140,7 +144,9 @@ protected:
     // layer settings
     gcn::Panel *panLayers;
     gcn::Button *btnLayers[LAYER_MAX];
-    gcn::CheckBox *cbLayerVisible;
+
+    // gui misc config
+    uint32 tileboxCols;
 
 private:
     void SaveCurrentMapAs(const char *fn);

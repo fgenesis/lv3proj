@@ -66,6 +66,15 @@ void LayerMgr::SetMaxDim(uint32 dim)
     _collisionMap.resize(dim, false);
 }
 
+void LayerMgr::SetLayer(TileLayer *layer, uint32 depth)
+{
+    if(_layers[depth])
+        _layers[depth]->mgr = NULL;
+    if(layer)
+        layer->mgr = this;
+    _layers[depth] = layer;
+}
+
 void LayerMgr::Render(void)
 {
     ObjectMgr *omgr = engine->objmgr;

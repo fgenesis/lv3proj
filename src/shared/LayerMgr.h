@@ -44,10 +44,7 @@ public:
 
     inline TileLayer *GetLayer(uint32 depth) { return _layers[depth]; }
     TileLayer *CreateLayer(bool collision = false, uint32 xoffs = 0, uint32 yoffs = 0);
-    inline void SetLayer(TileLayer *layer, uint32 depth)
-    {
-        _layers[depth] = layer;
-    }
+    void SetLayer(TileLayer *layer, uint32 depth);
 
     void Update(uint32 curtime);
     void Render(void);
