@@ -43,6 +43,7 @@ public:
     inline uint32 GetResY(void) { return _screen->h; }
     inline uint8 GetBPP(void) { return _screen->format->BitsPerPixel; }
     inline Point GetCameraPos(void) { return _cameraPos; }
+    inline Point *GetCameraPosPtr(void) { return &_cameraPos; }
     inline SDL_Surface *GetSurface(void) { return _screen; }
     SDL_Rect *GetVisibleBlockRect(void);
     virtual void SetTitle(char *title);

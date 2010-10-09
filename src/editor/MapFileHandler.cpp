@@ -18,6 +18,10 @@ bool EditorEngine::LoadMapFile(const char *fn)
         return false;
     }
 
+    // reset camera
+    _cameraPos.x = 0;
+    _cameraPos.y = 0;
+
     LayerMgr *mgr = MapFile::Load(mb, this);
     resMgr.Drop(mb, true); // have to delete this file from memory immediately
     if(!mgr)
@@ -28,8 +32,17 @@ bool EditorEngine::LoadMapFile(const char *fn)
 
     // initialize missing layers
     for(uint32 i = 0; i < LAYER_MAX; i++)
-        if(!mgr->GetLayer(i))
+    {
+        TileLayer *layer = mgr->GetLayer(i);
+        if(!layer)
+        {
+            layer = mgr->CreateLayer();
             mgr->SetLayer(mgr->CreateLayer(), i);
+        }
+
+        //layer->visible_area = NULL; // DEBUG
+    }
+            
 
     delete _layermgr;
     _layermgr = mgr;

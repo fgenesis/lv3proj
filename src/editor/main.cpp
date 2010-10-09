@@ -34,10 +34,10 @@ int main(int argc, char *argv[])
         logerror("Message: %s", ex.getMessage().c_str());
         getchar();
     }
-    catch(...)
+    /*catch(...)
     {
         logerror("Unhandled unknown Exception");
         getchar();
-    }
+    }*/
     return 0;
 }

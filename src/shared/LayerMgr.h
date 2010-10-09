@@ -53,7 +53,7 @@ public:
     void Render(void);
     void Clear(void);
 
-    inline void SetMaxDim(uint32 dim) { _maxdim = dim; }
+    inline void SetMaxDim(uint32 dim); // set x and y size of all layers & collision map + resize if necessary
     inline uint32 GetMaxDim(void) { return _maxdim; }
     inline uint32 GetMaxPixelDim(void) { return _maxdim * 16; }
     void CreateInfoLayer(void);

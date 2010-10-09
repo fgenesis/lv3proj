@@ -24,16 +24,16 @@ TileLayer *LayerMgr::CreateLayer(bool collision /* = false */, uint32 xoffs /* =
 {
     ASSERT(_maxdim); // sanity check
 
-    TileLayer *layer = new TileLayer;
-    layer->mgr = this;
-    layer->tilearray.resize(_maxdim, NULL);
-    layer->used = 0;
+    TileLayer *layer = new TileLayer();
+    layer->Resize(_maxdim);
     layer->collision = collision;
     layer->target = engine->GetSurface();
     layer->visible_area = engine->GetVisibleBlockRect();
     layer->visible = true;
     layer->xoffs = xoffs;
     layer->yoffs = yoffs;
+    layer->camera = engine->GetCameraPosPtr();
+    layer->mgr = this;
 
     return layer;
 }
@@ -55,6 +55,15 @@ void LayerMgr::Clear(void)
         _layers[i] = NULL;
     }
     _collisionMap.free();
+}
+
+void LayerMgr::SetMaxDim(uint32 dim)
+{
+    _maxdim = dim;
+    for(uint32 i = 0; i < LAYER_MAX; i++)
+        if(TileLayer *layer = GetLayer(i))
+            layer->Resize(dim);
+    _collisionMap.resize(dim, false);
 }
 
 void LayerMgr::Render(void)

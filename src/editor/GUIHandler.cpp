@@ -180,23 +180,34 @@ void EditorEngine::SetupInterface(void)
 
 void EditorEngine::SetupInterfaceLayers(void)
 {
-    if(_selLayer)
-        delete _selLayer;
     if(panTileboxLayer)
         delete panTileboxLayer;
     if(wndTilesLayer)
         delete wndTilesLayer;
 
     uint32 resmax = std::max(GetResX(), GetResY());
-    _layermgr->SetMaxDim(resmax / 16); // TODO: this should be done less hacklike, maybe...
-    _selLayer = (TileLayer*)_layermgr->CreateLayer(false); // this is explicitly created in the upper left corner
+    uint32 tilesmax = resmax / 16; // TODO: fix for tile size != 16
+    if(!_selLayer)
+    {
+        _selLayer = new TileLayer(); // this is explicitly created in the upper left corner
+        _selLayer->Resize(tilesmax);
+        _selLayer->target = GetSurface();
+        _selLayer->visible = true;
+    }
 
     int xo, yo;
     panTilebox->getAbsolutePosition(xo,yo);
-    panTileboxLayer = (TileLayer*)_layermgr->CreateLayer(false, xo, yo);
+    panTileboxLayer = new TileLayer();
+    panTileboxLayer->xoffs = xo;
+    panTileboxLayer->yoffs = yo;
+    panTileboxLayer->target = GetSurface();
+    panTileboxLayer->visible = true;
+    panTileboxLayer->Resize(tilesmax);
 
-    wndTilesLayer = (TileLayer*)_layermgr->CreateLayer(false);
+    wndTilesLayer = new TileLayer();
+    wndTilesLayer->target = GetSurface();
     wndTilesLayer->visible = false;
+    wndTilesLayer->Resize(tilesmax);
 
     // ##### TEMP TEST DEBUG STUFF ####
     uint32 cnt = 0;

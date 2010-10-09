@@ -288,9 +288,11 @@ void Engine::_Render(void)
 // returns the boundaries of the currently visible 16x16 pixel blocks
 SDL_Rect *Engine::GetVisibleBlockRect(void)
 {
-    _visibleBlockRect.x = GetCameraPos().x >> 4; // (x / 16) (16 = block size in pixels)
-    _visibleBlockRect.y = GetCameraPos().y >> 4;
-    _visibleBlockRect.w = (GetResX() >> 4) + 1;
-    _visibleBlockRect.h = (GetResY() >> 4) + 1;
+    uint32 posx = GetCameraPos().x < 0 ? 0 : GetCameraPos().x;
+    uint32 posy = GetCameraPos().y < 0 ? 0 : GetCameraPos().y;
+    _visibleBlockRect.x = posx / 16;
+    _visibleBlockRect.y = posy / 16;
+    _visibleBlockRect.w = ((GetResX() + posx) / 16) + 1;
+    _visibleBlockRect.h = ((GetResY() + posy) / 16) + 1;
     return &_visibleBlockRect;
 }

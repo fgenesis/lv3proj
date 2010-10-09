@@ -60,8 +60,9 @@ public:
         // if there was content, copy it
         if(olddata && oldsize)
         {
-            for(uint32 x = 0; x < oldsize; ++x)
-                for(uint32 y = 0; y < oldsize; ++y)
+            uint32 copysize = oldsize < newsize ? oldsize : newsize;
+            for(uint32 x = 0; x < copysize; ++x)
+                for(uint32 y = 0; y < copysize; ++y)
                     data[(y << req) | x] = olddata[(y << _shift) | x];
             delete [] olddata;
         }

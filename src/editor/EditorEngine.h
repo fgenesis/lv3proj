@@ -20,15 +20,20 @@ class EditorEngine : public Engine, public gcn::ActionListener, public gcn::Mous
 protected:
 
     // inherited from gcn::ActionListener
-    virtual void action(const gcn::ActionEvent& actionEvent);
+    virtual void action(const gcn::ActionEvent& ae);
 
     // inherited from gcn::MouseListener
-    virtual void mousePressed(gcn::MouseEvent& mouseEvent);
-    virtual void mouseDragged(gcn::MouseEvent& mouseEvent);
-    virtual void mouseReleased(gcn::MouseEvent& mouseEvent);
-    virtual void mouseMoved(gcn::MouseEvent& mouseEvent);
-    virtual void mouseExited(gcn::MouseEvent& mouseEvent);
-    virtual void mouseClicked(gcn::MouseEvent& mouseEvent);
+    virtual void mousePressed(gcn::MouseEvent& me);
+    virtual void mouseDragged(gcn::MouseEvent& me);
+    virtual void mouseReleased(gcn::MouseEvent& me);
+    virtual void mouseMoved(gcn::MouseEvent& me);
+    virtual void mouseExited(gcn::MouseEvent& me);
+    virtual void mouseClicked(gcn::MouseEvent& me);
+    virtual void mouseWheelMovedDown(gcn::MouseEvent& me);
+    virtual void mouseWheelMovedUp(gcn::MouseEvent& me);
+
+    // helper
+    void mouseWheelMoved(gcn::MouseEvent& me, bool up);
 
 
 public:
@@ -55,6 +60,7 @@ public:
     void ToggleLayerPanel(void);
     void ToggleLayerVisible(uint32 layerId);
     void UpdateLayerButtonColors(void);
+    void PanDrawingArea(int32 x, int32 y);
 
     void SetActiveLayer(uint32 layerId);
 
@@ -95,8 +101,10 @@ protected:
     gcn::Rectangle _selOverlayClip; // clipping area in which _selOverlayRect is drawn
     bool _selOverlayShow;
     bool _selOverlayHighlight;
-    int _mouseStartX;
-    int _mouseStartY;
+    int _mouseLeftStartX; // related to left button
+    int _mouseLeftStartY;
+    int _mouseRightStartX; // related to right button
+    int _mouseRightStartY;
 
     // GUI elements - main gui
     gcn::Panel *panMain;

@@ -5,6 +5,7 @@
 #include "GuichanExt.h"
 #include "LVPAFile.h"
 #include "SDLImageLoaderManaged.h"
+#include "SDL_func.h"
 #include "EditorEngine.h"
 
 
@@ -57,6 +58,7 @@ bool EditorEngine::Setup(void)
     gcn::Widget::setGlobalFont(_gcnFont);
 
     _layermgr->Clear();
+    _layermgr->SetMaxDim(64);
 
     SetupInterface();
     SetupEditorLayers();
@@ -92,6 +94,22 @@ void EditorEngine::OnKeyDown(SDLKey key, SDLMod mod)
             ToggleLayerPanel();
             break;
 
+            // TODO: below, fix for tile size != 16
+        case SDLK_UP:
+            PanDrawingArea(0, -16);
+            break;
+
+        case SDLK_DOWN:
+            PanDrawingArea(0, 16);
+            break;
+
+        case SDLK_LEFT:
+            PanDrawingArea(-16, 0);
+            break;
+
+        case SDLK_RIGHT:
+            PanDrawingArea(16, 0);
+            break;
 
         default:
             handled = false;
@@ -112,6 +130,7 @@ void EditorEngine::OnWindowResize(uint32 newx, uint32 newy)
 {
     SDL_SetVideoMode(newx,newy,GetBPP(), GetSurface()->flags);
     SetupInterface();
+    GetVisibleBlockRect(); // trigger recalc
 }
 
 void EditorEngine::_Process(uint32 ms)
@@ -136,7 +155,29 @@ void EditorEngine::_Render(void)
     // draw the layer manager, which is responsible to display the tiles on the main panel
     // do not draw if there is a fullscren overlay.
     if(!wndTiles->isVisible())
+    {
         _layermgr->Render();
+
+        // draw box around the drawing area
+        uint32 pixdim = _layermgr->GetMaxPixelDim();
+        gcn::Rectangle clip(
+            -_cameraPos.x,
+            -_cameraPos.y,
+            pixdim,
+            pixdim);
+
+
+        _gcnGfx->setColor(gcn::Color(255, 0, 0, 180));
+        _gcnGfx->pushClipArea(gcn::Rectangle(0,0,GetResX(), GetResY()));
+        _gcnGfx->drawRectangle(clip);
+        // draw 2nd rect around it (makes it thicker)
+        clip.x--;
+        clip.y--;
+        clip.width += 2;
+        clip.height+= 2;
+        _gcnGfx->drawRectangle(clip);
+        _gcnGfx->popClipArea();
+    }
 
     // draw everything related to guichan
     _gcnGui->draw();
@@ -145,7 +186,7 @@ void EditorEngine::_Render(void)
     // the layer's visibility is controlled by ToggleTileWnd()
     wndTilesLayer->Render();
 
-    // darw the tilebox layer, unless there is a fullscreen overlay
+    // draw the tilebox layer, unless there is a fullscreen overlay
     if(!wndTiles->isVisible())
         panTileboxLayer->Render();
 
@@ -213,14 +254,18 @@ void EditorEngine::UpdateSelectionFrame(gcn::Widget *src, int x, int y)
 
         // dont call Get16pxAlignedFrame() here, because this would also change width,
         // height and other stuff, thats not supposed to happen here
-        _selOverlayRect = gcn::Rectangle(x - (x % 16), y - (y % 16), _selCurrentSelRect.width, _selCurrentSelRect.height);
+        _selOverlayRect = gcn::Rectangle(
+            x - ((_cameraPos.x + x) % 16),
+            y - ((_cameraPos.y + y) % 16),
+            _selCurrentSelRect.width,
+            _selCurrentSelRect.height);
     }
     else
     {
-        gcn::Rectangle rect(std::min(_mouseStartX, x),
-                            std::min(_mouseStartY, y),
-                            std::max(_mouseStartX, x),
-                            std::max(_mouseStartY, y));
+        gcn::Rectangle rect(std::min(_mouseLeftStartX, x),
+                            std::min(_mouseLeftStartY, y),
+                            std::max(_mouseLeftStartX, x),
+                            std::max(_mouseLeftStartY, y));
         _selOverlayRect = Get16pxAlignedFrame(rect);
     }
     
@@ -243,7 +288,7 @@ gcn::Rectangle EditorEngine::GetTargetableLayerTiles(uint32 baseX, uint32 baseY,
     uint32 maxDimX = std::min(w, maxwidth);
     uint32 maxDimY = std::min(h, maxheight);
 
-    gcn::Rectangle rect(baseX / 16, baseY / 16, maxDimX, maxDimY);
+    gcn::Rectangle rect((baseX + _cameraPos.x) / 16, (baseY + _cameraPos.y) / 16, maxDimX, maxDimY);
 
     return rect;
 }
@@ -286,4 +331,9 @@ void EditorEngine::UpdateSelection(gcn::Widget *src)
     }
 }
 
-
+void EditorEngine::PanDrawingArea(int32 x, int32 y)
+{
+    _cameraPos.x += x;
+    _cameraPos.y += y;
+    GetVisibleBlockRect(); // to trigger recalc
+}

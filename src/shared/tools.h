@@ -86,4 +86,27 @@ inline int32 int32r(float f)
     return int32(f + 0.5f);
 }
 
+// floor to next power of 2
+inline uint32 flp2(uint32 x)
+{
+    x |= (x >> 1);
+    x |= (x >> 2);
+    x |= (x >> 4);
+    x |= (x >> 8);
+    x |= (x >> 16);
+    return x - (x >> 1);
+}
+
+// ceil to next power of 2
+inline uint32 clp2(uint32 x)
+{
+    --x;
+    x |= (x >> 1);
+    x |= (x >> 2);
+    x |= (x >> 4);
+    x |= (x >> 8);
+    x |= (x >> 16);
+    return x + 1;
+}
+
 #endif
