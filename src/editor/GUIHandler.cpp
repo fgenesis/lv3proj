@@ -99,8 +99,8 @@ void EditorEngine::SetupInterface(void)
     bgcol = gcn::Color(50,50,50,100);
     panel->setForegroundColor(fgcol);
     panel->setBackgroundColor(bgcol);
-    panel->setSize(4 * 16, freeHeight);
-    panel->SetMaxSlots(4, -1);
+    panel->setSize(8 * 16, freeHeight);
+    panel->SetMaxSlots(8, -1);
     panel->addMouseListener(this);
 
     // the right tilebox panel must be added AFTER the main panel!
@@ -180,33 +180,34 @@ void EditorEngine::SetupInterface(void)
 
 void EditorEngine::SetupInterfaceLayers(void)
 {
-    if(panTileboxLayer)
-        delete panTileboxLayer;
-    if(wndTilesLayer)
-        delete wndTilesLayer;
-
     uint32 resmax = std::max(GetResX(), GetResY());
     uint32 tilesmax = resmax / 16; // TODO: fix for tile size != 16
     if(!_selLayer)
     {
         _selLayer = new TileLayer(); // this is explicitly created in the upper left corner
-        _selLayer->Resize(tilesmax);
         _selLayer->target = GetSurface();
         _selLayer->visible = true;
     }
+    _selLayer->Resize(_layermgr->GetMaxDim());
 
     int xo, yo;
+    if(!panTileboxLayer)
+    {
+        panTileboxLayer = new TileLayer();
+        panTileboxLayer->target = GetSurface();
+        panTileboxLayer->visible = true;
+    }
     panTilebox->getAbsolutePosition(xo,yo);
-    panTileboxLayer = new TileLayer();
     panTileboxLayer->xoffs = xo;
     panTileboxLayer->yoffs = yo;
-    panTileboxLayer->target = GetSurface();
-    panTileboxLayer->visible = true;
     panTileboxLayer->Resize(tilesmax);
 
-    wndTilesLayer = new TileLayer();
-    wndTilesLayer->target = GetSurface();
-    wndTilesLayer->visible = false;
+    if(!wndTilesLayer)
+    {
+        wndTilesLayer = new TileLayer();
+        wndTilesLayer->target = GetSurface();
+        wndTilesLayer->visible = false;
+    }
     wndTilesLayer->Resize(tilesmax);
 
     // ##### TEMP TEST DEBUG STUFF ####

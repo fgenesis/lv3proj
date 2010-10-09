@@ -278,7 +278,8 @@ void EditorEngine::UpdateSelectionFrame(gcn::Widget *src, int x, int y)
 // baseXY must be the positions of the upper left start point.
 // aligning by 16 will be done inside the function.
 // maxwidth, maxheight is the max. amount of tiles in each direction that may be treated selectable. -1 for infinite.
-gcn::Rectangle EditorEngine::GetTargetableLayerTiles(uint32 baseX, uint32 baseY, uint32 addX, uint32 addY, uint32 maxwidth, uint32 maxheight)
+gcn::Rectangle EditorEngine::GetTargetableLayerTiles(uint32 baseX, uint32 baseY, uint32 addX, uint32 addY,
+                                                     uint32 maxwidth, uint32 maxheight, TileLayer *layer)
 {
     uint32 w = addX / 16;
     uint32 h = addY / 16;
@@ -288,9 +289,16 @@ gcn::Rectangle EditorEngine::GetTargetableLayerTiles(uint32 baseX, uint32 baseY,
     uint32 maxDimX = std::min(w, maxwidth);
     uint32 maxDimY = std::min(h, maxheight);
 
-    gcn::Rectangle rect((baseX + _cameraPos.x) / 16, (baseY + _cameraPos.y) / 16, maxDimX, maxDimY);
-
-    return rect;
+    Point *camera = layer->camera;
+    if(camera)
+    {
+        return gcn::Rectangle((baseX + camera->x) / 16, (baseY + camera->y) / 16, maxDimX, maxDimY);
+    }
+    else
+    {
+        return gcn::Rectangle(baseX / 16, baseY / 16, maxDimX, maxDimY);
+    }
+    
 }
 
 void EditorEngine::UpdateSelection(gcn::Widget *src)

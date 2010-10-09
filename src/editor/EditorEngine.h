@@ -70,7 +70,8 @@ public:
     gcn::Rectangle Get16pxAlignedFrame(gcn::Rectangle rsrc);
     void UpdateSelectionFrame(gcn::Widget *src, int x, int y);
     void UpdateSelection(gcn::Widget *src);
-    gcn::Rectangle GetTargetableLayerTiles(uint32 baseX, uint32 baseY, uint32 addX, uint32 addY, uint32 maxwidth, uint32 maxheight);
+    gcn::Rectangle GetTargetableLayerTiles(uint32 baseX, uint32 baseY, uint32 addX, uint32 addY,
+                                           uint32 maxwidth, uint32 maxheight, TileLayer *layer);
 
     gcn::Widget *RegWidget(gcn::Widget *w);
     gcn::Widget *AddWidgetTop(gcn::Widget *w);
