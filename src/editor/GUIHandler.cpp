@@ -336,11 +336,6 @@ void EditorEngine::SetLeftMainDistance(uint32 dist)
 {
     panMain->setX(dist);
     panMain->setWidth(GetResX() - dist);
-    for(uint32 i = 0; i < LAYER_MAX; i++)
-    {
-        if(TileLayer *layer = _layermgr->GetLayer(i))
-            layer->xoffs = dist;
-    }
     _selLayer->xoffs = dist;
     _selLayerBorderRect.x = dist;
 }

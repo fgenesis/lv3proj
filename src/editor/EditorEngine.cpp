@@ -335,5 +335,21 @@ void EditorEngine::PanDrawingArea(int32 x, int32 y)
 {
     _cameraPos.x += x;
     _cameraPos.y += y;
+
+    int32 pixdim = _layermgr->GetMaxPixelDim();
+    int32 halfx = GetResX() / 2;
+    int32 halfy = GetResY() / 2;
+
+    // limit view
+    if(_cameraPos.x < -halfx)
+        _cameraPos.x = -halfx;
+    else if(_cameraPos.x > pixdim - halfx)
+        _cameraPos.x = pixdim - halfx;
+
+    if(_cameraPos.y < -halfy)
+        _cameraPos.y = -halfy;
+    else if(_cameraPos.y > pixdim - halfy)
+        _cameraPos.y = pixdim - halfy;
+
     GetVisibleBlockRect(); // to trigger recalc
 }
