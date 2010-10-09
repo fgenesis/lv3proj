@@ -256,10 +256,25 @@ namespace gcn
             KeyInput keyInput = mInput->dequeueKeyInput();
 
             // Save modifiers state
-            mShiftPressed = keyInput.isShiftPressed();
-            mMetaPressed = keyInput.isMetaPressed();
-            mControlPressed = keyInput.isControlPressed();
-            mAltPressed = keyInput.isAltPressed();
+            mShiftPressed = (keyInput.getType() == KeyInput::PRESSED
+                         && (keyInput.getKey() == gcn::Key::LEFT_SHIFT
+                         || keyInput.getKey() == gcn::Key::RIGHT_SHIFT))
+                    || keyInput.isShiftPressed();
+
+            mMetaPressed = (keyInput.getType() == KeyInput::PRESSED
+                        && (keyInput.getKey() == gcn::Key::LEFT_META
+                        || keyInput.getKey() == gcn::Key::RIGHT_META))
+                    || keyInput.isMetaPressed();
+
+            mControlPressed = (keyInput.getType() == KeyInput::PRESSED
+                           && (keyInput.getKey() == gcn::Key::LEFT_CONTROL
+                           || keyInput.getKey() == gcn::Key::RIGHT_CONTROL))
+                       || keyInput.isControlPressed();
+
+            mAltPressed = (keyInput.getType() == KeyInput::PRESSED
+                       && (keyInput.getKey() == gcn::Key::LEFT_ALT
+                       || keyInput.getKey() == gcn::Key::RIGHT_ALT))
+                       || keyInput.isAltPressed();
 
             KeyEvent keyEventToGlobalKeyListeners(NULL,
                                                   mShiftPressed,
