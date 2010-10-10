@@ -74,6 +74,7 @@ bool EditorEngine::Setup(void)
     SetupEditorLayers();
     FillUseableTiles();
 
+    logdetail("EditorEngine setup completed.");
 
     return true;
 }

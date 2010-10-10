@@ -76,7 +76,7 @@ namespace gcn
                            mFilename(filename),
                            mLine(line)
     {
-
+        printf("gcn::Exception created: '%s' in %s:%u, %s", mMessage.c_str(), mFilename.c_str(), mLine, mFunction.c_str());
     }
 
     const std::string& Exception::getFunction() const

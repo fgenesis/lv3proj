@@ -158,12 +158,12 @@ namespace gcn
         dst.x = dstX + top.xOffset;
         dst.y = dstY + top.yOffset;
 
-        const SDLImage* srcImage = dynamic_cast<const SDLImage*>(image);
+        const SDLImage* srcImage = (const SDLImage*)(image); // FG: replaced dynamic_cast with C cast (fixed crash in release mode)
 
-        if (srcImage == NULL)
+        /*if (srcImage == NULL)
         {
             throw GCN_EXCEPTION("Trying to draw an image of unknown format, must be an SDLImage.");
-        }
+        }*/
 
         SDL_BlitSurface(srcImage->getSurface(), &src, mTarget, &dst);
     }
