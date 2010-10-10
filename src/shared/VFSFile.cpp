@@ -68,6 +68,11 @@ const char *VFSFileReal::name(void)
     return _name.c_str();
 }
 
+const char *VFSFileReal::fullname(void)
+{
+    return _fullname.c_str();
+}
+
 bool VFSFileReal::close(void)
 {
     if(_fh)

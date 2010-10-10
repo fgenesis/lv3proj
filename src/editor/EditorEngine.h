@@ -64,6 +64,7 @@ public:
     void ToggleLayerVisible(uint32 layerId);
     void UpdateLayerButtonColors(void);
     void PanDrawingArea(int32 x, int32 y);
+    void LoadPackages(void);
     void FillUseableTiles(void);
 
     void SetActiveLayer(uint32 layerId);

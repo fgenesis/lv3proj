@@ -20,6 +20,7 @@ public:
     virtual bool isopen(void) { return false; }
     virtual bool iseof(void) { return true; }
     virtual const char *name(void) { return ""; }
+    virtual const char *fullname(void) { return ""; }
     virtual bool close(void) { return false; }
     virtual bool seek(uint64 pos) { return false; }
     virtual bool seekRel(int64 offs) { return seek(getpos() + offs); }
@@ -43,6 +44,7 @@ public:
     virtual bool isopen(void);
     virtual bool iseof(void);
     virtual const char *name(void);
+    virtual const char *fullname(void);
     virtual bool close(void);
     virtual bool seek(uint64 pos);
     virtual bool seekRel(int64 offs);

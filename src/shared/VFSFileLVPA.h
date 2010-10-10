@@ -14,6 +14,7 @@ public:
     virtual bool isopen(void);
     virtual bool iseof(void);
     virtual const char *name(void);
+    virtual const char *fullname(void);
     virtual bool close(void);
     virtual bool seek(uint64 pos);
     virtual bool flush(void);
@@ -29,6 +30,7 @@ protected:
     uint32 _size;
     uint32 _headerId;
     std::string _name;
+    std::string _fullname;
     LVPAFile *_lvpa;
 };
 

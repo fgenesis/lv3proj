@@ -209,8 +209,6 @@ void EditorEngine::SetupInterfaceLayers(void)
         wndTilesLayer->visible = false;
     }
     wndTilesLayer->Resize(tilesmax);
-
-    FillUseableTiles();
 }
 
 gcn::Rectangle EditorEngine::Get16pxAlignedFrame(gcn::Rectangle rsrc)

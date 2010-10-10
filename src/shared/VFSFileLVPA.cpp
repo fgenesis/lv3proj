@@ -12,6 +12,7 @@ VFSFileLVPA::VFSFileLVPA(LVPAFile *src, uint32 headerId) : VFSFile()
 
     size_t slashpos = hdr.filename.find_last_of('/');
     _name = slashpos != std::string::npos ? hdr.filename.c_str() + slashpos + 1 : hdr.filename;
+    _fullname = hdr.filename;
 }
 
 VFSFileLVPA::~VFSFileLVPA()
@@ -37,6 +38,11 @@ bool VFSFileLVPA::iseof(void)
 const char *VFSFileLVPA::name(void)
 {
     return _name.c_str();
+}
+
+const char *VFSFileLVPA::fullname(void)
+{
+    return _fullname.c_str();
 }
 
 bool VFSFileLVPA::close(void)

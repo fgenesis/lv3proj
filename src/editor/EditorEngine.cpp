@@ -44,8 +44,12 @@ bool EditorEngine::Setup(void)
 {
     // setup the VFS and the container to read from
     LVPAFile *basepak = new LVPAFileReadOnly;
-    basepak->LoadFrom("basepak.lvpa", LVPALOAD_SOLID);
-    resMgr.vfs.LoadBase(basepak, true);
+    if(!basepak->LoadFrom("basepak.lvpa", LVPALOAD_SOLID))
+    {
+        logerror("EditorEngine::Setup: Can't open basepak.lvpa");
+        return false;
+    }
+    resMgr.vfs.LoadBase(basepak, true); // basepak is auto-deleted later
     resMgr.vfs.LoadFileSysRoot();
     resMgr.vfs.Prepare();
 
@@ -64,9 +68,11 @@ bool EditorEngine::Setup(void)
     // default config
     tileboxCols = 8;
 
+    LoadPackages();
     LoadData();
     SetupInterface();
     SetupEditorLayers();
+    FillUseableTiles();
 
 
     return true;

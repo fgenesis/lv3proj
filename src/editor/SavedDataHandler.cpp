@@ -14,7 +14,7 @@ void EditorEngine::SaveData(void)
     bool result = MapFile::SaveAs("saved_data/editor/last.tilebox", &mgr);
     mgr.SetLayer(NULL, 0); // detach from mgr
     if(!result)
-        logerror("EditorEngine::SaveData: Failed to save tilebox!");
+        logerror("EditorEngine::SaveData: Failed to save 'saved_data/editor/last.tilebox'");
 
 }
 
@@ -45,5 +45,5 @@ void EditorEngine::LoadData(void)
     }
 
     if(!success)
-        logerror("EditorEngine::LoadData: Failed to load tilebox!");
+        logerror("EditorEngine::LoadData: Failed to load 'saved_data/editor/last.tilebox'");
 }
