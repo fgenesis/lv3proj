@@ -3,6 +3,7 @@
 #include "ResourceMgr.h"
 #include "GuichanExt.h"
 #include "SDLImageLoaderManaged.h"
+#include "FileDialog.h"
 
 
 void EditorEngine::ClearWidgets(void)
@@ -154,7 +155,6 @@ void EditorEngine::SetupInterface(void)
     wndTiles->setMovable(false);
     wndTiles->setVisible(false);
     wndTiles->setTitleBarHeight(0);
-    wndTiles->setFrameSize(0);
     btnTWPrev = btn = new gcn::Button("  Prev  ");
     btn->addActionListener(this);
     panel = new gcn::Panel(4,4);
@@ -173,6 +173,15 @@ void EditorEngine::SetupInterface(void)
     wndTiles->addMouseListener(this);
     AddWidgetTop(wndTiles);
     // -- tile window end --
+
+    // -- file dialog window start --
+    if(!_fileDlg)
+    {
+        _fileDlg = new FileDialog();
+        _fileDlg->SetCallback(this);
+    }
+    _topWidget->add(_fileDlg);
+    // -- file dialog window end --
 
 
     SetupInterfaceLayers();

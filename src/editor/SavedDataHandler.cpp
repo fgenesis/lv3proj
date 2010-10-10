@@ -11,7 +11,7 @@ void EditorEngine::SaveData(void)
     mgr.SetLayer(panTileboxLayer, 0);
     CreateDir("saved_data");
     CreateDir("saved_data/editor");
-    bool result = MapFile::SaveAs("saved_data/editor/last.tilebox", &mgr);
+    bool result = MapFile::SaveAsFileDirect("saved_data/editor/last.tilebox", &mgr);
     mgr.SetLayer(NULL, 0); // detach from mgr
     if(!result)
         logerror("EditorEngine::SaveData: Failed to save 'saved_data/editor/last.tilebox'");

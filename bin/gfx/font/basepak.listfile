@@ -1,1 +1,3 @@
--p gfx/font -s fixedfont.png-p gfx/font -s basepak.listfile
+-p gfx/font -s fixedfont.png fixedfont.txt
+
+-p gfx/font -s basepak.listfile

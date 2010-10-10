@@ -2,6 +2,6 @@
 #define GCN_EXT_GUICHANEXT_H
 
 #include "Panel.h"
-
+#include "ListBox2.h"
 
 #endif

@@ -22,6 +22,8 @@ VFSFileLVPA::~VFSFileLVPA()
 bool VFSFileLVPA::open(const char *fn /* = NULL */, char *mode /* = NULL */)
 {
     _pos = 0;
+    if(mode)
+        _mode = mode;
     return true; // does not have to be opened
 }
 
@@ -82,12 +84,38 @@ uint32 VFSFileLVPA::read(char *dst, uint32 bytes)
 
 uint32 VFSFileLVPA::write(char *src, uint32 bytes)
 {
-    return VFSFile::npos; // TODO: implement if necessary
+    if(getpos() + bytes >= size())
+        size(getpos() + bytes); // enlarge if necessary
+
+    memblock data = _lvpa->Get(_headerId);
+    memcpy(data.ptr + getpos(), src, bytes);
+
+    return bytes;
 }
 
 uint64 VFSFileLVPA::size(void)
 {
     return _size;
+}
+
+uint64 VFSFileLVPA::size(uint64 newsize)
+{
+    memblock data = _lvpa->Get(_headerId);
+    const LVPAFileHeader& hdr = _lvpa->GetFileInfo(_headerId);
+    uint32 n = uint32(newsize);
+    if(n < data.size)
+    {
+        data.size = n;
+        _lvpa->Add(hdr.filename.c_str(), data, LVPAFileFlags(hdr.flags), hdr.algo, hdr.level); // overwrite old entry
+    }
+    else
+    {
+        memblock mb(new uint8[n + 4], n); // allocate new, with few extra bytes
+        memcpy(mb.ptr, data.ptr, data.size); // copy old
+        memset(mb.ptr + data.size, 0, n - data.size + 4); // zero out remaining (with extra bytes)
+        _lvpa->Add(hdr.filename.c_str(), mb, LVPAFileFlags(hdr.flags), hdr.algo, hdr.level); // overwrite old entry
+    }
+    return n;
 }
 
 const uint8 *VFSFileLVPA::getBuf(void)

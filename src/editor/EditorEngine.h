@@ -9,13 +9,16 @@
 #include "GuichanExt.h"
 #include "TileLayer.h"
 #include "LayerMgr.h"
+#include "FileDialog.h"
+
+class FileDialog;
 
 
 #define PREVIEWLAYER_MAX_SIZE 4
 
 
 
-class EditorEngine : public Engine, public gcn::ActionListener, public gcn::MouseListener
+class EditorEngine : public Engine, public gcn::ActionListener, public gcn::MouseListener, public FileDialogCallback
 {
 protected:
 
@@ -34,6 +37,9 @@ protected:
 
     // helper
     void mouseWheelMoved(gcn::MouseEvent& me, bool up);
+
+    // inherited from FileDialogCallback
+    void FileChosenCallback(FileDialog *dlg);
 
 
 public:
@@ -100,6 +106,7 @@ protected:
 
     gcn::Container *_topWidget;
     gcn::Font *_gcnFont;
+    FileDialog *_fileDlg; // used file dialog window, hidden and shown as needed
 
     // mouse selection related
     gcn::Rectangle _selOverlayRect; // relative to _selOverlayClip

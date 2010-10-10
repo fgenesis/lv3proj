@@ -5,7 +5,7 @@
 #include "MapFile.h"
 
 
-bool MapFile::SaveAs(const char *fn, LayerMgr *mgr)
+bool MapFile::SaveAsFileDirect(const char *fn, LayerMgr *mgr)
 {
     ByteBuffer bb;
     Save(&bb, mgr);

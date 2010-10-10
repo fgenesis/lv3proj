@@ -159,7 +159,23 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath=".\guichan_ext\FileDialog.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\guichan_ext\FileDialog.h"
+				>
+			</File>
+			<File
 				RelativePath=".\guichan_ext\GuichanExt.h"
+				>
+			</File>
+			<File
+				RelativePath=".\guichan_ext\ListBox2.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\guichan_ext\ListBox2.h"
 				>
 			</File>
 			<File

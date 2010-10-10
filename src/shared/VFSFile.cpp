@@ -140,6 +140,11 @@ uint64 VFSFileReal::size(void)
     return _size;
 }
 
+uint64 VFSFileReal::size(uint64 newsize)
+{
+    return size(); // resize not supported
+}
+
 const uint8 *VFSFileReal::getBuf(void)
 {
     if(_buf)

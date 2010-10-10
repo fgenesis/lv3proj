@@ -3,10 +3,35 @@
 #include "MapFile.h"
 #include "TileLayer.h"
 #include "LayerMgr.h"
+#include "LVPAFile.h"
+#include "VFSFileLVPA.h"
+#include "ByteBuffer.h"
+
 
 void EditorEngine::SaveCurrentMapAs(const char *fn)
 {
-    MapFile::SaveAs(fn, _layermgr);
+    VFSFile *vf = resMgr.vfs.GetFile(fn);
+    if(!vf)
+    {
+        MapFile::SaveAsFileDirect(fn, _layermgr);
+        return;
+    }
+
+    ByteBuffer bb;
+    MapFile::Save(&bb, _layermgr);
+    vf->open(NULL, "wb");
+    vf->write((char*)bb.contents(), bb.size());
+    vf->close();
+    if(!strcmp(vf->getSource(), "LVPA")) // is file in archive?
+    {
+        
+        // if so, we have to update the archive
+        LVPAFile *lvpa = ((VFSFileLVPA*)vf)->getLVPA();
+        logdebug("File is in container '%s', saving it", lvpa->GetMyName());
+        lvpa->Save();
+    }
+
+
 }
 
 bool EditorEngine::LoadMapFile(const char *fn)
@@ -26,7 +51,7 @@ bool EditorEngine::LoadMapFile(const char *fn)
     resMgr.Drop(mb, true); // have to delete this file from memory immediately
     if(!mgr)
     {
-        logerror("EditorEngine::LoadMapFile: Error loading file: '%s'", fn);
+        logerror("EditorEngine::LoadMapFile: Error loading file: '%s' as map", fn);
         return false;
     }
 

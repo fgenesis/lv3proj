@@ -29,6 +29,7 @@ public:
     virtual uint32 read(char *dst, uint32 bytes) { return npos; }
     virtual uint32 write(char *src, uint32 bytes) { return npos; }
     virtual uint64 size(void) { return 0; }
+    virtual uint64 size(uint64 newsize) { return 0; }
     virtual const uint8 *getBuf(void) { return NULL; }
     virtual const char *getSource(void) { return "<BASE>"; }
 
@@ -53,6 +54,7 @@ public:
     virtual uint32 read(char *dst, uint32 bytes);
     virtual uint32 write(char *src, uint32 bytes);
     virtual uint64 size(void);
+    virtual uint64 size(uint64 newsize);
     virtual const uint8 *getBuf(void);
     virtual const char *getSource(void) { return "disk"; }
 

@@ -23,7 +23,11 @@ int main(int argc, char *argv[])
     {
         editor.InitScreen(1000,600,0,SDL_RESIZABLE);
         editor.SetTitle("Lost Vikings 3 Project - Level Editor");
-        editor.Setup();
+        if(!editor.Setup())
+        {
+            logerror("Failed to setup editor. Exiting.");
+            return 1;
+        }
         editor.Run();
     }
     catch(gcn::Exception ex)

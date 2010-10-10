@@ -1,6 +1,7 @@
 #include "common.h"
 #include "EditorEngine.h"
 #include "TileLayer.h"
+#include "FileDialog.h"
 
 
 void EditorEngine::action(const gcn::ActionEvent& ae)
@@ -24,11 +25,11 @@ void EditorEngine::action(const gcn::ActionEvent& ae)
     }
     else if(src == btnSaveAs)
     {
-        SaveCurrentMapAs("output.lvpm"); // TODO: show filename dialog
+        _fileDlg->Open(true, "map");
     }
     else if(src == btnLoad)
     {
-        LoadMapFile("output.lvpm"); // TODO: show filename dialog
+        _fileDlg->Open(false, "map");
     }
 
 }
@@ -54,11 +55,26 @@ void EditorEngine::mousePressed(gcn::MouseEvent& me)
         }
     }
 
-    if( (src == panTilebox && me.getButton() == gcn::MouseEvent::RIGHT)
-        || (src == panMain && me.getButton() == gcn::MouseEvent::LEFT))
+    // TODO: clean up this mess, this must be possible to do easier!
+    if(src == panMain && me.getButton() == gcn::MouseEvent::LEFT)
     {
         TileLayer *target = _GetActiveLayerForWidget(src);
         gcn::Rectangle rect = GetTargetableLayerTiles(me.getX() + src->getX(), me.getY() + src->getY(),
+            _selLayerBorderRect.width, _selLayerBorderRect.height,
+            _selLayer->GetArraySize(), _selLayer->GetArraySize(), target);
+        for(uint32 y = 0; y < uint32(rect.height); y++)
+        {
+            for(uint32 x = 0; x < uint32(rect.width); x++)
+            {
+                BasicTile *tile = _selLayer->GetTile(x,y);
+                target->SetTile(x + rect.x, y + rect.y, tile);
+            }
+        }
+    }
+    else if(src == panTilebox && me.getButton() == gcn::MouseEvent::RIGHT)
+    {
+        TileLayer *target = _GetActiveLayerForWidget(src);
+        gcn::Rectangle rect = GetTargetableLayerTiles(me.getX(), me.getY(),
             _selLayerBorderRect.width, _selLayerBorderRect.height,
             _selLayer->GetArraySize(), _selLayer->GetArraySize(), target);
         for(uint32 y = 0; y < uint32(rect.height); y++)
@@ -192,3 +208,32 @@ void EditorEngine::mouseWheelMoved(gcn::MouseEvent& me, bool up)
     }
 }
 
+void EditorEngine::FileChosenCallback(FileDialog *dlg)
+{
+    DEBUG(ASSERT(dlg == _fileDlg)); // just to be sure it works, there is only one FileDialog object anyways
+
+    logdebug("FileChosenCallback, operation '%s'", dlg->GetOperation());
+
+    // Load/Save map file
+    if(!strcmp(dlg->GetOperation(), "map"))
+    {
+        std::string& fn = dlg->GetFileName();
+        if(dlg->IsSave())
+        {
+            logdetail("Saving map to '%s'", fn.c_str());
+            SaveCurrentMapAs(fn.c_str());
+        }
+        else
+        {
+            logdetail("Loading map from '%s'", fn.c_str());
+            if(!LoadMapFile(fn.c_str()))
+            {
+                logerror("'%s' can't be loaded, invalid?", fn.c_str());
+                return; // deep file dialog open
+            }
+        }
+    }
+
+    dlg->Close();
+
+}

@@ -18,9 +18,10 @@ public:
     bool AddPath(const char *path);
     void AddVFSDir(VFSDir *dir);
     void Prepare(bool clear = true);
-    void Reload(void);
+    void Reload(bool fromDisk = false);
     VFSFile *GetFile(const char *fn);
     VFSDir *GetDir(const char* dn);
+    VFSDir *GetDirRoot(void);
 
 
 protected:

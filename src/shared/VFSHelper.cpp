@@ -61,16 +61,18 @@ bool VFSHelper::LoadBase(LVPAFile *f, bool deleteLater)
 
 bool VFSHelper::LoadFileSysRoot(void)
 {
-    if(filesysRoot)
-        filesysRoot->ref--;
+    VFSDir *oldroot = filesysRoot;
 
     filesysRoot = new VFSDirReal;
     if(!filesysRoot->load("."))
     {
         filesysRoot->ref--;
-        filesysRoot = NULL;
+        filesysRoot = oldroot;
         return false;
     }
+
+    if(oldroot)
+        oldroot->ref--;
 
     return true;
 }
@@ -88,8 +90,10 @@ void VFSHelper::Prepare(bool clear /* = true */)
         merged->merge(filesysRoot);
 }
 
-void VFSHelper::Reload(void)
+void VFSHelper::Reload(bool fromDisk /* = false */)
 {
+    if(fromDisk)
+        LoadFileSysRoot();
     Prepare(false);
     for(std::list<VFSDir*>::iterator it = vlist.begin(); it != vlist.end(); it++)
         merged->merge(*it);
@@ -133,4 +137,9 @@ VFSFile *VFSHelper::GetFile(const char *fn)
 VFSDir *VFSHelper::GetDir(const char* dn)
 {
     return merged->getDir(dn);
+}
+
+VFSDir *VFSHelper::GetDirRoot(void)
+{
+    return merged;
 }

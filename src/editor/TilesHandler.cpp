@@ -26,7 +26,7 @@ void EditorEngine::LoadPackages(void)
         if(len >= 5 && !stricmp(fn + (len - 5), ".lvpa"))
         {
             // try to load as container
-            LVPAFileReadOnly *lvpa = new LVPAFileReadOnly;
+            LVPAFile*lvpa = new LVPAFile;
             if(lvpa->LoadFrom(fn, LVPALOAD_NONE))
             {
                 success = resMgr.vfs.AddContainer(lvpa, true); // delete later

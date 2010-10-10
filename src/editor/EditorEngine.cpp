@@ -23,6 +23,7 @@ EditorEngine::EditorEngine()
     panTileboxLayer = NULL;
     wndTilesLayer = NULL;
     _selLayer = NULL;
+    _fileDlg = NULL;
     _activeLayer = 0;
 }
 
@@ -59,7 +60,15 @@ bool EditorEngine::Setup(void)
     gcn::Image::setImageLoader(_gcnImgLoader);
 
     _gcnGui->setTop(_topWidget);
-    _gcnFont = new gcn::ImageFont("font/fixedfont.png", " abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789");
+    memblock *fontinfo = resMgr.LoadTextFile("gfx/font/fixedfont.txt");
+    if(!fontinfo)
+    {
+        logerror("EditorEngine::Setup: Can't load font infos");
+        return false;
+    }
+    std::string glyphs((char*)(fontinfo->ptr));
+    logdetail("Using font glyphs: \"%s\"", glyphs.c_str());
+    _gcnFont = new gcn::ImageFont("font/fixedfont.png", glyphs);
     gcn::Widget::setGlobalFont(_gcnFont);
 
     _layermgr->Clear();
@@ -87,6 +96,10 @@ bool EditorEngine::OnRawEvent(SDL_Event &evt)
 
 void EditorEngine::OnKeyDown(SDLKey key, SDLMod mod)
 {
+    // there are occasions when we should not listen to any keypresses
+    if(_fileDlg->isVisible())
+        return;
+
     bool handled = true;
     switch(key)
     {
@@ -108,19 +121,19 @@ void EditorEngine::OnKeyDown(SDLKey key, SDLMod mod)
 
             // TODO: below, fix for tile size != 16
         case SDLK_UP:
-            PanDrawingArea(0, -16);
+            PanDrawingArea(0, -16 * (mod & (KMOD_LCTRL | KMOD_RCTRL) ? 5 : 1) );
             break;
 
         case SDLK_DOWN:
-            PanDrawingArea(0, 16);
+            PanDrawingArea(0, 16 * (mod & (KMOD_LCTRL | KMOD_RCTRL) ? 5 : 1) );
             break;
 
         case SDLK_LEFT:
-            PanDrawingArea(-16, 0);
+            PanDrawingArea(-16 * (mod & (KMOD_LCTRL | KMOD_RCTRL) ? 5 : 1) , 0);
             break;
 
         case SDLK_RIGHT:
-            PanDrawingArea(16, 0);
+            PanDrawingArea(16 * (mod & (KMOD_LCTRL | KMOD_RCTRL) ? 5 : 1) , 0);
             break;
 
         default:
@@ -191,20 +204,6 @@ void EditorEngine::_Render(void)
         _gcnGfx->popClipArea();
     }
 
-    // draw everything related to guichan
-    _gcnGui->draw();
-
-    // if the tile window is visible, draw its layer. the visibility check is performed inside Render();
-    // the layer's visibility is controlled by ToggleTileWnd()
-    wndTilesLayer->Render();
-
-    // draw the tilebox layer, unless there is a fullscreen overlay
-    if(!wndTiles->isVisible())
-        panTileboxLayer->Render();
-
-    // this draws the grey/white selection box (check performed inside function)
-    _DrawSelOverlay();
-
     // the max. 4x4 preview box showing the currently selected tiles
     if(_selLayerShow && _selLayer->visible)
     {
@@ -224,6 +223,20 @@ void EditorEngine::_Render(void)
         _gcnGfx->drawRectangle(clip);
         _gcnGfx->popClipArea();
     }
+
+    // draw everything related to guichan
+    _gcnGui->draw();
+
+    // if the tile window is visible, draw its layer. the visibility check is performed inside Render();
+    // the layer's visibility is controlled by ToggleTileWnd()
+    wndTilesLayer->Render();
+
+    // draw the tilebox layer, unless there is a fullscreen overlay
+    if(!wndTiles->isVisible())
+        panTileboxLayer->Render();
+
+    // this draws the grey/white selection box (check performed inside function)
+    _DrawSelOverlay();
 
     SDL_Flip(_screen);
 }

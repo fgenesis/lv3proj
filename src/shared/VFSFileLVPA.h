@@ -22,8 +22,11 @@ public:
     virtual uint32 read(char *dst, uint32 bytes);
     virtual uint32 write(char *src, uint32 bytes);
     virtual uint64 size(void);
+    virtual uint64 size(uint64 newsize);
     virtual const uint8 *getBuf(void);
     virtual const char *getSource(void) { return "LVPA"; }
+
+    inline LVPAFile *getLVPA(void) { return _lvpa; }
 
 protected:
     uint32 _pos;
@@ -31,6 +34,7 @@ protected:
     uint32 _headerId;
     std::string _name;
     std::string _fullname;
+    std::string _mode;
     LVPAFile *_lvpa;
 };
 
