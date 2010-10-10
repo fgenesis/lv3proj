@@ -58,7 +58,7 @@ void EditorEngine::mousePressed(gcn::MouseEvent& me)
         || (src == panMain && me.getButton() == gcn::MouseEvent::LEFT))
     {
         TileLayer *target = _GetActiveLayerForWidget(src);
-        gcn::Rectangle rect = GetTargetableLayerTiles(me.getX(), me.getY(),
+        gcn::Rectangle rect = GetTargetableLayerTiles(me.getX() + src->getX(), me.getY() + src->getY(),
             _selLayerBorderRect.width, _selLayerBorderRect.height,
             _selLayer->GetArraySize(), _selLayer->GetArraySize(), target);
         for(uint32 y = 0; y < uint32(rect.height); y++)
@@ -145,7 +145,7 @@ void EditorEngine::mouseDragged(gcn::MouseEvent& me)
         if(me.getButton() == gcn::MouseEvent::LEFT) // paint on left-click
         {
             TileLayer *target = _GetActiveLayerForWidget(src);
-            gcn::Rectangle rect = GetTargetableLayerTiles(me.getX(), me.getY(),
+            gcn::Rectangle rect = GetTargetableLayerTiles(me.getX() + src->getX(), me.getY() + src->getY(),
                 _selLayerBorderRect.width, _selLayerBorderRect.height,
                 _selLayer->GetArraySize(), _selLayer->GetArraySize(), target);
             for(uint32 y = 0; y < uint32(rect.height); y++)

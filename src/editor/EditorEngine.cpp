@@ -295,8 +295,6 @@ gcn::Rectangle EditorEngine::GetTargetableLayerTiles(uint32 baseX, uint32 baseY,
     uint32 w = addX / 16;
     uint32 h = addY / 16;
 
-    // + 1 because there is at least 1 tile to target, the one we are pointing to
-    // subtract the space 
     uint32 maxDimX = std::min(w, maxwidth);
     uint32 maxDimY = std::min(h, maxheight);
 
