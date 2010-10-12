@@ -214,6 +214,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\editor\PaintHandler.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\editor\SavedDataHandler.cpp"
 				>
 			</File>

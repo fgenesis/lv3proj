@@ -58,33 +58,11 @@ void EditorEngine::mousePressed(gcn::MouseEvent& me)
     // TODO: clean up this mess, this must be possible to do easier!
     if(src == panMain && me.getButton() == gcn::MouseEvent::LEFT)
     {
-        TileLayer *target = _GetActiveLayerForWidget(src);
-        gcn::Rectangle rect = GetTargetableLayerTiles(me.getX() + src->getX(), me.getY() + src->getY(),
-            _selLayerBorderRect.width, _selLayerBorderRect.height,
-            _selLayer->GetArraySize(), _selLayer->GetArraySize(), target);
-        for(uint32 y = 0; y < uint32(rect.height); y++)
-        {
-            for(uint32 x = 0; x < uint32(rect.width); x++)
-            {
-                BasicTile *tile = _selLayer->GetTile(x,y);
-                target->SetTile(x + rect.x, y + rect.y, tile);
-            }
-        }
+        HandlePaintOnWidget(src, me.getX(), me.getY(), true);
     }
     else if(src == panTilebox && me.getButton() == gcn::MouseEvent::RIGHT)
     {
-        TileLayer *target = _GetActiveLayerForWidget(src);
-        gcn::Rectangle rect = GetTargetableLayerTiles(me.getX(), me.getY(),
-            _selLayerBorderRect.width, _selLayerBorderRect.height,
-            _selLayer->GetArraySize(), _selLayer->GetArraySize(), target);
-        for(uint32 y = 0; y < uint32(rect.height); y++)
-        {
-            for(uint32 x = 0; x < uint32(rect.width); x++)
-            {
-                BasicTile *tile = _selLayer->GetTile(x,y);
-                target->SetTile(x + rect.x, y + rect.y, tile);
-            }
-        }
+        HandlePaintOnWidget(src, me.getX(), me.getY(), false);
     }
 }
 
@@ -160,18 +138,7 @@ void EditorEngine::mouseDragged(gcn::MouseEvent& me)
     {
         if(me.getButton() == gcn::MouseEvent::LEFT) // paint on left-click
         {
-            TileLayer *target = _GetActiveLayerForWidget(src);
-            gcn::Rectangle rect = GetTargetableLayerTiles(me.getX() + src->getX(), me.getY() + src->getY(),
-                _selLayerBorderRect.width, _selLayerBorderRect.height,
-                _selLayer->GetArraySize(), _selLayer->GetArraySize(), target);
-            for(uint32 y = 0; y < uint32(rect.height); y++)
-            {
-                for(uint32 x = 0; x < uint32(rect.width); x++)
-                {
-                    BasicTile *tile = _selLayer->GetTile(x,y);
-                    target->SetTile(x + rect.x, y + rect.y, tile);
-                }
-            }
+            HandlePaintOnWidget(src, me.getX(), me.getY(), true);
         }
         else if(me.getButton() == gcn::MouseEvent::RIGHT) // pan on right-click
         {
@@ -229,7 +196,7 @@ void EditorEngine::FileChosenCallback(FileDialog *dlg)
             if(!LoadMapFile(fn.c_str()))
             {
                 logerror("'%s' can't be loaded, invalid?", fn.c_str());
-                return; // deep file dialog open
+                return; // keep file dialog open
             }
         }
     }

@@ -77,6 +77,8 @@ public:
 
     void SetLeftMainDistance(uint32 dist);
 
+    void HandlePaintOnWidget(gcn::Widget *src, uint32 xpos, uint32 ypos, bool addSrcPos);
+
     // note that rsrc height and width are expected to be bottom right x and y!
     gcn::Rectangle Get16pxAlignedFrame(gcn::Rectangle rsrc);
     void UpdateSelectionFrame(gcn::Widget *src, int x, int y);
