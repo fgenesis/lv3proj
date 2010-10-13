@@ -8,7 +8,7 @@ class FileDialogCallback;
 
 // a file dialog that works directly on the VFS
 class FileDialog : public gcn::Window, gcn::ActionListener, gcn::ListModel,
-    gcn::SelectionListener
+    gcn::SelectionListener, gcn::KeyListener
 {
 public:
 
@@ -28,6 +28,7 @@ public:
     virtual int getNumberOfElements(void);
     virtual void action(const gcn::ActionEvent& ae);
     virtual void valueChanged(const gcn::SelectionEvent& se);
+    virtual void keyPressed(gcn::KeyEvent& ke);
 
 protected:
     void _DoCallback(void);

@@ -11,10 +11,11 @@ FileDialog::FileDialog()
 {
     uint32 sx = 500;
     uint32 sy = 400;
-    gcn::Window::setMovable(true);
-    gcn::Window::setSize(sx, sy + gcn::Window::getTitleBarHeight());
-    gcn::Window::setFrameSize(2);
-    gcn::Window::setVisible(false);
+    setMovable(true);
+    setSize(sx, sy + gcn::Window::getTitleBarHeight());
+    setFrameSize(2);
+    setVisible(false);
+    addKeyListener(this);
 
     // add GUI elements
     bOk = new gcn::Button();
@@ -26,11 +27,11 @@ FileDialog::FileDialog()
     pPreview = new gcn::Panel(1, 1);
     pPreview->addActionListener(this);
 
-    gcn::Window::add(bCancel, sx - bCancel->getWidth() - 5, sy - bCancel->getHeight() - 5);
+    add(bCancel, sx - bCancel->getWidth() - 5, sy - bCancel->getHeight() - 5);
     int bx = bCancel->getX() - 5;
     int by = bCancel->getY() - bOk->getHeight() - 5;
 
-    gcn::Window::add(bOk, sx - bOk->getWidth() - 5, by);
+    add(bOk, sx - bOk->getWidth() - 5, by);
 
     lbFiles = new gcn::ListBox2();
     lbFiles->setListModel(this);
@@ -42,10 +43,11 @@ FileDialog::FileDialog()
     scroll->setSize(bx, by);
     scroll->setHorizontalScrollPolicy(gcn::ScrollArea::SHOW_NEVER);
     scroll->setVerticalScrollAmount(3);
-    gcn::Window::add(scroll, 5, 5);
+    add(scroll, 5, 5);
 
-    tbFilename = new gcn::TextField();
+    tbFilename = new gcn::GreedyTextField();
     tbFilename->setSize(scroll->getWidth() - 10, 20);
+    tbFilename->addActionListener(this);
     gcn::Window::add(tbFilename, scroll->getX(), scroll->getY() + scroll->getHeight() + 10);
 }
 
@@ -68,7 +70,6 @@ void FileDialog::Open(bool save, const char *opr /* = NULL */)
     {
         _dirstack.push_back(resMgr.vfs.GetDirRoot());
     }
-    gcn::Window::setVisible(true);
     setVisible(true);
     _save = save;
     bOk->setCaption(save ? "Save" : "Open");
@@ -229,7 +230,7 @@ void FileDialog::action(const gcn::ActionEvent& ae)
 {
     gcn::Widget *src = ae.getSource();
 
-    if(src == bOk || src == lbFiles)
+    if(src == bOk || src == lbFiles || src == tbFilename)
     {
         _HandleSelection();
     }
@@ -253,5 +254,19 @@ void FileDialog::valueChanged(const gcn::SelectionEvent& se)
             tbFilename->setText(""); // do not put directory name in text field if directory selected
 
         // TODO: update preview, once implemented
+    }
+}
+
+// -- from gcn::KeyListener --
+
+void FileDialog::keyPressed(gcn::KeyEvent& ke)
+{
+    if(ke.getKey() == gcn::Key::ESCAPE)
+    {
+        Close();
+    }
+    else if(ke.getKey() == gcn::Key::ENTER)
+    {
+        _HandleSelection();
     }
 }
