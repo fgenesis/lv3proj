@@ -3,5 +3,6 @@
 
 #include "Panel.h"
 #include "ListBox2.h"
+#include "GreedyTextField.h"
 
 #endif

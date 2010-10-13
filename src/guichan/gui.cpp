@@ -214,6 +214,17 @@ namespace gcn
         mKeyListeners.remove(keyListener);
     }
 
+    // FG: next 2 are additions
+    void Gui::addLateGlobalKeyListener(KeyListener* keyListener)
+    {
+        mLateKeyListeners.push_back(keyListener);
+    }
+
+    void Gui::removeLateGlobalKeyListener(KeyListener* keyListener)
+    {
+        mLateKeyListeners.remove(keyListener);
+    }
+
     void Gui::handleMouseInput()
     {
         while (!mInput->isMouseQueueEmpty())
@@ -337,7 +348,11 @@ namespace gcn
                 {
                     mFocusHandler->tabNext();
                 }
-            }                           
+            }
+
+            // FG: small addition: late global key listeners
+            if(!keyEventConsumed)
+                distributeKeyEventToLateGlobalKeyListeners(keyEventToGlobalKeyListeners);
                 
         } // end while
     }
@@ -887,6 +902,31 @@ namespace gcn
                   break;
               default:
                   throw GCN_EXCEPTION("Unknown key event type.");
+            }
+
+            if (keyEvent.isConsumed())
+            {
+                break;
+            }
+        }
+    }
+
+    void Gui::distributeKeyEventToLateGlobalKeyListeners(KeyEvent& keyEvent)
+    {
+        KeyListenerListIterator it;
+
+        for (it = mLateKeyListeners.begin(); it != mLateKeyListeners.end(); it++)
+        {
+            switch (keyEvent.getType())
+            {
+            case KeyEvent::PRESSED:
+                (*it)->keyPressed(keyEvent);
+                break;
+            case KeyEvent::RELEASED:
+                (*it)->keyReleased(keyEvent);
+                break;
+            default:
+                throw GCN_EXCEPTION("Unknown key event type.");
             }
 
             if (keyEvent.isConsumed())

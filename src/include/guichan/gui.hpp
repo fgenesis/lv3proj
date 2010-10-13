@@ -234,6 +234,10 @@ namespace gcn
          */
         virtual void removeGlobalKeyListener(KeyListener* keyListener);
 
+        // FG: addition
+        virtual void addLateGlobalKeyListener(KeyListener* keyListener);
+        virtual void removeLateGlobalKeyListener(KeyListener* keyListener);
+
     protected:
         /**
          * Handles all mouse input.
@@ -368,6 +372,7 @@ namespace gcn
          * @since 0.6.0
          */
         virtual void distributeKeyEventToGlobalKeyListeners(KeyEvent& keyEvent);
+        virtual void distributeKeyEventToLateGlobalKeyListeners(KeyEvent& keyEvent); // FG: addition
 
         /**
          * Gets the widget at a certain position.
@@ -432,6 +437,7 @@ namespace gcn
          * Holds the global key listeners of the Gui.
          */
         KeyListenerList mKeyListeners;
+        KeyListenerList mLateKeyListeners; // FG: addition
         
         /**
          * True if shift is pressed, false otherwise.
