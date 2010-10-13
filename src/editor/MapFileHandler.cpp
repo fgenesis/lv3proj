@@ -6,6 +6,7 @@
 #include "LVPAFile.h"
 #include "VFSFileLVPA.h"
 #include "ByteBuffer.h"
+#include "LayerPanel.h"
 
 
 void EditorEngine::SaveCurrentMapAs(const char *fn)
@@ -71,6 +72,8 @@ bool EditorEngine::LoadMapFile(const char *fn)
 
     delete _layermgr;
     _layermgr = mgr;
+
+    panLayers->UpdateSelection();
 
     return true;
 }

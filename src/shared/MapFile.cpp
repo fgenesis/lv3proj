@@ -104,7 +104,17 @@ void MapFile::Save(ByteBuffer *bufptr, LayerMgr *mgr)
     outbuf.put<uint32>(dataHdrOffsPos, outbuf.wpos()); // fix offset
     outbuf << uint32(mgr->GetMaxDim()); // x width
     outbuf << uint32(mgr->GetMaxDim()); // y height
+    outbuf << uint32(LAYER_MAX);
     outbuf << uint32(usedLayers.size());
+    outbuf << uint32(16); // tile size x // TODO: implement for other sizes
+    outbuf << uint32(16); // tile size y
+
+    // add all layer names
+    for(uint32 i = 0; i < LAYER_MAX; i++)
+    {
+        TileLayer *layer = mgr->GetLayer(i);
+        outbuf << (layer ? layer->name : "");
+    }
 
     // add individual layers
     for(std::map<uint32, ByteBuffer>::iterator it = usedLayers.begin(); it != usedLayers.end(); it++)
@@ -176,12 +186,24 @@ LayerMgr *MapFile::LoadUnsafe(ByteBuffer *bufptr, Engine *engine)
 
     // read layers header
     buf.rpos(dataHdrOffs);
-    uint32 width, height, layerCount;
+    uint32 width, height, layersTotal, layersUsed, tileSizeX, tileSizeY;
     buf >> width;
     buf >> height;
-    buf >> layerCount;
+    buf >> layersTotal;
+    buf >> layersUsed;
+    buf >> tileSizeX;
+    buf >> tileSizeY;
 
-    if(!layerCount)
+    // unsupported
+    if(layersTotal > LAYER_MAX)
+        return NULL;
+
+    // no layers?!
+    if(!layersUsed)
+        return NULL;
+
+    // bullshit data
+    if(layersTotal < layersUsed)
         return NULL;
 
     LayerMgr *mgr = new LayerMgr(engine);
@@ -189,14 +211,26 @@ LayerMgr *MapFile::LoadUnsafe(ByteBuffer *bufptr, Engine *engine)
 
     uint32 layerIndex;
     uint32 tileIdx;
+
+    // read names and create layers
+    for(uint32 i = 0; i < LAYER_MAX; i++) // create as many layers as the engine supports
+    {
+        TileLayer *layer = mgr->CreateLayer();
+        if(i < layersTotal) // and fill the names of as many as the file has
+        {
+            std::string name;
+            buf >> name;
+            layer->name = name;
+        }
+        mgr->SetLayer(layer, i);
+    }
     
-    // read individual layers
-    for(uint32 i = 0; i < layerCount; i++)
+    // read individual layer data
+    for(uint32 i = 0; i < layersUsed; i++)
     {
         buf >> layerIndex;
 
-        TileLayer *layer = mgr->CreateLayer();
-        mgr->SetLayer(layer, layerIndex);
+        TileLayer *layer = mgr->GetLayer(layerIndex);
 
         // read tiles on layer
         for(uint32 y = 0; y < height; y++)
