@@ -28,8 +28,7 @@ void gcn::GreedyTextField::keyPressed(KeyEvent& keyEvent)
     else if (key.getValue() == Key::ENTER)
     {
         distributeActionEvent();
-        keyEvent.consume();
-        getParent()->focusNext(); // move focus away, else almost impossible to escape fro mthis widget
+        keyEvent.consume(); // <-- change
     }
 
     else if (key.getValue() == Key::HOME)

@@ -6,7 +6,44 @@
 #include "LVPAFile.h"
 #include "SDLImageLoaderManaged.h"
 #include "SDL_func.h"
+#include "LayerPanel.h"
 #include "EditorEngine.h"
+
+const char *defaultLayerNames[LAYER_MAX] =
+{
+    /* 00 */ "Background 1",
+    /* 01 */ "Background 2",
+    /* 02 */ "Background 3",
+    /* 03 */ "Background 4",
+    /* 04 */ "background 5",
+    /* 05 */ "Sub 1",
+    /* 06 */ "Sub 2",
+    /* 07 */ "Sub 3",
+    /* 08 */ "Sub 4",
+    /* 09 */ "Base 1",
+    /* 10 */ "Base 2",
+    /* 11 */ "Base 3",
+    /* 12 */ "Base 4",
+    /* 13 */ "Base 5",
+    /* 14 */ "Base 6",
+    /* 15 */ "Base 7",
+    /* 16 */ "Object 1",
+    /* 17 */ "Object 2",
+    /* 18 */ "Object 3",
+    /* 19 */ "Object 4",
+    /* 20 */ "Object 5",
+    /* 21 */ "Object 6",
+    /* 22 */ "Object 7",
+    /* 23 */ "Object 8",
+    /* 24 */ "Effect 1",
+    /* 25 */ "Effect 2",
+    /* 26 */ "Effect 3",
+    /* 27 */ "Overlay 1",
+    /* 28 */ "Overlay 2",
+    /* 29 */ "Overlay 3",
+    /* 30 */ "Overlay 4",
+    /* 31 */ "Overlay 5"
+};
 
 
 EditorEngine::EditorEngine()
@@ -34,6 +71,7 @@ EditorEngine::~EditorEngine()
 
     delete _topWidget;
     delete _gcnFont;
+    delete _largeFont;
     delete _gcnImgLoader;
     delete _gcnGfx;
     delete _gcnInput;
@@ -60,16 +98,14 @@ bool EditorEngine::Setup(void)
     gcn::Image::setImageLoader(_gcnImgLoader);
 
     _gcnGui->setTop(_topWidget);
-    memblock *fontinfo = resMgr.LoadTextFile("gfx/font/fixedfont.txt");
-    if(!fontinfo)
-    {
-        logerror("EditorEngine::Setup: Can't load font infos");
-        return false;
-    }
-    std::string glyphs((char*)(fontinfo->ptr));
-    logdetail("Using font glyphs: \"%s\"", glyphs.c_str());
-    _gcnFont = new gcn::ImageFont("font/fixedfont.png", glyphs);
+    _gcnGui->addLateGlobalKeyListener(this);
+
+    // fixedfont.png
+    _gcnFont = _LoadFont("gfx/font/fixedfont.txt", "font/fixedfont.png");
     gcn::Widget::setGlobalFont(_gcnFont);
+
+    // rpgfont.png
+    _largeFont = _LoadFont("gfx/font/rpgfont.txt", "font/rpgfont.png");
 
     _layermgr->Clear();
     _layermgr->SetMaxDim(64);
@@ -81,11 +117,26 @@ bool EditorEngine::Setup(void)
     LoadData();
     SetupInterface();
     SetupEditorLayers();
+    panLayers->UpdateSelection(); // after layers are created, update buttons to assign text correctly
     FillUseableTiles();
 
     logdetail("EditorEngine setup completed.");
 
     return true;
+}
+
+gcn::Font *EditorEngine::_LoadFont(const char *infofile, const char *gfxfile)
+{
+    memblock *fontinfo = resMgr.LoadTextFile((char*)infofile);
+    if(!fontinfo)
+    {
+        logerror("EditorEngine::Setup: Can't load font infos (%s)", infofile);
+        return false;
+    }
+    std::string glyphs((char*)(fontinfo->ptr));
+    logdetail("Using font glyphs for '%s':", gfxfile);
+    logdetail("%s", glyphs.c_str());
+    return new gcn::ImageFont(gfxfile, glyphs);
 }
 
 bool EditorEngine::OnRawEvent(SDL_Event &evt)
@@ -94,68 +145,12 @@ bool EditorEngine::OnRawEvent(SDL_Event &evt)
     return true;
 }
 
-void EditorEngine::OnKeyDown(SDLKey key, SDLMod mod)
-{
-    // there are occasions when we should not listen to any keypresses
-    if(_fileDlg->isVisible())
-        return;
-
-    bool handled = true;
-    switch(key)
-    {
-        case SDLK_t:
-            ToggleTileWnd();
-            break;
-
-        case SDLK_g:
-            ToggleTilebox();
-            break;
-
-        case SDLK_p:
-            ToggleSelPreviewLayer();
-            break;
-
-        case SDLK_l:
-            ToggleLayerPanel();
-            break;
-
-            // TODO: below, fix for tile size != 16
-        case SDLK_UP:
-            PanDrawingArea(0, -16 * (mod & (KMOD_LCTRL | KMOD_RCTRL) ? 5 : 1) );
-            break;
-
-        case SDLK_DOWN:
-            PanDrawingArea(0, 16 * (mod & (KMOD_LCTRL | KMOD_RCTRL) ? 5 : 1) );
-            break;
-
-        case SDLK_LEFT:
-            PanDrawingArea(-16 * (mod & (KMOD_LCTRL | KMOD_RCTRL) ? 5 : 1) , 0);
-            break;
-
-        case SDLK_RIGHT:
-            PanDrawingArea(16 * (mod & (KMOD_LCTRL | KMOD_RCTRL) ? 5 : 1) , 0);
-            break;
-
-        default:
-            handled = false;
-    }
-
-    if(!handled)
-    {
-        Engine::OnKeyDown(key, mod);
-    }
-}
-
-void EditorEngine::OnKeyUp(SDLKey key, SDLMod mod)
-{
-    Engine::OnKeyUp(key, mod);
-}
-
 void EditorEngine::OnWindowResize(uint32 newx, uint32 newy)
 {
     SDL_SetVideoMode(newx,newy,GetBPP(), GetSurface()->flags);
     SetupInterface();
     GetVisibleBlockRect(); // trigger recalc
+    panLayers->UpdateSelection();
 }
 
 void EditorEngine::_Process(uint32 ms)
@@ -181,7 +176,12 @@ void EditorEngine::_Render(void)
     // do not draw if there is a fullscren overlay.
     if(!wndTiles->isVisible())
     {
-        _layermgr->Render();
+        // always show currently selected layer
+        TileLayer *activeLayer = _layermgr->GetLayer(GetActiveLayerId());
+        bool curVis = activeLayer->visible;
+        activeLayer->visible = true;
+        _layermgr->Render(); // <-- render all layers
+        activeLayer->visible = curVis;
 
         // draw box around the drawing area
         uint32 pixdim = _layermgr->GetMaxPixelDim();
@@ -261,10 +261,11 @@ void EditorEngine::SetupEditorLayers(void)
 
     for(uint32 i = LAYER_REARMOST_BACKGROUND; i < LAYER_MAX; i++)
     {
-        _layermgr->SetLayer(_layermgr->CreateLayer(false, 0, 0), i);
+        TileLayer *layer = _layermgr->CreateLayer(false, 0, 0);
+        layer->name = defaultLayerNames[i];
+        _layermgr->SetLayer(layer, i);
 
     }
-    SetActiveLayer(LAYER_MAX / 2);
 }
 
 

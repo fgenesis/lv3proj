@@ -31,7 +31,53 @@ void EditorEngine::action(const gcn::ActionEvent& ae)
     {
         _fileDlg->Open(false, "map");
     }
+}
 
+void EditorEngine::keyPressed(gcn::KeyEvent& ke)
+{
+    switch(ke.getKey().getValue())
+    {
+    case 't': case 'T':
+        ToggleTileWnd();
+        break;
+
+    case 'g': case 'G':
+        ToggleTilebox();
+        break;
+
+    case 'p': case 'P':
+        ToggleSelPreviewLayer();
+        break;
+
+    case 'l': case 'L':
+        ToggleLayerPanel();
+        break;
+
+    case 'm': case 'M':
+        SetActiveLayer((GetActiveLayerId() + 1) % LAYER_MAX);
+        break;
+
+    case 'n': case 'N':
+        SetActiveLayer((GetActiveLayerId() + LAYER_MAX - 1) % LAYER_MAX);
+        break;
+
+        // TODO: below, fix for tile size != 16
+    case gcn::Key::UP:
+        PanDrawingArea(0, -16 * (ke.isControlPressed() ? 5 : 1) );
+        break;
+
+    case gcn::Key::DOWN:
+        PanDrawingArea(0, 16 * (ke.isControlPressed() ? 5 : 1) );
+        break;
+
+    case gcn::Key::LEFT:
+        PanDrawingArea(-16 * (ke.isControlPressed() ? 5 : 1) , 0);
+        break;
+
+    case gcn::Key::RIGHT:
+        PanDrawingArea(16 * (ke.isControlPressed() ? 5 : 1) , 0);
+        break;
+    }
 }
 
 void EditorEngine::mousePressed(gcn::MouseEvent& me)
@@ -93,21 +139,7 @@ void EditorEngine::mouseExited(gcn::MouseEvent& me)
 
 void EditorEngine::mouseClicked(gcn::MouseEvent& me)
 {
-    gcn::Widget *src = me.getSource();
-    // poll the buttons for a click
-    for(uint32 i = 0; i < LAYER_MAX; i++)
-    {
-        if(src == btnLayers[i])
-        {
-            if(me.getButton() == gcn::MouseEvent::LEFT)
-                SetActiveLayer(i);
-            else if(me.getButton() == gcn::MouseEvent::RIGHT)
-                ToggleLayerVisible(i);
-
-            return;
-        }
-    }
-
+    //gcn::Widget *src = me.getSource();
 }
 
 void EditorEngine::mouseMoved(gcn::MouseEvent& me)

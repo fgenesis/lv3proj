@@ -167,6 +167,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\guichan_ext\GreedyTextField.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\guichan_ext\GreedyTextField.h"
+				>
+			</File>
+			<File
 				RelativePath=".\guichan_ext\GuichanExt.h"
 				>
 			</File>

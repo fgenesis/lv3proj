@@ -12,18 +12,23 @@
 #include "FileDialog.h"
 
 class FileDialog;
+class LayerPanel;
 
 
 #define PREVIEWLAYER_MAX_SIZE 4
 
 
 
-class EditorEngine : public Engine, public gcn::ActionListener, public gcn::MouseListener, public FileDialogCallback
+class EditorEngine : public Engine, public gcn::ActionListener, public gcn::MouseListener,
+    public gcn::KeyListener, public FileDialogCallback
 {
 protected:
 
     // inherited from gcn::ActionListener
     virtual void action(const gcn::ActionEvent& ae);
+
+    // inherited from gcn::KeyListener
+    virtual void keyPressed(gcn::KeyEvent& ke);
 
     // inherited from gcn::MouseListener
     virtual void mousePressed(gcn::MouseEvent& me);
@@ -48,9 +53,6 @@ public:
 
     virtual bool Setup(void);
 
-    //virtual void OnMouseEvent(uint32 type, uint32 button, uint32 state, uint32 x, uint32 y, int32 rx, int32 ry);
-    virtual void OnKeyDown(SDLKey key, SDLMod mod);
-    virtual void OnKeyUp(SDLKey key, SDLMod mod);
     //virtual void OnWindowEvent(bool active);
     virtual bool OnRawEvent(SDL_Event& evt);
     virtual void OnWindowResize(uint32 newx, uint32 newy);
@@ -74,6 +76,8 @@ public:
     void FillUseableTiles(void);
 
     void SetActiveLayer(uint32 layerId);
+    inline uint32 GetActiveLayerId(void) { return _activeLayer; }
+    inline LayerMgr *GetLayerMgr(void) { return _layermgr; }
 
     void SetLeftMainDistance(uint32 dist);
 
@@ -89,6 +93,8 @@ public:
     gcn::Widget *RegWidget(gcn::Widget *w);
     gcn::Widget *AddWidgetTop(gcn::Widget *w);
 
+    inline gcn::Font *GetLargeFont(void) { return _largeFont; }
+
 
 protected:
 
@@ -96,6 +102,7 @@ protected:
     virtual void _Render(void);
 
     void _DrawSelOverlay(void);
+    gcn::Font *_LoadFont(const char *infofile, const char *gfxfile);
 
     TileLayer *_GetActiveLayerForWidget(gcn::Widget *src);
 
@@ -105,6 +112,7 @@ protected:
     gcn::SDLGraphics* _gcnGfx;
     gcn::SDLInput* _gcnInput;
     gcn::SDLImageLoader* _gcnImgLoader;
+    gcn::Font *_largeFont;
 
     gcn::Container *_topWidget;
     gcn::Font *_gcnFont;
@@ -152,8 +160,7 @@ protected:
     uint32 _visibleLayerMask;
 
     // layer settings
-    gcn::Panel *panLayers;
-    gcn::Button *btnLayers[LAYER_MAX];
+    LayerPanel *panLayers;
 
     // gui misc config
     uint32 tileboxCols;

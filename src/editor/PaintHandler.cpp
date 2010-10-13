@@ -1,5 +1,6 @@
 #include "common.h"
 #include "EditorEngine.h"
+#include "LayerPanel.h"
 
 
 void EditorEngine::HandlePaintOnWidget(gcn::Widget *src, uint32 xpos, uint32 ypos, bool addSrcPos)
@@ -26,4 +27,5 @@ void EditorEngine::HandlePaintOnWidget(gcn::Widget *src, uint32 xpos, uint32 ypo
             target->SetTile(x + rect.x, y + rect.y, tile);
         }
     }
+    panLayers->UpdateStats(target);
 }

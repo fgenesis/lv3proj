@@ -225,6 +225,34 @@
 				RelativePath=".\editor\TilesHandler.cpp"
 				>
 			</File>
+			<Filter
+				Name="GUI elements"
+				>
+				<File
+					RelativePath=".\editor\BottomBarPanel.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\editor\BottomBarPanel.h"
+					>
+				</File>
+				<File
+					RelativePath=".\editor\LayerPanel.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\editor\LayerPanel.h"
+					>
+				</File>
+				<File
+					RelativePath=".\editor\TileboxPanel.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\editor\TileboxPanel.h"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="Header Files"

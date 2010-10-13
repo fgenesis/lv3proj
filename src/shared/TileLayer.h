@@ -28,6 +28,7 @@ public:
     inline uint32 GetArraySize(void) { return tilearray.size1d(); }
     inline uint32 GetPixelSize(void) { return GetArraySize() * 16; }
     inline bool IsUsed(void) { return used; }
+    inline uint32 UsedTiles(void) { return used; }
     void Resize(uint32 dim); // do not use this for layers stored in the LayerMgr!
 
     bool visible;

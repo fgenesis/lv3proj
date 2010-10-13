@@ -4,6 +4,7 @@
 #include "GuichanExt.h"
 #include "SDLImageLoaderManaged.h"
 #include "FileDialog.h"
+#include "LayerPanel.h"
 
 
 void EditorEngine::ClearWidgets(void)
@@ -97,7 +98,7 @@ void EditorEngine::SetupInterface(void)
     // -- right panel start --
     panTilebox = panel = new gcn::Panel(0,0);
     fgcol = gcn::Color(200,200,200,255);
-    bgcol = gcn::Color(50,50,50,100);
+    bgcol = gcn::Color(30,30,30,200);
     panel->setForegroundColor(fgcol);
     panel->setBackgroundColor(bgcol);
     panel->setSize(tileboxCols * 16, freeHeight);
@@ -109,24 +110,8 @@ void EditorEngine::SetupInterface(void)
     // -- right panel end --
 
     // -- left layer panel start --
-    panLayers = panel = new gcn::Panel(4,4);
-    panel->setBackgroundColor(gcn::Color(0,75,0,255));
-    panel->setForegroundColor(gcn::Color(0,200,0,255));
-    panel->setSize(100, GetResY() - panBottom->getHeight());
-    panel->setVisible(false);
-    panel->SetMaxSlots(2, -1);
-    for(uint32 i = 0; i < LAYER_MAX; i++)
-    {
-        char numstr[8];
-        sprintf(numstr," %s%u ", i <= 9 ? " " : "", i);
-        btnLayers[i] = btn = new gcn::Button(numstr);
-        btn->addMouseListener(this);
-        panel->add(RegWidget(btn));
-    }
-
-    // add panel to top widget
-    AddWidgetTop(panel)->setPosition(0, 0);
-
+    panLayers = new LayerPanel(this, 180, GetResY() - panBottom->getHeight());
+    AddWidgetTop(panLayers)->setPosition(0, 0);
     // -- left layer panel end --
 
     // -- main panel start --
@@ -291,31 +276,14 @@ void EditorEngine::ToggleLayerPanel(void)
 void EditorEngine::SetActiveLayer(uint32 layerId)
 {
     _activeLayer = layerId;
-    UpdateLayerButtonColors();
+    panLayers->UpdateSelection();
 }
 
 void EditorEngine::ToggleLayerVisible(uint32 layerId)
 {
     TileLayer *layer = _layermgr->GetLayer(layerId);
     layer->visible = !layer->visible;
-    UpdateLayerButtonColors();
-}
-
-void EditorEngine::UpdateLayerButtonColors(void)
-{
-    for(uint32 i = 0; i < LAYER_MAX; i++)
-    {
-        TileLayer *layer = _layermgr->GetLayer(i);
-        uint8 alpha = layer->visible ? 255 : 150;
-        if(i == _activeLayer)
-        {
-            btnLayers[i]->setBaseColor(gcn::Color(180,255,180,alpha));
-        }
-        else
-        {
-            btnLayers[i]->setBaseColor(gcn::Color(128,128,144,alpha));
-        }
-    }
+    panLayers->UpdateSelection();
 }
 
 void EditorEngine::SetLeftMainDistance(uint32 dist)
