@@ -138,9 +138,7 @@ end
 // --- initial load ---
 ScriptLoader.LoadDir("system")
 
-// TODO: load menu system here
-// use indirect call to prevent undefined symbol error during link step
-(#"PackageSystem").Load("lostvikings_test")
+// the scripts loaded until now will take care of the rest
 
 
 export

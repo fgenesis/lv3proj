@@ -1,0 +1,4 @@
+
+// TODO: load menu system here
+
+CallScheduler.Schedule( [PackageSystem.Load, "lostvikings_test"], 1)

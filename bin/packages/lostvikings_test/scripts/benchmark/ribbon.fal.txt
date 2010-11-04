@@ -1,4 +1,4 @@
-/* Original code was taken from http://gargaj.umlaut.hu/processing/sketch_081001a/applet/ and heavily modified. Thx Gargaj for publising it :) */
+/* Original code was taken from http://gargaj.umlaut.hu/processing/sketch_081001a/applet/ and heavily modified. Thx Gargaj :) */
 
 DELAY = 30
 
@@ -10,22 +10,29 @@ blacksfc = nil
 targetpos = [0, 450]
 oldwidth = nil
 SCREENSURFACE = Screen.GetSurface()
+pix = nil
+blitfunc = nil
+blackfunc = nil
 
 for i = 0 to 255: sintab[i] = int(sin(i/256.0 * 3.141596 * 2) * 255)
 
 function updatehook(ms)
-    global sfc, sintab, delay, DELAY, oldwidth, blacksfc
+    global sfc, sintab, delay, DELAY, oldwidth, blacksfc, pix, blitfunc, targetpos, SCREENSURFACE, blackfunc
     delay += ms
     if delay < DELAY: return
     delay = 0
     width, height = Screen.GetSize()
     if width != oldwidth
         sfc = Surface(width, 50)
+        pix = sfc.Pixel;
         blacksfc = Surface(width, 50)
         oldwidth = width
-        for y = 0 to height-1: for x = 0 to width-1: blacksfc.Pixel(x,y, 0)
+        bpix = blacksfc.Pixel;
+        blackfunc = [blacksfc.BlitTo, sfc, nil, nil, true]
+        blitfunc = [sfc.BlitTo, SCREENSURFACE, nil, targetpos]
+        for y = 0 to height-1: for x = 0 to width-1: bpix(x,y, 0)
     end
-    blacksfc.BlitTo(sfc, nil, nil, true)
+    blackfunc()
     
     m = Game.GetTime() >> 6
     y = 0
@@ -44,7 +51,7 @@ function updatehook(ms)
             xmul = 255/w1
             x = 0
             while x < w1
-                sfc.Pixel(y,s+x,   0xFF000000 || ((x*xmul)^^yr) << 16)
+                pix(y,s+x,   0xFF000000 || ((x*xmul)^^yr) << 16)
                 x++
             end
         end
@@ -54,7 +61,7 @@ function updatehook(ms)
             x = 0
             sw1 = s+w1
             while x < w2
-                sfc.Pixel(y,sw1+x,  0xFF000000 || ((x*xmul)^^yr) << 8)
+                pix(y,sw1+x,  0xFF000000 || ((x*xmul)^^yr) << 8)
                 x++
             end
         end
@@ -64,7 +71,7 @@ function updatehook(ms)
             xmul = 255/w2p
             x = 0
             while x < w2p
-                sfc.Pixel(y,s-x,    0xFF000000 || ((x*xmul)^^yr))
+                pix(y,s-x,    0xFF000000 || ((x*xmul)^^yr))
                 x++
             end
         end
@@ -76,7 +83,7 @@ function updatehook(ms)
             x = 0
             while x < w1p
                 q = (x*xmul)^^yr
-                sfc.Pixel(y,sw2-x,  0xFF000000 || (q << 16) || (q << 8))
+                pix(y,sw2-x,  0xFF000000 || (q << 16) || (q << 8))
                 x++
             end
         end
@@ -86,9 +93,9 @@ function updatehook(ms)
 end
 
 function renderhook()
-    global sfc, targetpos, SCREENSURFACE
-    if not sfc: return
-    sfc.BlitTo(SCREENSURFACE, nil, targetpos)
+    global blitfunc
+    if not blitfunc: return
+    blitfunc()
 end
 
 
