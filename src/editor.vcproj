@@ -264,6 +264,14 @@
 					RelativePath=".\editor\TileLayerPanel.h"
 					>
 				</File>
+				<File
+					RelativePath=".\editor\TileWindow.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\editor\TileWindow.h"
+					>
+				</File>
 			</Filter>
 		</Filter>
 		<Filter

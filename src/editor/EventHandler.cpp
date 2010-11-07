@@ -8,31 +8,6 @@
 
 void EditorEngine::action(const gcn::ActionEvent& ae)
 {
-    gcn::Widget *src = ae.getSource();
-    if(src == btnToggleTilebox)
-    {
-        ToggleTilebox();
-    }
-    else if(src == btnTiles)
-    {
-        ToggleTileWnd();
-    }
-    else if(src == btnToggleLayers)
-    {
-        ToggleLayerPanel();
-    }
-    else if(src == btnQuit)
-    {
-        _quit = true; // TODO: "Do you really want to...? YES DAMNIT!"
-    }
-    else if(src == btnSaveAs)
-    {
-        _fileDlg->Open(true, "map");
-    }
-    else if(src == btnLoad)
-    {
-        _fileDlg->Open(false, "map");
-    }
 }
 
 void EditorEngine::keyPressed(gcn::KeyEvent& ke)

@@ -16,6 +16,8 @@ class LayerPanel;
 class TileLayerPanel;
 class TileboxPanel;
 class DrawAreaPanel;
+class BottomBarPanel;
+class TileWindow;
 
 
 #define PREVIEWLAYER_MAX_SIZE 4
@@ -75,6 +77,7 @@ public:
     void FillUseableTiles(void);
 
     inline LayerMgr *GetLayerMgr(void) { return _layermgr; }
+    inline FileDialog *GetFileDlg(void) { return _fileDlg; }
 
     void ChangeLayerMgr(LayerMgr *mgr);
 
@@ -119,16 +122,9 @@ protected:
     // GUI elements - main gui
     DrawAreaPanel *panMain;
     TileboxPanel *panTilebox; // right panel
-    gcn::Panel *panBottom; // bottom panel with all the buttons
-    gcn::Button *btnQuit;
-    gcn::Button *btnNew;
-    gcn::Button *btnToggleTilebox;
-    gcn::Button *btnSaveAs;
-    gcn::Button *btnLoad;
-    gcn::Button *btnData;
-    gcn::Button *btnTiles;
-    gcn::Button *btnToggleLayers;
-    gcn::Window *wndTiles; // large tile window
+    BottomBarPanel *panBottom; // bottom panel with all the buttons
+    TileWindow *wndTiles; // large tile window
+    
 
     // GUI elements - tile window
     gcn::Label *laTWCurFolder;

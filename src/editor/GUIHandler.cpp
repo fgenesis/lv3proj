@@ -7,6 +7,8 @@
 #include "LayerPanel.h"
 #include "TileboxPanel.h"
 #include "DrawAreaPanel.h"
+#include "BottomBarPanel.h"
+#include "TileWindow.h"
 
 
 void EditorEngine::ClearWidgets(void)
@@ -49,51 +51,11 @@ void EditorEngine::SetupInterface(void)
     gcn::Color bgcol;
 
     // -- bottom panel start --
-    panBottom = panel = new gcn::Panel(4,4);
-    btnQuit = btn = new gcn::Button("Quit"); // we create this button earlier so the max height of the panel can be determined
-    fgcol = gcn::Color(200,200,200,255);
-    bgcol = gcn::Color(80,0,0,100);
-    panel->setForegroundColor(fgcol);
-    panel->setBackgroundColor(bgcol);
-    panel->setSize(GetResX(), btn->getHeight() + panel->GetSpacingY() * 2);
-    panel->SetMaxSlots(-1, 1);
-
-    btn->addActionListener(this);
-    panel->add(RegWidget(btn));
-
-    btnNew = btn = new gcn::Button(" New ");
-    btn->addActionListener(this);
-    panel->add(RegWidget(btn));
-
-    btnLoad = btn = new gcn::Button(" Load ");
-    btn->addActionListener(this);
-    panel->add(RegWidget(btn));
-
-    btnSaveAs = btn = new gcn::Button(" Save as ");
-    btn->addActionListener(this);
-    panel->add(RegWidget(btn));
-
-    btnData = btn = new gcn::Button(" Data ");
-    btn->addActionListener(this);
-    panel->add(RegWidget(btn));
-
-    btnTiles = btn = new gcn::Button(" Tiles ");
-    btn->addActionListener(this);
-    panel->add(RegWidget(btn));
-
-    btnToggleLayers = btn = new gcn::Button(" Layers ");
-    btn->addActionListener(this);
-    panel->add(RegWidget(btn));
-
-    // this stuff is supposed to be added to the left edge of the panel
-    btnToggleTilebox = btn = new gcn::Button("Toggle Tilebox");
-    panel->InsertSpace(GetResX() - panel->GetNextX() - btn->getDimension().width - panel->GetSpacingX(), 0);
-    btn->addActionListener(this);
-    panel->add(RegWidget(btn));
-
+    panBottom = new BottomBarPanel(this);
+    panBottom->setPosition(0, GetResY() - panBottom->getHeight());
     // add panel to top widget
-    AddWidgetTop(panel)->setPosition(0, GetResY() - panel->getHeight());
-    uint32 freeHeight = GetResY() - panel->getHeight();
+    AddWidgetTop(panBottom);
+    uint32 freeHeight = GetResY() - panBottom->getHeight();
     // -- bottom panel end --
 
 
@@ -114,7 +76,8 @@ void EditorEngine::SetupInterface(void)
 
     // -- left layer panel start --
     panLayers = new LayerPanel(this, 180, GetResY() - panBottom->getHeight());
-    AddWidgetTop(panLayers)->setPosition(0, 0);
+    panLayers->setPosition(0, 0);
+    AddWidgetTop(panLayers);
     // -- left layer panel end --
 
     // -- main panel start --
@@ -137,7 +100,7 @@ void EditorEngine::SetupInterface(void)
 
 
     // -- tile window start --
-    wndTiles = new gcn::Window("Tiles");
+    wndTiles = new TileWindow(this);
     wndTiles->setSize(GetResX(), GetResY() - panBottom->getHeight());
     wndTiles->setOpaque(true);
     wndTiles->setBaseColor(gcn::Color(0, 0, 0, 255));

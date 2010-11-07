@@ -45,6 +45,7 @@ Engine::~Engine()
 
 void Engine::Shutdown(void)
 {
+    _quit = true;
 }
 
 void Engine::SetTitle(char *title)
@@ -161,7 +162,7 @@ void Engine::_ProcessEvents(void)
                 break;
 
             case SDL_QUIT:
-                _quit = true;
+                Shutdown();
                 break;
         }
     }
@@ -229,7 +230,7 @@ void Engine::OnKeyDown(SDLKey key, SDLMod mod)
     {
 
         if(key == SDLK_F4)
-            _quit = true;
+            Shutdown();
         if(key == SDLK_RETURN)
         {
             uint32 x = GetResX();
