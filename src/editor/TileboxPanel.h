@@ -25,8 +25,6 @@ protected:
     void _DrawSelTiles(void);
     
     bool _locked;
-
-
 };
 
 #endif

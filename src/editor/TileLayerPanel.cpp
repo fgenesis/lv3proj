@@ -15,26 +15,37 @@ TileLayerPanel::~TileLayerPanel()
 
 void TileLayerPanel::logic(void)
 {
-    int xo, yo;
-    getAbsolutePosition(xo,yo);
-    uint32 frametime = _engine->GetCurFrameTime();
-    if(_mgr)
+    if(IsCovered())
+        return;
+
+    if(isVisible())
     {
-        _mgr->SetRenderOffset(xo, yo);
-        _mgr->Update(frametime);
+        int xo, yo;
+        getAbsolutePosition(xo,yo);
+        uint32 frametime = _engine->GetCurFrameTime();
+        if(_mgr)
+        {
+            _mgr->SetRenderOffset(xo, yo);
+            _mgr->Update(frametime);
+        }
+
+        for(uint32 i = 0; i < _layers.size(); ++i)
+        {
+            TileLayer& tl = *_layers[i];
+            tl.xoffs = xo;
+            tl.yoffs = yo;
+            tl.Update(frametime);
+        }
     }
 
-    for(uint32 i = 0; i < _layers.size(); ++i)
-    {
-        TileLayer& tl = *_layers[i];
-        tl.xoffs = xo;
-        tl.yoffs = yo;
-        tl.Update(frametime);
-    }
+    gcn::SelectionFramePanel::logic();
 }
 
 void TileLayerPanel::draw(gcn::Graphics *g)
 {
+    if(IsCovered())
+        return;
+
     gcn::Panel::draw(g);
     if(_mgr)
         _mgr->Render();

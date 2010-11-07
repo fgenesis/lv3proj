@@ -2,6 +2,7 @@
 #include "Panel.h"
 
 gcn::Panel::Panel(int initialSpaceX, int initialSpaceY)
+: _coveredBy(NULL)
 {
     _slotsx = -1;
     _slotsy = -1;
@@ -28,6 +29,9 @@ void gcn::Panel::SetMaxSlots(int x, int y)
 
 void gcn::Panel::draw(Graphics* graphics)
 {
+    if(IsCovered())
+        return;
+
     // draw self, background
     if(getBackgroundColor().a) // draw background only if not completely transparent
     {

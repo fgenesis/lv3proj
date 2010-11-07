@@ -55,7 +55,6 @@ EditorEngine::EditorEngine()
     _gcnInput = new gcn::SDLInput();
     _gcnGui = new gcn::Gui();
     _topWidget = new gcn::Container();
-    wndTilesLayer = NULL;
     _fileDlg = NULL;
 }
 
@@ -152,23 +151,13 @@ void EditorEngine::_Process(uint32 ms)
 {
     _gcnGui->logic();
     Engine::_Process(ms);
-
-    // update this one only if necessary, we do not have to animate tiles there that are not shown anyway
-    if(wndTilesLayer->visible)
-        wndTilesLayer->Update(GetCurFrameTime());
 }
 
 
 void EditorEngine::_Render(void)
 {
-    SDL_FillRect(GetSurface(), NULL, 0); // blank the whole screen
-
     // draw everything related to guichan
     _gcnGui->draw();
-
-    // if the tile window is visible, draw its layer. the visibility check is performed inside Render();
-    // the layer's visibility is controlled by ToggleTileWnd()
-    wndTilesLayer->Render();
 
     SDL_Flip(_screen);
 }
@@ -185,32 +174,6 @@ void EditorEngine::SetupEditorLayers(void)
         _layermgr->SetLayer(layer, i);
 
     }
-}
-
-// returns a rect defining the targetable tile indexes of a TileLayer.
-// addX, addY are passed as relative coords from baseXY.
-// baseXY must be the positions of the upper left start point.
-// aligning by 16 will be done inside the function.
-// maxwidth, maxheight is the max. amount of tiles in each direction that may be treated selectable. -1 for infinite.
-gcn::Rectangle EditorEngine::GetTargetableLayerTiles(uint32 baseX, uint32 baseY, uint32 addX, uint32 addY,
-                                                     uint32 maxwidth, uint32 maxheight, TileLayer *layer)
-{
-    uint32 w = addX / 16;
-    uint32 h = addY / 16;
-
-    uint32 maxDimX = std::min(w, maxwidth);
-    uint32 maxDimY = std::min(h, maxheight);
-
-    Point *camera = layer->camera;
-    if(camera)
-    {
-        return gcn::Rectangle((baseX + camera->x) / 16, (baseY + camera->y) / 16, maxDimX, maxDimY);
-    }
-    else
-    {
-        return gcn::Rectangle(baseX / 16, baseY / 16, maxDimX, maxDimY);
-    }
-    
 }
 
 void EditorEngine::PanDrawingArea(int32 x, int32 y)

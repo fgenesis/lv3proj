@@ -4,6 +4,8 @@
 #include "VFSFile.h"
 #include "ResourceMgr.h"
 #include "LVPAFile.h"
+#include "TileWindow.h"
+#include "TileboxPanel.h"
 
 
 // TODO: this function needs to be removed in some future, but it is good enough to fill up the tile list
@@ -96,5 +98,5 @@ void EditorEngine::FillUseableTiles(void)
 
     uint32 pos = 0;
     uint32 maxwidth = GetResX() / 16;
-    DirLoadHelper("", wndTilesLayer, gfxDir, maxwidth, pos);
+    DirLoadHelper("", wndTiles->GetTilesPanel()->GetTileLayer(), gfxDir, maxwidth, pos);
 }

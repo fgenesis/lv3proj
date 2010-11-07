@@ -81,11 +81,6 @@ public:
 
     void ChangeLayerMgr(LayerMgr *mgr);
 
-    // note that rsrc height and width are expected to be bottom right x and y!
-    void UpdateSelection(gcn::Widget *src);
-    gcn::Rectangle GetTargetableLayerTiles(uint32 baseX, uint32 baseY, uint32 addX, uint32 addY,
-                                           uint32 maxwidth, uint32 maxheight, TileLayer *layer);
-
     gcn::Widget *RegWidget(gcn::Widget *w);
     gcn::Widget *AddWidgetTop(gcn::Widget *w);
 
@@ -94,6 +89,7 @@ public:
     inline LayerPanel *GetLayerPanel(void) { return panLayers; }
     inline DrawAreaPanel *GetDrawPanel(void) { return panMain; }
     inline TileboxPanel *GetTileboxPanel(void) { return panTilebox; }
+    inline TileWindow *GetTileWnd(void) { return wndTiles; }
 
 
 protected:
@@ -124,17 +120,8 @@ protected:
     TileboxPanel *panTilebox; // right panel
     BottomBarPanel *panBottom; // bottom panel with all the buttons
     TileWindow *wndTiles; // large tile window
+    LayerPanel *panLayers; // layer settings
     
-
-    // GUI elements - tile window
-    gcn::Label *laTWCurFolder;
-    gcn::Button *btnTWNext;
-    gcn::Button *btnTWPrev;
-    TileLayer *wndTilesLayer; // the layer where all the tiles for selection will be put
-
-    // layer settings
-    LayerPanel *panLayers;
-
     // gui misc config
     uint32 tileboxCols;
 

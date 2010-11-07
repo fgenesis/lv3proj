@@ -26,6 +26,11 @@ namespace gcn
         virtual void SetMaxSlots(int x, int y);
         virtual void InsertSpace(int x, int y) { _nextx += x; _nexty += y; }
 
+        // a widget is covered, if another widget is visible, which has been set as covering
+        // this is intended to get more rendering speed, nothing else
+        inline void SetCoveredBy(Widget *w) { _coveredBy = w; }
+        inline bool IsCovered(void) { return _coveredBy && _coveredBy->isVisible(); }
+
 
     protected:
         int _slotsx; // max slot count
@@ -38,6 +43,8 @@ namespace gcn
 
         int _spacingX;
         int _spacingY;
+
+        Widget *_coveredBy;
 
     };
 

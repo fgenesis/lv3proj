@@ -38,8 +38,6 @@ void gcn::SelectionFramePanel::draw(Graphics* g)
 
 void gcn::SelectionFramePanel::_initRect(uint32 x, uint32 y, bool resetWH /* = true */)
 {
-    //_frame.x += _blockOffsX;
-    //_frame.y += _blockOffsY;
     _frame.x = x - ((x - _blockOffsX) % _blockW);
     _frame.y = y - ((y - _blockOffsY) % _blockH);
     if(resetWH)

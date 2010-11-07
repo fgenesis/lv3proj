@@ -31,6 +31,9 @@ TileLayer *DrawAreaPanel::GetPaintableTiles(void)
 
 void DrawAreaPanel::logic(void)
 {
+    if(IsCovered())
+        return;
+
     TileLayerPanel::logic();
 
     Point cam = _engine->GetCameraPos();
@@ -50,6 +53,9 @@ void DrawAreaPanel::logic(void)
 
 void DrawAreaPanel::draw(gcn::Graphics *g)
 {
+    if(IsCovered())
+        return;
+
     // always show currently selected layer
     TileLayer *activeLayer = _mgr->GetLayer(GetActiveLayerId());
     bool curVis = activeLayer->visible;

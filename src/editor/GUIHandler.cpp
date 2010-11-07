@@ -45,15 +45,10 @@ void EditorEngine::SetupInterface(void)
     _topWidget->setOpaque(false);
     _topWidget->setBaseColor(gcn::Color(0,0,0,255));
 
-    gcn::Panel *panel;
-    gcn::Button *btn;
-    gcn::Color fgcol;
-    gcn::Color bgcol;
 
     // -- bottom panel start --
     panBottom = new BottomBarPanel(this);
     panBottom->setPosition(0, GetResY() - panBottom->getHeight());
-    // add panel to top widget
     AddWidgetTop(panBottom);
     uint32 freeHeight = GetResY() - panBottom->getHeight();
     // -- bottom panel end --
@@ -62,16 +57,13 @@ void EditorEngine::SetupInterface(void)
     // -- right panel start --
     panTilebox = new TileboxPanel(this);
     panTilebox->SetBlockSize(16,16);
-    fgcol = gcn::Color(200,200,200,255);
-    bgcol = gcn::Color(30,30,30,200);
-    panTilebox->setForegroundColor(fgcol);
-    panTilebox->setBackgroundColor(bgcol);
-    panTilebox->setSize(tileboxCols * 16, freeHeight);
+    panTilebox->setForegroundColor(gcn::Color(200,200,200,255));
+    panTilebox->setBackgroundColor(gcn::Color(30,30,30,200));
+    panTilebox->setSize(tileboxCols * panTilebox->GetBlockW(), freeHeight);
     panTilebox->SetMaxSlots(tileboxCols, -1);
     panTilebox->addMouseListener(this);
 
-    // the right tilebox panel must be added AFTER the main panel!
-
+    AddWidgetTop(panTilebox)->setPosition(GetResX() - panTilebox->getWidth(), 0);
     // -- right panel end --
 
     // -- left layer panel start --
@@ -86,44 +78,18 @@ void EditorEngine::SetupInterface(void)
     panMain->SetBlockSize(16, 16); // TODO: change this
     panMain->SetDraggable(false);
     panMain->setForegroundColor(gcn::Color(255,255,255,255));
-    panMain->setBackgroundColor(gcn::Color(0,0,0,0));
+    panMain->setBackgroundColor(gcn::Color(0,0,0,255));
     panMain->setSize(GetResX(), GetResY() - panBottom->getHeight());
     panMain->SetMaxSlots(-1,-1);
     panMain->addMouseListener(this);
 
-    // add panel to top widget
     AddWidgetTop(panMain)->setPosition(0, 0);
     // -- main panel end --
-
-    // time to add the right tilebox panel
-    AddWidgetTop(panTilebox)->setPosition(GetResX() - panTilebox->getWidth(), 0);
 
 
     // -- tile window start --
     wndTiles = new TileWindow(this);
     wndTiles->setSize(GetResX(), GetResY() - panBottom->getHeight());
-    wndTiles->setOpaque(true);
-    wndTiles->setBaseColor(gcn::Color(0, 0, 0, 255));
-    wndTiles->setFrameSize(0);
-    wndTiles->setMovable(false);
-    wndTiles->setVisible(false);
-    wndTiles->setTitleBarHeight(0);
-    btnTWPrev = btn = new gcn::Button("  Prev  ");
-    btn->addActionListener(this);
-    panel = new gcn::Panel(4,4);
-    panel->setBackgroundColor(gcn::Color(0x99B0FF));
-    panel->setForegroundColor(gcn::Color(255,255,255,255));
-    panel->SetMaxSlots(-1, 1);
-    panel->setSize(GetResX(), btn->getHeight() + panel->GetSpacingY() * 2);
-    panel->add(RegWidget(btn));
-    btnTWNext = btn = new gcn::Button("  Next  ");
-    btn->addActionListener(this);
-    panel->add(RegWidget(btn));
-    panel->InsertSpace(15,0);
-    laTWCurFolder = new gcn::Label("Current directory");
-    panel->add(RegWidget(laTWCurFolder));
-    wndTiles->add(RegWidget(panel), 0, wndTiles->getHeight() - panel->getHeight());
-    wndTiles->addMouseListener(this);
     AddWidgetTop(wndTiles);
     // -- tile window end --
 
@@ -138,6 +104,11 @@ void EditorEngine::SetupInterface(void)
 
     panMain->requestMoveToBottom();
 
+    // speed enhancement - some widgets are covered if the big tile window is visible
+    panMain->SetCoveredBy(wndTiles);
+    panTilebox->SetCoveredBy(wndTiles);
+    panLayers->SetCoveredBy(wndTiles);
+
 
     SetupInterfaceLayers();
 }
@@ -146,31 +117,45 @@ void EditorEngine::SetupInterfaceLayers(void)
 {
     uint32 resmax = std::max(GetResX(), GetResY());
     uint32 tilesmax = resmax / 16; // TODO: fix for tile size != 16
-
-    std::vector<TileLayer*>& tblayerv = panTilebox->GetTiles();
     TileLayer *tl;
-    if(tblayerv.empty())
-    {
-         tl = new TileLayer();
-        tl->target = GetSurface();
-        tl->visible = true;
 
-        tblayerv.push_back(tl);
-    }
-    else
     {
-        tl = tblayerv[0];
+        std::vector<TileLayer*>& tblayerv = panTilebox->GetTiles();
+        if(tblayerv.empty())
+        {
+            tl = new TileLayer();
+            tl->target = GetSurface();
+            tl->visible = true;
+
+            tblayerv.push_back(tl);
+        }
+        else
+        {
+            tl = tblayerv[0];
+        }
+
+        tl->Resize(tilesmax);
     }
 
-    tl->Resize(tilesmax);
-
-    if(!wndTilesLayer)
     {
-        wndTilesLayer = new TileLayer();
-        wndTilesLayer->target = GetSurface();
-        wndTilesLayer->visible = false;
+        std::vector<TileLayer*>& tblayerv = wndTiles->GetTilesPanel()->GetTiles();
+        if(tblayerv.empty())
+        {
+            tl = new TileLayer();
+            tl->target = GetSurface();
+            tl->visible = true;
+
+            tblayerv.push_back(tl);
+        }
+        else
+        {
+            tl = tblayerv[0];
+        }
+
+        tl->Resize(tilesmax);
     }
-    wndTilesLayer->Resize(tilesmax);
+
+    
 }
 
 void EditorEngine::ToggleVisible(gcn::Widget *w)
@@ -192,7 +177,6 @@ void EditorEngine::ToggleTilebox(void)
 void EditorEngine::ToggleTileWnd(void)
 {
     ToggleVisible(wndTiles);
-    wndTilesLayer->visible = wndTiles->isVisible();
 }
 
 void EditorEngine::ToggleLayerPanel(void)
