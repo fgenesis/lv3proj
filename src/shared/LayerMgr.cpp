@@ -13,7 +13,7 @@
 
 
 LayerMgr::LayerMgr(Engine *e)
-: engine(e), _maxdim(0), _collisionMap(LCF_WALL)
+: _engine(e), _maxdim(0), _collisionMap(LCF_WALL)
 {
     for(uint32 i = 0; i < LAYER_MAX; ++i)
         _layers[i] = NULL;
@@ -27,12 +27,12 @@ TileLayer *LayerMgr::CreateLayer(bool collision /* = false */, uint32 xoffs /* =
     TileLayer *layer = new TileLayer();
     layer->Resize(_maxdim);
     layer->collision = collision;
-    layer->target = engine->GetSurface();
-    layer->visible_area = engine->GetVisibleBlockRect();
+    layer->target = _engine->GetSurface();
+    layer->visible_area = _engine->GetVisibleBlockRect();
     layer->visible = true;
     layer->xoffs = xoffs;
     layer->yoffs = yoffs;
-    layer->camera = engine->GetCameraPosPtr();
+    layer->camera = _engine->GetCameraPosPtr();
     layer->mgr = this;
 
     return layer;
@@ -66,6 +66,16 @@ void LayerMgr::SetMaxDim(uint32 dim)
     _collisionMap.resize(dim, false);
 }
 
+void LayerMgr::SetRenderOffset(int32 x, int32 y)
+{
+    for(uint32 i = 0; i < LAYER_MAX; i++)
+        if(TileLayer *layer = GetLayer(i))
+        {
+            layer->xoffs = x;
+            layer->yoffs = y;
+        }
+}
+
 void LayerMgr::SetLayer(TileLayer *layer, uint32 depth)
 {
     if(_layers[depth])
@@ -77,23 +87,23 @@ void LayerMgr::SetLayer(TileLayer *layer, uint32 depth)
 
 void LayerMgr::Render(void)
 {
-    ObjectMgr *omgr = engine->objmgr;
+    ObjectMgr *omgr = _engine->objmgr;
     for(uint32 i = 0; i < LAYER_MAX; ++i)
     {
         // render map tiles
-        if(_layers[i] && !engine->HasDebugFlag(EDBG_HIDE_LAYERS))
+        if(_layers[i] && !_engine->HasDebugFlag(EDBG_HIDE_LAYERS))
             _layers[i]->Render();
 
         // render objects/sprites
-        if(!engine->HasDebugFlag(EDBG_HIDE_SPRITES))
+        if(!_engine->HasDebugFlag(EDBG_HIDE_SPRITES))
             omgr->RenderLayer(i);
     }
 
     // DEBUG: render collision map
-    if(engine->HasDebugFlag(EDBG_COLLISION_MAP_OVERLAY))
+    if(_engine->HasDebugFlag(EDBG_COLLISION_MAP_OVERLAY))
     {
-        uint32 xmax = std::min(_collisionMap.size1d(), engine->GetResX());
-        uint32 ymax = std::min(_collisionMap.size1d(), engine->GetResY());
+        uint32 xmax = std::min(_collisionMap.size1d(), _engine->GetResX());
+        uint32 ymax = std::min(_collisionMap.size1d(), _engine->GetResY());
         for(uint32 y = 0; y < ymax; y++)
         {
             for(uint32 x = 0; x < xmax; x++)
@@ -106,12 +116,12 @@ void LayerMgr::Render(void)
                     c |= 0xFFFF0000;
 
                 if(c)
-                    SDLfunc_putpixel(engine->GetSurface(), x, y, c);
+                    SDLfunc_putpixel(_engine->GetSurface(), x, y, c);
             }
         }
     }
     
-    if(engine->HasDebugFlag(EDBG_SHOW_BBOXES))
+    if(_engine->HasDebugFlag(EDBG_SHOW_BBOXES))
         omgr->RenderBBoxes();
 }
 

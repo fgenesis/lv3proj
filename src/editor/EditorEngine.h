@@ -13,6 +13,9 @@
 
 class FileDialog;
 class LayerPanel;
+class TileLayerPanel;
+class TileboxPanel;
+class DrawAreaPanel;
 
 
 #define PREVIEWLAYER_MAX_SIZE 4
@@ -33,10 +36,6 @@ protected:
     // inherited from gcn::MouseListener
     virtual void mousePressed(gcn::MouseEvent& me);
     virtual void mouseDragged(gcn::MouseEvent& me);
-    virtual void mouseReleased(gcn::MouseEvent& me);
-    virtual void mouseMoved(gcn::MouseEvent& me);
-    virtual void mouseExited(gcn::MouseEvent& me);
-    virtual void mouseClicked(gcn::MouseEvent& me);
     virtual void mouseWheelMovedDown(gcn::MouseEvent& me);
     virtual void mouseWheelMovedUp(gcn::MouseEvent& me);
 
@@ -75,17 +74,11 @@ public:
     void LoadPackages(void);
     void FillUseableTiles(void);
 
-    void SetActiveLayer(uint32 layerId);
-    inline uint32 GetActiveLayerId(void) { return _activeLayer; }
     inline LayerMgr *GetLayerMgr(void) { return _layermgr; }
 
-    void SetLeftMainDistance(uint32 dist);
-
-    void HandlePaintOnWidget(gcn::Widget *src, uint32 xpos, uint32 ypos, bool addSrcPos);
+    void ChangeLayerMgr(LayerMgr *mgr);
 
     // note that rsrc height and width are expected to be bottom right x and y!
-    gcn::Rectangle Get16pxAlignedFrame(gcn::Rectangle rsrc);
-    void UpdateSelectionFrame(gcn::Widget *src, int x, int y);
     void UpdateSelection(gcn::Widget *src);
     gcn::Rectangle GetTargetableLayerTiles(uint32 baseX, uint32 baseY, uint32 addX, uint32 addY,
                                            uint32 maxwidth, uint32 maxheight, TileLayer *layer);
@@ -95,16 +88,17 @@ public:
 
     inline gcn::Font *GetLargeFont(void) { return _largeFont; }
 
+    inline LayerPanel *GetLayerPanel(void) { return panLayers; }
+    inline DrawAreaPanel *GetDrawPanel(void) { return panMain; }
+    inline TileboxPanel *GetTileboxPanel(void) { return panTilebox; }
+
 
 protected:
 
     virtual void _Process(uint32 ms);
     virtual void _Render(void);
 
-    void _DrawSelOverlay(void);
     gcn::Font *_LoadFont(const char *infofile, const char *gfxfile);
-
-    TileLayer *_GetActiveLayerForWidget(gcn::Widget *src);
 
     std::set<gcn::Widget*> _widgets;
 
@@ -118,20 +112,13 @@ protected:
     gcn::Font *_gcnFont;
     FileDialog *_fileDlg; // used file dialog window, hidden and shown as needed
 
-    // mouse selection related
-    gcn::Rectangle _selOverlayRect; // relative to _selOverlayClip
-    gcn::Rectangle _selCurrentSelRect;
-    gcn::Rectangle _selOverlayClip; // clipping area in which _selOverlayRect is drawn
-    bool _selOverlayShow;
-    bool _selOverlayHighlight;
-    int _mouseLeftStartX; // related to left button
-    int _mouseLeftStartY;
-    int _mouseRightStartX; // related to right button
+    // mouse panning related (right button)
+    int _mouseRightStartX;
     int _mouseRightStartY;
 
     // GUI elements - main gui
-    gcn::Panel *panMain;
-    gcn::Panel *panTilebox; // right panel
+    DrawAreaPanel *panMain;
+    TileboxPanel *panTilebox; // right panel
     gcn::Panel *panBottom; // bottom panel with all the buttons
     gcn::Button *btnQuit;
     gcn::Button *btnNew;
@@ -142,22 +129,12 @@ protected:
     gcn::Button *btnTiles;
     gcn::Button *btnToggleLayers;
     gcn::Window *wndTiles; // large tile window
-    TileLayer *panTileboxLayer;
 
     // GUI elements - tile window
     gcn::Label *laTWCurFolder;
     gcn::Button *btnTWNext;
     gcn::Button *btnTWPrev;
     TileLayer *wndTilesLayer; // the layer where all the tiles for selection will be put
-
-    // tiling and layers, main surface, preview box
-    TileLayer *_selLayer;
-    bool _selLayerShow;
-    gcn::Rectangle _selLayerBorderRect; // this defines where the selection preview box is drawn
-
-    // tiling and layers, main surface, draw area
-    uint32 _activeLayer;
-    uint32 _visibleLayerMask;
 
     // layer settings
     LayerPanel *panLayers;

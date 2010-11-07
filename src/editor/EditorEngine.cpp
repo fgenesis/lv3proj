@@ -8,6 +8,7 @@
 #include "SDL_func.h"
 #include "LayerPanel.h"
 #include "EditorEngine.h"
+#include "DrawAreaPanel.h"
 
 const char *defaultLayerNames[LAYER_MAX] =
 {
@@ -54,14 +55,8 @@ EditorEngine::EditorEngine()
     _gcnInput = new gcn::SDLInput();
     _gcnGui = new gcn::Gui();
     _topWidget = new gcn::Container();
-    _selOverlayShow = false;
-    _selLayerShow = true;
-    _selOverlayHighlight = false;
-    panTileboxLayer = NULL;
     wndTilesLayer = NULL;
-    _selLayer = NULL;
     _fileDlg = NULL;
-    _activeLayer = 0;
 }
 
 EditorEngine::~EditorEngine()
@@ -114,9 +109,9 @@ bool EditorEngine::Setup(void)
     tileboxCols = 8;
 
     LoadPackages();
-    LoadData();
     SetupInterface();
     SetupEditorLayers();
+    LoadData();
     panLayers->UpdateSelection(); // after layers are created, update buttons to assign text correctly
     FillUseableTiles();
 
@@ -161,68 +156,12 @@ void EditorEngine::_Process(uint32 ms)
     // update this one only if necessary, we do not have to animate tiles there that are not shown anyway
     if(wndTilesLayer->visible)
         wndTilesLayer->Update(GetCurFrameTime());
-    if(panTileboxLayer->visible)
-        panTileboxLayer->Update(GetCurFrameTime());
-    if(_selLayerShow && _selLayer->visible)
-        _selLayer->Update(GetCurFrameTime());
 }
 
 
 void EditorEngine::_Render(void)
 {
     SDL_FillRect(GetSurface(), NULL, 0); // blank the whole screen
-
-    // draw the layer manager, which is responsible to display the tiles on the main panel
-    // do not draw if there is a fullscren overlay.
-    if(!wndTiles->isVisible())
-    {
-        // always show currently selected layer
-        TileLayer *activeLayer = _layermgr->GetLayer(GetActiveLayerId());
-        bool curVis = activeLayer->visible;
-        activeLayer->visible = true;
-        _layermgr->Render(); // <-- render all layers
-        activeLayer->visible = curVis;
-
-        // draw box around the drawing area
-        uint32 pixdim = _layermgr->GetMaxPixelDim();
-        gcn::Rectangle clip(
-            -_cameraPos.x,
-            -_cameraPos.y,
-            pixdim,
-            pixdim);
-
-
-        _gcnGfx->setColor(gcn::Color(255, 0, 0, 180));
-        _gcnGfx->pushClipArea(gcn::Rectangle(0,0,GetResX(), GetResY()));
-        _gcnGfx->drawRectangle(clip);
-        // draw 2nd rect around it (makes it thicker)
-        clip.x--;
-        clip.y--;
-        clip.width += 2;
-        clip.height+= 2;
-        _gcnGfx->drawRectangle(clip);
-        _gcnGfx->popClipArea();
-    }
-
-    // the max. 4x4 preview box showing the currently selected tiles
-    if(_selLayerShow && _selLayer->visible)
-    {
-        // limit the preview box area so that it can not fill the whole screen
-        // draw it always in the top-left corner of the main panel
-        gcn::Rectangle clip(_selLayerBorderRect.x,
-                            _selLayerBorderRect.y,
-                            std::min(_selLayerBorderRect.width, PREVIEWLAYER_MAX_SIZE * 16),
-                            std::min(_selLayerBorderRect.height, PREVIEWLAYER_MAX_SIZE * 16));
-        _gcnGfx->pushClipArea(clip);
-        _selLayer->Render();
-        _gcnGfx->setColor(gcn::Color(255,0,255,150));
-
-        // this will put the rect into the right position
-        clip.x = 0;
-        clip.y = 0;
-        _gcnGfx->drawRectangle(clip);
-        _gcnGfx->popClipArea();
-    }
 
     // draw everything related to guichan
     _gcnGui->draw();
@@ -231,28 +170,8 @@ void EditorEngine::_Render(void)
     // the layer's visibility is controlled by ToggleTileWnd()
     wndTilesLayer->Render();
 
-    // draw the tilebox layer, unless there is a fullscreen overlay
-    if(!wndTiles->isVisible())
-        panTileboxLayer->Render();
-
-    // this draws the grey/white selection box (check performed inside function)
-    _DrawSelOverlay();
-
     SDL_Flip(_screen);
 }
-
-void EditorEngine::_DrawSelOverlay(void)
-{
-    if(_selOverlayShow)
-    {
-        _gcnGfx->setColor(_selOverlayHighlight ? gcn::Color(255,255,255,255) : gcn::Color(255,255,255,150));
-        _gcnGfx->pushClipArea(_selOverlayClip);
-        _gcnGfx->drawRectangle(_selOverlayRect);
-        _gcnGfx->popClipArea();
-    }
-}
-
-
 
 void EditorEngine::SetupEditorLayers(void)
 {
@@ -266,37 +185,6 @@ void EditorEngine::SetupEditorLayers(void)
         _layermgr->SetLayer(layer, i);
 
     }
-}
-
-
-
-
-void EditorEngine::UpdateSelectionFrame(gcn::Widget *src, int x, int y)
-{
-    if(src == panMain)
-    {
-        if(_selCurrentSelRect.width < 16 && _selCurrentSelRect.height < 16)
-            return;
-
-        // dont call Get16pxAlignedFrame() here, because this would also change width,
-        // height and other stuff, thats not supposed to happen here
-        _selOverlayRect = gcn::Rectangle(
-            x - ((_cameraPos.x + x) % 16),
-            y - ((_cameraPos.y + y) % 16),
-            _selCurrentSelRect.width,
-            _selCurrentSelRect.height);
-    }
-    else
-    {
-        gcn::Rectangle rect(std::min(_mouseLeftStartX, x),
-                            std::min(_mouseLeftStartY, y),
-                            std::max(_mouseLeftStartX, x),
-                            std::max(_mouseLeftStartY, y));
-        _selOverlayRect = Get16pxAlignedFrame(rect);
-    }
-    
-    _selOverlayClip = src->getDimension();
-    _selOverlayShow = true;
 }
 
 // returns a rect defining the targetable tile indexes of a TileLayer.
@@ -325,44 +213,6 @@ gcn::Rectangle EditorEngine::GetTargetableLayerTiles(uint32 baseX, uint32 baseY,
     
 }
 
-void EditorEngine::UpdateSelection(gcn::Widget *src)
-{
-    int maxX = std::min(_selOverlayRect.width / 16, (int)_selLayer->GetArraySize());
-    int maxY = std::min(_selOverlayRect.height / 16, (int)_selLayer->GetArraySize());
-    _selLayerBorderRect.x = _selLayer->xoffs;
-    _selLayerBorderRect.y = _selLayer->yoffs;
-    _selLayerBorderRect.width = maxX * 16;
-    _selLayerBorderRect.height = maxY * 16;
-
-    TileLayer *srcLayer = _GetActiveLayerForWidget(src);
-
-    if(srcLayer)
-    {
-        for(int iy = 0; iy < (int)_selLayer->GetArraySize() ; iy++)
-        {
-            for(int ix = 0; ix < (int)_selLayer->GetArraySize(); ix++)
-            {
-                if(iy >= maxY || ix >= maxX)
-                {
-                    _selLayer->SetTile(ix, iy, NULL);
-                    continue;
-                }
-
-                int tilex = (_selOverlayRect.x + (ix * 16)) / 16;
-                int tiley = (_selOverlayRect.y + (iy * 16)) / 16;
-                if(tilex < 0 || tiley < 0)
-                    continue;
-
-                BasicTile *tile = srcLayer->GetTile(tilex, tiley);
-                _selLayer->SetTile(ix, iy, tile);
-            }
-        }
-
-        // store the current selection size, it is needed to preview on the main surface where the new tiles will be put
-        _selCurrentSelRect = _selOverlayRect;
-    }
-}
-
 void EditorEngine::PanDrawingArea(int32 x, int32 y)
 {
     _cameraPos.x += x;
@@ -384,4 +234,10 @@ void EditorEngine::PanDrawingArea(int32 x, int32 y)
         _cameraPos.y = pixdim - halfy;
 
     GetVisibleBlockRect(); // to trigger recalc
+}
+
+void EditorEngine::ChangeLayerMgr(LayerMgr *mgr)
+{
+    panMain->SetLayerMgr(mgr);
+    _layermgr = mgr;
 }

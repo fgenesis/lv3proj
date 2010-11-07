@@ -140,6 +140,9 @@ void TileLayer::Render(void)
 // this should be called by LayerMgr only
 void TileLayer::Resize(uint32 dim)
 {
+    // this would be bad...
+    DEBUG(ASSERT(!mgr));
+
     // enlarging is easy as no tiles will disappear
     uint32 newsize = clp2(dim); // always n^2
     if(newsize >= tilearray.size1d())
@@ -164,4 +167,28 @@ void TileLayer::Resize(uint32 dim)
         for(x = 0; x < newsize; x++)
             if(BasicTile *tile = GetTile(x,y))
                 SetTile(x, y, NULL, false); // drop tile
+}
+
+void TileLayer::CopyTo(uint32 startx, uint32 starty, TileLayer *dest, uint32 destx, uint32 desty, uint32 w, uint32 h)
+{
+    uint32 copyable_src_x = GetArraySize() - startx;
+    uint32 copyable_src_y = GetArraySize() - starty;
+    uint32 copyable_dest_x = dest->GetArraySize() - destx;
+    uint32 copyable_dest_y = dest->GetArraySize() - desty;
+    w = std::min(w, std::min(copyable_src_x, copyable_dest_x));
+    h = std::min(h, std::min(copyable_src_y, copyable_dest_y));
+
+    for(uint32 iy = 0; iy < h ; iy++)
+    {
+        for(uint32 ix = 0; ix < w; ix++)
+        {
+            uint32 fromx = startx + ix;
+            uint32 fromy = starty + iy;
+            uint32 tox = destx + ix;
+            uint32 toy = desty + iy;
+
+            BasicTile *tile = GetTile(fromx, fromy);
+            dest->SetTile(tox, toy, tile);
+        }
+    }
 }

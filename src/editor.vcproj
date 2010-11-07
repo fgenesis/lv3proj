@@ -214,10 +214,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\editor\PaintHandler.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\editor\SavedDataHandler.cpp"
 				>
 			</File>
@@ -237,6 +233,14 @@
 					>
 				</File>
 				<File
+					RelativePath=".\editor\DrawAreaPanel.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\editor\DrawAreaPanel.h"
+					>
+				</File>
+				<File
 					RelativePath=".\editor\LayerPanel.cpp"
 					>
 				</File>
@@ -250,6 +254,14 @@
 				</File>
 				<File
 					RelativePath=".\editor\TileboxPanel.h"
+					>
+				</File>
+				<File
+					RelativePath=".\editor\TileLayerPanel.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\editor\TileLayerPanel.h"
 					>
 				</File>
 			</Filter>

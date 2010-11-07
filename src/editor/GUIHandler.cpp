@@ -5,6 +5,8 @@
 #include "SDLImageLoaderManaged.h"
 #include "FileDialog.h"
 #include "LayerPanel.h"
+#include "TileboxPanel.h"
+#include "DrawAreaPanel.h"
 
 
 void EditorEngine::ClearWidgets(void)
@@ -96,14 +98,15 @@ void EditorEngine::SetupInterface(void)
 
 
     // -- right panel start --
-    panTilebox = panel = new gcn::Panel(0,0);
+    panTilebox = new TileboxPanel(this);
+    panTilebox->SetBlockSize(16,16);
     fgcol = gcn::Color(200,200,200,255);
     bgcol = gcn::Color(30,30,30,200);
-    panel->setForegroundColor(fgcol);
-    panel->setBackgroundColor(bgcol);
-    panel->setSize(tileboxCols * 16, freeHeight);
-    panel->SetMaxSlots(tileboxCols, -1);
-    panel->addMouseListener(this);
+    panTilebox->setForegroundColor(fgcol);
+    panTilebox->setBackgroundColor(bgcol);
+    panTilebox->setSize(tileboxCols * 16, freeHeight);
+    panTilebox->SetMaxSlots(tileboxCols, -1);
+    panTilebox->addMouseListener(this);
 
     // the right tilebox panel must be added AFTER the main panel!
 
@@ -115,16 +118,18 @@ void EditorEngine::SetupInterface(void)
     // -- left layer panel end --
 
     // -- main panel start --
-    panMain = panel = new gcn::Panel(0,0);
-    panel->setForegroundColor(gcn::Color(255,255,255,255));
-    panel->setBackgroundColor(gcn::Color(0,0,0,0));
-    panel->setSize(GetResX(), GetResY() - panBottom->getHeight());
-    //panel->moveToBottom(panTilebox);
-    panel->SetMaxSlots(-1,-1);
-    panel->addMouseListener(this);
+    panMain = new DrawAreaPanel(this);
+    panMain->SetLayerMgr(_layermgr);
+    panMain->SetBlockSize(16, 16); // TODO: change this
+    panMain->SetDraggable(false);
+    panMain->setForegroundColor(gcn::Color(255,255,255,255));
+    panMain->setBackgroundColor(gcn::Color(0,0,0,0));
+    panMain->setSize(GetResX(), GetResY() - panBottom->getHeight());
+    panMain->SetMaxSlots(-1,-1);
+    panMain->addMouseListener(this);
 
     // add panel to top widget
-    AddWidgetTop(panel)->setPosition(0, 0);
+    AddWidgetTop(panMain)->setPosition(0, 0);
     // -- main panel end --
 
     // time to add the right tilebox panel
@@ -168,6 +173,8 @@ void EditorEngine::SetupInterface(void)
     _topWidget->add(_fileDlg);
     // -- file dialog window end --
 
+    panMain->requestMoveToBottom();
+
 
     SetupInterfaceLayers();
 }
@@ -176,25 +183,23 @@ void EditorEngine::SetupInterfaceLayers(void)
 {
     uint32 resmax = std::max(GetResX(), GetResY());
     uint32 tilesmax = resmax / 16; // TODO: fix for tile size != 16
-    if(!_selLayer)
-    {
-        _selLayer = new TileLayer(); // this is explicitly created in the upper left corner
-        _selLayer->target = GetSurface();
-        _selLayer->visible = true;
-    }
-    _selLayer->Resize(_layermgr->GetMaxDim());
 
-    int xo, yo;
-    if(!panTileboxLayer)
+    std::vector<TileLayer*>& tblayerv = panTilebox->GetTiles();
+    TileLayer *tl;
+    if(tblayerv.empty())
     {
-        panTileboxLayer = new TileLayer();
-        panTileboxLayer->target = GetSurface();
-        panTileboxLayer->visible = true;
+         tl = new TileLayer();
+        tl->target = GetSurface();
+        tl->visible = true;
+
+        tblayerv.push_back(tl);
     }
-    panTilebox->getAbsolutePosition(xo,yo);
-    panTileboxLayer->xoffs = xo;
-    panTileboxLayer->yoffs = yo;
-    panTileboxLayer->Resize(tilesmax);
+    else
+    {
+        tl = tblayerv[0];
+    }
+
+    tl->Resize(tilesmax);
 
     if(!wndTilesLayer)
     {
@@ -205,78 +210,31 @@ void EditorEngine::SetupInterfaceLayers(void)
     wndTilesLayer->Resize(tilesmax);
 }
 
-gcn::Rectangle EditorEngine::Get16pxAlignedFrame(gcn::Rectangle rsrc)
-{
-    rsrc.width += 16;
-    rsrc.height += 16;
-    uint32 modx = rsrc.x % 16;
-    uint32 mody = rsrc.y % 16;
-    uint32 modw = rsrc.width % 16;
-    uint32 modh = rsrc.height % 16;
-    rsrc.x -= modx;
-    rsrc.y -= mody;
-    rsrc.width -= modw;
-    rsrc.width -= rsrc.x;
-    rsrc.height -= modh;
-    rsrc.height -= rsrc.y;
-    if(!rsrc.width)
-        rsrc.width = 16;
-    if(!rsrc.height)
-        rsrc.height = 16;
-    return rsrc;
-}
-
 void EditorEngine::ToggleVisible(gcn::Widget *w)
 {
     w->setVisible(!w->isVisible());
 }
 
-
-TileLayer *EditorEngine::_GetActiveLayerForWidget(gcn::Widget *src)
-{
-    if(src == wndTiles)
-        return wndTilesLayer;
-    else if(src == panTilebox)
-        return panTileboxLayer;
-    // TODO: add support for more source layers if required
-    // TODO: especially support for the different panMain layers!
-    else if(src == panMain)
-        return (TileLayer*)_layermgr->GetLayer(_activeLayer);
-
-    return NULL;
-}
-
 void EditorEngine::ToggleSelPreviewLayer(void)
 {
-    _selLayer->visible = !_selLayer->visible;
+    TileLayerPanel *preview = panMain->GetPreview();
+    preview->setVisible(!preview->isVisible());
 }
 
 void EditorEngine::ToggleTilebox(void)
 {
     ToggleVisible(panTilebox);
-    panTileboxLayer->visible = panTilebox->isVisible();
 }
 
 void EditorEngine::ToggleTileWnd(void)
 {
     ToggleVisible(wndTiles);
     wndTilesLayer->visible = wndTiles->isVisible();
-    _selLayerShow = !wndTilesLayer->visible;
 }
 
 void EditorEngine::ToggleLayerPanel(void)
 {
     ToggleVisible(panLayers);
-    if(panLayers->isVisible())
-        SetLeftMainDistance(panLayers->getWidth());
-    else
-        SetLeftMainDistance(0);
-}
-
-void EditorEngine::SetActiveLayer(uint32 layerId)
-{
-    _activeLayer = layerId;
-    panLayers->UpdateSelection();
 }
 
 void EditorEngine::ToggleLayerVisible(uint32 layerId)
@@ -284,12 +242,4 @@ void EditorEngine::ToggleLayerVisible(uint32 layerId)
     TileLayer *layer = _layermgr->GetLayer(layerId);
     layer->visible = !layer->visible;
     panLayers->UpdateSelection();
-}
-
-void EditorEngine::SetLeftMainDistance(uint32 dist)
-{
-    panMain->setX(dist);
-    panMain->setWidth(GetResX() - dist);
-    _selLayer->xoffs = dist;
-    _selLayerBorderRect.x = dist;
 }

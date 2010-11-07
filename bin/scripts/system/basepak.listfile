@@ -1,6 +1,7 @@
 -p scripts/system -s CallScheduler.fal
 -p scripts/system -s EngineHooks.fal
 -p scripts/system -s GarbageCollect.fal
+-p scripts/system -s MenuLoader.fal
 -p scripts/system -s PackageSystem.fal
 -p scripts/system -s SNESKeyMap.fal
 -p scripts/system -s ScriptConstants.fal

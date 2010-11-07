@@ -3,6 +3,7 @@
 #include "LayerMgr.h"
 #include "EditorEngine.h"
 #include "GuichanExt.h"
+#include "DrawAreaPanel.h"
 
 
 LayerPanel::LayerPanel(EditorEngine *engine, uint32 width, uint32 height)
@@ -96,7 +97,7 @@ void LayerPanel::mouseClicked(gcn::MouseEvent& me)
         if(src == btnLayers[i])
         {
             if(me.getButton() == gcn::MouseEvent::LEFT)
-                _engine->SetActiveLayer(i);
+                _engine->GetDrawPanel()->SetActiveLayer(i);
             else if(me.getButton() == gcn::MouseEvent::RIGHT)
                 _engine->ToggleLayerVisible(i);
 
@@ -111,12 +112,12 @@ void LayerPanel::action(const gcn::ActionEvent& ae)
 
     if(src == cbVisible)
     {
-        _engine->GetLayerMgr()->GetLayer(_engine->GetActiveLayerId())->visible = cbVisible->isSelected();
+        _engine->GetLayerMgr()->GetLayer(_engine->GetDrawPanel()->GetActiveLayerId())->visible = cbVisible->isSelected();
         UpdateSelection();
     }
     else if(src == tfName)
     {
-        _engine->GetLayerMgr()->GetLayer(_engine->GetActiveLayerId())->name = tfName->getText();
+        _engine->GetLayerMgr()->GetLayer(_engine->GetDrawPanel()->GetActiveLayerId())->name = tfName->getText();
         focusNext(); // move focus away, else almost impossible to escape from textfield widget
         UpdateSelection();
     }
@@ -138,7 +139,7 @@ void LayerPanel::action(const gcn::ActionEvent& ae)
 void LayerPanel::UpdateSelection(void)
 {
     TileLayer *activeLayer = NULL;
-    uint32 a = _engine->GetActiveLayerId();
+    uint32 a = _engine->GetDrawPanel()->GetActiveLayerId();
     for(uint32 i = 0; i < LAYER_MAX; i++)
     {
         TileLayer *layer = _engine->GetLayerMgr()->GetLayer(i);

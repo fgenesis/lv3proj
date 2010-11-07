@@ -2,6 +2,8 @@
 #include "EditorEngine.h"
 #include "TileLayer.h"
 #include "FileDialog.h"
+#include "TileboxPanel.h"
+#include "DrawAreaPanel.h"
 
 
 void EditorEngine::action(const gcn::ActionEvent& ae)
@@ -54,11 +56,11 @@ void EditorEngine::keyPressed(gcn::KeyEvent& ke)
         break;
 
     case 'm': case 'M':
-        SetActiveLayer((GetActiveLayerId() + 1) % LAYER_MAX);
+        panMain->SetActiveLayer((panMain->GetActiveLayerId() + 1) % LAYER_MAX);
         break;
 
     case 'n': case 'N':
-        SetActiveLayer((GetActiveLayerId() + LAYER_MAX - 1) % LAYER_MAX);
+        panMain->SetActiveLayer((panMain->GetActiveLayerId() + LAYER_MAX - 1) % LAYER_MAX);
         break;
 
         // TODO: below, fix for tile size != 16
@@ -83,16 +85,8 @@ void EditorEngine::keyPressed(gcn::KeyEvent& ke)
 void EditorEngine::mousePressed(gcn::MouseEvent& me)
 {
     gcn::Widget *src = me.getSource();
-    if(me.getButton() == gcn::MouseEvent::LEFT)
-    {
-        if(src == panTilebox || src == wndTiles)
-        {
-            _mouseLeftStartX = me.getX() - (me.getX() % 16);
-            _mouseLeftStartY = me.getY() - (me.getY() % 16);
-            _selOverlayHighlight = true;
-        }
-    }
-    else if(me.getButton() == gcn::MouseEvent::RIGHT)
+
+    if(me.getButton() == gcn::MouseEvent::RIGHT)
     {
         if(src == panMain)
         {
@@ -104,73 +98,23 @@ void EditorEngine::mousePressed(gcn::MouseEvent& me)
     // TODO: clean up this mess, this must be possible to do easier!
     if(src == panMain && me.getButton() == gcn::MouseEvent::LEFT)
     {
-        HandlePaintOnWidget(src, me.getX(), me.getY(), true);
+        //HandlePaintOnWidget(src, me.getX(), me.getY(), true);
     }
     else if(src == panTilebox && me.getButton() == gcn::MouseEvent::RIGHT)
     {
-        HandlePaintOnWidget(src, me.getX(), me.getY(), false);
+        //HandlePaintOnWidget(src, me.getX(), me.getY(), false);
     }
-}
-
-void EditorEngine::mouseReleased(gcn::MouseEvent& me)
-{
-    gcn::Widget *src = me.getSource();
-    if(me.getButton() == gcn::MouseEvent::LEFT)
-    {
-        _selOverlayHighlight = false;
-        if(src == panTilebox || src == wndTiles)
-        {
-            _mouseLeftStartX = me.getX() - (me.getX() % 16);
-            _mouseLeftStartY = me.getY() - (me.getY() % 16);
-            UpdateSelection(me.getSource());
-            UpdateSelectionFrame(me.getSource(), me.getX(), me.getY());
-        }
-    }
-}
-
-void EditorEngine::mouseExited(gcn::MouseEvent& me)
-{
-    gcn::Widget *src = me.getSource();
-    if(src == wndTiles || src == panTilebox || src == panMain)
-    {
-        _selOverlayShow = false;
-    }
-}
-
-void EditorEngine::mouseClicked(gcn::MouseEvent& me)
-{
-    //gcn::Widget *src = me.getSource();
-}
-
-void EditorEngine::mouseMoved(gcn::MouseEvent& me)
-{
-    gcn::Widget *src = me.getSource();
-    if(src == wndTiles || src == panTilebox || src == panMain)
-    {
-        _mouseLeftStartX = me.getX();
-        _mouseLeftStartY = me.getY();
-        UpdateSelectionFrame(src, me.getX(), me.getY());
-    }
-    else
-        _selOverlayShow = false;
 }
 
 void EditorEngine::mouseDragged(gcn::MouseEvent& me)
 {
     gcn::Widget *src = me.getSource();
-    //if(me.getButton() == gcn::MouseEvent::LEFT)
-    {
-        if(src == wndTiles || src == panTilebox || src == panMain)
-        {
-            UpdateSelectionFrame(src, me.getX(), me.getY());
-        }
-    }
 
     if(src == panMain)
     {
         if(me.getButton() == gcn::MouseEvent::LEFT) // paint on left-click
         {
-            HandlePaintOnWidget(src, me.getX(), me.getY(), true);
+            //HandlePaintOnWidget(src, me.getX(), me.getY(), true);
         }
         else if(me.getButton() == gcn::MouseEvent::RIGHT) // pan on right-click
         {

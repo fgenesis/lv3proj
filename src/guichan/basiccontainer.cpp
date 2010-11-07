@@ -279,7 +279,8 @@ namespace gcn
         graphics->pushClipArea(getChildrenArea());
 
         WidgetListIterator iter;
-        for (iter = mWidgets.begin(); iter != mWidgets.end(); iter++)
+        unsigned int framesize;
+        for (iter = mWidgets.begin(); iter != mWidgets.end(); ++iter)
         {
             if ((*iter)->isVisible())
             {
@@ -288,10 +289,11 @@ namespace gcn
                 if ((*iter)->getFrameSize() > 0)
                 {
                     Rectangle rec = (*iter)->getDimension();
-                    rec.x -= (*iter)->getFrameSize();
-                    rec.y -= (*iter)->getFrameSize();
-                    rec.width += 2 * (*iter)->getFrameSize();
-                    rec.height += 2 * (*iter)->getFrameSize();
+                    framesize = (*iter)->getFrameSize();
+                    rec.x -= framesize;
+                    rec.y -= framesize;
+                    rec.width += 2 * framesize;
+                    rec.height += 2 * framesize;
                     graphics->pushClipArea(rec);
                     (*iter)->drawFrame(graphics);
                     graphics->popClipArea();

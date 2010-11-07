@@ -50,7 +50,8 @@ public:
     void Render(void);
     void Clear(void);
 
-    inline void SetMaxDim(uint32 dim); // set x and y size of all layers & collision map + resize if necessary
+    void SetMaxDim(uint32 dim); // set x and y size of all layers & collision map + resize if necessary
+    void SetRenderOffset(int32 x, int32 y);
     inline uint32 GetMaxDim(void) { return _maxdim; }
     inline uint32 GetMaxPixelDim(void) { return _maxdim * 16; }
     void CreateInfoLayer(void);
@@ -75,7 +76,7 @@ public:
 
 
 private:
-    Engine *engine;
+    Engine *_engine;
     TileLayer *_layers[LAYER_MAX];
     TileInfoLayer _infoLayer;
     CollisionMap _collisionMap;

@@ -30,14 +30,15 @@ public:
     inline bool IsUsed(void) { return used; }
     inline uint32 UsedTiles(void) { return used; }
     void Resize(uint32 dim); // do not use this for layers stored in the LayerMgr!
+    void CopyTo(uint32 startx, uint32 starty, TileLayer *dest, uint32 destx, uint32 desty, uint32 w, uint32 h);
 
     bool visible;
     bool collision; // do collision checking against this layer for non-transparent areas
     SDL_Rect *visible_area; // what to render - Engine::GetVisibleBlockRect()
     Point *camera;
     SDL_Surface *target; // where to render to - should be set to Engine::GetSurface(). set visible=false if this is NULL!
-    uint32 xoffs;
-    uint32 yoffs;
+    int32 xoffs;
+    int32 yoffs;
     std::string name;
 
 protected:

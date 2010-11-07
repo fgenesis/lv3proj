@@ -68,10 +68,10 @@ bool EditorEngine::LoadMapFile(const char *fn)
 
         //layer->visible_area = NULL; // DEBUG
     }
-            
 
-    delete _layermgr;
-    _layermgr = mgr;
+    LayerMgr *oldmgr = _layermgr;
+    ChangeLayerMgr(mgr);
+    delete oldmgr;
 
     panLayers->UpdateSelection();
 

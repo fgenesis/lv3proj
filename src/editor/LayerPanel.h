@@ -4,11 +4,11 @@
 
 class EditorEngine;
 
-class LayerPanel : public gcn::Panel, gcn::MouseListener, gcn::ActionListener
+class LayerPanel : public gcn::Panel, public gcn::MouseListener, public gcn::ActionListener
 {
 public:
     LayerPanel(EditorEngine *engine, uint32 width, uint32 height);
-    ~LayerPanel();
+    virtual ~LayerPanel();
 
     virtual void mouseClicked(gcn::MouseEvent& me); // from gcn::MouseListener
     virtual void action(const gcn::ActionEvent& ae); // from gcn::ActionListener

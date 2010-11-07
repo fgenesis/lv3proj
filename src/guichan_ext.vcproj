@@ -210,6 +210,14 @@
 				RelativePath=".\guichan_ext\SDLImageManaged.h"
 				>
 			</File>
+			<File
+				RelativePath=".\guichan_ext\SelectionFramePanel.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\guichan_ext\SelectionFramePanel.h"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
