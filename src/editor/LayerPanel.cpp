@@ -11,9 +11,8 @@ LayerPanel::LayerPanel(EditorEngine *engine, uint32 width, uint32 height)
 {
     setBackgroundColor(gcn::Color(0,75,0,255));
     setForegroundColor(gcn::Color(0,200,0,255));
-    setSize(width, height);
-    setVisible(false);
     SetMaxSlots(2, -1);
+    setSize(width, height);
     gcn::Button *btn;
 
     uint32 w = getWidth() / 2 - (GetSpacingX() * 2);

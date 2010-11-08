@@ -61,7 +61,15 @@ EditorEngine::EditorEngine()
 EditorEngine::~EditorEngine()
 {
     SaveData();
-    ClearWidgets();
+    
+    // delete all widgets from the top widget
+    while(_topWidget->mWidgets.size())
+    {
+        delete _topWidget->mWidgets.back();
+        // nothing else to do, the widgets unregister themselves
+    }
+
+    _topWidget->mWidgets.clear();
 
     delete _topWidget;
     delete _gcnFont;
@@ -108,6 +116,7 @@ bool EditorEngine::Setup(void)
     tileboxCols = 8;
 
     LoadPackages();
+    _CreateInterfaceWidgets();
     SetupInterface();
     SetupEditorLayers();
     LoadData();

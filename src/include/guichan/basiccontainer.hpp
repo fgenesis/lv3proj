@@ -155,6 +155,8 @@ namespace gcn
          */
         virtual Widget* findWidgetById(const std::string& id);
 
+    public: // FG: made public
+
         /**
          * Typedef.
          */

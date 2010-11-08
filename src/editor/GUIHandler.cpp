@@ -10,97 +10,45 @@
 #include "BottomBarPanel.h"
 #include "TileWindow.h"
 
-
-void EditorEngine::ClearWidgets(void)
+// to be called only once!
+void EditorEngine::_CreateInterfaceWidgets(void)
 {
-    _topWidget->clear();
-    for(std::set<gcn::Widget*>::iterator it = _widgets.begin(); it != _widgets.end(); it++)
-    {
-        delete *it;
-    }
-    _widgets.clear();
-
-}
-
-// registers a widget for garbage collection
-gcn::Widget *EditorEngine::RegWidget(gcn::Widget *w)
-{
-    _widgets.insert(w);
-    return w;
-}
-
-// adds a widget to the top widget and registers it for garbage collection
-gcn::Widget *EditorEngine::AddWidgetTop(gcn::Widget *w)
-{
-    _topWidget->add(w);
-    return RegWidget(w);
-}
-
-// place widgets based on resolution.
-// to be called on each resize event
-void EditorEngine::SetupInterface(void)
-{
-    ClearWidgets();
-    _topWidget->setDimension(gcn::Rectangle(0, 0, GetResX(), GetResY()));
     _topWidget->setOpaque(false);
     _topWidget->setBaseColor(gcn::Color(0,0,0,255));
 
-
-    // -- bottom panel start --
     panBottom = new BottomBarPanel(this);
     panBottom->setPosition(0, GetResY() - panBottom->getHeight());
-    AddWidgetTop(panBottom);
-    uint32 freeHeight = GetResY() - panBottom->getHeight();
-    // -- bottom panel end --
+    _topWidget->add(panBottom);
 
-
-    // -- right panel start --
     panTilebox = new TileboxPanel(this);
-    panTilebox->SetBlockSize(16,16);
     panTilebox->setForegroundColor(gcn::Color(200,200,200,255));
     panTilebox->setBackgroundColor(gcn::Color(30,30,30,200));
-    panTilebox->setSize(tileboxCols * panTilebox->GetBlockW(), freeHeight);
-    panTilebox->SetMaxSlots(tileboxCols, -1);
     panTilebox->addMouseListener(this);
+    _topWidget->add(panTilebox);
 
-    AddWidgetTop(panTilebox)->setPosition(GetResX() - panTilebox->getWidth(), 0);
-    // -- right panel end --
-
-    // -- left layer panel start --
-    panLayers = new LayerPanel(this, 180, GetResY() - panBottom->getHeight());
+    panLayers = new LayerPanel(this, 180, GetResY() - panBottom->getHeight()); // use the same sizes below
     panLayers->setPosition(0, 0);
-    AddWidgetTop(panLayers);
-    // -- left layer panel end --
+    panLayers->setVisible(false);
+    _topWidget->add(panLayers);
 
-    // -- main panel start --
     panMain = new DrawAreaPanel(this);
     panMain->SetLayerMgr(_layermgr);
-    panMain->SetBlockSize(16, 16); // TODO: change this
     panMain->SetDraggable(false);
     panMain->setForegroundColor(gcn::Color(255,255,255,255));
     panMain->setBackgroundColor(gcn::Color(0,0,0,255));
-    panMain->setSize(GetResX(), GetResY() - panBottom->getHeight());
     panMain->SetMaxSlots(-1,-1);
     panMain->addMouseListener(this);
+    panMain->setPosition(0, 0);
+    _topWidget->add(panMain);
 
-    AddWidgetTop(panMain)->setPosition(0, 0);
-    // -- main panel end --
-
-
-    // -- tile window start --
     wndTiles = new TileWindow(this);
-    wndTiles->setSize(GetResX(), GetResY() - panBottom->getHeight());
-    AddWidgetTop(wndTiles);
-    // -- tile window end --
+    wndTiles->setVisible(false);
+    _topWidget->add(wndTiles);
 
-    // -- file dialog window start --
-    if(!_fileDlg)
-    {
-        _fileDlg = new FileDialog();
-        _fileDlg->SetCallback(this);
-    }
+    _fileDlg = new FileDialog();
+    _fileDlg->SetCallback(this);
     _topWidget->add(_fileDlg);
-    // -- file dialog window end --
+
 
     panMain->requestMoveToBottom();
 
@@ -108,11 +56,36 @@ void EditorEngine::SetupInterface(void)
     panMain->SetCoveredBy(wndTiles);
     panTilebox->SetCoveredBy(wndTiles);
     panLayers->SetCoveredBy(wndTiles);
+}
 
+// place widgets based on resolution.
+// to be called on each resize event
+// widgets must NOT be (re-)created here!
+void EditorEngine::SetupInterface(void)
+{
+    _topWidget->setDimension(gcn::Rectangle(0, 0, GetResX(), GetResY()));
+
+    panBottom->setPosition(0, GetResY() - panBottom->getHeight());
+    panBottom->setWidth(GetResX());
+    uint32 freeHeight = GetResY() - panBottom->getHeight();
+
+    panTilebox->SetBlockSize(16,16);
+    panTilebox->setSize(tileboxCols * panTilebox->GetBlockW(), freeHeight);
+    panTilebox->SetMaxSlots(tileboxCols, -1);
+    panTilebox->setPosition(GetResX() - panTilebox->getWidth(), 0);
+
+    panLayers->setSize(180, GetResY() - panBottom->getHeight()); // use the same sizes above
+
+    panMain->SetBlockSize(16, 16); // TODO: change this
+    panMain->setSize(GetResX(), GetResY() - panBottom->getHeight());
+
+    wndTiles->setSize(GetResX(), GetResY() - panBottom->getHeight());
 
     SetupInterfaceLayers();
 }
 
+// create TileLayers for tilebox and tile window if not present,
+// and resize them if required
 void EditorEngine::SetupInterfaceLayers(void)
 {
     uint32 resmax = std::max(GetResX(), GetResY());
@@ -134,7 +107,8 @@ void EditorEngine::SetupInterfaceLayers(void)
             tl = tblayerv[0];
         }
 
-        tl->Resize(tilesmax);
+        if(tl->GetArraySize() < tilesmax)
+            tl->Resize(tilesmax);
     }
 
     {
@@ -151,8 +125,8 @@ void EditorEngine::SetupInterfaceLayers(void)
         {
             tl = tblayerv[0];
         }
-
-        tl->Resize(tilesmax);
+        if(tl->GetArraySize() < tilesmax)
+            tl->Resize(tilesmax);
     }
 
     

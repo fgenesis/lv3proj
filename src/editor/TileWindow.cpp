@@ -14,7 +14,6 @@ laCurFolder("Current directory")
     setOpaque(false);
     setFrameSize(0);
     setMovable(false);
-    setVisible(false);
     setTitleBarHeight(0);
     btnPrev.addActionListener(this);
     btnNext.addActionListener(this);

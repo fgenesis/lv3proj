@@ -12,6 +12,7 @@ public:
     virtual ~BottomBarPanel();
 
     virtual void action(const gcn::ActionEvent& ae);
+    virtual void logic(void);
 
 
 protected:

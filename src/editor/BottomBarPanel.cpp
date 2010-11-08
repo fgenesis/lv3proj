@@ -28,7 +28,6 @@ btnToggleLayers(" Layers ")
     add(&btnSaveAs);
     add(&btnTiles);
     add(&btnToggleLayers);
-    InsertSpace(_engine->GetResX() - GetNextX() - btnToggleTilebox.getDimension().width - GetSpacingX(), 0);
     add(&btnToggleTilebox);
 
     setForegroundColor(gcn::Color(200,200,200,255));
@@ -37,6 +36,14 @@ btnToggleLayers(" Layers ")
 
 BottomBarPanel::~BottomBarPanel()
 {
+}
+
+void BottomBarPanel::logic(void)
+{
+    // the toggle tilebox button should stick to the very right of the panel
+    btnToggleTilebox.setX(getWidth() - btnToggleTilebox.getDimension().width - GetSpacingX());
+
+    gcn::Panel::logic();
 }
 
 void BottomBarPanel::action(const gcn::ActionEvent& ae)

@@ -61,8 +61,7 @@ public:
     void SaveData(void);
     void LoadData(void);
 
-    void ClearWidgets(void);
-    void SetupInterface(void);
+    void SetupInterface(void); // assumes widgets are already created. adjusts & repositions them
     void SetupInterfaceLayers(void);
     void SetupEditorLayers(void);
     void ToggleVisible(gcn::Widget *w);
@@ -81,9 +80,6 @@ public:
 
     void ChangeLayerMgr(LayerMgr *mgr);
 
-    gcn::Widget *RegWidget(gcn::Widget *w);
-    gcn::Widget *AddWidgetTop(gcn::Widget *w);
-
     inline gcn::Font *GetLargeFont(void) { return _largeFont; }
 
     inline LayerPanel *GetLayerPanel(void) { return panLayers; }
@@ -93,13 +89,12 @@ public:
 
 
 protected:
+    void _CreateInterfaceWidgets(void); // create the widgets only (to be called on startup
 
     virtual void _Process(uint32 ms);
     virtual void _Render(void);
 
     gcn::Font *_LoadFont(const char *infofile, const char *gfxfile);
-
-    std::set<gcn::Widget*> _widgets;
 
     gcn::Gui *_gcnGui;
     gcn::SDLGraphics* _gcnGfx;
