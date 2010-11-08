@@ -116,6 +116,7 @@ void DrawAreaPanel::SetActiveLayer(uint32 i)
     _engine->GetLayerPanel()->UpdateSelection();
 }
 
+// called when tiles are to be drawn on a layer
 void DrawAreaPanel::_DrawSelTiles(void)
 {
     // only allow drawing while the selection rect is visible
@@ -140,7 +141,12 @@ void DrawAreaPanel::_DrawSelTiles(void)
     else
         y += (cam.y / (int32)GetBlockH());
 
-    GetPaintableTiles()->CopyTo(0, 0, _mgr->GetLayer(_activeLayer), x, y, w, h);
+    TileLayer *target = _mgr->GetLayer(_activeLayer);
+    GetPaintableTiles()->CopyTo(0, 0, target, x, y, w, h);
+
+    // update used tile counter in layer panel
+    _engine->GetLayerPanel()->UpdateStats(target);
+
 }
 
 void DrawAreaPanel::mousePressed( gcn::MouseEvent& me)
