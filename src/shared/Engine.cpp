@@ -12,13 +12,15 @@
 
 volatile uint32 Engine::s_curFrameTime; // game time
 volatile uint32 Engine::s_lastFrameTime; // last frame's clock()
+bool Engine::_quit;
 
 Engine::Engine()
-: _screen(NULL), _fps(0), _sleeptime(0), _quit(false), _framecounter(0), _paused(false),
+: _screen(NULL), _fps(0), _sleeptime(0), _framecounter(0), _paused(false),
 _debugFlags(EDBG_NONE)
 {
     log("Game Engine start.");
 
+    _quit = false;
     _layermgr = new LayerMgr(this);
     _fpsclock = s_lastFrameTime = clock();
     s_curFrameTime = 0;
@@ -46,6 +48,44 @@ Engine::~Engine()
 void Engine::Shutdown(void)
 {
     _quit = true;
+}
+
+void Engine::_OnSignal(int s)
+{
+    switch(s)
+    {
+    case SIGINT:
+    case SIGQUIT:
+    case SIGTERM:
+    case SIGABRT:
+#ifdef _WIN32
+    case SIGBREAK:
+#endif
+        SetQuit(true);
+        break;
+    }
+}
+
+void Engine::HookSignals(void)
+{
+    signal(SIGINT, &Engine::_OnSignal);
+    signal(SIGQUIT, &Engine::_OnSignal);
+    signal(SIGTERM, &Engine::_OnSignal);
+    signal(SIGABRT, &Engine::_OnSignal);
+#ifdef _WIN32
+    signal(SIGBREAK, &Engine::_OnSignal);
+#endif
+}
+
+void Engine::UnhookSignals(void)
+{
+    signal(SIGINT, 0);
+    signal(SIGQUIT, 0);
+    signal(SIGTERM, 0);
+    signal(SIGABRT, 0);
+#ifdef _WIN32
+    signal(SIGBREAK, 0);
+#endif
 }
 
 void Engine::SetTitle(char *title)
@@ -116,7 +156,7 @@ void Engine::Run(void)
 void Engine::_ProcessEvents(void)
 {
     SDL_Event evt;
-    while(SDL_PollEvent(&evt))
+    while(!_quit && SDL_PollEvent(&evt))
     {
         if(!OnRawEvent(evt))
             continue;
@@ -162,7 +202,7 @@ void Engine::_ProcessEvents(void)
                 break;
 
             case SDL_QUIT:
-                Shutdown();
+                SetQuit(true);
                 break;
         }
     }
@@ -230,7 +270,7 @@ void Engine::OnKeyDown(SDLKey key, SDLMod mod)
     {
 
         if(key == SDLK_F4)
-            Shutdown();
+            SetQuit(true);
         if(key == SDLK_RETURN)
         {
             uint32 x = GetResX();

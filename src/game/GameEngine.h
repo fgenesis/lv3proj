@@ -22,7 +22,6 @@ public:
     //virtual void OnWindowEvent(bool active);
 
     virtual bool Setup(void);
-    virtual void Quit(void);
     virtual void Shutdown(void);
 
 

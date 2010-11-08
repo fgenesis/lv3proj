@@ -17,10 +17,12 @@ int main(int argc, char **argv)
     // the engine must be created *after* SDL is fully initialized!
     GameEngine engine;
 
+    engine.HookSignals();
     engine.InitScreen(1000,600,0,SDL_RESIZABLE);
     engine.SetTitle("LV3p Engine");
     engine.Setup();
     engine.Run();
+    engine.UnhookSignals();
     engine.Shutdown();
 
     return 0;

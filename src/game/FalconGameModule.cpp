@@ -166,7 +166,7 @@ FALCON_FUNC fal_Game_LoadLevel(Falcon::VMachine *vm)
 
 FALCON_FUNC fal_Game_Exit(Falcon::VMachine *vm)
 {
-    g_engine_ptr->Quit();
+    g_engine_ptr->SetQuit(true);
 }
 
 FALCON_FUNC fal_Game_LoadPropFile(Falcon::VMachine *vm)

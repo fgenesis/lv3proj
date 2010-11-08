@@ -386,6 +386,8 @@ Point LayerMgr::GetNonCollidingPoint(BaseRect *rect, uint8 direction, uint32 max
     MovementDirectionInfo mdi(*rect, direction);
     BaseRect r = rect->cloneRect();
     int32 moveable;
+    if(maxdist == uint32(-1)) // by default, dont try to go further then the total layer size
+        maxdist = GetMaxPixelDim();
     if(moveable = (int32)CanMoveToDirection(&r, mdi, maxdist)) // try to move as far as possible
     {
         r.MoveRelative(mdi.xstep * moveable, mdi.ystep * moveable);

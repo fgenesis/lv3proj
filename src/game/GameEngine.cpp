@@ -66,12 +66,6 @@ bool GameEngine::Setup(void)
     return true;
 }
 
-void GameEngine::Quit(void)
-{
-    // TODO: save stuff like settings
-    _quit = true;
-}
-
 void GameEngine::OnKeyDown(SDLKey key, SDLMod mod)
 {
     Engine::OnKeyDown(key, mod);

@@ -25,10 +25,14 @@ class Engine
 public:
     Engine();
     virtual ~Engine();
+    void HookSignals(void);
+    void UnhookSignals(void);
 
     virtual void InitScreen(uint32 sizex, uint32 sizey, uint8 bpp = 0, uint32 extraflags = 0);
     virtual bool Setup(void);
     virtual void Shutdown(void);
+    inline bool IsQuit(void) { return _quit; }
+    inline static void SetQuit(bool q = true) { _quit = q; }
 
     virtual void OnMouseEvent(uint32 type, uint32 button, uint32 state, uint32 x, uint32 y, int32 rx, int32 ry);
     virtual void OnKeyDown(SDLKey key, SDLMod mod);
@@ -89,12 +93,15 @@ protected:
     uint32 _fpsclock;
     uint32 _sleeptime;
     Point _cameraPos; // camera / "screen anchor" position in 2D-space, top-left corner (starts with (0,0) )
-    bool _quit;
     bool _paused;
     uint32 _debugFlags;
 
 private:
+    static void _OnSignal(int s);
     void _InitJoystick(void); // this does nothing if joystick support was not explicitly initialized in SDL_Init()
+
+    static bool _quit;
+    
     
 
 };

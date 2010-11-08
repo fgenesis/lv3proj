@@ -18,6 +18,7 @@ int main(int argc, char *argv[])
     mtRandSeed(time(NULL));
 
     EditorEngine editor;
+    editor.HookSignals();
 
     try
     {
@@ -26,12 +27,15 @@ int main(int argc, char *argv[])
         if(!editor.Setup())
         {
             logerror("Failed to setup editor. Exiting.");
+            editor.UnhookSignals();
             return 1;
         }
         editor.Run();
+        editor.UnhookSignals();
     }
     catch(gcn::Exception ex)
     {
+        editor.UnhookSignals();
         logerror("An unhandled gcn::Exception occurred! Infos:");
         logerror("File: %s:%u", ex.getFilename().c_str(), ex.getLine());
         logerror("Function: %s", ex.getFunction().c_str());
