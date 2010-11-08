@@ -30,8 +30,6 @@ laCurFolder("Current directory")
     pTiles = new TileboxPanel(engine);
     pTiles->setBackgroundColor(gcn::Color(0,0,0,255));
     pTiles->SetLocked(); // do not allow accidental modification
-    DrawAreaPanel *drawp = engine->GetDrawPanel();
-    pTiles->SetBlockSize(drawp->GetBlockW(), drawp->GetBlockH());
     add(pTiles);
 }
 

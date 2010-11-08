@@ -77,9 +77,10 @@ void EditorEngine::SetupInterface(void)
     panLayers->setSize(180, GetResY() - panBottom->getHeight()); // use the same sizes above
 
     panMain->SetBlockSize(16, 16); // TODO: change this
-    panMain->setSize(GetResX(), GetResY() - panBottom->getHeight());
+    panMain->setSize(GetResX(), GetResY());
 
     wndTiles->setSize(GetResX(), GetResY() - panBottom->getHeight());
+    wndTiles->GetTilesPanel()->SetBlockSize(panMain->GetBlockW(), panMain->GetBlockH());
 
     SetupInterfaceLayers();
 }
