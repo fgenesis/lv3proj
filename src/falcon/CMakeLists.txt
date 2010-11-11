@@ -7,8 +7,7 @@
 add_definitions(-DFALCON_ENGINE_EXPORTS)
 
 include_directories(
-  ${PROJECT_BINARY_DIR}/include
-  ${PROJECT_SOURCE_DIR}/include
+  ${TOP_INCLUDE_DIR}
   ${CMAKE_CURRENT_SOURCE_DIR}
   ${CMAKE_CURRENT_SOURCE_DIR}/core_module  
 )
@@ -54,28 +53,6 @@ if(UNIX OR APPLE)
     )
   endif()
 
-  option(FALCON_SKIP_BISON "Don't perform grammar recompilation" on)
-  if(NOT FALCON_SKIP_BISON)
-    find_program(BISON_EXECUTABLE bison)
-    if(NOT BISON_EXECUTABLE)
-      message(FATAL_ERROR "BISON not found - Turn on FALCON_SKIP_BISON to not perform grammar recompilation")
-    endif(NOT BISON_EXECUTABLE)
-    
-    # Builds out-of-source. Copy into the source tree and commit to svn, if desired.
-    add_custom_command(
-      DEPENDS 
-        ${PROJECT_SOURCE_DIR}/include/falcon/syntree.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/src_parser.yy
-      COMMAND 
-        ${BISON_EXECUTABLE} -y ${CMAKE_CURRENT_SOURCE_DIR}/src_parser.yy 
-                            -o ${CMAKE_CURRENT_SOURCE_DIR}/src_parser.cpp       
-      OUTPUT
-        ${CMAKE_CURRENT_SOURCE_DIR}/src_parser.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/src_parser.hpp 
-      COMMENT "Creating src_parser.cpp"
-    )
-
-  endif(NOT FALCON_SKIP_BISON)
 
 elseif(WIN32)
 
@@ -148,7 +125,7 @@ set(CORE_MODULE_SOURCES
 )
 
 
-add_library(falcon_engine SHARED
+add_library(falcon_engine
   attribmap.cpp
   autocstring.cpp
   autowstring.cpp
@@ -244,8 +221,6 @@ add_library(falcon_engine SHARED
   src_parser.cpp
   #
   
-  ${FALCON_HEADERS}
-  
   ${CORE_MODULE_SOURCES}
   ${SYS_SPECIFIC}
 )
@@ -271,7 +246,3 @@ if(UNIX OR APPLE)
   target_link_libraries(falcon_engine ${SYS_LIBS})
 endif()
 
-install(TARGETS falcon_engine 
-  EXPORT falcon-core-targets
-  ${FALCON_INSTALL_DESTINATIONS} 
-)

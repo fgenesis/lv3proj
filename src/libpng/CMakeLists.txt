@@ -27,5 +27,5 @@ trees.c
 uncompr.c
 zutil.c
 )
-# include_directories (${LOSTVIKINGS3_SOURCE_DIR}/src/include) 
-add_library(png ${libpng_SRC})
+
+add_library(libpng ${libpng_SRC})

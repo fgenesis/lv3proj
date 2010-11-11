@@ -1,4 +1,4 @@
-include_directories (${LOSTVIKINGS3_SOURCE_DIR}/src/include) 
+include_directories (${TOP_INCLUDE_DIR}) 
 
 set(ALLEGRO
   allegro/allegroimage.cpp
@@ -92,12 +92,6 @@ contrib/allegro/allegroglyphkeeperfont.cpp
 contrib/widgets/adjustingcontainer.cpp
 )
 
-set(GUICHAN_EXT
-../guichan_ext/Panel.cpp
-)
 
-
-add_library(guichan ${COMMON} ${SDL} ${WIDGETS} ${GUICHAN_EXT} )
-
-
+add_library(guichan ${COMMON} ${SDL} ${WIDGETS} )
 

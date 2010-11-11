@@ -10,5 +10,5 @@ add_executable (tilegrab
 main.cpp
 ) 
 
-target_link_libraries(tilegrab shared png SDL SDL_image)
+target_link_libraries(tilegrab shared libpng SDL SDL_image)
  #shared falcon_engine compiler_fm SDL SDL_mixer SDL_image guichan 

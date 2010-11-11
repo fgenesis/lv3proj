@@ -6,11 +6,17 @@ Crc32.cpp
 Engine.cpp
 FalconBaseModule.cpp
 FalconObjectModule.cpp
+IMG_savepng.c
 LayerMgr.cpp
 log.cpp
 LVPAFile.cpp
-LVPAFileStore.cpp
+LzFind.c
+Lzma2Dec.c
+Lzma2Enc.c
 LZMACompressor.cpp
+LzmaDec.c
+LzmaEnc.c
+MapFile.cpp
 ObjectMgr.cpp
 Objects.cpp
 PhysicsSystem.cpp
@@ -21,13 +27,12 @@ SoundCore.cpp
 Tile.cpp
 TileLayer.cpp
 tools.cpp
-IMG_savepng.c
-LzFind.c
-Lzma2Dec.c
-Lzma2Enc.c
-LzmaDec.c
-LzmaEnc.c
-
+VFSDir.cpp
+VFSDirLVPA.cpp
+VFSFile.cpp
+VFSFileLVPA.cpp
+VFSHelper.cpp
 )
-include_directories (${LOSTVIKINGS3_SOURCE_DIR}/src/include) 
+
+include_directories (${TOP_INCLUDE_DIR}) 
 add_library(shared ${shared_SRC})

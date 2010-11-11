@@ -27,6 +27,7 @@
 *.exp
 *.tmp
 temp/*
+builddir/*
 
 #
 # Top-level generic files
