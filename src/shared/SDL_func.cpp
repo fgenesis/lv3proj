@@ -324,9 +324,19 @@ void SDLfunc_drawVLine(SDL_Surface *target, int x, int y1, int y2, int r, int g,
 void SDLfunc_drawRectangle(SDL_Surface *target, SDL_Rect& rectangle, int r, int g, int b, int a)
 {
     int x1 = rectangle.x;
-    int x2 = rectangle.x + rectangle.w - 1;
     int y1 = rectangle.y;
-    int y2 = rectangle.y + rectangle.h - 1;
+    if(x1 >= target->w || y1 >= target->h)
+        return;
+    int y2 = y1 + rectangle.h - 1;
+    int x2 = x1 + rectangle.w - 1;
+    if(x2 < 0 || y2 < 0)
+        return;
+
+    if(x1 < 0) x1 = 0;
+    if(y1 < 0) y1 = 0;
+    if(x2 >= target->w) x2 = target->w - 1;
+    if(y2 >= target->h) y2 = target->h - 1;
+
 
     SDLfunc_drawHLine(target, x1, y1, x2, r, g, b, a);
     SDLfunc_drawHLine(target, x1, y2, x2, r, g, b, a);
