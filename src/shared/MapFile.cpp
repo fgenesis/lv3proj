@@ -125,19 +125,19 @@ void MapFile::Save(ByteBuffer *bufptr, LayerMgr *mgr)
     }
 }
 
-LayerMgr *MapFile::Load(memblock *mem, Engine *engine)
+LayerMgr *MapFile::Load(memblock *mem, Engine *engine, LayerMgr *mgr /* = NULL */)
 {
     // TODO: make this more efficient
     ByteBuffer bb(mem->size);
     bb.append(mem->ptr, mem->size);
-    return Load(&bb, engine);
+    return Load(&bb, engine, mgr);
 }
 
-LayerMgr *MapFile::Load(ByteBuffer *bufptr, Engine *engine)
+LayerMgr *MapFile::Load(ByteBuffer *bufptr, Engine *engine, LayerMgr *mgr /* = NULL */)
 {
     try
     {
-        return LoadUnsafe(bufptr, engine);
+        return LoadUnsafe(bufptr, engine, mgr);
     }
     catch(ByteBufferException ex)
     {
@@ -149,7 +149,7 @@ LayerMgr *MapFile::Load(ByteBuffer *bufptr, Engine *engine)
 }
 
 
-LayerMgr *MapFile::LoadUnsafe(ByteBuffer *bufptr, Engine *engine)
+LayerMgr *MapFile::LoadUnsafe(ByteBuffer *bufptr, Engine *engine, LayerMgr *mgr)
 {
     ByteBuffer& buf = *bufptr;
 
@@ -206,7 +206,17 @@ LayerMgr *MapFile::LoadUnsafe(ByteBuffer *bufptr, Engine *engine)
     if(layersTotal < layersUsed)
         return NULL;
 
-    LayerMgr *mgr = new LayerMgr(engine);
+    if(mgr)
+    {
+        // mgr already in use, just clear existing layers
+        for(uint32 i = 0; i < LAYER_MAX; ++i)
+            if(TileLayer *ly = mgr->GetLayer(i))
+                ly->Clear();                
+    }
+    else
+    {
+        mgr = new LayerMgr(engine);
+    }
     mgr->SetMaxDim(std::max(width, height));
 
     uint32 layerIndex;
@@ -215,7 +225,9 @@ LayerMgr *MapFile::LoadUnsafe(ByteBuffer *bufptr, Engine *engine)
     // read names and create layers
     for(uint32 i = 0; i < LAYER_MAX; i++) // create as many layers as the engine supports
     {
-        TileLayer *layer = mgr->CreateLayer();
+        TileLayer *layer = mgr->GetLayer(i);
+        if(!layer)
+            layer = mgr->CreateLayer();
         if(i < layersTotal) // and fill the names of as many as the file has
         {
             std::string name;

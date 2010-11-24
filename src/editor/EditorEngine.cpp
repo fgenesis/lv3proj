@@ -207,9 +207,3 @@ void EditorEngine::PanDrawingArea(int32 x, int32 y)
 
     GetVisibleBlockRect(); // to trigger recalc
 }
-
-void EditorEngine::ChangeLayerMgr(LayerMgr *mgr)
-{
-    panMain->SetLayerMgr(mgr);
-    _layermgr = mgr;
-}

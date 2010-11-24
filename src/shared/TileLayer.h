@@ -21,6 +21,7 @@ class TileLayer
 public:
     TileLayer();
     ~TileLayer();
+    void Clear(void);
     void Update(uint32 curtime);
     void Render(void);
     void SetTile(uint32 x, uint32 y, BasicTile *tile, bool updateCollision = true);

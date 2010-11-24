@@ -48,13 +48,14 @@ bool EditorEngine::LoadMapFile(const char *fn)
     _cameraPos.x = 0;
     _cameraPos.y = 0;
 
-    LayerMgr *mgr = MapFile::Load(mb, this);
+    LayerMgr *mgr = MapFile::Load(mb, this, _layermgr);
     resMgr.Drop(mb, true); // have to delete this file from memory immediately
     if(!mgr)
     {
         logerror("EditorEngine::LoadMapFile: Error loading file: '%s' as map", fn);
         return false;
     }
+    ASSERT(mgr == _layermgr); // it should not return something else; in this case it has allocated a new mgr, what we dont want here
 
     // initialize missing layers
     for(uint32 i = 0; i < LAYER_MAX; i++)
@@ -65,13 +66,7 @@ bool EditorEngine::LoadMapFile(const char *fn)
             layer = mgr->CreateLayer();
             mgr->SetLayer(mgr->CreateLayer(), i);
         }
-
-        //layer->visible_area = NULL; // DEBUG
     }
-
-    LayerMgr *oldmgr = _layermgr;
-    ChangeLayerMgr(mgr);
-    delete oldmgr;
 
     panLayers->UpdateSelection();
 

@@ -78,8 +78,6 @@ public:
     inline LayerMgr *GetLayerMgr(void) { return _layermgr; }
     inline FileDialog *GetFileDlg(void) { return _fileDlg; }
 
-    void ChangeLayerMgr(LayerMgr *mgr);
-
     inline gcn::Font *GetLargeFont(void) { return _largeFont; }
 
     inline LayerPanel *GetLayerPanel(void) { return panLayers; }

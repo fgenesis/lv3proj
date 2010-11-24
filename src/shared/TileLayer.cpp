@@ -21,6 +21,13 @@ TileLayer::~TileLayer()
                 tile->ref--;
 }
 
+void TileLayer::Clear(void)
+{
+    for(uint32 y = 0; y < tilearray.size1d(); ++y)
+        for(uint32 x = 0; x < tilearray.size1d(); ++x)
+            SetTile(x, y, NULL, true);
+}
+
 // Puts a tile to location (x,y). Set tile to NULL to remove current tile. Does ref-counting.
 void TileLayer::SetTile(uint32 x, uint32 y, BasicTile *tile, bool updateCollision /* = true */)
 {
@@ -137,12 +144,9 @@ void TileLayer::Render(void)
     }
 }
 
-// this should be called by LayerMgr only
+// this should be called by LayerMgr only, unless the layer has no mgr
 void TileLayer::Resize(uint32 dim)
 {
-    // this would be bad...
-    DEBUG(ASSERT(!mgr));
-
     // enlarging is easy as no tiles will disappear
     uint32 newsize = clp2(dim); // always n^2
     if(newsize >= tilearray.size1d())
