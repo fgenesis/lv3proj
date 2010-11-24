@@ -57,6 +57,12 @@ bool EditorEngine::LoadMapFile(const char *fn)
     }
     ASSERT(mgr == _layermgr); // it should not return something else; in this case it has allocated a new mgr, what we dont want here
 
+    for(std::map<std::string, std::string>::iterator it = _layermgr->stringdata.begin(); it != _layermgr->stringdata.end(); ++it)
+    {
+        DEBUG_LOG("STRING: %s -> '%s'", it->first.c_str(), it->second.c_str());
+    }
+
+
     // initialize missing layers
     for(uint32 i = 0; i < LAYER_MAX; i++)
     {

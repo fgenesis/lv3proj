@@ -123,6 +123,9 @@ bool EditorEngine::Setup(void)
     panLayers->UpdateSelection(); // after layers are created, update buttons to assign text correctly
     FillUseableTiles();
 
+    // TEMP -- DEBUG
+    _layermgr->stringdata["__PACKAGES"] = "lostvikings_data";
+
     logdetail("EditorEngine setup completed.");
 
     return true;

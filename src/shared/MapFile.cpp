@@ -30,12 +30,16 @@ void MapFile::Save(ByteBuffer *bufptr, LayerMgr *mgr)
     std::map<std::string, uint32> usedGfx;
     std::map<uint32, ByteBuffer> usedLayers;
     ByteBuffer gfxBuf;
+    ByteBuffer strdataBuf;
     uint32 gfxIndex;
+
+    // append string data
+    for(std::map<std::string, std::string>::iterator it = mgr->stringdata.begin(); it != mgr->stringdata.end(); ++it)
+        strdataBuf << it->first << it->second;
 
     // entry with ID 0 is always empty string
     gfxBuf << "";
     gfxIndex = 1;
-
 
     for(uint32 i = 0; i < LAYER_MAX; i++)
     {
@@ -76,6 +80,7 @@ void MapFile::Save(ByteBuffer *bufptr, LayerMgr *mgr)
 
     uint32 prealloc = 100; // for headers and different stuff. TODO: predict better.
     prealloc += gfxBuf.size();
+    prealloc += strdataBuf.size();
     prealloc += (usedLayers.size() * bytesPerLayer);
 
 
@@ -85,15 +90,34 @@ void MapFile::Save(ByteBuffer *bufptr, LayerMgr *mgr)
 
     outbuf.append("LVPM", 4); // magic
     outbuf << uint32(1); // version
-    outbuf << uint32(0) << uint32(0) << uint32(0) << uint32(0); // reserved
+    outbuf << uint32(0) << uint32(0) << uint32(0) << uint32(0); // reserved (header + flags)
 
+    // #1 -- string data offset (can be 0)
+    uint32 strdataOffsPos = outbuf.wpos();
+    outbuf << uint32(0); // stringdata offset
+
+    // #2 -- tile names offset (must exist)
     uint32 tileOffsPos = outbuf.wpos();
     outbuf << uint32(0); // tile data offset
 
+    // #3 -- map/layer data offset (must exist)
     uint32 dataHdrOffsPos = outbuf.wpos();
     outbuf << uint32(0); // map data header start offset
 
+    // #4 - #12 -- reserved
+    outbuf << uint32(0) << uint32(0) << uint32(0) << uint32(0); // reserved (other offsets)
+    outbuf << uint32(0) << uint32(0) << uint32(0) << uint32(0); // makes total 12 offset uint32s
+    outbuf << uint32(0);
+
     // TODO: more header data here?
+
+    // add stringdata - if empty, at strdataOffsPos will be 0, which means no stringdata
+    if(mgr->stringdata.size())
+    {
+        outbuf.put<uint32>(strdataOffsPos, outbuf.wpos());
+        outbuf << uint32(mgr->stringdata.size()); // string count, not byte count
+        outbuf.append(strdataBuf.contents(), strdataBuf.size());
+    }
 
     // fill tiles
     outbuf.put<uint32>(tileOffsPos, outbuf.wpos()); // fix offset
@@ -164,13 +188,44 @@ LayerMgr *MapFile::LoadUnsafe(ByteBuffer *bufptr, Engine *engine, LayerMgr *mgr)
         return NULL;
 
     uint32 pad;
-    buf >> pad >> pad >> pad >> pad; // reserved
+    buf >> pad >> pad >> pad >> pad; // reserved (other header fields + flags)
 
+    // #1 -- string data offset (can be 0)
+    uint32 strdataOffs;
+    buf >> strdataOffs;
+
+    // #2 -- tile names offset (must exist)
     uint32 tileOffs;
     buf >> tileOffs;
+    if(!tileOffs) // must have tiles
+        return NULL;
 
+    // #3 -- map/layer data offset (must exist)
     uint32 dataHdrOffs;
     buf >> dataHdrOffs;
+    if(!dataHdrOffs)
+        return NULL; // must have a data hdr
+
+    // #4 - #12 -- reserved
+    buf >> pad >> pad >> pad >> pad; // reserved (other header fields + flags)
+    buf >> pad >> pad >> pad >> pad; // total 12 offset uint32
+    buf >> pad;
+
+    // read stringdata (use extra map instead of writing into the mgr directly - loading may still fail below)
+    std::map<std::string, std::string> stringdata;
+    if(strdataOffs)
+    {
+        buf.rpos(strdataOffs);
+        uint32 entries;
+        buf >> entries;
+        std::string key, val;
+        while(entries--)
+        {
+            buf >> key;
+            buf >> val;
+            stringdata.insert(std::make_pair(key,val));
+        }
+    }
 
     // read gfx strings
     buf.rpos(tileOffs);
@@ -261,6 +316,9 @@ LayerMgr *MapFile::LoadUnsafe(ByteBuffer *bufptr, Engine *engine, LayerMgr *mgr)
                 }
             }
     }
+
+    // assign stringdata
+    mgr->stringdata = stringdata;
 
     return mgr;
 }

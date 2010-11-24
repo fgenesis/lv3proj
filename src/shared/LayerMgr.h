@@ -74,6 +74,7 @@ public:
     bool CanFallDown(Point anchor, uint32 arealen);
     void LoadAsciiLevel(AsciiLevel *level);
 
+    std::map<std::string, std::string> stringdata; // stores arbitrary content, to be used in scripts or so. // TODO: add documentation
 
 private:
     Engine *_engine;
