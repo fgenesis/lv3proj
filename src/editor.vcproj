@@ -241,6 +241,22 @@
 					>
 				</File>
 				<File
+					RelativePath=".\editor\GraphNode.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\editor\GraphNode.h"
+					>
+				</File>
+				<File
+					RelativePath=".\editor\GraphWindow.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\editor\GraphWindow.h"
+					>
+				</File>
+				<File
 					RelativePath=".\editor\LayerPanel.cpp"
 					>
 				</File>
