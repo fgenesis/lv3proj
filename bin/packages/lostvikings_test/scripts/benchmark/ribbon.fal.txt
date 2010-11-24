@@ -34,7 +34,7 @@ function updatehook(ms)
     end
     blackfunc()
     
-    m = Game.GetTime() >> 6
+    m = Engine.GetTime() >> 6
     y = 0
     while y < width
         t = sintab[ ((y >> 3) + m) && 0xFF ] + 127

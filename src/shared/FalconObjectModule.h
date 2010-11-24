@@ -68,36 +68,6 @@ protected:
 
 };
 
-
-class fal_TileLayer : public Falcon::CoreObject
-{
-public:
-    fal_TileLayer( const Falcon::CoreClass* generator, TileLayer *obj )
-        : Falcon::CoreObject( generator ), _layer(obj)
-    {
-    }
-
-    virtual bool setProperty( const Falcon::String &prop, const Falcon::Item &value )
-    {
-        return false;
-    }
-
-    virtual bool getProperty( const Falcon::String &prop, Falcon::Item &ret ) const
-    {
-        return defaultProperty( prop, ret); // property not found
-    }
-
-    Falcon::CoreObject *clone() const
-    {
-        return NULL; // not cloneable
-    }
-    inline TileLayer *GetLayer(void) { return _layer; }
-
-private:
-    TileLayer *_layer;
-};
-
-
 class fal_Tile : public Falcon::CoreObject
 {
 public:

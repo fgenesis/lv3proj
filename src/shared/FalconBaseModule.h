@@ -2,6 +2,7 @@
 #define FALCON_BASE_MODULE_H
 
 class SoundFile;
+class TileLayer;
 struct SDL_Surface;
 
 
@@ -16,6 +17,18 @@ FALCON_FUNC fal_TrueFunc(Falcon::VMachine *vm);
 FALCON_FUNC fal_FalseFunc(Falcon::VMachine *vm);
 
 void forbidden_init(Falcon::VMachine *vm);
+
+class EngineError: public Falcon::Error
+{
+public:
+    EngineError():
+      Falcon::Error( "EngineError" )
+      {}
+
+      EngineError( const Falcon::ErrorParam &params  ):
+      Falcon::Error( "EngineError", params )
+      {}
+};
 
 class fal_Sound : public Falcon::FalconData
 {
@@ -47,6 +60,34 @@ public:
     SDL_Surface *surface;
     bool adopted;
 
+};
+
+class fal_TileLayer : public Falcon::CoreObject
+{
+public:
+    fal_TileLayer( const Falcon::CoreClass* generator, TileLayer *obj )
+        : Falcon::CoreObject( generator ), _layer(obj)
+    {
+    }
+
+    virtual bool setProperty( const Falcon::String &prop, const Falcon::Item &value )
+    {
+        return false;
+    }
+
+    virtual bool getProperty( const Falcon::String &prop, Falcon::Item &ret ) const
+    {
+        return defaultProperty( prop, ret); // property not found
+    }
+
+    Falcon::CoreObject *clone() const
+    {
+        return NULL; // not cloneable
+    }
+    inline TileLayer *GetLayer(void) { return _layer; }
+
+private:
+    TileLayer *_layer;
 };
 
 #endif

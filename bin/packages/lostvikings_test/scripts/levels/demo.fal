@@ -152,8 +152,8 @@ class WinObject(level) from Object
 end
 
 function WinLevel(level)
-    Game.PlayMusic("lv1_amiga_intro.ogg")
-    Game.SetMusicVolume(120)
+    Music.Play("lv1_amiga_intro.ogg")
+    Music.SetVolume(120)
     img = ImageObject("misc/win.png")
     img.SetPos(100,100)
     level.player.godmode = true
@@ -180,7 +180,7 @@ class Demolevel
     pcontrol = nil
 
     function Load()
-        Game.LoadLevel("demolevel.txt")
+        Engine.LoadLevel("demolevel.txt")
     end
     
     function Init()
@@ -198,7 +198,7 @@ class Demolevel
         self.CreateObjects()
         self.SetupPlayer()
         
-        Game.CreateCollisionMap(true)
+        Engine.CreateCollisionMap(true)
         
         // setup environment
         TurnOnGravity()
@@ -244,7 +244,7 @@ class Demolevel
         buttonCounter = 0
         
         maxpos = Screen.GetLayerSize() - 1
-        for ly in [Screen.GetLayer(6), Screen.GetLayer(7)] // Game.LoadLevel() puts the tiles for ascii levels to the layers 6 and 7
+        for ly in [Screen.GetLayer(6), Screen.GetLayer(7)] // Engine.LoadLevel() puts the tiles for ascii levels to the layers 6 and 7
             for y = 0 to maxpos
                 for x = 0 to maxpos
                     tile = ly.GetTile(x,y)
@@ -369,8 +369,8 @@ lvl.Init()
 
 PlayerAliveCheck(lvl.player)
 
-Game.SetMusicVolume(70)
-Game.PlayMusic("lv1_snes_ship.ogg")
+Music.SetVolume(70)
+Music.Play("lv1_snes_ship.ogg")
 
 
 

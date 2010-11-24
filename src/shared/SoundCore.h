@@ -36,7 +36,9 @@ public:
     void Destroy();
     SoundFile *GetSound(char *fn); // do NOT forget to decRef the returned ptr !!
     void PlayMusic(char *fn);
-    void StopMusic();
+    void PauseMusic(void);
+    void StopMusic(void);
+    bool IsPlayingMusic(void);
     void SetMusicVolume(uint8 vol);
     uint32 GetMusicVolume(void);
 

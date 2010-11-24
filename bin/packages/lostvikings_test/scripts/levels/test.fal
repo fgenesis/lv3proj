@@ -1,7 +1,7 @@
 
 // some test stuff to see what the falcon bindings can do
 > "-- Setting up test Level --"
-Game.LoadLevel("testlevel.txt")
+Engine.LoadLevel("testlevel.txt")
 
 Screen.CreateInfoLayer()
 
@@ -17,7 +17,7 @@ InitialMapSetup()
 
 
 // at this point, the ASCII level loader already populated the layers with tiles, create & update the collision map
-Game.CreateCollisionMap(true)
+Engine.CreateCollisionMap(true)
 > "-- Calculated collision map --"
 
 // set game constants
@@ -52,8 +52,8 @@ blk4.SetPos(495,299)
 blk5 = IronBlock()
 blk5.SetPos(536,320)
 
-//Game.SetMusicVolume(80)
-//Game.PlayMusic("lv1_snes_ship.ogg")
+//Engine.SetMusicVolume(80)
+//Engine.PlayMusic("lv1_snes_ship.ogg")
 
 
 

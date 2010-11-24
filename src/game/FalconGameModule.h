@@ -8,17 +8,4 @@ Falcon::Module *FalconGameModule_create(void);
 void FalconGameModule_SetEnginePtr(Engine *e);
 
 
-
-class GameError: public Falcon::Error
-{
-public:
-    GameError():
-      Falcon::Error( "GameError" )
-      {}
-
-      GameError( const Falcon::ErrorParam &params  ):
-      Falcon::Error( "GameError", params )
-      {}
-};
-
 #endif

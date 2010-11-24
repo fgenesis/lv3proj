@@ -70,6 +70,12 @@ void SoundCore::Destroy()
 
 void SoundCore::PlayMusic(char *fn)
 {
+    if(!fn)
+    {
+        if(Mix_PausedMusic())
+            Mix_ResumeMusic();
+        return;
+    }
     if(Mix_PlayingMusic())
         StopMusic();
     _music = resMgr.LoadMusic(fn);
@@ -78,6 +84,10 @@ void SoundCore::PlayMusic(char *fn)
     SetLoopPoint(atof(resMgr.GetPropForMusic(fn, "looppoint").c_str()));
     Mix_PlayMusic(_music, 0);
     Mix_HookMusicFinished(musicFinished);
+}
+void SoundCore::PauseMusic(void)
+{
+    Mix_PauseMusic();
 }
 
 void SoundCore::StopMusic(void)
@@ -88,6 +98,11 @@ void SoundCore::StopMusic(void)
         resMgr.Drop(_music);
         _music = NULL;
     }
+}
+
+bool SoundCore::IsPlayingMusic(void)
+{
+    return Mix_PlayingMusic() && !Mix_PausedMusic();
 }
 
 void SoundCore::SetMusicVolume(uint8 vol)
