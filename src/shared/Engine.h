@@ -3,6 +3,10 @@
 
 #include <SDL/SDL.h>
 #include <SDL/SDL_image.h>
+#include <guichan.hpp>
+#include <guichan/sdl.hpp>
+#include "SDLImageLoaderManaged.h"
+#include "SDLImageManaged.h"
 #include "SharedStructs.h"
 
 
@@ -67,6 +71,9 @@ public:
     }
 
     inline LayerMgr *_GetLayerMgr(void) const { return _layermgr; }
+    inline gcn::Graphics *GetGcnGfx(void) { return _gcnGfx; }
+
+    gcn::Font *LoadFont(const char *infofile, const char *gfxfile);
 
     ObjectMgr *objmgr;
     PhysicsMgr *physmgr;
@@ -80,6 +87,9 @@ protected:
     virtual void _CalcFPS(void);
     virtual void _Render(void);
     virtual void _Process(uint32 ms);
+
+    gcn::SDLGraphics* _gcnGfx;
+    gcn::SDLImageLoader* _gcnImgLoader;
 
     std::string _wintitle;
     SDL_Surface *_screen;

@@ -4,8 +4,6 @@
 #include <set>
 
 #include "Engine.h"
-#include <guichan.hpp>
-#include <guichan/sdl.hpp>
 #include "GuichanExt.h"
 #include "TileLayer.h"
 #include "LayerMgr.h"
@@ -92,12 +90,8 @@ protected:
     virtual void _Process(uint32 ms);
     virtual void _Render(void);
 
-    gcn::Font *_LoadFont(const char *infofile, const char *gfxfile);
-
     gcn::Gui *_gcnGui;
-    gcn::SDLGraphics* _gcnGfx;
     gcn::SDLInput* _gcnInput;
-    gcn::SDLImageLoader* _gcnImgLoader;
     gcn::Font *_largeFont;
 
     gcn::Container *_topWidget;

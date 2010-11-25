@@ -4,6 +4,7 @@
 class SoundFile;
 class TileLayer;
 struct SDL_Surface;
+namespace gcn { class Font; }
 
 
 Falcon::Module *FalconBaseModule_create(void);
@@ -41,6 +42,19 @@ public:
 
 private:
     SoundFile *_snd;
+};
+
+class fal_Font : public Falcon::FalconData
+{
+public:
+    fal_Font(gcn::Font *f) : _font(f) {}
+    ~fal_Font();
+    inline gcn::Font *GetFont(void) { return _font; }
+    virtual FalconData *clone() const { return NULL; } // not cloneable
+    virtual void gcMark( Falcon::uint32 mark ) { }
+
+private:
+    gcn::Font *_font;
 };
 
 class fal_Surface : public Falcon::FalconObject

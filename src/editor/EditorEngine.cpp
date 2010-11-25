@@ -96,18 +96,16 @@ bool EditorEngine::Setup(void)
 
     _gcnGui->setGraphics(_gcnGfx);
     _gcnGui->setInput(_gcnInput);
-    _gcnGfx->setTarget(GetSurface());
-    gcn::Image::setImageLoader(_gcnImgLoader);
 
     _gcnGui->setTop(_topWidget);
     _gcnGui->addLateGlobalKeyListener(this);
 
     // fixedfont.png
-    _gcnFont = _LoadFont("gfx/font/fixedfont.txt", "font/fixedfont.png");
+    _gcnFont = LoadFont("gfx/font/fixedfont.txt", "font/fixedfont.png");
     gcn::Widget::setGlobalFont(_gcnFont);
 
     // rpgfont.png
-    _largeFont = _LoadFont("gfx/font/rpgfont.txt", "font/rpgfont.png");
+    _largeFont = LoadFont("gfx/font/rpgfont.txt", "font/rpgfont.png");
 
     _layermgr->Clear();
     _layermgr->SetMaxDim(64);
@@ -129,20 +127,6 @@ bool EditorEngine::Setup(void)
     logdetail("EditorEngine setup completed.");
 
     return true;
-}
-
-gcn::Font *EditorEngine::_LoadFont(const char *infofile, const char *gfxfile)
-{
-    memblock *fontinfo = resMgr.LoadTextFile((char*)infofile);
-    if(!fontinfo)
-    {
-        logerror("EditorEngine::Setup: Can't load font infos (%s)", infofile);
-        return false;
-    }
-    std::string glyphs((char*)(fontinfo->ptr));
-    logdetail("Using font glyphs for '%s':", gfxfile);
-    logdetail("%s", glyphs.c_str());
-    return new gcn::ImageFont(gfxfile, glyphs);
 }
 
 bool EditorEngine::OnRawEvent(SDL_Event &evt)

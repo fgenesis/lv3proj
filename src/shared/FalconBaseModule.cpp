@@ -562,6 +562,33 @@ FALCON_FUNC fal_Surface_BlitTo( Falcon::VMachine *vm )
     }
 }
 
+FALCON_FUNC fal_Surface_Write( Falcon::VMachine *vm )
+{
+    FALCON_REQUIRE_PARAMS_EXTRA(4, "x, y, Font, S");
+    Falcon::Item *i_font = vm->param(2);
+    Falcon::Item *i_str = vm->param(3);
+    if(!(i_str->isString() && i_font->isOfClass("Font")))
+    {
+        throw new Falcon::ParamError(Falcon::ErrorParam( Falcon::e_inv_params, __LINE__ )
+            .extra("x, y, Font, S") );
+    }
+
+    uint32 x = (uint32)vm->param(0)->forceInteger();
+    uint32 y = (uint32)vm->param(1)->forceInteger();
+    gcn::SDLGraphics *gfx = (gcn::SDLGraphics*)g_engine_ptr_->GetGcnGfx();
+    gcn::Font *font = ((fal_Font*)(i_font->asObject()->getUserData()))->GetFont();
+    SDL_Surface *surf = Falcon::dyncast<fal_Surface*>(vm->self().asObject())->surface;
+    Falcon::AutoCString cstr(i_str->asString());
+    
+    SDL_Surface *orig = gfx->getTarget();
+    gfx->setTarget(surf);
+    gfx->setFont(font);
+    gfx->_beginDraw();
+    gfx->drawText(cstr.c_str(), x, y);
+    gfx->_endDraw();
+    gfx->setTarget(orig);
+}
+
 FALCON_FUNC fal_Music_GetVolume(Falcon::VMachine *vm)
 {
     vm->retval(Falcon::int32(sndCore.GetMusicVolume()));
@@ -749,6 +776,25 @@ FALCON_FUNC fal_Screen_GetSurface(Falcon::VMachine *vm)
     vm->retval(fs);
 }
 
+fal_Font::~fal_Font()
+{
+    delete _font;
+}
+
+FALCON_FUNC fal_Font_init( Falcon::VMachine *vm )
+{
+    FALCON_REQUIRE_PARAMS_EXTRA(1, "S image, S infofile");
+    Falcon::AutoCString imgfile(vm->param(0)->asString());
+    Falcon::AutoCString infofile(vm->param(1)->asString());
+    gcn::Font *fnt = g_engine_ptr_->LoadFont(infofile.c_str(), imgfile.c_str());
+    if(!fnt)
+    {
+        vm->self().setNil();
+        return;
+    }
+    vm->self().asObject()->setUserData(new fal_Font(fnt));
+}
+
 
 Falcon::Module *FalconBaseModule_create(void)
 {
@@ -784,11 +830,15 @@ Falcon::Module *FalconBaseModule_create(void)
     m->addClassMethod(clsMusic, "IsPlaying", fal_Music_IsPlaying);
 
     Falcon::Symbol *clsSound = m->addClass("Sound", fal_Sound_init);
+    clsSound->setWKS(true);
     m->addClassMethod(clsSound, "Play", fal_Sound_Play);
     m->addClassMethod(clsSound, "Stop", fal_Sound_Stop);
     m->addClassMethod(clsSound, "SetVolume", fal_Sound_SetVolume);
     m->addClassMethod(clsSound, "GetVolume", fal_Sound_GetVolume);
     m->addClassMethod(clsSound, "IsPlaying", fal_Sound_IsPlaying);
+
+    Falcon::Symbol *clsFont = m->addClass("Font", fal_Font_init);
+    clsFont->setWKS(true);
 
     Falcon::Symbol *symVFS = m->addSingleton("VFS");
     Falcon::Symbol *clsVFS = symVFS->getInstance();
@@ -805,6 +855,7 @@ Falcon::Module *FalconBaseModule_create(void)
     clsSurface->getClassDef()->factory(&fal_Surface::factory);
     m->addClassMethod(clsSurface, "Pixel", fal_Surface_Pixel);
     m->addClassMethod(clsSurface, "BlitTo", fal_Surface_BlitTo);
+    m->addClassMethod(clsSurface, "Write", fal_Surface_Write);
 
     m->addExtFunc("include_ex", fal_include_ex);
     m->addExtFunc("DbgBreak", fal_debug_break);

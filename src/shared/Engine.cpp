@@ -1,4 +1,6 @@
 #include "common.h"
+#include "SDLImageLoaderManaged.h"
+#include "SDLImageManaged.h"
 #include "AnimParser.h"
 #include "ResourceMgr.h"
 #include "LayerMgr.h"
@@ -19,6 +21,11 @@ Engine::Engine()
 _debugFlags(EDBG_NONE)
 {
     log("Game Engine start.");
+
+    _gcnImgLoader = new gcn::SDLImageLoaderManaged();
+    _gcnGfx = new gcn::SDLGraphics();
+    _gcnGfx->setTarget(GetSurface());
+    gcn::Image::setImageLoader(_gcnImgLoader);
 
     _quit = false;
     _layermgr = new LayerMgr(this);
@@ -336,4 +343,30 @@ SDL_Rect *Engine::GetVisibleBlockRect(void)
     _visibleBlockRect.w = ((GetResX() + posx) / 16) + 1;
     _visibleBlockRect.h = ((GetResY() + posy) / 16) + 1;
     return &_visibleBlockRect;
+}
+
+gcn::Font *Engine::LoadFont(const char *infofile, const char *gfxfile)
+{
+    memblock *fontinfo = resMgr.LoadTextFile((char*)infofile);
+    if(!fontinfo)
+    {
+        logerror("EditorEngine::Setup: Can't load font infos (%s)", infofile);
+        return false;
+    }
+    std::string glyphs((char*)(fontinfo->ptr));
+    logdetail("Using font glyphs for '%s':", gfxfile);
+    logdetail("%s", glyphs.c_str());
+
+    gcn::Font *font = NULL;
+    try
+    {
+        font = new gcn::ImageFont(gfxfile, glyphs);
+    }
+    catch(gcn::Exception ex)
+    {
+        delete font;
+        font = NULL;
+    }
+
+    return font;
 }

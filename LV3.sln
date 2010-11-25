@@ -13,6 +13,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "shared", "src\shared.vcproj
 	ProjectSection(ProjectDependencies) = postProject
 		{97682C4B-0762-47C9-ACCC-83EA74FA6B71} = {97682C4B-0762-47C9-ACCC-83EA74FA6B71}
 		{91245151-4CC8-481A-AC7B-CFE1CB864F65} = {91245151-4CC8-481A-AC7B-CFE1CB864F65}
+		{4BFC1E80-2428-45B4-9722-EB4169C44B68} = {4BFC1E80-2428-45B4-9722-EB4169C44B68}
 		{36BCB3AB-6233-404D-9409-0E31FFE49932} = {36BCB3AB-6233-404D-9409-0E31FFE49932}
 	EndProjectSection
 EndProject
@@ -32,9 +33,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "editor", "src\editor.vcproj
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "guichan", "src\guichan.vcproj", "{AF213C17-7765-4FEA-8EDF-B266BAECF14B}"
-	ProjectSection(ProjectDependencies) = postProject
-		{4CA929A3-1073-4120-AE68-BD7E111F82A3} = {4CA929A3-1073-4120-AE68-BD7E111F82A3}
-	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "guichan_ext", "src\guichan_ext.vcproj", "{4BFC1E80-2428-45B4-9722-EB4169C44B68}"
 	ProjectSection(ProjectDependencies) = postProject
