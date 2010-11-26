@@ -4,6 +4,7 @@
 #include <falcon/engine.h>
 #include "SharedStructs.h"
 #include "PhysicsSystem.h"
+#include "DelayedDeletable.h"
 
 /*
  * NOTE: The OnEnter(), OnLeave(), OnWhatever() functions are defined in FalconObjectModule.cpp !!
@@ -25,7 +26,7 @@ enum ObjectType
 };
 
 // basic object class, defines shared properties but can't be instantiated
-class BaseObject
+class BaseObject : public DelayedDeletable
 {
     friend class ObjectMgr;
 
@@ -39,15 +40,10 @@ public:
     inline uint8 GetType(void) { return type; }
 
     inline void SetLayerMgr(LayerMgr *mgr) { _layermgr = mgr; }
-    inline void MustDie(bool b) { _mustdie = b; }
-    inline bool MustDie(void) { return _mustdie; }
 
 protected:
     uint32 _id;
     uint8 type;
-    bool _mustdie; // if this is true, do not touch this object anymore
-
-
 
     LayerMgr *_layermgr; // required for collision checks
 };

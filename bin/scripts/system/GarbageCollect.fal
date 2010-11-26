@@ -1,6 +1,6 @@
 
 function GarbageCheck()
-    //> "GC: items: ", GC.items
+    > "GC: items: ", GC.items, ", Mem: ", GC.usedMem >> 10, "k  (normal: ", GC.th_active >> 10, "k, active: ", GC.th_active >> 10, "k)"
 end
 
 function GarbageCheckPeriodic()
@@ -9,10 +9,10 @@ function GarbageCheckPeriodic()
 end
 
 GC.adjust(GC.ADJ_STRICT)
-GC.enable(false)
+GC.enable(true)
 > "Garbage collection policy: ", GC.adjust()
 
 // DEBUG: turn on GC logging to keep track of allocated items
-GarbageCheckPeriodic()
+//GarbageCheckPeriodic()
 
 export

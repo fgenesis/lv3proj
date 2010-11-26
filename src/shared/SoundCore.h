@@ -4,9 +4,10 @@
 #include <SDL/SDL_mixer.h>
 #include "ResourceMgr.h"
 #include "SelfRefCounter.h"
+#include "DelayedDeletable.h"
 
 
-class SoundFile
+class SoundFile : public DelayedDeletable
 {
     friend class SoundCore;
 
@@ -20,7 +21,10 @@ public:
 
     //void Seek(uint32); // NYI
 
-    SelfRefCounter<SoundFile> ref;
+    SelfRefCounter<SoundFile, false> ref;
+
+    // from DelayedDeletable
+    virtual bool CanBeDeleted(void);
 
 private:
     SoundFile(Mix_Chunk *p);

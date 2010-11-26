@@ -4,8 +4,11 @@
 #include <map>
 #include <SDL/SDL.h>
 #include <SDL/SDL_mixer.h>
+#include <falcon/mt.h>
+#include "UndefUselessCrap.h"
 
 #include "VFSHelper.h"
+#include "DelayedDeletable.h"
 
 struct Anim;
 
@@ -27,7 +30,7 @@ class ResourceMgr
     {
         ResStruct() : rt(RESTYPE_MEMBLOCK), count(1) {}
         ResStruct(ResourceType r) : rt(r), count(1) {}
-        uint32 count;
+        volatile Falcon::int32 count;
         ResourceType rt;
     };
 
@@ -51,6 +54,7 @@ public:
     std::string GetPropForMusic(char *fn, char *prop) { return GetPropForFile((char*)(std::string("music/") + fn).c_str(), prop); }
 
     VFSHelper vfs;
+    DeletablePool pool;
 
 private:
     inline void *_GetPtr(std::string& fn)

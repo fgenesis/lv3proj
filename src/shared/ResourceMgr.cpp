@@ -26,6 +26,8 @@ ResourceMgr::~ResourceMgr()
 
 void ResourceMgr::DropUnused(void)
 {
+    pool.Cleanup();
+
     bool del;
     do // Anims contain references to SDL_Surfaces, which may be skipped if the Anim is deleted after the
     {  // Surface's count is checked. iterate over tiles again in case we deleted something in the previous loop.
@@ -52,7 +54,7 @@ void ResourceMgr::_IncRef(void *ptr, ResourceType rt)
 
     PtrCountMap::iterator it = _ptrmap.find(ptr);
     if(it != _ptrmap.end())
-        ++(it->second.count);
+        Falcon::atomicInc(it->second.count);
     else
         _ptrmap[ptr] = ResStruct(rt);
 }
@@ -67,7 +69,7 @@ void ResourceMgr::_DecRef(void *ptr, bool del /* = false */)
         {
             DEBUG(logerror("ResourceMgr::_DecRef("PTRFMT") - already 0 (type %u)", ptr, it->second.count, it->second.rt));
         }
-        if( !(--(it->second.count)) )
+        if( !Falcon::atomicDec(it->second.count) )
         {
             DEBUG(logdebug("ResourceMgr::_DecRef("PTRFMT") - now UNUSED (type %u)", ptr, it->second.count, it->second.rt));
             if(del)

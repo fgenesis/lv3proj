@@ -20,6 +20,7 @@ void musicFinished(void)
 SoundFile::SoundFile(Mix_Chunk *p)
 : sound(p), channel(-1), resCallback(p), ref(this)
 {
+    resMgr.pool.Add(this);
 }
 
 SoundFile::~SoundFile()
@@ -53,6 +54,11 @@ void SoundFile::Stop(void)
 {
     //if(IsPlaying())
         Mix_HaltChannel(channel);
+}
+
+bool SoundFile::CanBeDeleted(void)
+{
+    return !(ref.count() || IsPlaying());
 }
 
 SoundCore::SoundCore()

@@ -92,7 +92,7 @@ void ObjectMgr::Update(uint32 ms)
         ActiveRect *base = (ActiveRect*)it->second;
 
         // do not touch objects flagged for deletion
-        if(base->MustDie())
+        if(base->CanBeDeleted())
             continue;
 
         if(base->GetType() >= OBJTYPE_OBJECT)
@@ -124,7 +124,7 @@ void ObjectMgr::Update(uint32 ms)
         ActiveRect *base = (ActiveRect*)it->second;
 
         // collision detection (object vs object)
-        if(base->MustDie() || !base->IsCollisionEnabled() || !base->HasMoved())
+        if(base->CanBeDeleted() || !base->IsCollisionEnabled() || !base->HasMoved())
             continue;
 
         // i guess this will be very slow for MANY objects in the game... have to see how this works out
@@ -132,7 +132,7 @@ void ObjectMgr::Update(uint32 ms)
         {
             ActiveRect *other = (ActiveRect*)jt->second;
             // never calculate collision with self, invalid, or non-colliding objects
-            if(base == other || other->MustDie() || !other->IsCollisionEnabled())
+            if(base == other || other->CanBeDeleted() || !other->IsCollisionEnabled())
                 continue;
             // skip solid objects, as these are handled in the physics system.
             if(other->GetType() >= OBJTYPE_OBJECT && ((Object*)other)->IsBlocking())
@@ -149,7 +149,7 @@ void ObjectMgr::Update(uint32 ms)
     for(ObjectMap::iterator it = _store.begin(); it != _store.end(); )
     {
         BaseObject *obj = it->second;
-        if(obj->MustDie())
+        if(obj->CanBeDeleted())
         {
             // remove expired objects
             it = Remove(obj->GetId());

@@ -46,8 +46,8 @@ Engine::~Engine()
     delete objmgr;
     delete physmgr;
     delete _layermgr;
-    sndCore.Destroy();
     resMgr.DropUnused(); // at this point, all resources should have a refcount of 0, so this removes all.
+    sndCore.Destroy(); // must be deleted after all sounds were dropped by the ResourceMgr
     if(_screen)
         SDL_FreeSurface(_screen);
 }
@@ -249,6 +249,9 @@ void Engine::_Process(uint32 ms)
 {
     _layermgr->Update(GetCurFrameTime());
     objmgr->Update(ms);
+
+    // TODO: do not call this every frame!
+    resMgr.pool.Cleanup();
 }
 
 // Handle a raw SDL_Event before anything else. return true for further processing,
