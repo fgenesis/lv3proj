@@ -8,7 +8,7 @@ class DelayedDeletable
 public:
     DelayedDeletable() : _mustdie(false) {}
     virtual ~DelayedDeletable() {}
-    inline void MustDie(bool b) { _mustdie = b; }
+    virtual void SetDelete(void) { _mustdie = true; }
     virtual bool CanBeDeleted(void) { return _mustdie; }
 
 private:
@@ -20,15 +20,18 @@ class DeletablePool
 public:
     ~DeletablePool() { Cleanup(); }
     void Add(DelayedDeletable *d) { _store.insert(d); }
-    void Cleanup(void)
+    void Cleanup(bool force = false)
     {
         for(std::set<DelayedDeletable*>::iterator it = _store.begin(); it != _store.end(); )
-            if((*it)->CanBeDeleted())
+        {
+            if(force || (*it)->CanBeDeleted())
             {
                 delete *it;
                 _store.erase(it++);
             }
-            else ++it;
+            else
+                ++it;
+        }
     }
 
 private:

@@ -61,6 +61,11 @@ bool SoundFile::CanBeDeleted(void)
     return !(ref.count() || IsPlaying());
 }
 
+void SoundFile::SetDelete(void)
+{
+    Stop();
+}
+
 SoundCore::SoundCore()
 : _music(NULL)
 {

@@ -12,7 +12,7 @@ class SoundFile : public DelayedDeletable
     friend class SoundCore;
 
 public:
-    ~SoundFile();
+    virtual ~SoundFile();
     void Play(void); // also used to resume
     void Stop(void);
     void SetVolume(uint8 vol);
@@ -25,6 +25,7 @@ public:
 
     // from DelayedDeletable
     virtual bool CanBeDeleted(void);
+    virtual void SetDelete(void);
 
 private:
     SoundFile(Mix_Chunk *p);

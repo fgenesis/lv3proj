@@ -45,6 +45,7 @@ Engine::~Engine()
     delete objmgr;
     delete physmgr;
     delete _layermgr;
+    resMgr.pool.Cleanup(true); // force deletion of everything
     resMgr.DropUnused(); // at this point, all resources should have a refcount of 0, so this removes all.
     sndCore.Destroy(); // must be deleted after all sounds were dropped by the ResourceMgr
     if(_screen)
