@@ -24,7 +24,6 @@ _debugFlags(EDBG_NONE)
 
     _gcnImgLoader = new gcn::SDLImageLoaderManaged();
     _gcnGfx = new gcn::SDLGraphics();
-    _gcnGfx->setTarget(GetSurface());
     gcn::Image::setImageLoader(_gcnImgLoader);
 
     _quit = false;
@@ -107,6 +106,8 @@ void Engine::InitScreen(uint32 sizex, uint32 sizey, uint8 bpp /* = 0 */, uint32 
     _screenFlags = SDL_HWSURFACE | SDL_DOUBLEBUF | SDL_ANYFORMAT | SDL_HWACCEL | extraflags;
     _screen = SDL_SetVideoMode(sizex, sizey, bpp, _screenFlags);
     _screenFlags &= ~SDL_FULLSCREEN; // this depends on current setting and should not be stored
+
+    _gcnGfx->setTarget(GetSurface());
 }
 
 void Engine::_InitJoystick(void)
