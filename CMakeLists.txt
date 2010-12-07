@@ -5,5 +5,9 @@ if(NOT CMAKE_BUILD_TYPE)
 	set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build (Debug or Release)" FORCE)
 endif()
 
+if(COMPILER_GCC)
+	set(CMAKE_CXX_FLAGS_RELEASE "-O2 -DNDEBUG")
+endif()
+
 PROJECT(LV3)
 add_subdirectory (src) 
