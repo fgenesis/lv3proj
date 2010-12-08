@@ -5,7 +5,7 @@
 #include <sstream>
 #include <string>
 #include <fstream>
-#include <errno.h>
+#include <cerrno>
 #include "tools.h"
 
 #if PLATFORM == PLATFORM_WIN32
@@ -126,23 +126,20 @@ std::string toHexDump(uint8* array, uint32 size, bool spaces, uint32 per_line)
 std::deque<std::string> GetFileList(std::string path)
 {
     std::deque<std::string> files;
-
-# ifndef _WIN32 // TODO: fix this function for linux if needed
+# ifndef _WIN32
     const char *p = path.c_str();
     DIR * dirp;
     struct dirent * dp;
     dirp = opendir(p);
-    while (dirp)
+
+    while((dp=readdir(dirp)) != NULL)
     {
-        errno = 0;
-        if ((dp = readdir(dirp)) != NULL)
-            files.push_back(std::string(dp->d_name));
-        else
-            break;
+        if (dp->d_type != DT_DIR) // only add if it is not a directory
+            files.push_back(path+"/"+std::string(dp->d_name));
     }
+
     if(dirp)
         closedir(dirp);
-
 # else
 
     if(path.at(path.length()-1)!='/')
@@ -153,13 +150,12 @@ std::deque<std::string> GetFileList(std::string path)
     HANDLE hFil=FindFirstFile(p,&fil);
     if(hFil!=INVALID_HANDLE_VALUE)
     {
-        if( !(fil.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) )
-            files.push_back(std::string(fil.cFileName));
-        while(FindNextFile(hFil,&fil))
+        do
         {
-            if( !(fil.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) )
-                files.push_back(std::string(fil.cFileName));
+            if(!(fil.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
+                files.push_back(path+std::string(fil.cFileName));
         }
+        while(FindNextFile(hFil, &fil));
     }
 
 # endif
@@ -171,52 +167,65 @@ std::deque<std::string> GetDirList(std::string path, bool recursive /* = false *
 {
     std::deque<std::string> dirs;
 
-    if(path.at(path.length()-1)!='/')
+#ifndef _WIN32
+
+    const char *p = path.c_str();
+    DIR * dirp;
+    struct dirent * dp;
+    dirp = opendir(p);
+
+    while((dp=readdir(dirp)) != NULL)
+    {
+        if (dp->d_type == DT_DIR) // only add if it is a directory
+        {
+            if(strcmp(dp->d_name, ".") != 0 && strcmp(dp->name, "..") != 0)
+            {
+                std::string s = path+"/"+std::string(dp->d_name);
+				dirs.push_back(s);
+                if (recursive) // needing a better way to do that
+                {
+                    std::deque<std::string> &newDirs = GetDirList(s);
+                    dirs.insert(dirs.end(), newdirs.begin(), newdirs.end());
+                }
+            }
+        }
+    }
+
+    if(dirp)
+        closedir(dirp);
+
+#else
+
+    if(path[path.length()-1]!='/')
         path += "/";
 
-    std::string search = path + "*.*"; 
+    std::string search = path + "*.*";
     const char *p = search.c_str();
     WIN32_FIND_DATA fil;
     HANDLE hFil=FindFirstFile(p,&fil);
     if(hFil!=INVALID_HANDLE_VALUE)
     {
-        if( fil.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY )
-        {
-            std::string s = path + std::string(fil.cFileName);
-            if(!(!strcmp(fil.cFileName, ".") || !strcmp(fil.cFileName, "..")))
-            {
-                dirs.push_back(s);
-
-                if(recursive)
-                {
-                    std::deque<std::string>& newdirs = GetDirList(s);
-                    for(std::deque<std::string>::iterator it = newdirs.begin(); it != newdirs.end(); it++)
-                    {
-                        dirs.push_back(*it);
-                    }
-                }
-            }
-        }
-        while(FindNextFile(hFil,&fil))
+        do
         {
             if( fil.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY )
             {
-                if(!strcmp(fil.cFileName, ".") || !strcmp(fil.cFileName, ".."))
+                if (strcmp(fil.cFileName, ".") || strcmp(fil.cFileName, ".."))
                     continue;
+
                 std::string s = path + std::string(fil.cFileName);
                 dirs.push_back(s);
 
-                if(recursive)
+                if (recursive) // needing a better way to do that
                 {
-                    std::deque<std::string>& newdirs = GetDirList(s);
-                    for(std::deque<std::string>::iterator it = newdirs.begin(); it != newdirs.end(); it++)
-                    {
-                        dirs.push_back(*it);
-                    }
+                    std::deque<std::string> &newdirs = GetDirList(s);
+                    dirs.insert(dirs.end(), newdirs.begin(), newdirs.end());
                 }
             }
         }
+        while(FindNextFile(hFil, &fil));
     }
+
+#endif
 
     return dirs;
 }
@@ -280,7 +289,7 @@ uint32 getMSTime(void)
 uint32 getMSTimeDiff(uint32 oldMSTime, uint32 newMSTime)
 {
     // getMSTime() have limited data range and this is case when it overflow in this tick
-    if (oldMSTime > newMSTime)                    
+    if (oldMSTime > newMSTime)
         return (0xFFFFFFFF - oldMSTime) + newMSTime;
     else
         return newMSTime - oldMSTime;

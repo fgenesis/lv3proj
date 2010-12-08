@@ -109,4 +109,14 @@ inline uint32 clp2(uint32 x)
     return x + 1;
 }
 
+// helps to convert strings to other types, or from other types to a string
+template <typename in_value, typename out_value>
+inline void convert(const in_value &ival, out_value &oval)
+{
+    std::stringstream sstream;
+    sstream << ival; // insert value in stream
+    sstream >> oval; // get value from stream
+}
+
+
 #endif
