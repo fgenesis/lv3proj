@@ -402,7 +402,7 @@ FALCON_FUNC fal_BaseObject_Remove(Falcon::VMachine *vm)
     fal_ObjectCarrier *self = Falcon::dyncast<fal_ObjectCarrier*>( vm->self().asObject() );
     BaseObject *obj = self->GetObj();
     if(obj) // it can happen that the object is already deleted here, and the ptr is NULL
-        obj->MustDie(true);
+        obj->SetDelete();
 }
 
 FALCON_FUNC fal_ActiveRect_SetBBox(Falcon::VMachine *vm)
