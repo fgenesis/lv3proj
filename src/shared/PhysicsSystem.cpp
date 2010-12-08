@@ -46,11 +46,11 @@ void PhysicsMgr::UpdatePhysics(Object *obj, uint32 ms)
         if(phys.xfriction)
         {
             neg = fastsgncheck(phys.xspeed);
-            phys.xspeed = fastabs(phys.xspeed) - (phys.xfriction * tf);
+            phys.xspeed = abs(phys.xspeed) - (phys.xfriction * tf);
             if(phys.xspeed < 0.0f)
                 phys.xspeed = 0.0f;
             else if(neg)
-                phys.xspeed = fastneg(phys.xspeed);
+                phys.xspeed = -phys.xspeed;
         }
     }
 
@@ -67,11 +67,11 @@ void PhysicsMgr::UpdatePhysics(Object *obj, uint32 ms)
         // apply friction, y speed
         if(phys.yfriction)
         {
-            phys.yspeed = fastabs(phys.yspeed) - (phys.yfriction * tf);
+            phys.yspeed = abs(phys.yspeed) - (phys.yfriction * tf);
             if(phys.yspeed < 0.0f)
                 phys.yspeed = 0.0f;
             else if(neg)
-                phys.yspeed = fastneg(phys.yspeed);
+                phys.yspeed = -phys.yspeed;
         }
     }
 
