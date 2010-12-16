@@ -412,6 +412,7 @@ memblock *ResourceMgr::LoadTextFile(char *name)
             if(vf->isopen())
                 vf->close();
             uint32 size = vf->size();
+
             if(size && vf->open(NULL, "r"))
             {
                 mb = new memblock(new uint8[size + 4], size); // extra padding

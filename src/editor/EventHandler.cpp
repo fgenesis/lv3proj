@@ -135,7 +135,7 @@ void EditorEngine::FileChosenCallback(FileDialog *dlg)
     // Load/Save map file
     if(!strcmp(dlg->GetOperation(), "map"))
     {
-        std::string& fn = dlg->GetFileName();
+        std::string fn = dlg->GetFileName();
         if(dlg->IsSave())
         {
             logdetail("Saving map to '%s'", fn.c_str());

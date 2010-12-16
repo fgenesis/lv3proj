@@ -27,5 +27,4 @@ TileWindow.cpp
 )
 
 add_executable (editor ${editor_SRC}) 
-
-target_link_libraries(editor shared SDL SDL_mixer SDL_image guichan guichan_ext )
+target_link_libraries(editor shared guichan_ext guichan  compiler_fm falcon_engine SDL SDL_image SDL_mixer)

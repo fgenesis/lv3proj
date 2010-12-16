@@ -1,6 +1,6 @@
 
 # top include dir for external projects
-set(TOP_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include")
+set(TOP_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include" "${CMAKE_CURRENT_SOURCE_DIR}/guichan_ext")
 
 # shared include dir with most of the things required
 set(SHARED_INCLUDE_DIR "${TOP_INCLUDE_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}/shared")
@@ -17,7 +17,7 @@ add_subdirectory (guichan)
 add_subdirectory (falcon_ext)
 add_subdirectory (guichan_ext)
 
-set(Falcon_ALL falcon_engine ${Falcon_MODULES})
+set(Falcon_ALL ${Falcon_MODULES} falcon_engine)
 
 # binaries
 add_subdirectory (editor)

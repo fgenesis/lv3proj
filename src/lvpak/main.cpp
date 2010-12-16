@@ -4,7 +4,7 @@
 
 struct FilenameWithProps
 {
-    FilenameWithProps(std::string& s) : level(LVPACOMP_INHERIT), solid(false), fn(s), algo(LVPAPACK_DEFAULT) {}
+    FilenameWithProps(std::string s) : level(LVPACOMP_INHERIT), solid(false), fn(s), algo(LVPAPACK_DEFAULT) {}
     std::string fn;
     std::string relPath;
     uint8 level; // LVPACOMP_INHERIT for default
@@ -346,7 +346,7 @@ int main(int argc, char *argv[])
                     continue;
                 }
                 fseek(fh, 0, SEEK_END);
-                fpos_t s = ftell(fh);
+                uint32 s = ftell(fh);
                 fseek(fh, 0, SEEK_SET);
                 uint8 *buf = new uint8[s];
                 fread(buf, s, 1, fh);

@@ -44,7 +44,10 @@ bool VFSFileReal::open(const char *fn /* = NULL */, char *mode /* = NULL */)
 
     _fh = fopen(_fullname.c_str(), mode ? mode : "rb");
     if(!_fh)
+    {
+        logerror("VFSFileReal: Could not open file '%s'", _fullname.c_str());
         return false;
+    }
 
     fseek(_fh, 0, SEEK_END);
     _size = getpos();

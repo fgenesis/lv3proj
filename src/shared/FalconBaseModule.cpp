@@ -637,7 +637,7 @@ FALCON_FUNC fal_Engine_GetTime(Falcon::VMachine *vm)
 FALCON_FUNC fal_Engine_LoadLevel(Falcon::VMachine *vm)
 {
     FALCON_REQUIRE_PARAMS_EXTRA(1,"S filename");
-    Falcon::AutoCString cstr = vm->param(0)->asString();
+    Falcon::AutoCString cstr(vm->param(0)->asString());
     AsciiLevel *level = LoadAsciiLevel((char*)cstr.c_str());
     if(!level)
     {

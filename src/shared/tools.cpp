@@ -135,7 +135,7 @@ std::deque<std::string> GetFileList(std::string path)
     while((dp=readdir(dirp)) != NULL)
     {
         if (dp->d_type != DT_DIR) // only add if it is not a directory
-            files.push_back(path+"/"+std::string(dp->d_name));
+            files.push_back(std::string(dp->d_name));
     }
 
     if(dirp)
@@ -178,14 +178,14 @@ std::deque<std::string> GetDirList(std::string path, bool recursive /* = false *
     {
         if (dp->d_type == DT_DIR) // only add if it is a directory
         {
-            if(strcmp(dp->d_name, ".") != 0 && strcmp(dp->name, "..") != 0)
+            if(strcmp(dp->d_name, ".") != 0 && strcmp(dp->d_name, "..") != 0)
             {
                 std::string s = path+"/"+std::string(dp->d_name);
 				dirs.push_back(s);
                 if (recursive) // needing a better way to do that
                 {
-                    std::deque<std::string> &newDirs = GetDirList(s);
-                    dirs.insert(dirs.end(), newdirs.begin(), newdirs.end());
+                    std::deque<std::string> newDirs = GetDirList(s);
+                    dirs.insert(dirs.end(), newDirs.begin(), newDirs.end());
                 }
             }
         }
@@ -209,9 +209,8 @@ std::deque<std::string> GetDirList(std::string path, bool recursive /* = false *
         {
             if( fil.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY )
             {
-                if (strcmp(fil.cFileName, ".") || strcmp(fil.cFileName, ".."))
+                if (!strcmp(fil.cFileName, ".") || !strcmp(fil.cFileName, ".."))
                     continue;
-
                 std::string s = path + std::string(fil.cFileName);
                 dirs.push_back(s);
 

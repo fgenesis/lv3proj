@@ -46,10 +46,18 @@
 //   - FALCON_SYSTEM_WIN
 //   - FALCON_SYSTEM_MAC
 
-#define FALCON_SYSTEM_WIN
+#if defined( __WIN32__ ) || defined( WIN32 ) || defined( _WIN32 )
+#  define FALCON_SYSTEM_WIN
+#  define FALCON_HOST_SYSTEM        "WINDOWS"
+#else
+#  define FALCON_SYSTEM_UNIX
+#  define FALCON_HOST_SYSTEM        "LINUX"
+#endif
 
-#define FALCON_HOST_SYSTEM          "WINDOWS"
 #define FALCON_LITTLE_ENDIAN        1
+
+// TODO: add support for apple and other weird platforms
+
 
 //============================================
 // Config informations

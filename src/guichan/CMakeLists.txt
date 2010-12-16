@@ -93,5 +93,5 @@ contrib/widgets/adjustingcontainer.cpp
 )
 
 
-add_library(guichan ${COMMON} ${SDL} ${WIDGETS} )
+add_library(guichan ${COMMON} ${SDL} ${WIDGETS})
 

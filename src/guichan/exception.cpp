@@ -46,7 +46,7 @@
  */
 
 #include "guichan/exception.hpp"
-
+#include <cstdio>
 namespace gcn
 {
     Exception::Exception()

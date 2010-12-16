@@ -15,11 +15,11 @@
 #include "FalconBaseModule.h"
 #include "FalconObjectModule.h"
 
-Engine *g_engine_ptr = NULL;
+Engine *g_engine_ptr_s = NULL;
 
 void FalconObjectModule_SetEnginePtr(Engine *eng)
 {
-    g_engine_ptr = eng;
+    g_engine_ptr_s = eng;
 }
 
 FalconProxyObject::~FalconProxyObject()
@@ -165,10 +165,10 @@ void fal_ObjectCarrier::init(Falcon::VMachine *vm)
     BaseObject *obj = self->GetObj();
     fobj->vm = vm;
     fobj->gclock = new Falcon::GarbageLock(Falcon::Item(self));
-    obj->SetLayerMgr(g_engine_ptr->_GetLayerMgr());
+    obj->SetLayerMgr(g_engine_ptr_s->_GetLayerMgr());
     obj->Init(); // correctly set type of object
     obj->_falObj = fobj;
-    g_engine_ptr->objmgr->Add(obj);
+    g_engine_ptr_s->objmgr->Add(obj);
 }
 
 Falcon::CoreObject* fal_ObjectCarrier::factory( const Falcon::CoreClass *cls, void *user_data, bool )
@@ -812,13 +812,13 @@ FALCON_FUNC fal_TileLayer_IsCollisionEnabled(Falcon::VMachine *vm)
 
 FALCON_FUNC fal_Objects_GetLastId(Falcon::VMachine *vm)
 {
-    vm->retval((Falcon::int64)g_engine_ptr->objmgr->GetLastId());
+    vm->retval((Falcon::int64)g_engine_ptr_s->objmgr->GetLastId());
 }
 
 FALCON_FUNC fal_Objects_Get(Falcon::VMachine *vm)
 {
     FALCON_REQUIRE_PARAMS_EXTRA(1, "N");
-    BaseObject *obj = g_engine_ptr->objmgr->Get(vm->param(0)->forceIntegerEx());
+    BaseObject *obj = g_engine_ptr_s->objmgr->Get(vm->param(0)->forceIntegerEx());
     if(!obj)
     {
         vm->retnil();
@@ -838,7 +838,7 @@ FALCON_FUNC fal_Objects_GetAllInRect(Falcon::VMachine *vm)
     rect.w = (uint32)vm->param(2)->forceInteger();
     rect.h = (uint32)vm->param(3)->forceInteger();
     ObjectWithSideSet li;
-    g_engine_ptr->objmgr->GetAllObjectsIn(rect, li);
+    g_engine_ptr_s->objmgr->GetAllObjectsIn(rect, li);
     if(li.empty())
     {
         vm->retnil();

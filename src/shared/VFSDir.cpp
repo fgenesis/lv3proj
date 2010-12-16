@@ -118,16 +118,16 @@ uint32 VFSDirReal::load(const char *dir /* = NULL */)
 {
     _abspath = dir;
     _name = _PathToFileName(dir); // path must not end with '/'
-    std::deque<std::string>& fl = GetFileList(dir);
+    std::deque<std::string> fl = GetFileList(dir);
 
     for(std::deque<std::string>::iterator it = fl.begin(); it != fl.end(); it++)
     {
-        VFSFileReal *f = new VFSFileReal((_abspath + '/' + *it).c_str());
+        VFSFileReal *f = new VFSFileReal((_abspath + '/'  + *it).c_str());
         _files[f->name()] = f;
     }
     uint32 sum = fl.size();
 
-    std::deque<std::string>& dl = GetDirList(dir, false);
+    std::deque<std::string> dl = GetDirList(dir, false);
     
     for(std::deque<std::string>::iterator it = dl.begin(); it != dl.end(); it++)
     {

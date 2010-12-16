@@ -8,4 +8,7 @@ FalconGameModule.cpp
 GameEngine.cpp
 ) 
 
-target_link_libraries(game shared ${Falcon_ALL} SDL SDL_mixer SDL_image)
+install(TARGETS game DESTINATION bin)
+target_link_libraries(game shared guichan_ext guichan  compiler_fm falcon_engine SDL SDL_image SDL_mixer)
+
+# target_link_libraries(game shared guichan ${Falcon_ALL} SDL SDL_mixer SDL_image)
