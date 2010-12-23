@@ -15,19 +15,22 @@ class PackageSystem
     function Load(pkg)
         > "PackageSystem:Load(", pkg, ")"
         p = "packages/" + pkg
-        from_cont = VFS.AddContainer(p + ".lvpa")
-        from_dir = VFS.AddPath(p)
+        from_cont = VFS.AddContainer(p + ".lvpa", p, false) // add the container contents into package/<name> directory, keeping files on disk with a higher priority 
+        m = VFS.Merge(p, "") // merge the package directory into root dir
+        if not m // this cant happen
+            > "PackageSystem:Load: MERGE ERROR"
+            return false
+        end
         if not ScriptLoader.LoadFile("package.fal")
             > @ "ERROR: Package '$pkg': Loading the 'package.fal' script failed!"
         end
-        return (from_dir or from_cont)
+        
+        return from_cont or (pkg in VFS.GetDirList("packages"))
     end
     
     // register a function that will be called once at next engine tick
     function RunAfterLoad(func)
-        self.runLoadCtr++
-        proxy = {f => f(); return true}
-        RegisterUpdateHook("PackageSystem_RunAfterLoad_" + self.runLoadCtr, [ proxy , func] )
+        CallScheduler.Schedule(func, 1)
     end
 end
 

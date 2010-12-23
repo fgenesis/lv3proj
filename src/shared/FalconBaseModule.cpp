@@ -253,64 +253,55 @@ FALCON_FUNC fal_InvertSide( Falcon::VMachine *vm )
 }
 
 /*#
-@method VFS AddPath
-@param path Relative directory name
-@brief Merges a directory into the virtual file system tree
-
-After adding a path, its files and sub-directories can be accessed like if they were
-in the root directory.
-*/
-FALCON_FUNC fal_VFS_AddPath( Falcon::VMachine *vm )
-{
-    FALCON_REQUIRE_PARAMS_EXTRA(1, "S");
-    if(!vm->param(0)->isString())
-    {
-        throw new Falcon::ParamError(Falcon::ErrorParam( Falcon::e_inv_params, __LINE__ )
-            .extra("S") );
-    }
-    Falcon::String *path = vm->param(0)->asString();
-    Falcon::AutoCString cstr(path);
-    vm->retval(resMgr.vfs.AddPath(cstr.c_str()));
-}
-
-/*#
 @method VFS AddContainer
 @param filename Container (.lvpa) file to load
+@param dir Directory to load into
+@optparam overwrite If true, files in the virtual file tree will be replaced by those from the container file
+@optparam preload 0 (default) - load only index; 1 - preload all files; 2 - preload only solid block
 @brief Merges the contents of a container file into the virtual file system tree
 
 After adding a container, its files and sub-directories can be accessed like if they were
-in the root directory on the file system.
+in the directory specified.
+It can then be mounted to other directories as well.
 */
 FALCON_FUNC fal_VFS_AddContainer( Falcon::VMachine *vm )
 {
-    FALCON_REQUIRE_PARAMS_EXTRA(1, "S [, N]");
-    if(!vm->param(0)->isString())
+    FALCON_REQUIRE_PARAMS_EXTRA(2, "S, S [, B [, N]]");
+    if(!(vm->param(0)->isString() && vm->param(1)->isString()))
     {
         throw new Falcon::ParamError(Falcon::ErrorParam( Falcon::e_inv_params, __LINE__ )
-            .extra("S [, N]") );
+            .extra("S, S [, B [, N]]") );
     }
-    Falcon::String *path = vm->param(0)->asString();
-    Falcon::AutoCString cstr(path);
+    Falcon::String *fn = vm->param(0)->asString();
+    Falcon::String *dir = vm->param(1)->asString();
+    Falcon::AutoCString cfn(fn);
+    bool overwrite = true;
 
     LVPALoadFlags mode = LVPALOAD_NONE;
-    if(vm->paramCount() > 1)
+    if(vm->paramCount() > 2)
     {
-        switch(vm->param(0)->forceInteger())
+        overwrite = vm->param(2)->isTrue();
+
+        if(vm->paramCount() > 3)
         {
-            case 1: mode = LVPALOAD_ALL; break;
-            case 2: mode = LVPALOAD_SOLID; break;
+            switch(vm->param(3)->forceInteger())
+            {
+                case 1: mode = LVPALOAD_ALL; break;
+                case 2: mode = LVPALOAD_SOLID; break;
+            }
         }
     }
 
     LVPAFile *lvpa = new LVPAFileReadOnly;
-    if(!lvpa->LoadFrom(cstr.c_str(), mode))
+    if(!lvpa->LoadFrom(cfn.c_str(), mode))
     {
         delete lvpa;
         vm->retval(false);
         return;
     }
 
-    vm->retval(resMgr.vfs.AddContainer(lvpa, true));
+    Falcon::AutoCString cdir(dir);
+    vm->retval(resMgr.vfs.AddContainer(lvpa, cdir.c_str(), true, overwrite));
 }
 
 /*#
@@ -333,9 +324,7 @@ to refresh the virtual file system tree.
 */
 FALCON_FUNC fal_VFS_Reload( Falcon::VMachine *vm )
 {
-    // TODO: make this reload mounted subdirs too...?
-    resMgr.vfs.LoadFileSysRoot();
-    resMgr.vfs.Reload();
+    resMgr.vfs.Reload(true);
 }
 
 /*#
@@ -353,8 +342,9 @@ FALCON_FUNC fal_VFS_GetDirList( Falcon::VMachine *vm )
         throw new Falcon::ParamError(Falcon::ErrorParam( Falcon::e_inv_params, __LINE__ )
             .extra("S") );
     }
+    Falcon::String *str = arg->asString();
     Falcon::AutoCString cstr(arg->asString());
-    VFSDir *vd = resMgr.vfs.GetDir(cstr.c_str());
+    VFSDir *vd = str->length() ? resMgr.vfs.GetDir(cstr.c_str()) : resMgr.vfs.GetDirRoot();
     if(!vd)
     {
         vm->retnil();
@@ -385,8 +375,9 @@ FALCON_FUNC fal_VFS_GetFileList( Falcon::VMachine *vm )
         throw new Falcon::ParamError(Falcon::ErrorParam( Falcon::e_inv_params, __LINE__ )
             .extra("S") );
     }
-    Falcon::AutoCString cstr(arg->asString());
-    VFSDir *vd = resMgr.vfs.GetDir(cstr.c_str());
+    Falcon::String *str = arg->asString();
+    Falcon::AutoCString cstr(str);
+    VFSDir *vd = str->length() ? resMgr.vfs.GetDir(cstr.c_str()) : resMgr.vfs.GetDirRoot();
     if(!vd)
     {
         vm->retnil();
@@ -419,6 +410,40 @@ FALCON_FUNC fal_VFS_HasFile( Falcon::VMachine *vm )
     Falcon::AutoCString cstr(arg->asString());
     bool result = resMgr.vfs.GetFile(cstr.c_str());
     vm->retval(result);
+}
+
+/*#
+@method VFS Merge
+@brief Merges a directory into another directory
+@param source The directory which will be mounted into target. Must exist.
+@param target The directory where source will be merged into
+@optparam force If true, create the target directory if not present
+@return True if mounting was successful
+*/
+FALCON_FUNC fal_VFS_Merge( Falcon::VMachine *vm )
+{
+    FALCON_REQUIRE_PARAMS_EXTRA(2, "S, S [, B]");
+    Falcon::Item *src_i = vm->param(0);
+    Falcon::Item *targ_i = vm->param(1);
+    Falcon::Item *force_i = vm->param(2);
+    bool force = force_i && force_i->isTrue();
+    if(!(src_i->isString() && targ_i->isString()))
+    {
+        throw new Falcon::ParamError(Falcon::ErrorParam( Falcon::e_inv_params, __LINE__ )
+            .extra("S, S [, B]") );
+    }
+    Falcon::AutoCString csrc(src_i->asString());
+    Falcon::AutoCString ctarg(targ_i->asString());
+
+    VFSDir *targetdir = resMgr.vfs.GetDir(ctarg.c_str(), force);
+    VFSDir *srcdir = resMgr.vfs.GetDir(csrc.c_str());
+    if(targetdir && srcdir)
+    {
+        targetdir->merge(srcdir);
+        vm->retval(true);
+    }
+    else
+        vm->retval(false);
 }
 
 fal_Surface::fal_Surface(const Falcon::CoreClass* generator)
@@ -695,6 +720,11 @@ FALCON_FUNC fal_Engine_UpdateCollisionMap(Falcon::VMachine *vm)
     }
 }
 
+FALCON_FUNC fal_Engine_Reset(Falcon::VMachine *vm)
+{
+    g_engine_ptr_->SetReset();
+}
+
 FALCON_FUNC fal_Screen_GetLayer(Falcon::VMachine *vm)
 {
     FALCON_REQUIRE_PARAMS(1);
@@ -795,6 +825,27 @@ FALCON_FUNC fal_Font_init( Falcon::VMachine *vm )
     vm->self().asObject()->setUserData(new fal_Font(fnt));
 }
 
+FALCON_FUNC fal_Font_GetWidth( Falcon::VMachine *vm )
+{
+    Falcon::Item *itm = vm->param(0);
+    if(!(itm && itm->isString()))
+    {
+        throw new Falcon::ParamError( Falcon::ErrorParam( itm ? Falcon::e_param_type : Falcon::e_missing_params ).
+            extra( "S" ) );
+    }
+    Falcon::String *s = vm->param(0)->asString();
+    gcn::Font *font = ((fal_Font*)(vm->self().asObject()->getFalconData()))->GetFont();
+    Falcon::AutoCString cstr(s);
+
+    vm->retval((int64)font->getWidth(cstr.c_str()));
+}
+
+FALCON_FUNC fal_Font_GetHeight( Falcon::VMachine *vm )
+{
+    gcn::Font *font = ((fal_Font*)(vm->self().asObject()->getFalconData()))->GetFont();
+    vm->retval((int64)font->getHeight());
+}
+
 
 Falcon::Module *FalconBaseModule_create(void)
 {
@@ -809,6 +860,7 @@ Falcon::Module *FalconBaseModule_create(void)
     m->addClassMethod(clsEngine, "LoadPropFile", fal_Engine_LoadPropFile);
     m->addClassMethod(clsEngine, "CreateCollisionMap", fal_Engine_CreateCollisionMap);
     m->addClassMethod(clsEngine, "UpdateCollisionMap", fal_Engine_UpdateCollisionMap);
+    m->addClassMethod(clsEngine, "Reset", fal_Engine_Reset);
 
     Falcon::Symbol *symScreen = m->addSingleton("Screen");
     Falcon::Symbol *clsScreen = symScreen->getInstance();
@@ -838,17 +890,19 @@ Falcon::Module *FalconBaseModule_create(void)
     m->addClassMethod(clsSound, "IsPlaying", fal_Sound_IsPlaying);
 
     Falcon::Symbol *clsFont = m->addClass("Font", fal_Font_init);
+    m->addClassMethod(clsFont, "GetWidth", fal_Font_GetWidth);
+    m->addClassMethod(clsFont, "GetHeight", fal_Font_GetHeight);
     clsFont->setWKS(true);
 
     Falcon::Symbol *symVFS = m->addSingleton("VFS");
     Falcon::Symbol *clsVFS = symVFS->getInstance();
-    m->addClassMethod(clsVFS, "AddPath", fal_VFS_AddPath);
     m->addClassMethod(clsVFS, "AddContainer", fal_VFS_AddContainer);
     m->addClassMethod(clsVFS, "Clear", fal_VFS_Clear);
     m->addClassMethod(clsVFS, "Reload", fal_VFS_Reload);
     m->addClassMethod(clsVFS, "GetDirList", fal_VFS_GetDirList);
     m->addClassMethod(clsVFS, "GetFileList", fal_VFS_GetFileList);
     m->addClassMethod(clsVFS, "HasFile", fal_VFS_HasFile);
+    m->addClassMethod(clsVFS, "Merge", fal_VFS_Merge);
 
     Falcon::Symbol *clsSurface = m->addClass("Surface", fal_Surface::init);
     clsSurface->setWKS(true);

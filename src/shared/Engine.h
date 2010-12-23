@@ -38,6 +38,9 @@ public:
     inline bool IsQuit(void) { return _quit; }
     inline static void SetQuit(bool q = true) { _quit = q; }
 
+    inline void SetReset(bool r = true) { _reset = r; }
+    inline bool IsReset(void) { return _reset; }
+
     virtual void OnMouseEvent(uint32 type, uint32 button, uint32 state, uint32 x, uint32 y, int32 rx, int32 ry);
     virtual void OnKeyDown(SDLKey key, SDLMod mod);
     virtual void OnKeyUp(SDLKey key, SDLMod mod);
@@ -87,6 +90,7 @@ protected:
     virtual void _CalcFPS(void);
     virtual void _Render(void);
     virtual void _Process(uint32 ms);
+    virtual void _Reset(void);
 
     gcn::SDLGraphics* _gcnGfx;
     gcn::SDLImageLoader* _gcnImgLoader;
@@ -104,6 +108,7 @@ protected:
     uint32 _sleeptime;
     Point _cameraPos; // camera / "screen anchor" position in 2D-space, top-left corner (starts with (0,0) )
     bool _paused;
+    bool _reset;
     uint32 _debugFlags;
 
 private:

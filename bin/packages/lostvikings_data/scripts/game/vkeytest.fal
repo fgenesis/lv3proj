@@ -1,7 +1,0 @@
-//RegisterInputHook("sneskeys",sneskeys)
-
-
-function sneskeys(inp)
-    vkey, pl, val = inp
-    > @ "$vkey, $pl, $val"
-end

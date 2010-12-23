@@ -1,0 +1,4 @@
+/* This file should contain functions registering themselves on startup,
+providing additional debug info */
+
+dbg_AddHookCountOverlay()

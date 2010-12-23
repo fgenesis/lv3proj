@@ -48,7 +48,6 @@ bool VFSDir::merge(VFSDir *dir, bool overwrite /* = true */)
 
 bool VFSDir::insert(VFSDir *subdir, bool overwrite /* = true */)
 {
-    
     VFSDirMap::iterator it = _subdirs.find(subdir->name());
     VFSDir *mydir;
     if(it != _subdirs.end())
@@ -86,6 +85,7 @@ VFSFile *VFSDir::getFile(const char *fn)
 
 VFSDir *VFSDir::getDir(const char *subdir, bool forceCreate /* = false */)
 {
+    VFSDir *ret = NULL;
     char *slashpos = (char *)strchr(subdir, '/');
 
     // if there is a '/' in the string, descend into subdir and continue there
@@ -96,28 +96,35 @@ VFSDir *VFSDir::getDir(const char *subdir, bool forceCreate /* = false */)
 
         VFSDirMap::iterator it = _subdirs.find(subdir);
 
-        VFSDir *ret = NULL;
-
         if(it != _subdirs.end())
         {
             *slashpos = '/'; // restore original string
-            ret = it->second->getDir(sub);
+            ret = it->second->getDir(sub, forceCreate); // descend into subdirs
         }
+        else if(forceCreate)
+        {
+            VFSDir *ins = new VFSDir;
+            ins->_name = subdir;
+            *slashpos = '/'; // restore original string
+            _subdirs[ins->_name] = ins;
+            ret = ins->getDir(sub, true); // create remaining structure
+        }
+    }
+    else
+    {
+
+        VFSDirMap::iterator it = _subdirs.find(subdir);
+        if(it != _subdirs.end())
+            ret = it->second;
         else if(forceCreate)
         {
             ret = new VFSDir;
             ret->_name = subdir;
-            *slashpos = '/'; // restore original string
-            insert(ret, true);
-            ret->getDir(sub, true); // create remaining structure
-            --(ret->ref); // was added, decref here
+            _subdirs[ret->_name] = ret;
         }
-
-        return ret;
     }
 
-    VFSDirMap::iterator it = _subdirs.find(subdir);
-    return it != _subdirs.end() ? it->second : NULL;
+    return ret;
 }
 
 

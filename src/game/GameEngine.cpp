@@ -15,7 +15,7 @@
 #include "LVPAFile.h"
 
 GameEngine::GameEngine()
-: Engine()
+: Engine(), _wasInit(false)
 {
     falcon = new AppFalconGame(this);
 
@@ -47,8 +47,13 @@ void GameEngine::Shutdown(void)
 
 bool GameEngine::Setup(void)
 {
-    // initialize the falcon scripting engine & VM
-    Falcon::Engine::Init();
+    if(!_wasInit)
+    {
+        // initialize the falcon scripting engine & VM
+        Falcon::Engine::Init();
+
+        _wasInit = true;
+    }
 
     // setup the VFS and the container to read from
     LVPAFile *basepak = new LVPAFileReadOnly;
@@ -310,4 +315,13 @@ void GameEngine::_Process(uint32 ms)
     }
     
     Engine::_Process(ms);
+}
+
+void GameEngine::_Reset(void)
+{
+    Engine::_Reset();
+    falcon->DeleteVM();
+    Falcon::Engine::PerformGC();
+    
+    this->Setup();
 }

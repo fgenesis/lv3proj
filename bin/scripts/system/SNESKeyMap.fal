@@ -126,6 +126,10 @@ class SNESKeyMap
     function ClearInputHooks()
         self.hooks.clear()
     end
+    
+    function GetInputHookCount()
+        return len(self.hooks)
+    end
 
 end
 

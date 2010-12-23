@@ -11,7 +11,6 @@ _rhooks = []
 // --- called by core whenever input occurs ---
 function InputEventHandler(e)
     global _rawhooks
-    //> @ "EVENT DEBUG: ty:$ty, src:$src, which:$which, value:$value"
     
     for name,func in _rawhooks
         try
@@ -42,6 +41,11 @@ function GetRawInputHook(who)
     return nil
 end
 
+function GetRawInputHookCount()
+    global _rawhooks
+    return len(_rawhooks)
+end
+
 
 // called by the core on every loop
 function GameUpdate(ms)
@@ -49,7 +53,6 @@ function GameUpdate(ms)
     
     // process registered functions. if one returns true, remove from list
     for name, func in _uphooks
-        rm = false
         try
             if func(ms): continue dropping
         catch in err
@@ -73,6 +76,11 @@ function UnregisterUpdateHook(who)
     _uphooks -= who
 end
 
+function GetUpdateHookCount()
+    global _uphooks
+    return len(_uphooks)
+end
+
 // called by the core after every rendering
 function PostRender()
     global _rhooks
@@ -80,7 +88,7 @@ function PostRender()
     // process registered functions. if one returns true, remove from list
     for func in _rhooks
         try
-            func()
+            if func(): continue dropping
         catch in err
             > "ERROR: PostRender(): unhandled exception in a hook:"
             > func
@@ -102,13 +110,18 @@ function UnregisterRenderHook(func)
     arrayDel(_rhooks, func)
 end
 
+function GetRenderHookCount()
+    global _rhooks
+    return len(_rhooks)
+end
+
 
 
 export GameUpdate
-export RegisterUpdateHook, UnregisterUpdateHook
+export RegisterUpdateHook, UnregisterUpdateHook, GetUpdateHookCount
 
 export InputEventHandler
-export RegisterRawInputHook, UnregisterRawInputHook, GetRawInputHook
+export RegisterRawInputHook, UnregisterRawInputHook, GetRawInputHook, GetRawInputHookCount
 
 export PostRender
-export RegisterRenderHook, UnregisterRenderHook
+export RegisterRenderHook, UnregisterRenderHook, GetRenderHookCount

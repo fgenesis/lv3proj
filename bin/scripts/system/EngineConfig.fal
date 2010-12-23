@@ -1,0 +1,12 @@
+
+EngineConfig = [ => ]
+
+EngineConfig["musicVolume"] = MAX_VOLUME
+EngineConfig["soundVolume"] = MAX_VOLUME
+EngineConfig["menuMusic"] = "liquidat.xm"
+
+
+EngineConfig = bless(EngineConfig)
+
+
+export EngineConfig

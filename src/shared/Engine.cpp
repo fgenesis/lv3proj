@@ -18,7 +18,7 @@ bool Engine::_quit;
 
 Engine::Engine()
 : _screen(NULL), _fps(0), _sleeptime(0), _framecounter(0), _paused(false),
-_debugFlags(EDBG_NONE)
+_debugFlags(EDBG_NONE), _reset(false)
 {
     log("Game Engine start.");
 
@@ -146,6 +146,9 @@ void Engine::Run(void)
     uint32 diff;
     while(!_quit)
     {
+        if(IsReset())
+            _Reset();
+
         ms = clock();
         diff = ms - s_lastFrameTime;
         diff &= 0x7F; // 127 ms max. allowed diff time
@@ -374,4 +377,15 @@ gcn::Font *Engine::LoadFont(const char *infofile, const char *gfxfile)
     }
 
     return font;
+}
+
+void Engine::_Reset(void)
+{
+    _reset = false;
+    objmgr->RemoveAll();
+    _layermgr->Clear();
+    resMgr.pool.Cleanup();
+    resMgr.DropUnused();
+    resMgr.vfs.Prepare(true);
+    resMgr.vfs.Reload(true);
 }

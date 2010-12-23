@@ -1,0 +1,36 @@
+
+function dbg_PrintDir(dir, i)
+    i = i ? i : ""
+    dl = VFS.GetDirList(dir)
+    for d in dl
+        > i, "[", d, "]"
+        df = dir ? dir + "/" + d : d
+        dbg_PrintDir(df, i + "  ")
+    end
+    
+    fl = VFS.GetFileList(dir)
+    for f in fl
+        > i, f
+    end
+end
+
+function dbg_HookCountRenderHook() // note: this function is highly unoptimized and slow
+    r = GetRenderHookCount()
+    u = GetUpdateHookCount()
+    i = GetRawInputHookCount()
+    s = SNESKeyMap.GetInputHookCount()
+    str = @ "Hooks: Render = $r; Update = $u; RawInp = $i, SNESInp = $s"
+    w, h = Screen.GetSize()
+    font = GetFont("rpgfont")
+    Screen.GetSurface().Write(0, h - font.GetHeight(), font, str)
+end
+
+function dbg_AddHookCountOverlay()
+    RegisterRenderHook(dbg_HookCountRenderHook)
+end
+
+function dbg_RemoveHookCountOverlay()
+    UnregisterRenderHook(dbg_HookCountRenderHook)
+end
+
+export

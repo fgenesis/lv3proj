@@ -1,6 +1,7 @@
 
 // some test stuff to see what the falcon bindings can do
 > "-- Setting up test Level --"
+Music.Stop()
 Engine.LoadLevel("testlevel.txt")
 
 Screen.CreateInfoLayer()

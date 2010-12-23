@@ -29,7 +29,7 @@ void VFSHelper::_delete(void)
         merged = NULL;
     }
     for(VFSMountList::iterator it = vlist.begin(); it != vlist.end(); it++)
-        it->first->ref--;
+        it->vdir->ref--;
     for(std::set<LVPAFile*>::iterator it = lvpalist.begin(); it != lvpalist.end(); it++)
         delete *it;
     vlist.clear();
@@ -96,24 +96,25 @@ void VFSHelper::Reload(bool fromDisk /* = false */)
         LoadFileSysRoot();
     Prepare(false);
     for(VFSMountList::iterator it = vlist.begin(); it != vlist.end(); it++)
-        GetDir(it->second.c_str(), true)->merge(it->first);
+        GetDir(it->mountPoint.c_str(), true)->merge(it->vdir, it->overwrite);
 }
 
-void VFSHelper::AddVFSDir(VFSDir *dir, const char *subdir /* = NULL */)
+void VFSHelper::AddVFSDir(VFSDir *dir, const char *subdir /* = NULL */, bool overwrite /* = true */)
 {
     if(!subdir)
         subdir = "";
     dir->ref++;
-    vlist.push_back(std::make_pair(dir, subdir));
-    GetDir(subdir, true)->merge(dir); // merge into specified subdir
+    VDirEntry ve(dir, subdir, overwrite);
+    vlist.push_back(ve);
+    GetDir(subdir, true)->merge(dir, overwrite); // merge into specified subdir. will be (virtually) created if not existing
 }
 
-bool VFSHelper::AddContainer(LVPAFile *f, const char *path, bool deleteLater)
+bool VFSHelper::AddContainer(LVPAFile *f, const char *path, bool deleteLater, bool overwrite /* = true */)
 {
     VFSDirLVPA *vfs = new VFSDirLVPA(f);
     if(vfs->load())
     {
-        AddVFSDir(vfs, path);
+        AddVFSDir(vfs, path, overwrite);
         if(deleteLater)
             lvpalist.insert(f);
     }

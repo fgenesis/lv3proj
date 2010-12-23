@@ -1,0 +1,31 @@
+
+_fonts = [ => ]
+
+function LoadFont(name)
+    global _fonts
+    font = Font("font/" + name + ".png", "gfx/font/" + name + ".txt")
+    if font: RegisterFont(name, font)
+    return font
+end
+
+function RegisterFont(name, font)
+    global _fonts
+    select font
+        case Font
+            _fonts[name] = font
+        
+        default
+            inspect(font)
+            raise name + " - not a font!"
+            
+    end
+end
+
+function GetFont(name)
+    global _fonts
+    font = _fonts.get(name)
+    if not font: font = LoadFont(name)
+    return font
+end
+
+export

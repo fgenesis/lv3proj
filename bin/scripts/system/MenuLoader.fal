@@ -1,4 +1,155 @@
 
-// TODO: load menu system here
+class EngineMainMenu from SinusMenu
 
-CallScheduler.Schedule( [PackageSystem.Load, "lostvikings_test"], 1)
+    function Setup()
+        self.Add( OpenEnginePackageMenu, "Load Game" )
+        self.Add( [OpenMenu, EngineSettingsMenu], "Settings" )
+        self.Add( Engine.Reset, "[Debug: Hard Reset!]" )
+        self.Add( [OpenEngineFileBrowserMenu, ""], "[Debug: VFS Files...]" )
+        self.Add( self.OnGoBack, "Exit" )
+    end
+    
+    function OnGoBack()
+        Engine.Exit()
+    end
+    
+    function OnUpdate()
+        sx, sy = Screen.GetSize()
+        self.x = int((sx - self.totalW) / 2)
+        self.y = int((sy - self.totalH) / 2)
+    end
+
+end
+
+class EngineSettingsMenu from SinusMenu
+
+    function Setup()
+        self.Add( { => }, "Music volume" )
+        self.Add( { => }, "Sound volume" )
+        self.Add( self.OnGoBack, "Back" )
+    end
+    
+    function Update()
+        self.SinusMenu.Update()
+        self.Text(0, "Music Volume [" + EngineConfig.musicVolume + "]")
+        self.Text(1, "Sound Volume [" + EngineConfig.soundVolume + "]")
+    end
+    
+    function OnKeyLeft(): self.HandleLR(true)
+    function OnKeyRight(): self.HandleLR(false)
+    
+    function HandleLR(L)
+        done = true
+        switch self.sel
+            case 0
+                EngineConfig.musicVolume = climit(EngineConfig.musicVolume + (L ? -5 : 5), 0, MAX_VOLUME)
+                Music.SetVolume(EngineConfig.musicVolume)
+                
+            case 1
+                EngineConfig.soundVolume = climit(EngineConfig.soundVolume + (L ? -5 : 5), 0, MAX_VOLUME)
+                
+            default
+                done = false
+        end
+        if done
+            self.Update()
+            self.sndSelect.Play()
+        end
+    end
+    
+    function OnGoBack()
+        OpenMenu(EngineMainMenu)
+    end
+
+    function OnUpdate()
+        sx, sy = Screen.GetSize()
+        self.x = int((sx - self.totalW) / 2)
+        self.y = int((sy - self.totalH) / 2)
+    end
+end
+
+class EngineFileListMenu from SinusMenu
+    
+    init
+        self.rowSpacing = 3
+    end
+    
+    function OnGoBack()
+        OpenMenu(EngineMainMenu)
+    end
+    
+    function OnUpdate()
+        sx, sy = Screen.GetSize()
+        self.x = int((sx - self.totalW) / 2)
+        self.y = int((sy - self.totalH) / 2)
+    end
+
+end
+
+
+function OpenEngineMainMenu()
+    m = OpenMenu(EngineMainMenu)
+    Music.Play(EngineConfig.menuMusic)
+end
+
+function OpenEnginePackageMenu()
+    VFS.Reload()
+    dl = VFS.GetDirList("packages") // TODO: combine with GetFileList
+    fl = VFS.GetFileList("packages")
+    dict = [ => ]
+    for d in dl: dict[d] = true // populate the dict, filtering out duplicates. true is just a dummy value here.
+    for f in fl
+        if f.endsWith(".lvpa", true)
+            f = f[:-5] // skip the last 5 chars (= cut off ".lvpa")
+            if f: dict[f] = true
+        end
+    end
+    
+    m = EngineFileListMenu()
+    
+    for s, dummy in dict
+        m.Add( [LoadPackageFile, s], s )
+    end
+    m.Add(m.OnGoBack, "--- Back ---")
+    
+    OpenMenu( { => m } ) // use lambda to fake a constructor, because we have already initialized the menu
+
+end
+
+function OpenEngineFileBrowserMenu(path) // for debugging
+
+    VFS.Reload()
+    > "Entering path: '", path, "'"
+    m = EngineFileListMenu()
+    m.rowSpacing = 0
+    
+    d = VFS.GetDirList(path)
+    if d
+        for s in d
+            m.Add( [OpenEngineFileBrowserMenu, len(path) ? (path + "/" + s) : s], "[" + s + "]" )
+        end
+    end
+    
+    f = VFS.GetFileList(path)
+    if f
+        for s in f
+            m.Add( { => }, s )
+        end
+    end
+    
+    m.Add(m.OnGoBack, "--- Back ---")
+    
+    OpenMenu( { => m } )
+    
+end
+
+function LoadPackageFile(s)
+    > "Selected Package: ", s
+    CallScheduler.Schedule( [PackageSystem.Load, s], 1 )
+end
+
+
+CallScheduler.Schedule( OpenEngineMainMenu, 1 )
+
+
+export OpenEnginePackageMenu

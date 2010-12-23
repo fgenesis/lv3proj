@@ -1,0 +1,258 @@
+
+_currentMenu = nil
+
+
+// basic menu class, derive from this to specialize drawing of the currently selected menu entry
+// note: there can only be 1 menu be active at a time
+class Menu
+
+    accept_esc = true // accept esc key to go back 1 menu?
+    fontname = "rpgfont"
+    soundback = "menuclick.ogg"
+    soundselect = "menuclick.ogg"
+    soundaccept = "menuaccept.ogg"
+    
+    items = [] // stores all menu entries
+    sel = 0 // currently selected menu entry
+    font = nil
+    inputTime = 0 // to allow only 1 key press in 1 engine loop
+    rowSpacing = 5
+    x = 0
+    y = 0
+    totalW = 0
+    totalH = 0
+    sndAccept = nil
+    sndBack = nil
+    sndSelect = nil
+    
+    init
+        self.font = GetFont(self.fontname)
+        if not self.font: raise "Menu: Font " + self.fontname + " not found"
+        self.sndAccept = Sound(self.soundaccept)
+        if not self.sndAccept: raise "Menu: Sound " + self.soundaccept + " not found"
+        self.sndSelect = Sound(self.soundselect)
+        if not self.sndSelect: raise "Menu: Sound " + self.soundselect + " not found"
+        self.sndBack = Sound(self.soundback)
+        if not self.sndBack: raise "Menu: Sound " + self.soundback + " not found"
+        SNESKeyMap.RegisterInputHook(self, self.OnInput)
+        RegisterRawInputHook(self, self.OnRawInput)
+        RegisterUpdateHook(self, self.OnUpdate)
+        RegisterRenderHook(self.Draw)
+    end
+    
+    function Close()
+        SNESKeyMap.UnregisterInputHook(self, self.OnInput)
+        UnregisterRawInputHook(self, self.OnRawInput)
+        UnregisterUpdateHook(self)
+        UnregisterRenderHook(self.Draw)
+    end
+    
+    function Setup()
+    end
+    
+    function OnUpdate(ms)
+    end
+    
+    function Update()
+        h = self.font.GetHeight()
+        for itm in self.items
+            self.totalW = max(self.totalW, self.font.GetWidth(itm[0]))
+        end
+        self.totalH = max(self.totalH, len(self.items) * (h + self.rowSpacing))
+    end
+    
+    function Draw()
+        i = 0
+        for s, crap in self.items
+            if i == self.sel
+                self.DrawSelected(s, i)
+            else
+                self.DrawNormal(s, i)
+            end
+            ++i
+        end
+    end
+    
+    function DrawSelected(s, index)
+        h = self.font.GetHeight()
+        ypos = self.y + index * (h + self.rowSpacing)
+        Screen.GetSurface().Write(self.x + 10, ypos, self.font, s)
+    end
+    
+    function DrawNormal(s, index)
+        h = self.font.GetHeight()
+        ypos = self.y + index * (h + self.rowSpacing)
+        Screen.GetSurface().Write(self.x, ypos, self.font, s)
+    end
+    
+    function Clear()
+        self.items = []
+    end
+    
+    function Add(call, str)
+        arrayAdd(self.items, [str ? str : "<missing>", call] )
+    end
+    
+    function Text(i, str)
+        //self.items[i][0] = str
+        crap, call = self.items[i]
+        self.items[i] = .[str call]
+    end
+    
+    function OnKeyLeft()
+    end
+    
+    function OnKeyRight()
+    end
+    
+    function OnKeyUp()
+        self.sndSelect.Play()
+        if(self.sel <= 0)
+            self.sel = len(self.items) - 1  
+        else
+            --self.sel
+        end
+    end
+    
+    function OnKeyDown()
+        self.sndSelect.Play()
+        ++self.sel
+        self.sel %= len(self.items)
+    end
+    
+    function OnGoBack()
+        self.sndBack.Play()
+    end
+    
+    function _Accept(itm)
+        str, call = itm
+        self.sndAccept.Play()
+        call()
+    end
+    
+    function OnInput(inp)
+        global _currentMenu
+        if not _currentMenu == self: return
+        if not len(self.items): return
+        
+        // time guard, accept only 1 key press in 1 engine loop,
+        // because if both the SNESKeyMap and raw input are processed,
+        // a key press may be counted twice
+        t = Engine.GetTime()
+        if self.inputTime == t: return
+        self.inputTime = t
+        
+        key, player, state = inp // player not used
+            
+        if not state: return // do nothing if button was released
+        switch key
+            case KeyLEFT
+                self.OnKeyLeft()
+            case KeyRIGHT
+                self.OnKeyRight()
+            case KeyUP
+                self.OnKeyUp()
+            case KeyDOWN
+                self.OnKeyDown()
+            case KeyA
+                self._Accept(self.items[self.sel])
+            case KeyB
+                self._Accept(self.items[self.sel])
+            case KeySTART
+                self._Accept(self.items[self.sel])
+            case KeyY
+                self.OnGoBack()
+        end
+        UpdateCurrentMenu()
+    end
+    
+    // raw key translation
+    // raw input has always a higher priority then "tanslated" keys
+    // this is done so that the menu is always useable and does not
+    // require keyboard hammering to get to know the keys
+    function OnRawInput(e)
+        global _currentMenu
+        if not _currentMenu == self: return
+        ty, src, which, value = e
+        if(ty == EVENT_TYPE_KEYBOARD and value != 0)
+            if(which == SDLK.RETURN)
+                self.OnInput( .[KeySTART nil 1] )
+            elif(which == SDLK.ESCAPE)
+                // need special condition here because of key unbinding in main menu
+                if(not self.accept_esc): return
+                self.OnInput( .[KeyY nil 1] )
+            elif(which == SDLK.UP)
+                self.OnInput( .[KeyUP nil 1] )
+            elif(which == SDLK.DOWN)
+                self.OnInput( .[KeyDOWN nil 1])
+            elif(which == SDLK.LEFT)
+                self.OnInput( .[KeyLEFT nil 1])
+            elif(which == SDLK.RIGHT)
+                self.OnInput( .[KeyRIGHT nil 1] )
+            end
+        end
+    end
+    
+end
+
+class SinusMenu from Menu
+    
+    rowHeight = 0 // int
+    charWidth = 0 // int
+    amplitude = 10 // float
+    multiplier = 0.5 // float
+    
+    init
+        self.rowHeight = self.font.GetHeight()
+        self.charWidth = self.font.GetWidth("X") // just any average char
+        self.rowSpacing = int(self.rowHeight * 1.5)
+        self.amplitude = self.rowHeight / 3
+    end
+
+    function DrawSelected(s, index)
+        swrite = Screen.GetSurface().Write
+        ybase = self.y + index * (self.rowHeight + self.rowSpacing)
+        ampl = self.amplitude
+        arr = s.split()
+        cw = self.charWidth
+        mult = self.multiplier
+        t = Engine.GetTime() / 100
+        i = 0
+        xp = self.x
+        for c in arr
+            yp = ybase + int(ampl * sin(t + (i * mult)))
+            swrite(xp, yp, self.font, c)
+            xp += cw
+            ++i
+        end
+    end
+
+end
+
+
+function OpenMenu(mcons)
+    global _currentMenu
+    CloseCurrentMenu()
+    _currentMenu = mcons()
+    _currentMenu.Setup()
+    UpdateCurrentMenu()
+    return _currentMenu
+end
+
+function CloseCurrentMenu()
+    global _currentMenu
+    if not _currentMenu: return
+    _currentMenu.Close()
+    _currentMenu = nil
+end
+    
+// called when constructed & at keypress
+function UpdateCurrentMenu()
+    global _currentMenu
+    if not _currentMenu: return
+    _currentMenu.Update()
+end
+
+export OpenMenu, UpdateCurrentMenu, CloseCurrentMenu
+
+export Menu, SinusMenu

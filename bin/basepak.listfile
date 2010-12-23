@@ -1,4 +1,6 @@
 #include gfx/basepak.listfile
+#include music/basepak.listfile
+#include sfx/basepak.listfile
 #include scripts/basepak.listfile
 
 -s basepak.listfile

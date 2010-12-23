@@ -1,1 +1,5 @@
-#include font/basepak.listfile#include water/basepak.listfile#include misc/basepak.listfile
+#include font/basepak.listfile
+#include water/basepak.listfile
+#include misc/basepak.listfile
+
+-p gfx basepak.listfile

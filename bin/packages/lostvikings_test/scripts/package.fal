@@ -1,10 +1,52 @@
 
+
 PackageSystem.Load("lostvikings_data")
 
-function LoadFinal()
-    if not ScriptLoader.LoadFile("test.fal", "levels"): raise "OOOPS!"
-    ScriptLoader.LoadDir("benchmark")
+
+class LVTestLevelSelectMenu from SinusMenu
+
+    function Setup()
+        self.Add( [PackageSystem.RunAfterLoad, [MyLoadMapScript, "test.fal"]], "Test Level" )
+        self.Add( [PackageSystem.RunAfterLoad, [MyLoadMapScript, "demo.fal"]], "Demo Level" )
+        self.Add( self.OnGoBack, "--- Back ---" )
+    end
+    
+    function OnGoBack()
+        //OpenEnginePackageMenu()
+        ShutdownGamePackage()
+    end
+    
+    function OnUpdate()
+        sx, sy = Screen.GetSize()
+        self.x = int((sx - self.totalW) / 2)
+        self.y = int((sy - self.totalH) / 2)
+    end
+
 end
 
-PackageSystem.RunAfterLoad(LoadFinal)
+function MyLoadMapScript(file)
+    if not ScriptLoader.LoadFile(file, "levels"): ShutdownGamePackage()
+    ScriptLoader.LoadDir("benchmark")
+    CloseCurrentMenu()
+end
 
+function LoadFinal()
+    OpenMenu(LVTestLevelSelectMenu)
+end
+
+function EscHandler()
+    ShutdownGamePackage()
+end
+
+function RawKeyHandler(inp)
+    ty, src, which, value = inp
+    if(ty == EVENT_TYPE_KEYBOARD and value)
+        if(which == SDLK.ESCAPE)
+            EscHandler()
+        end
+    end
+end
+
+InitGamePackage()
+PackageSystem.RunAfterLoad(LoadFinal)
+RegisterRawInputHook("lostvikings_test", RawKeyHandler)
