@@ -193,6 +193,38 @@
 					>
 				</File>
 			</Filter>
+			<Filter
+				Name="confparser_module"
+				>
+				<File
+					RelativePath=".\falcon_ext\confparser_module\confparser.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\falcon_ext\confparser_module\confparser_ext.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\falcon_ext\confparser_module\confparser_ext.h"
+					>
+				</File>
+				<File
+					RelativePath=".\falcon_ext\confparser_module\confparser_mod.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\falcon_ext\confparser_module\confparser_mod.h"
+					>
+				</File>
+				<File
+					RelativePath=".\falcon_ext\confparser_module\confparser_st.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\falcon_ext\confparser_module\confparser_st.h"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="Header Files"
