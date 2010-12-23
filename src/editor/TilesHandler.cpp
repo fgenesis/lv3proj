@@ -31,7 +31,7 @@ void EditorEngine::LoadPackages(void)
             LVPAFile*lvpa = new LVPAFile;
             if(lvpa->LoadFrom(fn, LVPALOAD_NONE))
             {
-                success = resMgr.vfs.AddContainer(lvpa, true); // delete later
+                success = resMgr.vfs.AddContainer(lvpa, "", true); // delete later
             }
             if(success)
                 logdetail("Loaded package: '%s'", fn);

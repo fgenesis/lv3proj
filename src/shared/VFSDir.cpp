@@ -84,7 +84,7 @@ VFSFile *VFSDir::getFile(const char *fn)
     return it != _files.end() ? it->second : NULL;
 }
 
-VFSDir *VFSDir::getDir(const char *subdir)
+VFSDir *VFSDir::getDir(const char *subdir, bool forceCreate /* = false */)
 {
     char *slashpos = (char *)strchr(subdir, '/');
 
@@ -96,9 +96,24 @@ VFSDir *VFSDir::getDir(const char *subdir)
 
         VFSDirMap::iterator it = _subdirs.find(subdir);
 
-        *slashpos = '/'; // restore original string
+        VFSDir *ret = NULL;
 
-        return it != _subdirs.end() ? it->second->getDir(sub) : NULL;
+        if(it != _subdirs.end())
+        {
+            *slashpos = '/'; // restore original string
+            ret = it->second->getDir(sub);
+        }
+        else if(forceCreate)
+        {
+            ret = new VFSDir;
+            ret->_name = subdir;
+            *slashpos = '/'; // restore original string
+            insert(ret, true);
+            ret->getDir(sub, true); // create remaining structure
+            --(ret->ref); // was added, decref here
+        }
+
+        return ret;
     }
 
     VFSDirMap::iterator it = _subdirs.find(subdir);
@@ -132,7 +147,10 @@ uint32 VFSDirReal::load(const char *dir /* = NULL */)
     for(std::deque<std::string>::iterator it = dl.begin(); it != dl.end(); it++)
     {
         VFSDirReal *d = new VFSDirReal;
-        sum += d->load((*it).c_str()); // GetDirList() always returns full paths from relative
+        std::string full(dir);
+        full += '/';
+        full += *it;
+        sum += d->load(full.c_str()); // GetDirList() always returns relative paths
         _subdirs[d->name()] = d;
     }
     return sum;

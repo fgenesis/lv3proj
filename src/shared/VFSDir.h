@@ -15,9 +15,9 @@ class VFSDir
 public:
     VFSDir() : ref(this) {}
     virtual ~VFSDir();
-    virtual uint32 load(const char *dir = NULL) { return 0; }
+    virtual uint32 load(const char *dir = NULL) { return 0; } // dir must be absolute path
     virtual VFSFile *getFile(const char *fn);
-    virtual VFSDir *getDir(const char *subdir);
+    virtual VFSDir *getDir(const char *subdir, bool forceCreate = false);
 
     bool insert(VFSDir *subdir, bool overwrite = true);
     bool merge(VFSDir *dir, bool overwrite = true);

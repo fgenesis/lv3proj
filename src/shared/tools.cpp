@@ -123,6 +123,8 @@ std::string toHexDump(uint8* array, uint32 size, bool spaces, uint32 per_line)
     return ss.str();
 }
 
+// returns list of *plain* file names in given directory,
+// without paths, and without anything else
 std::deque<std::string> GetFileList(std::string path)
 {
     std::deque<std::string> files;
@@ -135,27 +137,34 @@ std::deque<std::string> GetFileList(std::string path)
     while((dp=readdir(dirp)) != NULL)
     {
         if (dp->d_type != DT_DIR) // only add if it is not a directory
-            files.push_back(std::string(dp->d_name));
+        {
+            std::string s(dp->d_name);
+            files.push_back(s);
+        }
     }
 
     if(dirp)
         closedir(dirp);
 # else
 
-    if(path.at(path.length()-1)!='/')
+    if(path[path.length()-1] != '/')
         path += "/";
-    path += "*.*";
-    const char *p = path.c_str();
     WIN32_FIND_DATA fil;
-    HANDLE hFil=FindFirstFile(p,&fil);
+    std::string search = path + "*";
+    HANDLE hFil = FindFirstFile(search.c_str(),&fil);
     if(hFil!=INVALID_HANDLE_VALUE)
     {
         do
         {
             if(!(fil.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
-                files.push_back(path+std::string(fil.cFileName));
+            {
+                std::string s(fil.cFileName);
+                files.push_back(s);
+            }
         }
         while(FindNextFile(hFil, &fil));
+
+        FindClose(hFil);
     }
 
 # endif
@@ -163,6 +172,8 @@ std::deque<std::string> GetFileList(std::string path)
     return files;
 }
 
+// returns a list of directory names in the given directory, *without* the source dir.
+// if getting the dir list recursively, all paths are added, except *again* the top source dir beeing queried.
 std::deque<std::string> GetDirList(std::string path, bool recursive /* = false */)
 {
     std::deque<std::string> dirs;
@@ -174,18 +185,22 @@ std::deque<std::string> GetDirList(std::string path, bool recursive /* = false *
     struct dirent * dp;
     dirp = opendir(p);
 
-    while((dp=readdir(dirp)) != NULL)
+    while((dp = readdir(dirp)) != NULL)
     {
         if (dp->d_type == DT_DIR) // only add if it is a directory
         {
             if(strcmp(dp->d_name, ".") != 0 && strcmp(dp->d_name, "..") != 0)
             {
-                std::string s = path+"/"+std::string(dp->d_name);
+                std::string s = dp->d_name;
 				dirs.push_back(s);
                 if (recursive) // needing a better way to do that
                 {
-                    std::deque<std::string> newDirs = GetDirList(s);
-                    dirs.insert(dirs.end(), newDirs.begin(), newDirs.end());
+                    std::deque<std::string> newdirs = GetDirList(s);
+                    for(std::deque<std::string>::iterator it = newdirs.begin(); it != newdirs.end(); ++it)
+                    {
+                        std::string d = s + *it;
+                        dirs.push_back(d);
+                    }
                 }
             }
         }
@@ -196,13 +211,12 @@ std::deque<std::string> GetDirList(std::string path, bool recursive /* = false *
 
 #else
 
-    if(path[path.length()-1]!='/')
+    if(path[path.length()-1] != '/')
         path += "/";
 
-    std::string search = path + "*.*";
-    const char *p = search.c_str();
+    std::string search = path + "*";
     WIN32_FIND_DATA fil;
-    HANDLE hFil=FindFirstFile(p,&fil);
+    HANDLE hFil = FindFirstFile(search.c_str(),&fil);
     if(hFil!=INVALID_HANDLE_VALUE)
     {
         do
@@ -211,17 +225,23 @@ std::deque<std::string> GetDirList(std::string path, bool recursive /* = false *
             {
                 if (!strcmp(fil.cFileName, ".") || !strcmp(fil.cFileName, ".."))
                     continue;
-                std::string s = path + std::string(fil.cFileName);
+                std::string s = fil.cFileName;
                 dirs.push_back(s);
 
                 if (recursive) // needing a better way to do that
                 {
-                    std::deque<std::string> &newdirs = GetDirList(s);
-                    dirs.insert(dirs.end(), newdirs.begin(), newdirs.end());
+                    std::deque<std::string> newdirs = GetDirList(s);
+                    for(std::deque<std::string>::iterator it = newdirs.begin(); it != newdirs.end(); ++it)
+                    {
+                        std::string d = s + *it;
+                        dirs.push_back(d);
+                    }
                 }
             }
         }
         while(FindNextFile(hFil, &fil));
+
+        FindClose(hFil);
     }
 
 #endif
