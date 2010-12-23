@@ -31,6 +31,9 @@
 #include <falcon/streambuffer.h>
 #include <falcon/stdstreams.h>
 
+#include <falcon/globals.h>
+#include <falcon/modulecache.h>
+
 #include <memory>
 
 
@@ -379,7 +382,8 @@ Module *ModuleLoader::loadFile( const URI& uri, t_filetype type, bool scan )
                .sysError( error )
                );
          }
-         origUri.path( curdir + "/" + origUri.path() );
+
+         origUri.pathElement().setFullLocation( curdir + "/" + origUri.pathElement().getFullLocation() );
       }
    }
    else
@@ -496,7 +500,10 @@ Module *ModuleLoader::loadFile( const URI& uri, t_filetype type, bool scan )
    }
    else
    {
-      raiseError( e_nofile, URI::URLDecode(uri.get()) );
+   	String expl = URI::URLDecode(uri.get());
+   	if( scan )
+   		expl += String(" in path ") + getSearchPath();
+      raiseError( e_nofile, expl );
    }
 
    // in case of errors, we already raised
@@ -689,10 +696,16 @@ bool ModuleLoader::applyLangTable( Module *mod, const String &file_path )
    return stringCount == 0;
 }
 
-
-
 Module *ModuleLoader::loadModule( const String &path )
 {
+   ModuleCache* mc = Engine::getModuleCache();
+   if( mc != 0 )
+   {
+      Module* mod = mc->find( path );
+      if( mod != 0 )
+         return mod;
+   }
+
    // May throw on error.
    Module *mod = 0;
 
@@ -700,6 +713,8 @@ Module *ModuleLoader::loadModule( const String &path )
       // loadModule may throw, so we need an autoptr not to leak in case of errors.
       std::auto_ptr<Stream> in( openResource( path, t_vmmod ));
       mod = loadModule( in.get() );
+
+      if( mc != 0 ) mod = mc->add( path, mod );
    }
    fassert( mod != 0 );
 
@@ -720,6 +735,14 @@ Module *ModuleLoader::loadModule( const String &path )
 
 Module *ModuleLoader::loadBinaryModule( const String &path )
 {
+   ModuleCache* mc = Engine::getModuleCache();
+   if( mc != 0 )
+   {
+      Module* mod = mc->find( path );
+      if( mod != 0 )
+         return mod;
+   }
+
    DllLoader dll;
 
    if ( ! dll.open( path ) )
@@ -756,6 +779,8 @@ Module *ModuleLoader::loadBinaryModule( const String &path )
    getModuleName( path, modName );
    mod->name( modName );
    mod->path( path );
+
+   if ( mc ) mod = mc->add( path, mod );
 
    // as dll instance has been emptied, the DLL won't be closed till the
    // module lifetime comes to an end.
@@ -821,6 +846,14 @@ void  ModuleLoader::raiseError( int code, const String &expl, int fsError )
 
 Module *ModuleLoader::loadSource( const String &file )
 {
+   ModuleCache* mc = Engine::getModuleCache();
+   if( mc != 0 )
+   {
+      Module* mod = mc->find( file );
+      if( mod != 0 )
+         return mod;
+   }
+
    // we need it later
    int32 dotpos = file.rfind( "." );
 
@@ -846,6 +879,11 @@ Module *ModuleLoader::loadSource( const String &file )
       mod = loadSource( in.get(), file, modName );
       m_forceTemplate = bOldForceFtd;
       in->close();
+
+      if( mc != 0 )
+      {
+         mod = mc->add( file, mod );
+      }
    }
    catch (Error *)
    {

@@ -13,15 +13,15 @@
    See LICENSE file for licensing details.
 */
 
+/*#
+   @beginmodule core
+*/
+
 #include <falcon/setup.h>
 #include <falcon/module.h>
 #include <falcon/item.h>
 #include <falcon/vm.h>
 #include <falcon/stream.h>
-
-/*#
-   
-*/
 
 namespace Falcon {
 namespace core {

@@ -18,7 +18,7 @@
 #include <falcon/falconobject.h>
 
 /*#
-
+   @beginmodule core
 */
 
 namespace Falcon {

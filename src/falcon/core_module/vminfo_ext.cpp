@@ -1,8 +1,7 @@
 /*
    FALCON - The Falcon Programming Language.
-   FILE: vminfo_ext.h
+   FILE: vminfo_ext.cpp
 
-   Header for Falcon Realtime Library - C modules
    -------------------------------------------------------------------
    Author: Giancarlo Niccolai
    Begin: Thu, 14 Aug 2008 00:31:21 +0200
@@ -16,6 +15,10 @@
 #include "core_module.h"
 #include <falcon/stackframe.h>
 #include <falcon/sys.h>
+
+/*#
+   @beginmodule core
+*/
 
 namespace Falcon {
 namespace core {
@@ -203,6 +206,22 @@ FALCON_FUNC vmModuleName( ::Falcon::VMachine *vm )
 
    vm->getCaller( sym, mod );
    vm->retval( new CoreString( mod->name() ));
+}
+
+/*#
+   @function vmModuleLine
+   @inset vminfo
+   @brief Returns the number of the line it has been called at.
+   @return An integer that represents a line number.
+*/
+FALCON_FUNC vmModuleLine( ::Falcon::VMachine *vm )
+{
+   const Symbol* sym;
+   uint32 line;
+   uint32 pc;
+
+   vm->getTraceStep( 0, sym, line, pc );
+   vm->retval( (int64)line );
 }
 
 /*

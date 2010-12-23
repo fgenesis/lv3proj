@@ -13,6 +13,10 @@
    See LICENSE file for licensing details.
 */
 
+/*#
+   @beginmodule core
+*/
+
 #include "core_module.h"
 #include <falcon/format.h>
 #include <falcon/corefunc.h>
@@ -665,7 +669,7 @@ static bool dop_internal( VMachine* vm )
    Given the @b key, @b dflt and @b oper parameters, this method 
    inserts a default value on a dictionary, eventually performing 
    a default operation. In short, if the @b key is not present in the
-   dictionary, a new key is created and the @dflt value is assigned to
+   dictionary, a new key is created and the @b dflt value is assigned to
    it. If a @b oper callable item (function) is given, then the current
    value associated with the key is passed to it as a parameter; in case
    that the key still doesn't exist, the @b dflt value is passed instead.
@@ -1521,6 +1525,16 @@ FALCON_FUNC LateBinding_value( VMachine *vm )
       vm->retval( vm->self().asFutureBind() );
    else
       vm->retnil();
+}
+
+/*#
+   @method symbol LateBinding
+   @brief Returns the symbol name associated with a late binding.
+   @return The symbol name
+*/
+FALCON_FUNC LateBinding_symbol( VMachine *vm )
+{
+   vm->retval( vm->self().asLBind() );
 }
 
 /*#

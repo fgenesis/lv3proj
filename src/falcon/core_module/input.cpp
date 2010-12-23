@@ -17,6 +17,10 @@
    Read a line from the input stream.
 */
 
+/*#
+   @beginmodule core
+*/
+
 #include <falcon/setup.h>
 #include <falcon/module.h>
 #include <falcon/item.h>
@@ -35,10 +39,6 @@
    #define STDIN_FILENO 0
    #endif
 #endif
-
-/*#
-   
-*/
 
 namespace Falcon {
 namespace core {

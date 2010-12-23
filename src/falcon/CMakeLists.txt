@@ -122,13 +122,16 @@ set(CORE_MODULE_SOURCES
   core_module/tokenizer_ext.cpp
   core_module/uri_ext.cpp
   core_module/vminfo_ext.cpp
+  core_module/webhelp.cpp
 )
 
 
 add_library(falcon_engine
   attribmap.cpp
   autocstring.cpp
+  autoucsstring.cpp
   autowstring.cpp
+  base64.cpp
   basealloc.cpp
   cacheobject.cpp
   crobject.cpp
@@ -179,6 +182,7 @@ add_library(falcon_engine
   mempool.cpp
   modloader.cpp
   module.cpp
+  modulecache.cpp
   pagedict.cpp
   path.cpp
   pcode.cpp

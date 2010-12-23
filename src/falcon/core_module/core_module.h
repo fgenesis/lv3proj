@@ -55,13 +55,13 @@ FALCON_FUNC  mth_metaclass ( ::Falcon::VMachine *vm );
 FALCON_FUNC  mth_getProperty( ::Falcon::VMachine *vm );
 FALCON_FUNC  mth_setProperty( ::Falcon::VMachine *vm );
 FALCON_FUNC  mth_properties( ::Falcon::VMachine *vm );
-FALCON_FUNC  Dictionary_dop( ::Falcon::VMachine *vm );
 
 //FALCON_FUNC  mth_hasProperty( ::Falcon::VMachine *vm );
 
 FALCON_FUNC  Function_name ( ::Falcon::VMachine *vm );
 FALCON_FUNC  Function_caller ( ::Falcon::VMachine *vm );
 FALCON_FUNC  Function_trace ( ::Falcon::VMachine *vm );
+FALCON_FUNC  Function_stack ( ::Falcon::VMachine *vm );
 FALCON_FUNC  Function_attributes( ::Falcon::VMachine *vm );
 
 // Iterator class
@@ -81,6 +81,7 @@ FALCON_FUNC  Iterator_find( ::Falcon::VMachine *vm );
 FALCON_FUNC  Iterator_insert( ::Falcon::VMachine *vm );
 
 FALCON_FUNC  LateBinding_value( ::Falcon::VMachine *vm );
+FALCON_FUNC  LateBinding_symbol( ::Falcon::VMachine *vm );
 FALCON_FUNC  LateBinding_bound( ::Falcon::VMachine *vm );
 FALCON_FUNC  LateBinding_bind( ::Falcon::VMachine *vm );
 FALCON_FUNC  LateBinding_unbind( ::Falcon::VMachine *vm );
@@ -242,6 +243,7 @@ FALCON_FUNC  vmIsMain( ::Falcon::VMachine *vm );
 FALCON_FUNC  vmFalconPath( ::Falcon::VMachine *vm );
 FALCON_FUNC  vmSearchPath( ::Falcon::VMachine *vm );
 FALCON_FUNC  vmModuleName( ::Falcon::VMachine *vm );
+FALCON_FUNC  vmModuleLine( ::Falcon::VMachine *vm );
 FALCON_FUNC  vmModulePath( ::Falcon::VMachine *vm );
 FALCON_FUNC  vmRelativePath( ::Falcon::VMachine *vm );
 
@@ -250,6 +252,7 @@ FALCON_FUNC  printl ( ::Falcon::VMachine *vm );
 FALCON_FUNC  inspect ( ::Falcon::VMachine *vm );
 FALCON_FUNC  mth_describe ( ::Falcon::VMachine *vm );
 FALCON_FUNC  seconds ( ::Falcon::VMachine *vm );
+FALCON_FUNC  epoch ( ::Falcon::VMachine *vm );
 FALCON_FUNC  input ( ::Falcon::VMachine *vm );
 FALCON_FUNC  falcon_getenv( ::Falcon::VMachine *vm );
 FALCON_FUNC  falcon_setenv( ::Falcon::VMachine *vm );
@@ -369,6 +372,7 @@ FALCON_FUNC  Array_tabField ( ::Falcon::VMachine *vm );
 FALCON_FUNC  Array_tabRow ( ::Falcon::VMachine *vm );
 FALCON_FUNC  Array_first ( ::Falcon::VMachine *vm );
 FALCON_FUNC  Array_last ( ::Falcon::VMachine *vm );
+FALCON_FUNC  Array_concat ( ::Falcon::VMachine *vm );
 
 FALCON_FUNC  bless( ::Falcon::VMachine *vm );
 FALCON_FUNC  mth_dictMerge( ::Falcon::VMachine *vm );
@@ -388,6 +392,8 @@ FALCON_FUNC  Dictionary_last( ::Falcon::VMachine *vm );
 FALCON_FUNC  Dictionary_comp ( ::Falcon::VMachine *vm );
 FALCON_FUNC  Dictionary_mcomp ( ::Falcon::VMachine *vm );
 FALCON_FUNC  Dictionary_mfcomp ( ::Falcon::VMachine *vm );
+FALCON_FUNC  Dictionary_dop( ::Falcon::VMachine *vm );
+FALCON_FUNC  Dictionary_do( ::Falcon::VMachine *vm );
 
 FALCON_FUNC  fileType( ::Falcon::VMachine *vm );
 FALCON_FUNC  fileNameSplit ( ::Falcon::VMachine *vm );
@@ -429,7 +435,10 @@ FALCON_FUNC  flc_floor ( ::Falcon::VMachine *vm );
 FALCON_FUNC  flc_ceil ( ::Falcon::VMachine *vm );
 FALCON_FUNC  flc_abs ( ::Falcon::VMachine *vm );
 FALCON_FUNC  flc_math_log ( ::Falcon::VMachine *vm );
+FALCON_FUNC  flc_math_log10 ( ::Falcon::VMachine *vm );
 FALCON_FUNC  flc_math_exp ( ::Falcon::VMachine *vm );
+FALCON_FUNC  flc_math_sqrt ( ::Falcon::VMachine *vm );
+FALCON_FUNC  flc_math_mod ( ::Falcon::VMachine *vm );
 FALCON_FUNC  flc_math_pow ( ::Falcon::VMachine *vm );
 FALCON_FUNC  flc_math_sin ( ::Falcon::VMachine *vm );
 FALCON_FUNC  flc_math_cos ( ::Falcon::VMachine *vm );
@@ -604,6 +613,10 @@ FALCON_FUNC  Table_curPage ( ::Falcon::VMachine *vm );
 FALCON_FUNC  Table_insertPage ( ::Falcon::VMachine *vm );
 FALCON_FUNC  Table_removePage ( ::Falcon::VMachine *vm );
 FALCON_FUNC  Table_getPage ( ::Falcon::VMachine *vm );
+
+FALCON_FUNC  Base64_encode ( ::Falcon::VMachine *vm );
+FALCON_FUNC  Base64_decode ( ::Falcon::VMachine *vm );
+FALCON_FUNC  Base64_decmb ( ::Falcon::VMachine *vm );
 
 FALCON_FUNC  Tokenizer_init ( ::Falcon::VMachine *vm );
 FALCON_FUNC  Tokenizer_parse ( ::Falcon::VMachine *vm );

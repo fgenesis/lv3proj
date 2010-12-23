@@ -15,7 +15,7 @@
 
 /** \file
    Implementation of Core Strings.
-   \todo Add support for intenrational strings.
+   \todo Add support for international strings.
 */
 
 #include <falcon/memory.h>
@@ -1365,22 +1365,6 @@ void String::prepend( uint32 chr )
    setCharAt( 0, chr );
 }
 
-void String::uint32ToHex( uint32 number, char *buffer )
-{
-   uint32 divisor = 0x10000000;
-   int pos = 0;
-
-   while( divisor > 0 ) {
-      uint32 rest = number / divisor;
-      if( rest > 0 || pos > 0 ) {
-         buffer[pos] = rest >= 10 ? 'A' + (rest - 10):'0'+rest;
-         pos++;
-         number -= rest * divisor;
-      }
-      divisor = divisor >> 4; // divide by 16
-   }
-   buffer[pos] = 0;
-}
 
 void String::escape( String &strout ) const
 {
@@ -1413,12 +1397,9 @@ void String::internal_escape( String &strout, bool full ) const
          case '\b': strout += "\\b"; break;
          case '\\': strout += "\\\\"; break;
          default:
-            if ( chat < 8 || (chat >= 128 && full) ) {
-               char bufarea[14];
-               bufarea[0] = '\\';
-               bufarea[1] = 'x';
-               uint32ToHex( chat, bufarea+2 );
-               strout += bufarea;
+            if ( chat < 32 || (chat >= 128 && full) ) {
+               strout += 'x';
+               strout.writeNumberHex(chat, true );
             }
             else{
                strout += chat;
@@ -1556,13 +1537,15 @@ bool String::deserialize( Stream *in, bool bStatic )
    uint32 size;
 
    in->read( (byte *) &size, sizeof( size ) );
-   m_size = endianInt32(size);
-   m_bExported = (m_size & 0x80000000) == 0x80000000;
-   m_size = m_size & 0x7FFFFFFF;
+   size = endianInt32(size);
+   m_bExported = (size & 0x80000000) == 0x80000000;
+   size = size & 0x7FFFFFFF;
 
    // if the size of the deserialized string is 0, we have an empty string.
-   if ( m_size == 0 )
+   if ( size == 0 )
    {
+      m_size = 0;
+
       // if we had something allocated, we got to free it.
       if ( m_allocated > 0 )
       {
@@ -1584,6 +1567,12 @@ bool String::deserialize( Stream *in, bool bStatic )
       // determine the needed manipulator
       if ( bStatic )
       {
+         if( m_size < size )
+         {
+            return false;
+         }
+
+         m_size = size;
          switch( chars )
          {
             case 1: manipulator( &csh::handler_static ); break;
@@ -1600,14 +1589,16 @@ bool String::deserialize( Stream *in, bool bStatic )
             case 4: manipulator( &csh::handler_buffer32 ); break;
             default: return false;
          }
+
+         m_allocated = m_size = size;
+         if ( m_storage != 0 )
+            memFree( m_storage );
+
+         m_storage = (byte *) memAlloc( m_allocated );
+         if( m_storage == 0 )
+            return false;
       }
 
-
-      m_storage = (byte *) memRealloc( m_storage, m_size );
-      if( m_storage == 0 )
-         return false;
-
-      m_allocated = m_size;
 
       #ifdef FALCON_LITTLE_ENDIAN
       in->read( m_storage, m_size );
@@ -1784,7 +1775,7 @@ bool String::parseBin( uint64 &target, uint32 pos ) const
    target = 0;
    uint32 endSub = pos;
 
-   // max lenght of binary = 64 chars, + 2 for stubs
+   // max length of binary = 64 chars, + 2 for stubs
    while( endSub < len && (endSub - pos < 64) )
    {
       uint32 chnext = getCharAt( endSub );
@@ -1810,7 +1801,7 @@ bool String::parseOctal( uint64 &target, uint32 pos ) const
    target = 0;
    uint32 endSub = pos;
 
-   // max lenght of octals = 11 chars, + 2 for stubs
+   // max length of octals = 11 chars, + 2 for stubs
    while( endSub < len && (endSub - pos < 26) )
    {
       uint32 chnext = getCharAt( endSub );
@@ -1904,7 +1895,7 @@ void String::writeNumber( int64 number )
    append( buffer + pos );
 }
 
-void String::writeNumberHex( uint64 number, bool uppercase )
+void String::writeNumberHex( uint64 number, bool uppercase, int ciphers  )
 {
    // prepare the buffer
    char buffer[18];
@@ -1912,6 +1903,10 @@ void String::writeNumberHex( uint64 number, bool uppercase )
    buffer[17] = '\0';
 
    byte base = uppercase ? 0x41 : 0x61;
+   if( ciphers > 16 )
+   {
+      ciphers = 16;
+   }
 
    if ( number == 0 )
    {
@@ -1928,11 +1923,17 @@ void String::writeNumberHex( uint64 number, bool uppercase )
          }
 
          number >>= 4;
+         ciphers--;
       }
-      pos++;
    }
 
-   append( buffer + pos );
+   while( ciphers > 0 )
+   {
+      buffer[pos--] = '0';
+      ciphers --;
+   }
+
+   append( buffer + pos + 1 );
 }
 
 void String::writeNumberOctal( uint64 number )
@@ -2073,7 +2074,14 @@ void String::upper()
    }
 }
 
+
 bool String::fromUTF8( const char *utf8 )
+{
+   return fromUTF8( utf8, -1 );
+}
+
+
+bool String::fromUTF8( const char *utf8, int len )
 {
    // destroy old contents
 
@@ -2085,7 +2093,7 @@ bool String::fromUTF8( const char *utf8 )
    m_size = 0;
 
    // empty string?
-   if ( *utf8 == 0 )
+   if ( len == 0 || *utf8 == 0 )
    {
       m_class = &csh::handler_static;
       return true;
@@ -2093,7 +2101,7 @@ bool String::fromUTF8( const char *utf8 )
 
    // start scanning
 
-   while ( *utf8 != 0 )
+   while ( len != 0 && *utf8 != 0 )
    {
       uint32 chr = 0;
 
@@ -2151,6 +2159,7 @@ bool String::fromUTF8( const char *utf8 )
       this->append( chr );
 
       utf8++;
+      --len;
    }
 
    return true;

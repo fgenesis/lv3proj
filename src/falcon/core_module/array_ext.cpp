@@ -17,6 +17,12 @@
    @funset core_array_funcs Array support
    @brief Array related functions.
    @beginset core_array_funcs
+
+   @inmodule core
+   
+   Functions in this set are meant to provide functional
+   support to arrays. Some of them replicate opeartor or
+   @a Array class methods.
 */
 
 #include <falcon/setup.h>
@@ -112,6 +118,48 @@ FALCON_FUNC  Array_mfcomp ( ::Falcon::VMachine *vm )
    }
 }
 
+
+/*#
+   @method concat Array
+   @brief Concatenate all the elements of an array in a string.
+   @optparam sep Separator to be put between the elements.
+   @return A single string.
+*/
+FALCON_FUNC  Array_concat ( ::Falcon::VMachine *vm )
+{
+	Item* i_sep = vm->param(0);
+
+   if ( i_sep != 0 && ! i_sep->isString() )
+   {
+      throw new ParamError( ErrorParam( e_inv_params, __LINE__ )
+         .extra( "[S]" ) );
+   }
+
+   CoreArray* arr = vm->self().asArray();
+   CoreString *str = new CoreString;
+   uint32 len = arr->length();
+
+   for( uint32 i = 0; i < len ; ++i )
+   {
+   	const Item& item = arr->at(i);
+
+   	if ( item.isString() )
+   	{
+   		str->append( *item.asString() );
+   	}
+   	else
+   	{
+   	  	String temp;
+   	  	vm->itemToString( temp, &item );
+   	  	str->append( temp );
+   	}
+
+   	if( (i + 1)< len && i_sep )
+   		str->append( *i_sep->asString() );
+   }
+
+   vm->retval( str );
+}
 
 /*#
    @method front Array
@@ -1339,7 +1387,7 @@ FALCON_FUNC  mth_arraySort( ::Falcon::VMachine *vm )
    @param array2 Array containing the second half of the merge, read-only
    @optparam insertPos Optional position of array 1 at which to place array2
    @optparam start First element of array2 to merge in array1
-   @optparam end Last element – 1 of array2 to merge in array1
+   @optparam end Last element - 1 of array2 to merge in array1
 
    The items in array2 are appended to the end of array1, or in case an mergePos
    is specified, they are inserted at the given position. If mergePos is 0, they

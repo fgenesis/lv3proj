@@ -13,6 +13,10 @@
    See LICENSE file for licensing details.
 */
 
+/*#
+   @beginmodule core
+*/
+
 /** \file
    Short description
 */
@@ -118,7 +122,7 @@ FALCON_FUNC String_charSize( VMachine *vm )
    This method returns a string containing one character from the beginning of the string,
    or eventually more characters in case a number > 1 is specified in @b count.
 
-   If @b remove is true, then the character is removed and the string is shrinked.
+   If @b remove is true, then the character is removed and the string is shrunk.
    @see strFront
 
    If @b numeric is true,
@@ -139,7 +143,7 @@ FALCON_FUNC String_charSize( VMachine *vm )
    This function returns a string containing one character from the beginning of @b str,
    or eventually more characters in case a number > 1 is specified in @b count.
 
-   If @b remove is true, then the character is removed and the string is shrinked.
+   If @b remove is true, then the character is removed and the string is shrunk.
    @see String.front
 
    If @b numeric is true,
@@ -199,7 +203,7 @@ FALCON_FUNC mth_strFront( VMachine *vm )
    This function returns a string containing one character from the end of this string,
    or eventually more characters in case a number > 1 is specified in @b count.
 
-   If @b remove is true, then the character is removed and the string is shrinked.
+   If @b remove is true, then the character is removed and the string is shrunk.
    @see strFront
 
    If @b numeric is true,
@@ -220,7 +224,7 @@ FALCON_FUNC mth_strFront( VMachine *vm )
    This function returns a string containing one character from the end of @b str,
    or eventually more characters in case a number > 1 is specified in @b count.
 
-   If @b remove is true, then the characters are removed and the string is shrinked.
+   If @b remove is true, then the characters are removed and the string is shrunk.
    @see String.front
 
    If @b numeric is true,
@@ -311,10 +315,10 @@ FALCON_FUNC mth_strBack( VMachine *vm )
 /*#
    @function strSplitTrimmed
    @brief Subdivides a string in an array of substrings given a token substring.
-   @param string The string that must be splitted
-   @param token The token by which the string should be splitted.
+   @param string The string that must be split.
+   @param token The token by which the string should be split.
    @optparam count Optional maximum split count.
-   @return An array of strings containing the splitted string.
+   @return An array of strings containing the split string.
 
    This function returns an array of strings extracted from the given parameter.
    The array is filled with strings extracted from the first parameter, by dividing
@@ -339,9 +343,9 @@ FALCON_FUNC mth_strBack( VMachine *vm )
 /*#
    @method splittr String
    @brief Subdivides a string in an array of substrings given a token substring.
-   @param token The token by which the string should be splitted.
+   @param token The token by which the string should be split.
    @optparam count Optional maximum split count.
-   @return An array of strings containing the splitted string.
+   @return An array of strings containing the split string.
 
    @see strSplitTrimmed
 */
@@ -369,7 +373,7 @@ FALCON_FUNC  mth_strSplitTrimmed ( ::Falcon::VMachine *vm )
    uint32 limit;
 
    if ( target == 0 || ! target->isString()
-        || splitstr == 0 || ! splitstr->isString()
+        || (splitstr != 0 && ! (splitstr->isString() || splitstr->isNil()))
         || ( count != 0 && ! count->isOrdinal() ) )
    {
       throw new ParamError( ErrorParam( e_inv_params, __LINE__ )
@@ -383,20 +387,44 @@ FALCON_FUNC  mth_strSplitTrimmed ( ::Falcon::VMachine *vm )
    String *tg_str = target->asString();
    uint32 tg_len = target->asString()->length();
 
-   String *sp_str = splitstr->asString();
-   uint32 sp_len = splitstr->asString()->length();
+   // split in chars?
+   if( splitstr == 0 || splitstr->isNil() || splitstr->asString()->size() == 0)
+   {
+      // split the string in an array.
+      if( limit > tg_len )
+         limit = tg_len;
 
-   // Is the split string empty
-   if ( sp_len == 0 ) {
-      vm->retnil();
+      CoreArray* ca = new CoreArray( limit );
+      for( uint32 i = 0; i < limit - 1; ++i )
+      {
+         CoreString* elem = new CoreString(1);
+         elem->append( tg_str->getCharAt(i) );
+         ca->append( elem );
+      }
+      // add remains if there are any
+      if(limit <= tg_len)
+         ca->append(tg_str->subString(limit - 1));
+
+      vm->retval( ca );
       return;
    }
+
+   String *sp_str = splitstr->asString();
+   uint32 sp_len = splitstr->asString()->length();
 
    // return item.
    CoreArray *retarr = new CoreArray;
 
+   // if the split string is empty, return empty string
+   if ( sp_len == 0 )
+   {
+      retarr->append( new CoreString() );
+      vm->retval( retarr );
+      return;
+   }
+
    // if the token is wider than the string, just return the string
-   if ( tg_len <= sp_len )
+   if ( tg_len < sp_len )
    {
       retarr->append( new CoreString(  *tg_str ) );
       vm->retval( retarr );
@@ -423,7 +451,7 @@ FALCON_FUNC  mth_strSplitTrimmed ( ::Falcon::VMachine *vm )
          uint32 splitend = pos - sp_len;
          retarr->append( new CoreString( String( *tg_str, last_pos, splitend ) ) );
 
-         lastIsEmpty = (last_pos + 1 >= splitend);
+         lastIsEmpty = (last_pos >= splitend);
 
          last_pos = pos;
          limit--;
@@ -457,10 +485,10 @@ FALCON_FUNC  mth_strSplitTrimmed ( ::Falcon::VMachine *vm )
 /*#
    @function strSplit
    @brief Subdivides a string in an array of substrings given a token substring.
-   @param string The string that must be splitted
-   @optparam token The token by which the string should be splitted.
+   @param string The string that must be split.
+   @optparam token The token by which the string should be split.
    @optparam count Optional maximum split count.
-   @return An array of strings containing the splitted string.
+   @return An array of strings containing the split string.
 
    This function returns an array of strings extracted from the given parameter.
    The array is filled with strings extracted from the first parameter, by dividing
@@ -484,7 +512,7 @@ FALCON_FUNC  mth_strSplitTrimmed ( ::Falcon::VMachine *vm )
    the string, only the first starting from left is considered, while the others
    are returned in the second item, unparsed.
 
-   If the @token is empty or not given, the string is returned as a sequence of
+   If the @b token is empty or not given, the string is returned as a sequence of
    1-character strings in an array.
 
 
@@ -498,9 +526,9 @@ FALCON_FUNC  mth_strSplitTrimmed ( ::Falcon::VMachine *vm )
 /*#
    @method split String
    @brief Subdivides a string in an array of substrings given a token substring.
-   @optparam token The token by which the string should be splitted.
+   @optparam token The token by which the string should be split.
    @optparam count Optional maximum split count.
-   @return An array of strings containing the splitted string.
+   @return An array of strings containing the split string.
 
 
    @see strSplit
@@ -526,7 +554,7 @@ FALCON_FUNC  mth_strSplit ( ::Falcon::VMachine *vm )
    }
 
    if ( (target == 0 || ! target->isString())
-        || (splitstr != 0 && ! (splitstr->isString()||splitstr->isNil()))
+        || (splitstr != 0 && ! (splitstr->isString() || splitstr->isNil()))
         || ( count != 0 && ! count->isOrdinal() ) )
    {
       throw new ParamError( ErrorParam( e_inv_params, __LINE__ )
@@ -534,44 +562,50 @@ FALCON_FUNC  mth_strSplit ( ::Falcon::VMachine *vm )
          .extra( vm->self().isMethodic() ? "S, [N]" : "S, S, [N]" ) );
    }
 
-   // Parameter estraction.
+   // Parameter extraction.
    String *tg_str = target->asString();
    uint32 tg_len = target->asString()->length();
    uint32 limit = count == 0 ? 0xffffffff: (int32) count->forceInteger();
 
    // split in chars?
-   if( splitstr == 0 || splitstr->isNil() )
+   if( splitstr == 0 || splitstr->isNil() || splitstr->asString()->size() == 0)
    {
       // split the string in an array.
       if( limit > tg_len )
          limit = tg_len;
 
       CoreArray* ca = new CoreArray( limit );
-      for( uint32 i = 0; i < limit; ++i )
+      for( uint32 i = 0; i < limit - 1; ++i )
       {
          CoreString* elem = new CoreString(1);
          elem->append( tg_str->getCharAt(i) );
          ca->append( elem );
       }
+      // add remains if there are any
+      if(limit <= tg_len)
+         ca->append(tg_str->subString(limit - 1));
 
       vm->retval( ca );
       return;
    }
 
    String *sp_str = splitstr->asString();
-   uint32 sp_len = splitstr->asString()->length();
+   uint32 sp_len = sp_str->length();
 
-   // Is the split string empty
-   if ( sp_len == 0 ) {
-      vm->retnil();
-      return;
-   }
 
    // return item.
    CoreArray *retarr = new CoreArray;
 
+   // if the split string is empty, return empty string
+   if ( sp_len == 0 )
+   {
+      retarr->append( new CoreString() );
+      vm->retval( retarr );
+      return;
+   }
+
    // if the token is wider than the string, just return the string
-   if ( tg_len <= sp_len )
+   if ( tg_len < sp_len )
    {
       retarr->append( new CoreString( *tg_str ) );
       vm->retval( retarr );
@@ -736,7 +770,7 @@ FALCON_FUNC  mth_strMerge ( ::Falcon::VMachine *vm )
 
 FALCON_FUNC  String_join ( ::Falcon::VMachine *vm )
 {
-   // Parameter estraction.
+   // Parameter extraction.
    CoreString *ts = new CoreString;
    String *self = vm->self().asString();
    uint32 pc = vm->paramCount();
@@ -870,7 +904,7 @@ FALCON_FUNC  mth_strFind ( ::Falcon::VMachine *vm )
 
 /*#
    @function strBackFind
-   @brief Finds a substring bakwards.
+   @brief Finds a substring backwards.
    @param string String where the search will take place.
    @param needle Substring to search for.
    @optparam start Optional position from which to start the search in string.
@@ -883,7 +917,7 @@ FALCON_FUNC  mth_strFind ( ::Falcon::VMachine *vm )
 
 /*#
    @method rfind String
-   @brief Finds a substring bakwards.
+   @brief Finds a substring backwards.
    @param needle Substring to search for.
    @optparam start Optional position from which to start the search in string.
    @optparam end Optional position at which to end the search in string.
@@ -1130,7 +1164,7 @@ FALCON_FUNC  mth_strFrontTrim ( ::Falcon::VMachine *vm )
       String *trim = trimChars->asString();
       int32 tLen = trim->length();
 
-      while( pos <= len )
+      while( pos < len )
       {
          uint32 chr = self->getCharAt( pos );
          int found = 0;

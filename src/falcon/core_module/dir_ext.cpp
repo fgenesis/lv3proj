@@ -287,19 +287,22 @@ FALCON_FUNC FileStat_read ( ::Falcon::VMachine *vm )
 
 /*#
    @function fileType
-   @brief Deterimnes the type of a file.
+   @brief Determines the type of a file.
    @param filename Relative or absolute path to a file.
+   @optparam nf Don't follow symlinks
+
    @return A valid file type or FileStat.NOTFOUND if not found.
 
    This function is useful to know what of what kind of system entry
    is a certain file, or if it exists at all, without paying the overhead
    for a full FileStat object being instantiated.
 
+
    Returned values may be:
       - FileStat.NORMAL
       - FileStat.DIR
       - FileStat.PIPE
-      - FileStat.LINK
+      - FileStat.LINK - Only if @b nf parameter is true.
       - FileStat.DEVICE
       - FileStat.SOCKET
       - FileStat.UNKNOWN
@@ -309,7 +312,7 @@ FALCON_FUNC FileStat_read ( ::Falcon::VMachine *vm )
 FALCON_FUNC  fileType( ::Falcon::VMachine *vm )
 {
    Item *name = vm->param(0);
-
+   Item *i_df = vm->param(1);
    if ( name == 0 || ! name->isString() )
    {
       throw new ParamError( ErrorParam( e_inv_params, __LINE__ )
@@ -320,7 +323,30 @@ FALCON_FUNC  fileType( ::Falcon::VMachine *vm )
 
    FileStat::e_fileType type = FileStat::t_notFound;
 
-   Sys::fal_fileType( *name->asString(), type );
+   bool follow = !( i_df != 0 && i_df->isTrue() );
+	int count = 99;
+
+	String sName = *name->asString();
+   while( true )
+   {
+   	Sys::fal_fileType( sName, type );
+
+   	if ( follow && type == FileStat::t_link )
+		{
+		   String temp;
+		   if ( ! Sys::fal_readlink( sName, temp ) || --count == 0 )
+		   {
+				type = FileStat::t_notFound;
+				break;
+			}
+		   sName = temp;
+		}
+   	else
+   	{
+   		break;
+   	}
+   }
+
    // will already be -1 if not found
    vm->retval( type );
 }
@@ -741,25 +767,43 @@ FALCON_FUNC  Directory_init ( ::Falcon::VMachine *vm )
 /*#
    @method read Directory
    @brief Returns the next entry in the directory.
-   @return A string representing the next entry, or nil when no new entries are left.
+   @return A string representing the next entry, or oob(0) when no new entries are left.
+
+   The usage is
+   @code
+   dir =  Directory( "." )
+   while entry = dir.read(): > entry
+   dir.close()
+   @endcode
+   or
+   @code
+   dir = Directory( "." )
+   for entry in dir.read: > entry
+   dir.close()
+   @endcode
+
 */
 FALCON_FUNC  Directory_read ( ::Falcon::VMachine *vm )
 {
    DirEntry *dir = dyncast<DirEntry *>(vm->self().asObject()->getFalconData());
 
    String reply;
-   if ( dir->read( reply ) ) {
+   if ( dir->read( reply ) )
+   {
       CoreString *ret = new CoreString;
       ret->bufferize( reply );
       vm->retval( ret );
    }
-   else {
-      if ( dir->lastError() != 0 ) {
+   else
+   {
+      if ( dir->lastError() != 0 )
+      {
          throw new IoError( ErrorParam( e_io_error, __LINE__ )
             .origin( e_orig_runtime )
             .sysError( (uint32) Sys::_lastError() ) );
       }
-      vm->retnil();
+      vm->retval( (int64)0 );
+      vm->regA().setOob( true );
    }
 }
 

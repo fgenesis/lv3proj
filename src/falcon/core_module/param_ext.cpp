@@ -14,8 +14,11 @@
 */
 
 #include "core_module.h"
-
 #include <string.h>
+
+/*#
+   @beginmodule core
+*/
 
 namespace Falcon {
 namespace core {
@@ -150,7 +153,7 @@ FALCON_FUNC  paramIsRef ( ::Falcon::VMachine *vm )
    @brief Changes the nth paramter if it has been passed by reference.
    @param number the paramter to be changed (zero based)
    @param value the new value for the parameter
-   @raise AccessError if @number is out of range.
+   @raise AccessError if @b number is out of range.
 
    The function is equivalent to assigning the value directly to the required
    parameter; of course, in this way also optional parameter may be accessed.
@@ -310,7 +313,7 @@ FALCON_FUNC core_passvp( VMachine *vm )
    // get the caller function symbol --- it holds the declared parameters
    const Symbol* sym = thisFrame->m_symbol;
    unsigned size =  sym->isFunction()? 
-      sym->getFuncDef()->symtab().size() :
+      sym->getFuncDef()->params() :
       sym->getExtFuncDef()->parameters()->size();
    
    Item* first = prevFrame->m_params;

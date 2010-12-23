@@ -18,6 +18,10 @@
 #include <falcon/module.h>
 #include <falcon/modloader.h>
 
+/*#
+   @beginmodule core
+*/
+
 namespace Falcon {
 namespace core {
 
@@ -100,7 +104,8 @@ FALCON_FUNC fal_include( Falcon::VMachine *vm )
 
    // load and link
    try {
-      rt.loadFile( fileName, false );
+      rt.loadFile( fileName, true );
+
       vm->launchAtLink( i_syms == 0 || i_syms->isNil() );
       LiveModule *lmod = vm->link( &rt );
 

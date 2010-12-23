@@ -288,7 +288,18 @@ base_statement:
          $$ = new Falcon::StmtAutoexpr( LINE, $1 );
       }
 
-   | expression_list OP_EQ expression EOL {
+   | expression_list OP_EQ expression EOL 
+      {
+         if ( $3->type() == Falcon::Value::t_array_decl 
+            )
+         {
+            Falcon::ArrayDecl* ad = $3->asArray();
+            if ( $1->size() != ad->size() )
+            {
+               COMPILER->raiseError(Falcon::e_unpack_size );
+            }
+         }
+         
          Falcon::Value *first = new Falcon::Value( $1 );
          COMPILER->defineVal( first );
          $$ = new Falcon::StmtAutoexpr( LINE,
@@ -1661,12 +1672,12 @@ import_statement:
          COMPILER->addNamespace( *$3, "", true, true );
          $$ = 0;
       }
-   | IMPORT FROM SYMBOL OP_AS SYMBOL EOL
+   | IMPORT FROM SYMBOL OP_IN SYMBOL EOL
       {
          COMPILER->addNamespace( *$3, *$5, true, false );
          $$ = 0;
       }
-   | IMPORT FROM STRING OP_AS SYMBOL EOL
+   | IMPORT FROM STRING OP_IN SYMBOL EOL
       {
          COMPILER->addNamespace( *$3, *$5, true, true );
          $$ = 0;

@@ -17,8 +17,9 @@
 #include <falcon/pagedict.h>
 
 /*#
-
+   @beginmodule core
 */
+
 namespace Falcon {
 namespace core {
 

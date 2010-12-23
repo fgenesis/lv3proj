@@ -15,6 +15,9 @@
 
 #include "core_module.h"
 
+/*#
+   @beginmodule core
+*/
 
 namespace Falcon {
 namespace core {
@@ -75,7 +78,6 @@ namespace core {
 /*#
    @function oob
    @brief Generates an out-of-band item.
-   @ingroup general_purpose
    @inset oob_support
    @optparam item The item to be declared out of band.
    @return An oob version of the item, or an oob @b nil if no item is given.
@@ -101,7 +103,6 @@ FALCON_FUNC  core_oob( ::Falcon::VMachine *vm )
 /*#
    @function deoob
    @brief Turns an out-of-band item in a normal item.
-   @ingroup general_purpose
    @inset oob_support
    @param item The out of band item to be turned into a normal item.
    @return An the non-out-of-band version version of the item.
@@ -128,7 +129,6 @@ FALCON_FUNC  core_deoob( ::Falcon::VMachine *vm )
 /*#
    @function isoob
    @brief Checks for the out-of-band status of an item.
-   @ingroup general_purpose
    @inset oob_support
    @param item The item to be checked.
    @return True if the item is out of band, false otherwise.

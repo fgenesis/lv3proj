@@ -13,6 +13,10 @@
    See LICENSE file for licensing details.
 */
 
+#ifdef __MINGW32__
+#define _time64 time
+#endif
+
 /** \file
    System level support for basic and common operatios.
 */
@@ -27,6 +31,8 @@
 #include <falcon/string.h>
 #include <falcon/memory.h>
 #include <errno.h>
+#include <time.h>
+
 
 #ifndef INVALID_FILE_ATTRIBUTES
 #define INVALID_FILE_ATTRIBUTES ((DWORD)-1)
@@ -126,6 +132,11 @@ numeric _localSeconds()
 uint32 _milliseconds()
 {
    return (uint32) GetTickCount();
+}
+
+int64 _epoch()
+{
+   return (int64) _time64(0);
 }
 
 void _tempName( String &res )

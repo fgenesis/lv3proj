@@ -191,7 +191,15 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\falcon\autoucsstring.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\falcon\autowstring.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\falcon\base64.cpp"
 				>
 			</File>
 			<File
@@ -416,6 +424,10 @@
 			</File>
 			<File
 				RelativePath=".\falcon\module.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\falcon\modulecache.cpp"
 				>
 			</File>
 			<File
@@ -809,6 +821,10 @@
 					RelativePath=".\falcon\core_module\vminfo_ext.cpp"
 					>
 				</File>
+				<File
+					RelativePath=".\falcon\core_module\webhelp.cpp"
+					>
+				</File>
 			</Filter>
 		</Filter>
 		<Filter
@@ -829,7 +845,15 @@
 				>
 			</File>
 			<File
+				RelativePath=".\include\falcon\autoucsstring.h"
+				>
+			</File>
+			<File
 				RelativePath=".\include\falcon\autowstring.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\falcon\base64.h"
 				>
 			</File>
 			<File
@@ -1189,6 +1213,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\include\falcon\modulecache.h"
+				>
+			</File>
+			<File
 				RelativePath=".\include\falcon\mt.h"
 				>
 			</File>
@@ -1444,18 +1472,6 @@
 				RelativePath=".\include\falcon\xtree_fix.h"
 				>
 			</File>
-			<Filter
-				Name="srv"
-				>
-				<File
-					RelativePath=".\include\falcon\srv\json_srv.h"
-					>
-				</File>
-				<File
-					RelativePath=".\include\falcon\srv\logging_srv.h"
-					>
-				</File>
-			</Filter>
 		</Filter>
 		<Filter
 			Name="Resource Files"

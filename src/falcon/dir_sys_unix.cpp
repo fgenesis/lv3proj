@@ -123,7 +123,7 @@ bool fal_mkdir( const String &f, int32 &fsStatus )
 {
    AutoCString filename( f );
 
-   if ( ::mkdir( filename.c_str(), 0777 ) == 0 ) {
+   if ( ::mkdir( filename.c_str(), 0744 ) == 0 ) {
       fsStatus = 0;
       return true;
    }
@@ -324,6 +324,11 @@ void fal_closeDir( ::Falcon::DirEntry *entry )
 
 bool DirEntry_unix::read( String &res )
 {
+   // Glibc doesn't perform that check
+   if( m_raw_dir == 0)
+   {
+      return false;
+   }
    struct dirent *d;
 
    errno = 0;
