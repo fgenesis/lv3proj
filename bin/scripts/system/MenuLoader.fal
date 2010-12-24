@@ -58,6 +58,7 @@ class EngineSettingsMenu from SinusMenu
     end
     
     function OnGoBack()
+        EngineConfig.Save()
         OpenMenu(EngineMainMenu)
     end
 

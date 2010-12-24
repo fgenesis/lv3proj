@@ -1,12 +1,62 @@
 
 EngineConfig = [ => ]
 
+// default entries
 EngineConfig["musicVolume"] = MAX_VOLUME
 EngineConfig["soundVolume"] = MAX_VOLUME
 EngineConfig["menuMusic"] = "liquidat.xm"
 
+// methods
+EngineConfig["Save"] = function()
+    d = [
+        "Music" => [
+            "Volume" => EngineConfig.musicVolume
+        ],
+        "Sound" => [
+            "Volume" => EngineConfig.soundVolume
+        ],
+        "Menu" => [
+            "Music" => EngineConfig.menuMusic
+        ]
+    ]
+    
+    cp = ConfParser()
+    for section, entries in d
+        for key, value in entries
+            cp.set(key, value, section)
+        end
+    end
+    
+    strm = OutputStream("saved_data/game/engine.ini")
+    cp.write(strm)
+    strm.close()
+end
+
+EngineConfig["Load"] = function()
+    try
+        strm = InputStream("saved_data/game/engine.ini")
+    catch
+        return false
+    end
+    cp = ConfParser()
+    cp.read(strm)
+    strm.close()
+    
+    musicd = cp.getDictionary("Music")
+    soundd = cp.getDictionary("Sound")
+    menud = cp.getDictionary("Menu")
+    
+    try: EngineConfig.musicVolume = int(musicd["Volume"])
+    try: EngineConfig.soundVolume = int(soundd["Volume"])
+    try: EngineConfig.menuMusic   = menud["Music"]
+    return true
+end
+
+
 
 EngineConfig = bless(EngineConfig)
+
+EngineConfig.Load()
 
 
 export EngineConfig
