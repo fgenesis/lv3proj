@@ -79,7 +79,8 @@ bool AppFalcon::EmbedStringAsModule(char *str, char *modName, bool throw_ /* = f
             Falcon::Item *mainItem = livemod->findModuleItem("__main__");
             if(mainItem)
             {
-                vm->callItemAtomic(*mainItem, 0);
+                vm->callFrame(*mainItem, 0);
+                vm->execFrame();
             }
         }
     }
