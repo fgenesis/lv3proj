@@ -13,5 +13,4 @@ add_library(confparser_fm
   confparser_ext.cpp
   confparser_mod.cpp
   confparser_st.cpp
-  confparser_srv.cpp
 )
