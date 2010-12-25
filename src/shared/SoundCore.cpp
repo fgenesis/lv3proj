@@ -10,7 +10,7 @@ void musicFinished(void)
     // from the manual:
     // NOTE: NEVER call SDL_Mixer functions, nor SDL_LockAudio, from a callback function. 
     // oh well... works. bah.
-    if(sndCore.GetLoopPoint())
+    if(sndCore._GetMusicPtr() && sndCore.GetLoopPoint())
     {
         Mix_PlayMusic(sndCore._GetMusicPtr(), 0);
         Mix_SetMusicPosition(sndCore.GetLoopPoint());
@@ -106,7 +106,11 @@ void SoundCore::StopMusic(void)
     if(_music)
     {
         Mix_HaltMusic();
-        resMgr.Drop(_music);
+        // HACK: due to weirdness in SDL_mixer code, we force the deletion of the music,
+        // which seems necessary to really stop playback;
+        // otherwise it may crash when music is stopped and later started again.
+        // TODO: remove 'true' param as soon as someone found out what causes the crash
+        resMgr.Drop(_music, true); 
         _music = NULL;
     }
 }

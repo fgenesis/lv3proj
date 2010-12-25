@@ -30,6 +30,7 @@ EngineConfig["Save"] = function()
     strm = OutputStream("saved_data/game/engine.ini")
     cp.write(strm)
     strm.close()
+    > "Engine config saved."
 end
 
 EngineConfig["Load"] = function()
@@ -49,6 +50,7 @@ EngineConfig["Load"] = function()
     try: EngineConfig.musicVolume = int(musicd["Volume"])
     try: EngineConfig.soundVolume = int(soundd["Volume"])
     try: EngineConfig.menuMusic   = menud["Music"]
+    > "Engine config loaded."
     return true
 end
 

@@ -160,9 +160,9 @@ function WinLevel(level)
     level.player.canDebugJump = true
 end
 
-function TurnOnGravity()
+function TurnOnGravity(nosound)
     Physics.SetGravity(300)
-    Sound("use.ogg").Play()
+    if not nosound: Sound("use.ogg").Play()
 end
 
 function TurnOffGravity()
@@ -201,7 +201,7 @@ class Demolevel
         Engine.CreateCollisionMap(true)
         
         // setup environment
-        TurnOnGravity()
+        TurnOnGravity(true)
     end
     
     function SetupPlayer()

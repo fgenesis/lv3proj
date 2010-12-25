@@ -628,7 +628,7 @@ FALCON_FUNC fal_Music_SetVolume(Falcon::VMachine *vm)
 FALCON_FUNC fal_Music_Play(Falcon::VMachine *vm)
 {
     Falcon::Item *itm = vm->param(0);
-    if(itm)
+    if(itm && !itm->isNil())
     {
         Falcon::AutoCString cstr(vm->param(0)->asString());
         sndCore.PlayMusic((char*)cstr.c_str());
