@@ -11,6 +11,11 @@ class PackageSystem
         raise "This class is a singleton and should not be instanced!"
     end
     
+    function LoadStructure(pkg)
+        p = "packages/" + pkg
+        return VFS.AddContainer(p + ".lvpa", p, false) // add the container contents into package/<name> directory, keeping files on disk with a higher priority 
+    end
+    
     // load a .lvpa file in directory "packages", or a subdir with that name
     function Load(pkg)
         > "PackageSystem:Load(", pkg, ")"
@@ -32,6 +37,78 @@ class PackageSystem
     function RunAfterLoad(func)
         CallScheduler.Schedule(func, 1)
     end
+    
+    function Enumerate()
+        dl = VFS.GetDirList("packages")
+        fl = VFS.GetFileList("packages")
+        dict = [ => ]
+        for d in dl: dict[d] = true // populate the dict, filtering out duplicates. true is just a dummy value here.
+        for f in fl
+            if f.endsWith(".lvpa", true)
+                f = f[:-5] // skip the last 5 chars (= cut off ".lvpa")
+                if len(f)
+                    dict[f] = true
+                    PackageSystem.LoadStructure(f) // integrate the container contents into packages/<name> subdir
+                end
+            end
+        end
+        
+        pkginfo = [ => ]
+        for name, dummy in dict
+            info = PackageSystem.GetInfos(name) // may return nil, if package is invalid
+            if info: pkginfo[name] = info
+        end
+        
+        return pkginfo
+    end
+    
+    function GetInfos(pkgname, section)
+        if not section: section = "package" // default param
+        buf = VFS.GetFileAsBuf("packages/" + pkgname + "/package.ini")
+        if not buf
+            > "Package '", pkgname, "' has no package.ini file, skipping"
+            return nil
+        end
+        
+        bb = ByteBuf(buf, true) // for more processing comfort, we wrap a ByteBuf around the MemBuf
+        ss = StringStream(bb.readString()) // and read one string from it (which, for text files, is the entire file)
+        // this is needed so the config parser will not append a newline char to config values if the original data are in windows CRLF encoding
+        ss.setEncoding(getSystemEncoding(), CR_TO_CRLF)
+        cp = ConfParser()
+        try
+            cp.read(ss) // can fail if there is a parsing error
+        catch in err
+            > 'PackageSystem:GetInfos("', pkgname, ', ', section, '") ERROR:'
+            > err
+            return nil
+        end
+        
+        return cp.getDictionary("package")
+    end
+    
+    function FilterByType(pkgdict, types)
+        ret = [ => ]
+        select types
+            case ArrayType
+                for name, entries in pkgdict
+                    if entries and entries["type"] in types
+                        ret[name] = entries
+                    end
+                end
+                
+            case StringType
+                for name, entries in pkgdict
+                    if entries and entries["type"] == types
+                        ret[name] = entries
+                    end
+                end
+                
+            default
+                raise "PackageSystem:FilterPackagesOfType: Expected string or array of strings"
+        end
+        return ret
+    end
+    
 end
 
 export

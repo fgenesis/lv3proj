@@ -177,3 +177,56 @@ const uint8 *VFSFileReal::getBuf(void)
     }
     return (const uint8 *)_buf;
 }
+
+// ------------- VFSFileMem -----------------------
+
+VFSFileMem::VFSFileMem(const char *name, uint8 *buf, uint32 size, bool copy /* = true */)
+: _mybuf(!copy), _size(size), _pos(0)
+{
+    DEBUG(ASSERT(buf));
+    _setName(name);
+    if(copy)
+    {
+        _buf = new uint8[size];
+        memcpy(_buf, buf, size);
+    }
+    else
+        _buf = buf;
+}
+
+VFSFileMem::~VFSFileMem()
+{
+    if(_mybuf)
+        delete [] _buf;
+}
+
+
+void VFSFileMem::_setName(const char *n)
+{
+    if(n && *n)
+    {
+        const char *slashpos = strrchr(n, '/');
+        _name = slashpos ? slashpos + 1 : n;
+        _fullname = n;
+    }
+}
+
+uint32 VFSFileMem::read(char *dst, uint32 bytes)
+{
+    if(iseof())
+        return 0;
+    uint32 rem = std::min(_size - _pos, bytes);
+
+    memcpy(dst, _buf + _pos, rem);
+    return rem;
+}
+
+uint32 VFSFileMem::write(char *src, uint32 bytes)
+{
+    if(iseof())
+        return 0;
+    uint32 rem = std::min(_size - _pos, bytes);
+
+    memcpy(_buf + _pos, src, rem);
+    return rem;
+}

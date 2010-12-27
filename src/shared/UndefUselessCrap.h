@@ -12,3 +12,8 @@
 #ifdef PlaySound
 #undef PlaySound
 #endif
+
+// have seen this somewhere, just in case...
+#ifdef mbuf
+#undef mbuf
+#endif

@@ -95,21 +95,15 @@ end
 
 function OpenEnginePackageMenu()
     VFS.Reload()
-    dl = VFS.GetDirList("packages") // TODO: combine with GetFileList
-    fl = VFS.GetFileList("packages")
-    dict = [ => ]
-    for d in dl: dict[d] = true // populate the dict, filtering out duplicates. true is just a dummy value here.
-    for f in fl
-        if f.endsWith(".lvpa", true)
-            f = f[:-5] // skip the last 5 chars (= cut off ".lvpa")
-            if f: dict[f] = true
-        end
-    end
+    packs = PackageSystem.Enumerate()
+    packs = PackageSystem.FilterByType(packs, ["game", "demo"])
     
     m = EngineFileListMenu()
     
-    for s, dummy in dict
-        m.Add( [LoadPackageFile, s], s )
+    for name, entries in packs
+        s = entries.get("name")
+        if not s: s = "[Package: " + name + "]" // more fail safe
+        m.Add( [LoadPackageFile, name], s )
     end
     m.Add(m.OnGoBack, "--- Back ---")
     
@@ -119,28 +113,28 @@ end
 
 function OpenEngineFileBrowserMenu(path) // for debugging
 
-    VFS.Reload()
     > "Entering path: '", path, "'"
     m = EngineFileListMenu()
     m.rowSpacing = 0
     
     d = VFS.GetDirList(path)
+    makeFN = { p, x => len(p) ? (p + "/" + x) : x }
     if d
         for s in d
-            m.Add( [OpenEngineFileBrowserMenu, len(path) ? (path + "/" + s) : s], "[" + s + "]" )
+            m.Add( [OpenEngineFileBrowserMenu, makeFN(path, s)], "[" + s + "]" )
         end
     end
     
     f = VFS.GetFileList(path)
     if f
         for s in f
-            m.Add( { => }, s )
+            m.Add( { => > ByteBuf(VFS.GetFileAsBuf(makeFN(path, s)), true).readString() }, s ) // output first readable string to console, for testing
         end
     end
     
     m.Add(m.OnGoBack, "--- Back ---")
     
-    OpenMenu( { => m } )
+    OpenMenu( { => m } ) // use lambda to fake a constructor, because we have already initialized the menu
     
 end
 

@@ -2,3 +2,4 @@
 #include scripts/package.listfile
 
 -s package.listfile
+package.ini

@@ -446,6 +446,62 @@ FALCON_FUNC fal_VFS_Merge( Falcon::VMachine *vm )
         vm->retval(false);
 }
 
+FALCON_FUNC fal_VFS_GetFileAsBuf( Falcon::VMachine *vm )
+{
+    FALCON_REQUIRE_PARAMS_EXTRA(1, "S");
+    Falcon::Item *i_fn = vm->param(0);
+    if(!i_fn->isString())
+    {
+        throw new Falcon::ParamError(Falcon::ErrorParam( Falcon::e_inv_params, __LINE__ )
+            .extra("S") );
+    }
+    Falcon::AutoCString fn(i_fn->asString());
+    VFSFile *vf = resMgr.vfs.GetFile((char*)fn.c_str());
+    if(!vf)
+    {
+        vm->retnil();
+        return;
+    }
+
+    uint32 size = vf->size();
+    const uint8 *vbuf = vf->getBuf();
+    if(!(size && vbuf))
+    {
+        vm->retnil();
+        return;
+    }
+    Falcon::MemBuf_1 *mbuf = new Falcon::MemBuf_1(size);
+    mbuf->length(size);
+    memcpy(mbuf->data(), vbuf, size);
+
+    vm->retval(mbuf);
+}
+
+FALCON_FUNC fal_VFS_AddBufAsFile( Falcon::VMachine *vm )
+{
+    FALCON_REQUIRE_PARAMS_EXTRA(2, "S, Buf");
+    Falcon::Item *i_fn = vm->param(0);
+    Falcon::Item *i_mbuf = vm->param(1);
+    if(!(i_fn->isString() && i_mbuf->isMemBuf()))
+    {
+        throw new Falcon::ParamError(Falcon::ErrorParam( Falcon::e_inv_params, __LINE__ )
+            .extra("S, Buf") );
+    }
+    Falcon::AutoCString fn(i_fn->asString());
+    Falcon::MemBuf *mbuf = i_mbuf->asMemBuf();
+
+    // figure out directory from full file name
+    std::string dirname(fn.c_str());
+    uint32 pathend = dirname.find_last_of("/\\");
+    if(pathend != std::string::npos)
+        dirname = dirname.substr(0, pathend);
+
+    VFSDir *vdir = resMgr.vfs.GetDir(dirname.c_str(), true);
+    VFSFileMem *vf = new VFSFileMem(fn.c_str(), mbuf->data(), mbuf->size(), true); // copy
+    vm->retval(vdir->add(vf, true));
+    --(vf->ref);
+}
+
 fal_Surface::fal_Surface(const Falcon::CoreClass* generator)
 : Falcon::FalconObject( generator )
 {
@@ -903,6 +959,8 @@ Falcon::Module *FalconBaseModule_create(void)
     m->addClassMethod(clsVFS, "GetFileList", fal_VFS_GetFileList);
     m->addClassMethod(clsVFS, "HasFile", fal_VFS_HasFile);
     m->addClassMethod(clsVFS, "Merge", fal_VFS_Merge);
+    m->addClassMethod(clsVFS, "AddBufAsFile", fal_VFS_AddBufAsFile);
+    m->addClassMethod(clsVFS, "GetFileAsBuf", fal_VFS_GetFileAsBuf);
 
     Falcon::Symbol *clsSurface = m->addClass("Surface", fal_Surface::init);
     clsSurface->setWKS(true);

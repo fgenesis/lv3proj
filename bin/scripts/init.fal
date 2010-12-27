@@ -135,8 +135,15 @@ class ScriptLoader
     
 end
 
+
 // --- initial load ---
 ScriptLoader.LoadDir("system")
+
+// after we are loaded, drop the init.fal loader script from the VFS,
+// just to be on the safe side if someone reloads the scripts root dir, which would attempt to load this script again,
+// which would cause major errors
+VFS.AddBufAsFile("scripts/init.fal", ByteBuf().write("// cleared").toMemBuf())
+
 
 // the scripts loaded until now will take care of the rest
 
