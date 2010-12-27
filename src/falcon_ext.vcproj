@@ -225,6 +225,50 @@
 					>
 				</File>
 			</Filter>
+			<Filter
+				Name="bufext_module"
+				>
+				<File
+					RelativePath=".\falcon_ext\bufext_module\bitbuf.h"
+					>
+				</File>
+				<File
+					RelativePath=".\falcon_ext\bufext_module\bufext.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\falcon_ext\bufext_module\bufext_ext.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\falcon_ext\bufext_module\bufext_ext.h"
+					>
+				</File>
+				<File
+					RelativePath=".\falcon_ext\bufext_module\bufext_ext.inl"
+					>
+				</File>
+				<File
+					RelativePath=".\falcon_ext\bufext_module\bufext_st.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\falcon_ext\bufext_module\bufext_st.h"
+					>
+				</File>
+				<File
+					RelativePath=".\falcon_ext\bufext_module\buffererror.h"
+					>
+				</File>
+				<File
+					RelativePath=".\falcon_ext\bufext_module\bytebuf.h"
+					>
+				</File>
+				<File
+					RelativePath=".\falcon_ext\bufext_module\endianswap.h"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="Header Files"

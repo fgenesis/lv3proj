@@ -10,6 +10,9 @@ Falcon::Module *falcon_compiler_module_init(void);
 // defined in falcon/confparser_module/confparser.cpp
 Falcon::Module *falcon_confparser_module_init(void);
 
+// defined in falcon/bufext_module/bufext.cpp
+Falcon::Module *bufext_module_init(void);
+
 
 AppFalcon::AppFalcon(Engine *e)
 : vm(NULL)
@@ -51,6 +54,7 @@ void AppFalcon::_LoadModules(void)
     vm->link( Falcon::core_module_init() );  // add the core module
     vm->link( falcon_compiler_module_init() );
     vm->link( falcon_confparser_module_init() );
+    vm->link( bufext_module_init() );
     vm->link( FalconBaseModule_create() );
     vm->link( FalconObjectModule_create() );
 }
