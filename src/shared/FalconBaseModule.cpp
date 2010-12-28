@@ -803,6 +803,59 @@ FALCON_FUNC fal_Screen_GetSize(Falcon::VMachine *vm)
     vm->retval(arr);
 }
 
+FALCON_FUNC fal_Screen_GetWidth(Falcon::VMachine *vm)
+{
+    vm->retval((Falcon::int64)g_engine_ptr_->GetResX());
+}
+
+FALCON_FUNC fal_Screen_GetHeight(Falcon::VMachine *vm)
+{
+    vm->retval((Falcon::int64)g_engine_ptr_->GetResY());
+}
+
+FALCON_FUNC fal_Screen_SetMode(Falcon::VMachine *vm)
+{
+    FALCON_REQUIRE_PARAMS_EXTRA(4, "I, I, B, B");
+    uint32 x = vm->param(0)->forceIntegerEx();
+    uint32 y = vm->param(1)->forceIntegerEx();
+    bool fs = vm->param(2)->isTrue();
+    bool resiz = vm->param(3)->isTrue();
+    SDL_Surface *surface = g_engine_ptr_->GetSurface();
+    uint32 flags = (surface ? surface->flags & ~(SDL_RESIZABLE | SDL_FULLSCREEN) : 0);
+    if(fs)
+        flags |= SDL_FULLSCREEN;
+    if(resiz)
+        flags |= SDL_RESIZABLE;
+    g_engine_ptr_->InitScreen(x, y, g_engine_ptr_->GetBPP(), flags);
+}
+
+FALCON_FUNC fal_Screen_SetBGColor(Falcon::VMachine *vm)
+{
+    if(!vm->paramCount())
+    {
+        g_engine_ptr_->SetDrawBG(false);
+        return;
+    }
+
+    FALCON_REQUIRE_PARAMS_EXTRA(3, "I, I, I");
+    
+    uint8 r = uint8(vm->param(0)->forceInteger());
+    uint8 g = uint8(vm->param(1)->forceInteger());
+    uint8 b = uint8(vm->param(2)->forceInteger());
+    g_engine_ptr_->SetBGColor(r,g,b);
+    g_engine_ptr_->SetDrawBG(true);
+}
+
+FALCON_FUNC fal_Screen_IsResizable(Falcon::VMachine *vm)
+{
+    vm->retval(g_engine_ptr_->IsResizable());
+}
+
+FALCON_FUNC fal_Screen_IsFullscreen(Falcon::VMachine *vm)
+{
+    vm->retval(g_engine_ptr_->IsFullscreen());
+}
+
 FALCON_FUNC fal_Screen_GetLayerSize(Falcon::VMachine *vm)
 {
     vm->retval((int64)g_engine_ptr_->_GetLayerMgr()->GetMaxDim());
@@ -922,11 +975,17 @@ Falcon::Module *FalconBaseModule_create(void)
     Falcon::Symbol *clsScreen = symScreen->getInstance();
     m->addClassMethod(clsScreen, "GetLayer", &fal_Screen_GetLayer);
     m->addClassMethod(clsScreen, "GetSize", &fal_Screen_GetSize);
+    m->addClassMethod(clsScreen, "GetWidth", &fal_Screen_GetWidth);
+    m->addClassMethod(clsScreen, "GetHeight", &fal_Screen_GetHeight);
     m->addClassMethod(clsScreen, "GetLayerSize", &fal_Screen_GetLayerSize);
     m->addClassMethod(clsScreen, "SetTileInfo", &fal_Screen_SetTileInfo);
     m->addClassMethod(clsScreen, "GetTileInfo", &fal_Screen_GetTileInfo);
     m->addClassMethod(clsScreen, "CreateInfoLayer", &fal_Screen_CreateInfoLayer);
     m->addClassMethod(clsScreen, "GetSurface", &fal_Screen_GetSurface);
+    m->addClassMethod(clsScreen, "SetMode", &fal_Screen_SetMode);
+    m->addClassMethod(clsScreen, "SetBGColor", &fal_Screen_SetBGColor);
+    m->addClassMethod(clsScreen, "CanResize", &fal_Screen_IsResizable);
+    m->addClassMethod(clsScreen, "IsFullscreen", &fal_Screen_IsFullscreen);
 
     Falcon::Symbol *symMusic = m->addSingleton("Music");
     Falcon::Symbol *clsMusic = symMusic->getInstance();

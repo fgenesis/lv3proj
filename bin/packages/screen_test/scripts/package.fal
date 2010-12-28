@@ -1,0 +1,37 @@
+
+
+coltab = arrayBuffer(256)
+for i = 0 to 255: coltab[i] = int(255 * sin((i / 256.0) * 3.14196))
+font = GetFont("rpgfont")
+message = "Any key to exit"
+msg_posx = (320 - font.GetWidth(message)) / 2
+msg_posy = (240 - font.GetHeight()) / 2
+
+function LoadFinal()
+    Screen.SetMode(320, 240, true, true) // fullscreen, resizable
+end
+
+function updatehook(ms)
+    m = Engine.GetTime() >> 3
+    r = coltab[(m      ) && 0xFF]
+    g = coltab[(m + 85 ) && 0xFF]
+    b = coltab[(m + 171) && 0xFF]
+    Screen.SetBGColor(r,g,b)
+end
+
+function renderhook()
+    Screen.GetSurface().Write(msg_posx, msg_posy, font, message)
+end
+
+function RawKeyHandler(inp)
+    ty, src, which, value = inp
+    if(ty == EVENT_TYPE_KEYBOARD and value)
+        ShutdownGamePackage()
+    end
+end
+
+InitGamePackage()
+PackageSystem.RunAfterLoad(LoadFinal)
+RegisterRawInputHook("screen_test_package", RawKeyHandler)
+RegisterUpdateHook("screen_test_package", updatehook);
+RegisterRenderHook(renderhook);

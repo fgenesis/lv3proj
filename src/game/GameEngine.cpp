@@ -47,8 +47,12 @@ void GameEngine::Shutdown(void)
 
 bool GameEngine::Setup(void)
 {
+    if(!Engine::Setup())
+        return false;
+
     if(!_wasInit)
     {
+        logdetail("Initializing Falcon...");
         // initialize the falcon scripting engine & VM
         Falcon::Engine::Init();
 
@@ -56,18 +60,34 @@ bool GameEngine::Setup(void)
     }
 
     // setup the VFS and the container to read from
+    logdetail("Initializing virtual file system...");
     LVPAFile *basepak = new LVPAFileReadOnly;
     basepak->LoadFrom("basepak.lvpa", LVPALOAD_SOLID);
     resMgr.vfs.LoadBase(basepak, true);
     resMgr.vfs.LoadFileSysRoot();
     resMgr.vfs.Prepare();
 
+    // load "loading" background
+    if(GetSurface())
+    {
+        SDL_Surface *loadingbg = resMgr.LoadImg("misc/loadingbg.png");
+        if(loadingbg)
+        {
+            SDL_BlitSurface(loadingbg, NULL, GetSurface(), NULL);
+            SDL_Flip(GetSurface());
+        }
+        else
+            logerror("Init: \"Loading\" background not found!");
+    }
+
     // load the initialization script
+    logdetail("Initializing scripts...");
     memblock *mb = resMgr.LoadTextFile("scripts/init.fal");
     ASSERT(mb); // TODO: this must be return false, maybe
     falcon->Init((char*)mb->ptr);
     resMgr.Drop(mb);
 
+    log("Game Engine ready.");
     return true;
 }
 
@@ -243,8 +263,8 @@ void GameEngine::OnMouseEvent(uint32 type, uint32 button, uint32 state, uint32 x
 void GameEngine::_Render(void)
 {
     // blank screen
-    SDL_FillRect(GetSurface(), NULL, 0); // TODO: remove this as soon as backgrounds are implemented!! (eats CPU)
-    //RenderBackground();
+    if(_drawBackground)
+        SDL_FillRect(GetSurface(), NULL, _bgcolor);
 
     // render the layers
     _layermgr->Render();

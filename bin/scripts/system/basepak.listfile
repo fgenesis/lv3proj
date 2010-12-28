@@ -3,6 +3,7 @@
 -p scripts/system -s DebugHooks.fal
 -p scripts/system -s DefaultJoystickBindings.fal
 -p scripts/system -s DefaultKeyBindings.fal
+-p scripts/system -s DefaultScreen.fal
 -p scripts/system -s EngineConfig.fal
 -p scripts/system -s EngineHooks.fal
 -p scripts/system -s FontStore.fal

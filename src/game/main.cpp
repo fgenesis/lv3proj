@@ -20,7 +20,7 @@ int main(int argc, char **argv)
     GameEngine engine;
 
     engine.HookSignals();
-    engine.InitScreen(1000,600,0,SDL_RESIZABLE);
+    engine.InitScreen(320,240,0,SDL_RESIZABLE);
     engine.SetTitle("LV3p Engine");
     engine.Setup();
     engine.Run();

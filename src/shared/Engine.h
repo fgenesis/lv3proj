@@ -50,9 +50,9 @@ public:
     virtual bool OnRawEvent(SDL_Event& evt); // return true to pass this event to the following internal event handlers, false to proceed with next event
 
 
-    inline uint32 GetResX(void) { return _screen->w; }
-    inline uint32 GetResY(void) { return _screen->h; }
-    inline uint8 GetBPP(void) { return _screen->format->BitsPerPixel; }
+    inline uint32 GetResX(void) { return _screen ? _screen->w : 0; }
+    inline uint32 GetResY(void) { return _screen ? _screen->h : 0; }
+    inline uint8 GetBPP(void) { return _screen ? _screen->format->BitsPerPixel : 0; }
     inline Point GetCameraPos(void) { return _cameraPos; }
     inline Point *GetCameraPosPtr(void) { return &_cameraPos; }
     inline SDL_Surface *GetSurface(void) { return _screen; }
@@ -72,6 +72,21 @@ public:
         else
             SetDebugFlag(flag);
     }
+    inline void ToggleFullscreen(void)
+    {
+        SetFullscreen(!IsFullscreen());
+    }
+    void SetFullscreen(bool b);
+    inline bool IsFullscreen(void) { return GetSurface()->flags & SDL_FULLSCREEN; }
+    void SetResizable(bool b);
+    inline bool IsResizable(void) { return GetSurface()->flags & SDL_RESIZABLE; }
+    inline void SetDrawBG(bool b) { _drawBackground = b; }
+    inline bool GetDrawBG(void) { return _drawBackground; }
+    inline void SetBGColor(uint8 r, uint8 g, uint8 b) { _bgcolor = SDL_MapRGB(GetSurface()->format, r,g,b); }
+    inline uint32 GetBGColor(void) { return _bgcolor; }
+    inline void TogglePause(void) { _paused = !_paused; }
+    inline bool IsPaused(void) { return _paused; }
+    inline void SetPaused(bool b) { _paused = b; }
 
     inline LayerMgr *_GetLayerMgr(void) const { return _layermgr; }
     inline gcn::Graphics *GetGcnGfx(void) { return _gcnGfx; }
@@ -106,19 +121,19 @@ protected:
     uint32 _framecounter;
     uint32 _fpsclock;
     uint32 _sleeptime;
+    uint32 _debugFlags;
+    uint32 _bgcolor;
     Point _cameraPos; // camera / "screen anchor" position in 2D-space, top-left corner (starts with (0,0) )
     bool _paused;
     bool _reset;
-    uint32 _debugFlags;
+    bool _drawBackground;
+    
 
 private:
     static void _OnSignal(int s);
     void _InitJoystick(void); // this does nothing if joystick support was not explicitly initialized in SDL_Init()
 
     static bool _quit;
-    
-    
-
 };
 
 #endif

@@ -56,6 +56,7 @@ EditorEngine::EditorEngine()
     _gcnGui = new gcn::Gui();
     _topWidget = new gcn::Container();
     _fileDlg = NULL;
+    _drawBackground = false; // here, guichan draws the black background, no reason to do it twice
 }
 
 EditorEngine::~EditorEngine()

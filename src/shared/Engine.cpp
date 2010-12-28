@@ -18,7 +18,7 @@ bool Engine::_quit;
 
 Engine::Engine()
 : _screen(NULL), _fps(0), _sleeptime(0), _framecounter(0), _paused(false),
-_debugFlags(EDBG_NONE), _reset(false)
+_debugFlags(EDBG_NONE), _reset(false), _bgcolor(0), _drawBackground(true)
 {
     log("Game Engine start.");
 
@@ -102,6 +102,11 @@ void Engine::SetTitle(char *title)
 
 void Engine::InitScreen(uint32 sizex, uint32 sizey, uint8 bpp /* = 0 */, uint32 extraflags /* = 0 */)
 {
+    if(sizex == GetResX() && sizey == GetResY() && (!bpp || bpp == GetBPP()) && ((_screen->flags | extraflags) == _screen->flags))
+        return; // no change, nothing to do
+
+    if(_screen)
+        SDL_FreeSurface(_screen);
     _winsizex = sizex;
     _winsizey = sizey;
     _screenFlags = SDL_HWSURFACE | SDL_DOUBLEBUF | SDL_ANYFORMAT | SDL_HWACCEL | extraflags;
@@ -157,7 +162,8 @@ void Engine::Run(void)
         {
             s_curFrameTime += diff;
             _Process(diff);
-            _Render();
+            if(_screen)
+                _Render();
         }
 
         _CalcFPS();
@@ -242,7 +248,6 @@ void Engine::_CalcFPS(void)
         }
     }
     SDL_Delay(_sleeptime);
-
 }
 
 bool Engine::Setup(void)
@@ -283,27 +288,12 @@ void Engine::OnKeyDown(SDLKey key, SDLMod mod)
 {
     if(mod & KMOD_LALT)
     {
-
         if(key == SDLK_F4)
             SetQuit(true);
-        if(key == SDLK_RETURN)
-        {
-            uint32 x = GetResX();
-            uint32 y = GetResY();
-            uint8 bpp = GetBPP();
-            uint32 flags = _screen->flags | _screenFlags;
-
-            SDL_FreeSurface(_screen);
-
-            // toggle between fullscreen, preserving other flags
-            if(flags & SDL_FULLSCREEN)
-                flags &= ~SDL_FULLSCREEN; // remove fullscreen flag
-            else
-                flags |= SDL_FULLSCREEN; // add fullscreen flag
-
-            InitScreen(x, y, bpp, flags);
-        }
+        else if(key == SDLK_RETURN)
+            ToggleFullscreen();
     }
+
     if(mod & KMOD_CTRL)
     {
         if(key == SDLK_F1)
@@ -316,12 +306,10 @@ void Engine::OnKeyDown(SDLKey key, SDLMod mod)
             ToggleDebugFlag(EDBG_SHOW_BBOXES);
     }
 
-
     if(key == SDLK_PAUSE)
     {
-        _paused = !_paused;
+        TogglePause();
     }
-
 }
 
 void Engine::OnKeyUp(SDLKey key, SDLMod mod)
@@ -335,9 +323,10 @@ void Engine::OnWindowResize(uint32 newx, uint32 newy)
 
 void Engine::_Render(void)
 {
-    //RenderBackground();
+    if(_drawBackground)
+        SDL_FillRect(GetSurface(), NULL, _bgcolor);
+
     _layermgr->Render();
-    // TODO: render sprites
     SDL_Flip(_screen);
 }
 
@@ -388,4 +377,36 @@ void Engine::_Reset(void)
     resMgr.DropUnused();
     resMgr.vfs.Prepare(true);
     resMgr.vfs.Reload(true);
+}
+
+void Engine::SetFullscreen(bool b)
+{
+    if(b == IsFullscreen())
+        return; // no change required
+
+    uint32 flags = _screen->flags | _screenFlags;
+
+    // toggle between fullscreen, preserving other flags
+    if(b)
+        flags |= SDL_FULLSCREEN; // add fullscreen flag
+    else
+        flags &= ~SDL_FULLSCREEN; // remove fullscreen flag
+
+    InitScreen(GetResX(), GetResY(), GetBPP(), flags);
+}
+
+void Engine::SetResizable(bool b)
+{
+    if(b == IsResizable())
+        return; // no change required
+
+    uint32 flags = _screen->flags | _screenFlags;
+
+    // toggle between fullscreen, preserving other flags
+    if(b)
+        flags |= SDL_RESIZABLE; // add resizable flag
+    else
+        flags &= ~SDL_RESIZABLE; // remove resizable flag
+
+    InitScreen(GetResX(), GetResY(), GetBPP(), flags);
 }
