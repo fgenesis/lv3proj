@@ -19,8 +19,11 @@ inline unsigned int SDLfunc_Alpha32(unsigned int src, unsigned int dst, unsigned
 }
 
 void SDLfunc_drawRectangle(SDL_Surface *target, SDL_Rect& rectangle, int r, int g, int b, int a);
+void SDLfunc_drawRectangle(SDL_Surface *target, SDL_Rect& rectangle, Uint32 pixel);
 void SDLfunc_drawVLine(SDL_Surface *target, int x, int y1, int y2, int r, int g, int b, int a);
+void SDLfunc_drawVLine(SDL_Surface *target, int x, int y1, int y2, Uint32 pixel);
 void SDLfunc_drawHLine(SDL_Surface *target, int x1, int y, int x2, int r, int g, int b, int a);
+void SDLfunc_drawHLine(SDL_Surface *target, int x1, int y, int x2, Uint32 pixel);
 
 
 #endif

@@ -162,8 +162,13 @@ SDL_Surface *SurfaceFlipHV(SDL_Surface *src)
 
 
 // copied from guichan
-
 void SDLfunc_drawHLine(SDL_Surface *target, int x1, int y, int x2, int r, int g, int b, int a)
+{
+    Uint32 pixel = SDL_MapRGBA(target->format, r, g, b, a);
+    SDLfunc_drawHLine(target, x1, y, x2, pixel);
+}
+
+void SDLfunc_drawHLine(SDL_Surface *target, int x1, int y, int x2, Uint32 pixel)
 {
     if (x1 > x2)
     {
@@ -173,12 +178,12 @@ void SDLfunc_drawHLine(SDL_Surface *target, int x1, int y, int x2, int r, int g,
     }
 
     int bpp = target->format->BytesPerPixel;
+    int a = pixel >> 24; // TODO: is this correct for big endian?
 
     SDL_LockSurface(target);
 
     Uint8 *p = (Uint8 *)target->pixels + y * target->pitch + x1 * bpp;
 
-    Uint32 pixel = SDL_MapRGB(target->format, r, g, b);
     switch(bpp)
     {
     case 1:
@@ -245,6 +250,12 @@ void SDLfunc_drawHLine(SDL_Surface *target, int x1, int y, int x2, int r, int g,
 
 void SDLfunc_drawVLine(SDL_Surface *target, int x, int y1, int y2, int r, int g, int b, int a)
 {
+    Uint32 pixel = SDL_MapRGBA(target->format, r, g, b, a);
+    SDLfunc_drawVLine(target, x, y1, y2, pixel);
+}
+
+void SDLfunc_drawVLine(SDL_Surface *target, int x, int y1, int y2, Uint32 pixel)
+{
     if (y1 > y2)
     {
         y1 ^= y2;
@@ -253,12 +264,11 @@ void SDLfunc_drawVLine(SDL_Surface *target, int x, int y1, int y2, int r, int g,
     }
 
     int bpp = target->format->BytesPerPixel;
+    int a = pixel >> 24; // TODO: is this correct for big endian?
 
     SDL_LockSurface(target);
 
     Uint8 *p = (Uint8 *)target->pixels + y1 * target->pitch + x * bpp;
-
-    Uint32 pixel = SDL_MapRGB(target->format, r, g, b);
 
     switch(bpp)
     {            
@@ -302,11 +312,12 @@ void SDLfunc_drawVLine(SDL_Surface *target, int x, int y1, int y2, int r, int g,
         break;
 
     case 4:
+        Uint32* q = (Uint32*)p;
         for (;y1 <= y2; ++y1)
         {
             if (a)
             {
-                *(Uint32*)p = (pixel,*(Uint32*)p,a);
+                *(Uint32*)p = SDLfunc_Alpha32(pixel,*q,a);
             }
             else
             {
@@ -323,6 +334,12 @@ void SDLfunc_drawVLine(SDL_Surface *target, int x, int y1, int y2, int r, int g,
 
 void SDLfunc_drawRectangle(SDL_Surface *target, SDL_Rect& rectangle, int r, int g, int b, int a)
 {
+    Uint32 pixel = SDL_MapRGBA(target->format, r, g, b, a);
+    SDLfunc_drawRectangle(target, rectangle, pixel);
+}
+
+void SDLfunc_drawRectangle(SDL_Surface *target, SDL_Rect& rectangle, Uint32 pixel)
+{
     int x1 = rectangle.x;
     int y1 = rectangle.y;
     if(x1 >= target->w || y1 >= target->h)
@@ -338,9 +355,9 @@ void SDLfunc_drawRectangle(SDL_Surface *target, SDL_Rect& rectangle, int r, int 
     if(y2 >= target->h) y2 = target->h - 1;
 
 
-    SDLfunc_drawHLine(target, x1, y1, x2, r, g, b, a);
-    SDLfunc_drawHLine(target, x1, y2, x2, r, g, b, a);
+    SDLfunc_drawHLine(target, x1, y1, x2, pixel);
+    SDLfunc_drawHLine(target, x1, y2, x2, pixel);
 
-    SDLfunc_drawVLine(target, x1, y1, y2, r, g, b, a);
-    SDLfunc_drawVLine(target, x2, y1, y2, r, g, b, a);
+    SDLfunc_drawVLine(target, x1, y1, y2, pixel);
+    SDLfunc_drawVLine(target, x2, y1, y2, pixel);
 }

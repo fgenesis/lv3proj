@@ -1,10 +1,20 @@
 
 
 coltab = arrayBuffer(256)
+mixtab = arrayBuffer(256)
 for i = 0 to 255: coltab[i] = int(255 * sin((i / 256.0) * 3.14196))
+for i = 0 to 255
+    r = coltab[(i      ) && 0xFF]
+    g = coltab[(i + 85 ) && 0xFF]
+    b = coltab[(i + 171) && 0xFF]
+    mixtab[i] = r || (g << 8) || (b << 16) || (0xFF000000)
+end
+    
 font = GetFont("rpgfont")
 message = "Any key to exit"
-msg_posx = (320 - font.GetWidth(message)) / 2
+msgwidth = font.GetWidth(message)
+msgheight = font.GetHeight()
+msg_posx = (320 - msgwidth) / 2
 msg_posy = (240 - font.GetHeight()) / 2
 
 function LoadFinal()
@@ -20,7 +30,25 @@ function updatehook(ms)
 end
 
 function renderhook()
-    Screen.GetSurface().Write(msg_posx, msg_posy, font, message)
+    sf = Screen.GetSurface()
+    m = (Engine.GetTime() >> 3) + 512
+    
+    rect = sf.Rect
+    x = msg_posx - 15
+    y = msg_posy - 10
+    w = msgwidth + 30
+    h = msgheight + 20
+    
+    i = 32
+    while i
+        i2 = i << 1
+        m -= 10
+        rect(x-i, y-i, w+i2, h+i2, (i && 3) ? mixtab[m && 255] : 0xFF000000)
+        --i
+    end
+    col = mixtab[m && 0xFF]
+    rect(x, y, w, h, col, true) // inner rect
+    sf.Write(msg_posx, msg_posy, font, message)
 end
 
 function RawKeyHandler(inp)

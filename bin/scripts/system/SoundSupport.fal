@@ -1,0 +1,19 @@
+
+_audioFileExt = ["wav", "ogg", // common formats (mp3 currently not supported)
+                 "mod", "xm", "it", "669", "s3m", // tracker formats, handled by MikMod
+                 "stm", "med", "amf", "apun", "dsm", "far", "gdm", "imf", "mtm", "okt", "stx", "ult", "uni", // also MikMod
+                 "aiff", "voc" // SDL_mixer says it supports those too
+                ]
+
+function IsSupportedAudioFile(fn)
+    fn = fn.lower() // see problem below
+    for ext in _audioFileExt
+        if fn.endsWith("." + ext)// -- case-insensitive endsWith() fails for .669 (bug?)
+            return true
+        end
+    end
+    return false
+end
+
+
+export IsSupportedAudioFile

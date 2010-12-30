@@ -567,6 +567,26 @@ FALCON_FUNC fal_Surface_Pixel( Falcon::VMachine *vm )
         SDLfunc_putpixel(s, x, y, c);
 }
 
+FALCON_FUNC fal_Surface_Rect( Falcon::VMachine *vm )
+{
+    FALCON_REQUIRE_PARAMS_EXTRA(5, "N, N, N, N, N [, B]");
+    SDL_Rect rect;
+    rect.x = (uint32)vm->param(0)->forceInteger();
+    rect.y = (uint32)vm->param(1)->forceInteger();
+    rect.w = (uint32)vm->param(2)->forceInteger();
+    rect.h = (uint32)vm->param(3)->forceInteger();
+    uint32 c = (uint32)vm->param(4)->forceInteger();
+    Falcon::Item *i_fill = vm->param(5);
+    bool fill = i_fill && i_fill->isTrue();
+    fal_Surface *self = Falcon::dyncast<fal_Surface*>( vm->self().asObject() );
+    SDL_Surface *s = self->surface;
+    if(fill)
+        SDL_FillRect(s, &rect, c);
+    else
+        SDLfunc_drawRectangle(s, rect, c);
+}
+
+
 FALCON_FUNC fal_Surface_BlitTo( Falcon::VMachine *vm )
 {
     FALCON_REQUIRE_PARAMS_EXTRA(1, "Surface [, A [, A [, B]]]]");
@@ -1025,6 +1045,7 @@ Falcon::Module *FalconBaseModule_create(void)
     clsSurface->setWKS(true);
     clsSurface->getClassDef()->factory(&fal_Surface::factory);
     m->addClassMethod(clsSurface, "Pixel", fal_Surface_Pixel);
+    m->addClassMethod(clsSurface, "Rect", fal_Surface_Rect);
     m->addClassMethod(clsSurface, "BlitTo", fal_Surface_BlitTo);
     m->addClassMethod(clsSurface, "Write", fal_Surface_Write);
 

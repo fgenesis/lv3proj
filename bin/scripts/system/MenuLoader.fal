@@ -23,16 +23,49 @@ end
 
 class EngineSettingsMenu from SinusMenu
 
+    _music = []
+    _musicPos = 0
+    
     function Setup()
         self.Add( { => }, "Music volume" )
         self.Add( { => }, "Sound volume" )
+        self.Add( [self.UpdateMusic, 1], "Menu music" )
         self.Add( self.OnGoBack, "Back" )
+        self.LoadMusic()
+    end
+    
+    function LoadMusic()
+        self._music = filter( IsSupportedAudioFile, VFS.GetFileList("music") )
+        if len(self._music)
+            self._musicPos = self._music.find(EngineConfig.menuMusic)
+            if self._musicPos < 0
+                self._musicPos = 0
+                forceStart = true
+            else
+                forceStart = false
+            end
+            self.UpdateMusic(0, forceStart)
+        end
     end
     
     function Update()
         self.SinusMenu.Update()
         self.Text(0, "Music Volume [" + EngineConfig.musicVolume + "]")
         self.Text(1, "Sound Volume [" + EngineConfig.soundVolume + "]")
+        self.Text(2, "Menu Music [" + EngineConfig.menuMusic + "]")
+    end
+    
+    function UpdateMusic(dir, forceStart)
+        count = len(self._music)
+        if not count: return
+        oldm = self._music[self._musicPos]
+        self._musicPos = climit(self._musicPos + dir, 0, count - 1)
+        m = self._music[self._musicPos]
+        
+        EngineConfig.menuMusic = m
+        if (m != oldm) or forceStart
+            Music.Play(m)
+        end
     end
     
     function OnKeyLeft(): self.HandleLR(true)
@@ -47,6 +80,9 @@ class EngineSettingsMenu from SinusMenu
                 
             case 1
                 EngineConfig.soundVolume = climit(EngineConfig.soundVolume + (L ? -5 : 5), 0, MAX_VOLUME)
+                
+            case 2
+                self.UpdateMusic(L ? -1 : 1)
                 
             default
                 done = false
