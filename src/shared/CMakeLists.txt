@@ -32,6 +32,12 @@ VFSDirLVPA.cpp
 VFSFile.cpp
 VFSFileLVPA.cpp
 VFSHelper.cpp
+
+// SDL_gfx files
+SDL_gfx/SDL_framerate.c
+SDL_gfx/SDL_gfxPrimitives.c
+SDL_gfx/SDL_imageFilter.c
+SDL_gfx/SDL_rotozoom.c
 )
 
 include_directories (${TOP_INCLUDE_DIR}) 

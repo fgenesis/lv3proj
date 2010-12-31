@@ -535,6 +535,46 @@
 					>
 				</File>
 			</Filter>
+			<Filter
+				Name="SDL_gfx"
+				>
+				<File
+					RelativePath=".\shared\SDL_gfx\SDL_framerate.c"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\SDL_gfx\SDL_framerate.h"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\SDL_gfx\SDL_gfxPrimitives.c"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\SDL_gfx\SDL_gfxPrimitives.h"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\SDL_gfx\SDL_gfxPrimitives_font.h"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\SDL_gfx\SDL_imageFilter.c"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\SDL_gfx\SDL_imageFilter.h"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\SDL_gfx\SDL_rotozoom.c"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\SDL_gfx\SDL_rotozoom.h"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="Header Files"
