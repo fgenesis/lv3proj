@@ -37,6 +37,8 @@ public:
     virtual void Shutdown(void);
     inline bool IsQuit(void) { return _quit; }
     inline static void SetQuit(bool q = true) { _quit = q; }
+    inline static SDL_Joystick *GetJoystick(uint32 i) { return i < s_joysticks.size() ? s_joysticks[i] : NULL; }
+    inline static uint32 GetJoystickCount(void) { return s_joysticks.size(); }
 
     inline void SetReset(bool r = true) { _reset = r; }
     inline bool IsReset(void) { return _reset; }
@@ -127,11 +129,13 @@ protected:
     bool _paused;
     bool _reset;
     bool _drawBackground;
+
+    static std::vector<SDL_Joystick*> s_joysticks;
     
 
 private:
+    static void _InitJoystick(void); // this does nothing if joystick support was not explicitly initialized in SDL_Init()
     static void _OnSignal(int s);
-    void _InitJoystick(void); // this does nothing if joystick support was not explicitly initialized in SDL_Init()
 
     static bool _quit;
 };

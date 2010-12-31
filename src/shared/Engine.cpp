@@ -15,6 +15,7 @@
 volatile uint32 Engine::s_curFrameTime; // game time
 volatile uint32 Engine::s_lastFrameTime; // last frame's clock()
 bool Engine::_quit;
+std::vector<SDL_Joystick*> Engine::s_joysticks;
 
 Engine::Engine()
 : _screen(NULL), _fps(0), _sleeptime(0), _framecounter(0), _paused(false),
@@ -42,6 +43,10 @@ _debugFlags(EDBG_NONE), _reset(false), _bgcolor(0), _drawBackground(true)
 
 Engine::~Engine()
 {
+    for(uint32 i = 0; i < s_joysticks.size(); ++i)
+        if(s_joysticks[i] && SDL_JoystickOpened(SDL_JoystickIndex(s_joysticks[i]))) // this is maybe a bit overcomplicated, but safe at least
+            SDL_JoystickClose(s_joysticks[i]);
+
     delete objmgr;
     delete physmgr;
     delete _layermgr;
@@ -119,6 +124,7 @@ void Engine::InitScreen(uint32 sizex, uint32 sizey, uint8 bpp /* = 0 */, uint32 
 void Engine::_InitJoystick(void)
 {
     uint32 num = SDL_NumJoysticks();
+    s_joysticks.resize(num);
     SDL_Joystick *jst = NULL;
     if(num)
     {
@@ -132,11 +138,13 @@ void Engine::_InitJoystick(void)
                 log("Found joystick #%u (%s) with %u axes, %u buttons, %u hats, %u balls", i, SDL_JoystickName(i),
                     SDL_JoystickNumAxes(jst), SDL_JoystickNumButtons(jst), SDL_JoystickNumHats(jst), SDL_JoystickNumBalls(jst));
                 SDL_JoystickEventState(SDL_ENABLE); // there is at least 1 active joystick, activate event mode
+                
             }
             else
             {
                 logerror("Found joystick #%u (%s), but failed to initialize!", i, SDL_JoystickName(i));
             }
+            s_joysticks[i] = jst;
         }
     }
     else

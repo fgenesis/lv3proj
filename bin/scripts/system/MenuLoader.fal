@@ -30,6 +30,7 @@ class EngineSettingsMenu from SinusMenu
         self.Add( { => }, "Music volume" )
         self.Add( { => }, "Sound volume" )
         self.Add( [self.UpdateMusic, 1], "Menu music" )
+        self.Add( OpenJoystickTest, "Joystick Test" )
         self.Add( self.OnGoBack, "Back" )
         self.LoadMusic()
     end
@@ -172,6 +173,11 @@ function OpenEngineFileBrowserMenu(path) // for debugging
     
     OpenMenu( { => m } ) // use lambda to fake a constructor, because we have already initialized the menu
     
+end
+
+function OpenJoystickTest()
+    CloseCurrentMenu()
+    ShowJoystickTestScreen( [OpenMenu, EngineSettingsMenu] )
 end
 
 function LoadPackageFile(s)

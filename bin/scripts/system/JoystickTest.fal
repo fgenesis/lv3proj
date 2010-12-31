@@ -1,0 +1,151 @@
+class JoyTest(id, xp, yp)
+    _axis = nil
+    _buttons = nil
+    _retfunc = nil
+    _font = nil
+    _xpos = xp
+    _ypos = yp
+    _dim = 100
+    _halfdim = nil
+    _id = id
+    _info = nil
+    _acolors = nil
+    
+    init
+        self._info = Engine.JoystickInfo(self._id) // returns: [name, axes, buttons, hats, balls]
+        self._axis = arrayBuffer((self._info[1] + 1) / 2)
+        for a in self._axis: .= [0, 0] // set every position to [0, 0]
+        self._buttons = arrayBuffer(self._info[2])
+        self._font = GetFont("rpgfont")
+        self._halfdim = self._dim / 2
+        self._acolors = [0xFFFF0000, 0xFF00FF00, 0xFF0000FF, 0xFFFFFF00, 0xFF00FFFF, 0xFFFF00FF, 0xFFFFFFFF]
+    end
+    
+    function axis(which, value)
+        v = which >> 1
+        li = self._axis[v]
+        x, y = li
+        if which && 1 // here we assume that the even axis is the X-axis (but this is not always the case for axis # > 1)
+            y = value
+        else
+            x = value
+        end
+        self._axis[v] = [x, y]
+    end
+    
+    function button(which, value)
+        self._buttons[which] = value
+    end
+    
+    function render(surf)
+        rect = surf.Rect
+        write = surf.Write
+        pix = surf.Pixel
+        
+        // outer rect
+        rect(self._xpos, self._ypos, self._dim, self._dim, 0xFFFFFFFF)
+        
+        yb = self._ypos - 10 // 10 will be added in first loop
+        for i = 0 to len(self._buttons) - 1
+            if i % 5 == 0
+                yb += 10
+                xb = self._xpos + self._dim + 3
+            else
+                xb += 10
+            end
+            rect(xb, yb, 8, 8, 0xFF00DD00)
+            if self._buttons[i]
+                rect(xb+1, yb+1, 6, 6, 0xFF00FF00, true)
+            end
+        end
+        
+        //yt = self._ypos + self._dim + 10
+        for i = 0 to len(self._axis) - 1
+            x, y = self._axis[i]
+            
+            //write(10, yt, self._font, "X: " + x)
+            //yt += 20
+            //write(10, yt, self._font, "Y: " + y)
+            //yt += 30
+            
+            h = self._halfdim
+            frac = h / 32768
+            x = self._xpos + (x * frac) + h
+            y = self._ypos + (y * frac) + h
+            
+            col = self._acolors[i] // lets hope there are not too many axes, this will go boom otherwise
+            rect(x-4, y-4, 9, 9, col && 0x7FFFFFFF) // mask out half opacity
+            rect(x-2, y-2, 5, 5, col)
+            pix(x, y, col)
+        end
+
+    end
+end
+
+_retfunc = nil
+_joytest = nil
+
+function ShowJoystickTestScreen(returnfunc)
+    global _retfunc, _joytest
+    
+    resetscreen = [Screen.SetMode, Screen.GetWidth(),  Screen.GetHeight(), Screen.IsFullscreen(), Screen.CanResize()]
+    _retfunc = { =>
+        resetscreen()
+        returnfunc()
+    }
+    
+    jc = Engine.JoystickCount()
+    if jc
+        if jc > 4: jc = 4  // limit this test to 4 joysticks for now, if someone needs more, let me know
+        _joytest = arrayBuffer(jc) 
+        jpos = [ [5,5], [165, 5], [5, 115], [165, 115] ]
+        for i = 0 to jc - 1: _joytest[i] = JoyTest(i, jpos[i][0], jpos[i][1])
+    else
+        _joytest = nil
+    end
+    
+    Screen.SetMode(320, 240, false, true)
+    RegisterRawInputHook("JoystickTest.fal", inputhook)
+    RegisterRenderHook(renderhook)
+end
+
+function _Return()
+    global _retfunc
+    f = function()
+        UnregisterRawInputHook("JoystickTest.fal")
+        UnregisterRenderHook(renderhook)
+        _retfunc()
+    end
+    CallScheduler.Schedule(f, 1)
+end
+
+function renderhook()
+    global _joytest
+    surf = Screen.GetSurface()
+    if _joytest
+        for j in _joytest: j.render(surf)
+    else
+        font = GetFont("rpgfont")
+        write = Screen.GetSurface().Write
+        write(10, 10, font, "No joysticks found.")
+        write(10, 30, font, "In case you just plugged one in,")
+        write(10, 50, font, "please restart the engine,")
+        write(10, 70, font, "so that it will be detected.")
+        write(10, 100, font, "(Press ESC to return)")
+    end
+end
+
+function inputhook(e)
+    global _joytest
+    ty, src, which, value = e
+    if ty == EVENT_TYPE_KEYBOARD and which == SDLK.ESCAPE
+        _Return()
+    elif ty == EVENT_TYPE_JOYSTICK_AXIS
+        _joytest[src].axis(which, value)
+    elif ty == EVENT_TYPE_JOYSTICK_BUTTON
+        _joytest[src].button(which, value)
+    end
+end
+
+
+export ShowJoystickTestScreen

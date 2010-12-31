@@ -801,6 +801,31 @@ FALCON_FUNC fal_Engine_Reset(Falcon::VMachine *vm)
     g_engine_ptr_->SetReset();
 }
 
+FALCON_FUNC fal_Engine_JoystickCount(Falcon::VMachine *vm)
+{
+    vm->retval((Falcon::int64)Engine::GetJoystickCount());
+}
+
+FALCON_FUNC fal_Engine_JoystickInfo(Falcon::VMachine *vm)
+{
+    FALCON_REQUIRE_PARAMS_EXTRA(1, "I");
+    uint32 id = vm->param(0)->forceIntegerEx();
+    SDL_Joystick *jst = Engine::GetJoystick(id);
+    if(jst)
+    {
+        Falcon::CoreArray *ca = new Falcon::CoreArray(5);
+        Falcon::CoreString *jname = new Falcon::CoreString(SDL_JoystickName(id));
+        ca->append(jname);
+        ca->append((Falcon::int64)SDL_JoystickNumAxes(jst));
+        ca->append((Falcon::int64)SDL_JoystickNumButtons(jst));
+        ca->append((Falcon::int64)SDL_JoystickNumHats(jst));
+        ca->append((Falcon::int64)SDL_JoystickNumBalls(jst));
+        vm->retval(ca);
+    }
+    else
+        vm->retnil();
+}
+
 FALCON_FUNC fal_Screen_GetLayer(Falcon::VMachine *vm)
 {
     FALCON_REQUIRE_PARAMS(1);
@@ -975,6 +1000,19 @@ FALCON_FUNC fal_Font_GetHeight( Falcon::VMachine *vm )
     vm->retval((int64)font->getHeight());
 }
 
+FALCON_FUNC fal_Color( Falcon::VMachine *vm )
+{
+    FALCON_REQUIRE_PARAMS_EXTRA(3, "I, I, I [, I]")
+    Falcon::Item *i_alpha = vm->param(3);
+    SDL_PixelFormat *fmt = g_engine_ptr_->GetSurface()->format;
+    uint8 r = vm->param(0)->forceInteger();
+    uint8 g = vm->param(1)->forceInteger();
+    uint8 b = vm->param(2)->forceInteger();
+    if(i_alpha)
+        vm->retval((Falcon::int64)SDL_MapRGB(fmt,r,g,b));
+    else
+        vm->retval((Falcon::int64)SDL_MapRGBA(fmt,r,g,b, i_alpha->forceInteger()));
+}
 
 Falcon::Module *FalconBaseModule_create(void)
 {
@@ -990,6 +1028,8 @@ Falcon::Module *FalconBaseModule_create(void)
     m->addClassMethod(clsEngine, "CreateCollisionMap", fal_Engine_CreateCollisionMap);
     m->addClassMethod(clsEngine, "UpdateCollisionMap", fal_Engine_UpdateCollisionMap);
     m->addClassMethod(clsEngine, "Reset", fal_Engine_Reset);
+    m->addClassMethod(clsEngine, "JoystickCount", fal_Engine_JoystickCount);
+    m->addClassMethod(clsEngine, "JoystickInfo", fal_Engine_JoystickInfo);
 
     Falcon::Symbol *symScreen = m->addSingleton("Screen");
     Falcon::Symbol *clsScreen = symScreen->getInstance();
@@ -1052,6 +1092,7 @@ Falcon::Module *FalconBaseModule_create(void)
     m->addExtFunc("include_ex", fal_include_ex);
     m->addExtFunc("DbgBreak", fal_debug_break);
     m->addExtFunc("InvertSide", fal_InvertSide);
+    m->addExtFunc("color", fal_Color);
 
     m->addConstant("MAX_VOLUME", Falcon::int64(MIX_MAX_VOLUME));
 
