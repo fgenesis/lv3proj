@@ -27,7 +27,24 @@ EngineConfig["Save"] = function()
         end
     end
     
-    strm = OutputStream("saved_data/game/engine.ini")
+    makestrm = function()
+        ostr = OutputStream("saved_data/game/engine.ini")
+        ostr.setEncoding(getSystemEncoding(), SYSTEM_DETECT)
+        return ostr
+    end
+    
+    try
+        strm = makestrm()
+    catch
+        try: dirMake("saved_data/game")
+        try
+            strm = makestrm()
+        catch
+            > "Failed to save engine config!"
+            return
+        end
+    end
+    
     cp.write(strm)
     strm.close()
     > "Engine config saved."
@@ -36,6 +53,7 @@ end
 EngineConfig["Load"] = function()
     try
         strm = InputStream("saved_data/game/engine.ini")
+        strm.setEncoding(getSystemEncoding(), SYSTEM_DETECT)
     catch
         return false
     end
@@ -51,6 +69,9 @@ EngineConfig["Load"] = function()
     try: EngineConfig.soundVolume = int(soundd["Volume"])
     try: EngineConfig.menuMusic   = menud["Music"]
     > "Engine config loaded."
+    
+    Music.SetVolume(EngineConfig.musicVolume)
+    > "Engine config applied."
     return true
 end
 
