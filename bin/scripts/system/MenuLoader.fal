@@ -133,7 +133,7 @@ end
 function OpenEnginePackageMenu()
     VFS.Reload()
     packs = PackageSystem.Enumerate()
-    packs = PackageSystem.FilterByType(packs, ["game", "demo"])
+    packs = PackageSystem.FilterByType(packs, ["game", "demo", "test"])
     
     m = EngineFileListMenu()
     
@@ -182,7 +182,12 @@ end
 
 function LoadPackageFile(s)
     > "Selected Package: ", s
-    CallScheduler.Schedule( [PackageSystem.Load, s], 1 )
+    loadfunc = function()
+        try
+            return PackageSystem.Load(s) // there may be an explicitly raised error somewhere in the package dependencies upon loading
+        end
+    end
+    CallScheduler.Schedule( loadfunc, 1 )
 end
 
 

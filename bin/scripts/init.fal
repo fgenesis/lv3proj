@@ -34,7 +34,7 @@ class ScriptLoader
                     > "** Falcon script '" + sc + "' loaded"
                     done_count++
                     continue dropping // when we reached this point loading the file was sucessful, remove it from the list
-                catch in err
+                catch Error in err
                     if(collect_errors)
                         errors[sc] = err
                     else
@@ -84,8 +84,17 @@ class ScriptLoader
     end
     
     // -- static function --
-    function LoadFile(fn, dir)
-        fullfn = "scripts/" + (dir ? dir + "/" : "") + fn
+    // dir: optional arg, if supplied, use this dir for loading, otherwise use "scripts"
+    // ex: if true, do not force "/scripts/" subdir, use full path instead
+    function LoadFile(fn, dir, ex)
+        if not dir
+            dir = "" // be sure its not nil
+        elif dir.endsWith("/")
+            dir = dir[:-1] // remove "/" (need this in include_ex)
+        end
+        fullfn = dir + "/" + fn
+        if not ex: fullfn = "scripts/" + fullfn
+        
         if not VFS.HasFile(fullfn)
             > "ScriptLoader::LoadFile: '", fullfn, "' not found"
             DbgBreak()
@@ -96,14 +105,15 @@ class ScriptLoader
         
         try
             if dir
-                include_ex(fn, "", "scripts/" + dir)
-                > "** Falcon script '" + dir + "/" + fn + "' loaded"
+                d = ex ? dir : "scripts/" + dir
+                include_ex(fn, "", d)
+                > "** Falcon script '" + d + "/" + fn + "' loaded"
             else
                 include_ex(fn, "", "scripts")
-                > "** Falcon script '" + fn + "' loaded"
+                > "** Falcon script 'scripts/" + fn + "' loaded"
             end
             return true
-        catch in err
+        catch Error in err
             > "ScriptLoader::LoadFile('", fn, "', '", dir, "') failed:"
             > err
         end
@@ -111,18 +121,26 @@ class ScriptLoader
     end
     
     // -- class method --
-    function AddDir(dir)
+    function AddDir(dir, ex)
         if dir
-            self.FillList(self._list, "scripts/" + dir)
+            if not ex
+                self.FillList(self._list, "scripts/" + dir)
+            else
+                self.FillList(self._list, dir)
+            end
         else
             self.FillList(self._list, "scripts")
         end
     end 
     
     // -- class method --
-    function AddFile(fn, dir)
+    function AddFile(fn, dir, ex)
         if dir
-            self._list.push( [fn, "scripts/" + dir] )
+            if not ex
+                self._list.push( [fn, "scripts/" + dir] )
+            else
+                self._list.push( [fn, dir] )
+            end
         else
             self._list.push( [fn, "scripts"] )
         end
@@ -146,6 +164,9 @@ VFS.AddBufAsFile("scripts/init.fal", ByteBuf().write("// cleared").toMemBuf())
 
 
 // the scripts loaded until now will take care of the rest
+// let's broadcast an event, so that scripts waiting that initialization is finished
+// may do some finalization jobs or whatever
+broadcast("INIT_DONE");
 
 
 export

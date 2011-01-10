@@ -1,0 +1,172 @@
+/* Package class - Convenience functions for packages.
+ * This class is intended to provide functions for
+ * Game packages to ease initialization and proper cleanup.
+ * Usage of this class is not required, but recommended,
+ * as it takes care of the current package name,
+ * and adjusts paths accordingly.
+ * Game/playable packages should call InitGame();
+ * Content-only packages should call InitData().
+ */
+
+class Package
+
+    _name = nil
+    
+    init
+        self._name = PackageSystem.Current()
+    end
+    
+    function GetName(): return self ? self._name : PackageSystem.Current()
+    
+    function InitGame()
+        self._Init()
+        CloseCurrentMenu()
+    end
+    
+    function InitData()
+        self._Init()
+        // ...
+    end
+
+    // do some cleanup work before a package's script is loaded
+    function _Init()
+        > "[Package] Inititalizing: ", self._name
+        // ...
+    end
+
+    function Shutdown()
+        Engine.Reset()
+        
+    end
+
+    function InitScript(file)
+        if not self.LoadScript(file)
+            > "Package.InitScript: FAIL"
+            self.Shutdown()
+        end
+    end
+    
+    function LoadScript(file)
+        dir = "packages/" + self._name + "/scripts"
+        return ScriptLoader.LoadFile(file, dir, true)
+    end
+
+    function LoadScripts(/* ... */)
+        pkgdir = "packages/" + self._name + "/scripts/"
+        loader = ScriptLoader()
+        for i = 0 to paramCount() - 1
+            dir = parameter(i)
+            select dir
+                case StringType
+                    loader.AddDir(pkgdir + dir, true)
+                default
+                    for d in dir: loader.AddDir(pkgdir + d, true)
+            end
+        end
+        loader.DoLoad()
+    end
+    
+    function LoadDependency(pkg, silent)
+        try
+            return PackageSystem.Load(pkg, not silent) // try to load the package, and raise errors on failure, unless silent is true
+        catch PackageError in err
+            rfunc = [renderhook_bad_dependency, err.description, self._name, pkg]
+            escfunc = function(inp)
+                ty, src, which, value = inp
+                if (ty == EVENT_TYPE_KEYBOARD or ty == EVENT_TYPE_JOYSTICK_BUTTON) and value
+                    f = function()
+                        UnregisterRawInputHook("Package.fal-depfail")
+                        UnregisterRenderHook(rfunc)
+                        Package.Shutdown() // nothing better to do, we dont know which other packages were already loaded
+                    end
+                    CallScheduler.Schedule(f, 1)
+                end
+            end
+            
+            CloseCurrentMenu()
+            RegisterRenderHook(rfunc)
+            RegisterRawInputHook("Package.fal-depfail", escfunc)
+            
+             // we do not throw a PackageError here, otherwise it might be caught half-way up the callstack.
+             // instead, this one is supposed to reach the menu, or at least something that is aware of possible errors
+             // (to definitely abort dependency processing)
+            if not silent: raise "LoadDependency FAIL"
+            return false
+        end
+    end
+    
+    // register a function that will be called in next engine loop,
+    // and if it fails, shutdown the package properly
+    function Start(func)
+        f = function(pkg)
+            try
+                func()
+            catch in err
+                > "Package.Start: ERROR:"
+                > err
+                if not pkg: pkg = Package // just in case self was nil
+                
+                // pretty-printing [HACK]
+                if err provides heading
+                    arr = err.heading().split(":", 3)
+                    if len(arr) >= 3
+                        s1 = ":".merge(arr[0:2])
+                        s2 = ":".merge(arr[2:])
+                        arr = [s1, s2]
+                    end
+                else
+                    arr = [err.toString()]
+                end
+                
+                rfunc = [renderhook_start_fail, arr, pkg.GetName()]
+                escfunc = function(inp)
+                    ty, src, which, value = inp
+                    if (ty == EVENT_TYPE_KEYBOARD or ty == EVENT_TYPE_JOYSTICK_BUTTON) and value
+                        rescue = function()
+                            UnregisterRawInputHook("Package.fal-startfail")
+                            UnregisterRenderHook(rfunc)
+                            Package.Shutdown() // nothing better to do, we dont know which other packages were already loaded
+                        end
+                        CallScheduler.Schedule(rescue, 1)
+                    end
+                end
+                
+                CloseCurrentMenu()
+                RegisterRenderHook(rfunc)
+                RegisterRawInputHook("Package.fal-startfail", escfunc)
+            end
+        end
+        CallScheduler.Schedule([f, self], 1)
+    end
+    
+end
+
+function renderhook_bad_dependency(str, which, req)
+    surf = Screen.GetSurface()
+    font = GetFont("rpgfont")
+    write = Screen.GetSurface().Write
+    write(10, 10, font, "Error, tried to load:")
+    write(10, 30, font, "  " + which)
+    write(10, 50, font, "But that depends on:")
+    write(10, 70, font, "  " + req)
+    write(10, 90, font, "which caused the following error:")
+    write(10, 110, font, "  " + str)
+    write(10, 140, font, "(Press any key to return)")
+end
+
+function renderhook_start_fail(arr, which)
+    surf = Screen.GetSurface()
+    font = GetFont("rpgfont")
+    write = Screen.GetSurface().Write
+    write(10, 10, font, "Error, tried to load:")
+    write(10, 30, font, "  " + which)
+    write(10, 50, font, "which caused the following error:")
+    i = 50
+    for s in arr
+        i += font.GetHeight() + 3
+        write(10, i, font, "  " + s)
+    end
+    write(10, i + (font.GetHeight() * 2), font, "(Press any key to return)")
+end
+
+export Package

@@ -1,6 +1,4 @@
 
-loader = ScriptLoader()
-loader.AddDir("game")
-loader.AddDir("sprites")
-// ...
-loader.DoLoad()
+pkg = Package()
+pkg.InitData()
+pkg.LoadScripts("game", "sprites")

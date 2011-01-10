@@ -11,4 +11,32 @@ end
 
 function arraysum(y): return reduce( {a,b => a+b}, y, 0 )
 
+function ReadIniFileAsDict(fn)
+    buf = VFS.GetFileAsBuf(fn)
+    if not buf
+        > "ReadIniFileAsDict: '", fn, "' not found"
+        return nil
+    end
+    
+    bb = ByteBuf(buf, true) // for more processing comfort, we wrap a ByteBuf around the MemBuf
+    ss = StringStream(bb.readString()) // and read one string from it (which, for text files, is the entire file)
+    // this is needed so the config parser will not append a newline char to config values if the original data are in windows CRLF encoding
+    ss.setEncoding(getSystemEncoding(), SYSTEM_DETECT)
+    cp = ConfParser()
+    try
+        cp.read(ss) // can fail if there is a parsing error
+    catch in err
+        > 'ReadIniFileAsDict("', fn, '") ERROR:'
+        > err
+        return nil
+    end
+    
+    d = [ => ]
+    d[""] = cp.getDictionary() // no section
+    for s in cp.getSections(): d[s] = cp.getDictionary(s)
+    
+    return d
+end
+
+
 export

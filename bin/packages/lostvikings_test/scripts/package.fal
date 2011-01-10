@@ -1,19 +1,19 @@
 
-
-PackageSystem.Load("lostvikings_data")
+pkg = Package()
+pkg.InitGame()
+pkg.LoadDependency("lostvikings_data")
 
 
 class LVTestLevelSelectMenu from SinusMenu
 
     function Setup()
-        self.Add( [PackageSystem.RunAfterLoad, [MyLoadMapScript, "test.fal"]], "Test Level" )
-        self.Add( [PackageSystem.RunAfterLoad, [MyLoadMapScript, "demo.fal"]], "Demo Level" )
+        self.Add( [Package.Start, [MyLoadMapScript, "test.fal"]], "Test Level" )
+        self.Add( [Package.Start, [MyLoadMapScript, "demo.fal"]], "Demo Level" )
         self.Add( self.OnGoBack, "--- Back ---" )
     end
     
     function OnGoBack()
-        //OpenEnginePackageMenu()
-        ShutdownGamePackage()
+        Package.Shutdown()
     end
     
     function OnUpdate()
@@ -25,8 +25,8 @@ class LVTestLevelSelectMenu from SinusMenu
 end
 
 function MyLoadMapScript(file)
-    if not ScriptLoader.LoadFile(file, "levels"): ShutdownGamePackage()
-    ScriptLoader.LoadDir("benchmark")
+    pkg.InitScript("levels/" + file)
+    pkg.LoadScripts("benchmark")
     CloseCurrentMenu()
 end
 
@@ -35,7 +35,7 @@ function LoadFinal()
 end
 
 function EscHandler()
-    ShutdownGamePackage()
+    Package.Shutdown()
 end
 
 function RawKeyHandler(inp)
@@ -47,6 +47,5 @@ function RawKeyHandler(inp)
     end
 end
 
-InitGamePackage()
-PackageSystem.RunAfterLoad(LoadFinal)
+pkg.Start(LoadFinal)
 RegisterRawInputHook("lostvikings_test", RawKeyHandler)

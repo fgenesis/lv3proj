@@ -1,0 +1,11 @@
+
+pkg = Package()
+
+pkg.LoadDependency("invalid_dep_pkg")
+
+function LoadFinal()
+    raise "This error should never be raised."
+end
+
+pkg.InitGame()
+pkg.Start(LoadFinal)

@@ -3,13 +3,29 @@ Package system script.
 Uses the VFS class provided by the engine to make package management easier
 */
 
+class PackageError(str, which) from Error(200, str, which)
+    package = which
+end
+
 class PackageSystem
 
     static runLoadCtr = 0
+    static _pkgList = nil // internally used like a stack
     
     init
         raise "This class is a singleton and should not be instanced!"
     end
+    
+    function Init()
+        self._pkgList = List("") // means no package loaded (sentinel entry)
+    end
+    
+    function _PushPkg(s): self._pkgList.push(s)
+    function _PopPkg(): return self._pkgList.pop()
+    
+    // return name of package currently inside
+    function Current(): return self._pkgList.back()
+    
     
     function LoadStructure(pkg)
         p = "packages/" + pkg
@@ -17,32 +33,68 @@ class PackageSystem
     end
     
     // load a .lvpa file in directory "packages", or a subdir with that name
-    function Load(pkg)
+    function Load(pkg, throw)
         > "PackageSystem:Load(", pkg, ")"
         p = "packages/" + pkg
-        from_cont = VFS.AddContainer(p + ".lvpa", p, false) // add the container contents into package/<name> directory, keeping files on disk with a higher priority 
+        lvpa_exists = VFS.HasFile(p + ".lvpa")
+        pkgdir_exists = (pkg in VFS.GetDirList("packages"))
+
+        if not (pkgdir_exists or lvpa_exists)
+            > "ERROR: Package '", pkg, "': No such package!"
+            if throw: raise PackageError("No such package", pkg)
+            return false
+        end
+        
+        if lvpa_exists
+            if not VFS.AddContainer(p + ".lvpa", p, false) // add the container contents into package/<name> directory, keeping files on disk with a higher priority
+                if not pkgdir_exists // it is only in a container (not plain files on disk), but we cant load that
+                    if throw: raise PackageError("Error loading package container", pkg)
+                    return false
+                else
+                    > "WARNING: Can't load container file for '", pkg, "', using files on disk only"
+                end
+            end
+        end
+        
+        if not VFS.HasFile(p + "/scripts/package.fal")
+            > "ERROR: Package '", pkg, "': There is no 'package.fal' script!"
+            if throw: raise PackageError("Can't find package.fal", pkg)
+            return false
+        end
+        
+        // when we are here, the package is loaded, but it is not yet merged into root dir,
+        // and its initialization script has not yet been started.
+        // the event broadcasted here can be used by scripts interested to do actions directly before a (3rd-party) package is loaded.
+        // for example, this is used by Safe.fal, to prevent system access for those scripts.
+        // broadcasting the event *here* is important, so that Safe.fal and others listening to this can not be overridden
+        // by packages which contain files of the same name.
+        broadcast("LOAD_PACKAGE", pkg)
+        
         m = VFS.Merge(p, "") // merge the package directory into root dir
         if not m // this cant happen
             > "PackageSystem:Load: MERGE ERROR"
+            if throw: raise PackageError("VFS MERGE ERROR", pkg)
             return false
         end
-        if not ScriptLoader.LoadFile("package.fal")
-            > @ "ERROR: Package '$pkg': Loading the 'package.fal' script failed!"
+        
+        self._PushPkg(pkg)
+        
+        if not ScriptLoader.LoadFile("package.fal", p + "/scripts", true) // load the initialization script (absolute path)
+            > "ERROR: Package '", pkg, "': Loading the 'package.fal' script failed!"
+            self._PopPkg()
+            if throw: raise PackageError("Error loading package.fal")
+            return false
         end
         
-        return from_cont or (pkg in VFS.GetDirList("packages"))
-    end
-    
-    // register a function that will be called once at next engine tick
-    function RunAfterLoad(func)
-        CallScheduler.Schedule(func, 1)
+        self._PopPkg()
+            
+        return true
     end
     
     function Enumerate()
-        dl = VFS.GetDirList("packages")
-        fl = VFS.GetFileList("packages")
         dict = [ => ]
-        for d in dl: dict[d] = true // populate the dict, filtering out duplicates. true is just a dummy value here.
+        // first, load the package files, and unpack parts of them to create the VFS dirs
+        fl = VFS.GetFileList("packages")
         for f in fl
             if f.endsWith(".lvpa", true)
                 f = f[:-5] // skip the last 5 chars (= cut off ".lvpa")
@@ -52,6 +104,9 @@ class PackageSystem
                 end
             end
         end
+        // then, enumerate the subdirs
+        dl = VFS.GetDirList("packages")
+        for d in dl: dict[d] = true // populate the dict, filtering out duplicates. true is just a dummy value here.
         
         pkginfo = [ => ]
         for name, dummy in dict
@@ -91,14 +146,14 @@ class PackageSystem
         select types
             case ArrayType
                 for name, entries in pkgdict
-                    if entries and entries["type"] in types
+                    if entries and entries.get("type") in types
                         ret[name] = entries
                     end
                 end
                 
             case StringType
                 for name, entries in pkgdict
-                    if entries and entries["type"] == types
+                    if entries and entries.get("type") == types
                         ret[name] = entries
                     end
                 end
@@ -110,5 +165,7 @@ class PackageSystem
     end
     
 end
+
+PackageSystem.Init()
 
 export

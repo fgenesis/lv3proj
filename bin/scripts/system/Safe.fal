@@ -1,0 +1,110 @@
+/*
+   safe - Falcon IRC Bot evaluation security file
+   FILE: safe.fal
+
+   Code to prevent submitted code from doing anything bad
+   -------------------------------------------------------------------
+   Author: Paul Nema
+   Begin: 13-DEC-2009
+
+   -------------------------------------------------------------------
+   (C) Copyright 2009: the falbot developers (see list in AUTHORS file)
+
+   See LICENSE file for licensing details.
+*/
+/* adapted for LV3 engine */
+
+// import the symbols explicitly (this is required to be able to override them globally)
+import include, getenv, setenv, MemBufFromPtr
+import readURI, writeURI
+import dirChange, dirCurrent, dirMake, dirMakeLink, dirRemove, dirReadLink
+import fileChgroup, fileChmod, fileChown, fileCopy, fileMove, fileRemove, fileType
+import IOStream, InputStream, OutputStream, Directory, FileStat
+
+s_safe = false
+
+function blockedOverride(s)
+    > "!! Attempt to call forbidden function: ", s
+end
+
+class IOStreamOverride(s)
+    init
+        > "!! Attempt to use class IOStream"
+    end
+end
+
+class InputStreamOverride(s)
+    init
+        > "!! Attempt to use class InputStream"
+    end
+end
+
+class OutputStreamOverride(s)
+    init
+        > "!! Attempt to use class OutputStream"
+    end
+end
+
+class DirectoryOverride(s)
+    init
+        > "!! Attempt to use class Directory"
+    end
+end
+
+class FileStatOverride(s)
+    init
+        > "!! Attempt to use class FileStat"
+    end
+end
+
+function overrideSystemFuncs()
+    global s_safe
+    
+    // we are in a function, but we want to override the symbols globally
+    global include, getenv, setenv, MemBufFromPtr
+    global readURI, writeURI
+    global dirChange, dirCurrent, dirMake, dirMakeLink, dirRemove, dirReadLink
+    global fileChgroup, fileChmod, fileChown, fileCopy, fileMove, fileRemove, fileType
+    global IOStream, InputStream, OutputStream, Directory, FileStat
+    
+    if s_safe: return
+    
+    // FUNCTIONS
+    include       = { => blockedOverride("include") } // we have include_ex
+    getenv        = { => blockedOverride("getenv") }
+    setenv        = { => blockedOverride("setenv") }
+    MemBufFromPtr = { => blockedOverride("MemBufFromPtr") }
+    
+    readURI        = { => blockedOverride("readURI") }
+    writeURI        = { => blockedOverride("writeURI") }
+    
+    dirChange     = { => blockedOverride("dirChange") }
+    dirCurrent    = { => blockedOverride("dirCurrent") }
+    dirMake       = { => blockedOverride("dirMake") }
+    dirReadLink   = { => blockedOverride("dirReadLink") }
+    dirRemove     = { => blockedOverride("dirRemove") }
+    
+    fileChgroup   = { => blockedOverride("fileChgroup") }
+    fileChmod     = { => blockedOverride("fileChmod") }
+    fileChown     = { => blockedOverride("fileChown") }
+    fileCopy      = { => blockedOverride("fileCopy") }
+    fileMove      = { => blockedOverride("fileMove") }
+    fileRemove    = { => blockedOverride("fileRemove") }
+    fileType      = { => blockedOverride("fileType") }
+    
+    // CLASSES
+    IOStream      = IOStreamOverride
+    InputStream   = InputStreamOverride
+    OutputStream  = OutputStreamOverride
+    Directory     = DirectoryOverride
+    FileStat      = FileStatOverride
+    
+    s_safe = true
+    > "[Safe.fal] System function overrides installed"
+    
+end
+
+// this event is broadcasted in PackageSystem.fal, after loading a package,
+// but before executing its initialization script
+subscribe("LOAD_PACKAGE", overrideSystemFuncs)
+

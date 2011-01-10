@@ -1,0 +1,77 @@
+
+pkg = Package()
+pkg.InitGame()
+
+function LoadFinal()
+    x = nil
+    working = []
+    
+    try
+        x = InputStream("basepak.lvpa")
+        if x provides close
+            x.close()
+            working += "InputStream"
+        end
+    catch
+        working += "InputStream"
+    end
+    
+    try
+        x = OutputStream("~safetest.tmp")
+        if x provides close
+            x.close()
+            working += "OutputStream"
+        end
+    catch
+        working += "OutputStream"
+    end
+    
+    try
+        x = IOStream("~safetest.tmp")
+        if x provides close
+            x.close()
+            working += "IOStream"
+        end
+    catch
+        working += "IOStream"
+    end
+    
+    mb = MemBuf(10, 1)
+    x = MemBufFromPtr(mb.ptr(), 10)
+    if x: working += "MemBufFromPtr"
+    
+    x = getenv("PATH")
+    if x: working += "getenv"
+    
+    x = Directory(".")
+    if x provides read: working += "Directory"
+    
+    RegisterRenderHook([renderhook, working]);
+end
+
+function RawKeyHandler(inp)
+    ty, src, which, value = inp
+    if (ty == EVENT_TYPE_KEYBOARD or ty == EVENT_TYPE_JOYSTICK_BUTTON) and value
+        Package.Shutdown()
+    end
+end
+
+RegisterRawInputHook("forbidden_test_package", RawKeyHandler)
+
+
+function renderhook(working)
+    surf = Screen.GetSurface()
+    font = GetFont("rpgfont")
+    write = Screen.GetSurface().Write
+    if len(working)
+        write(10, 10, font, "Your engine is NOT safe!")
+        for i = 0 to len(working) - 1
+            write(10, 30 + (i * 15), font, "  " + working[i])
+        end
+    else
+        write(10, 10, font, "Your engine seems safe, good!")
+    end
+end
+
+
+pkg.Start(LoadFinal)

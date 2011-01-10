@@ -54,12 +54,15 @@ end
 function RawKeyHandler(inp)
     ty, src, which, value = inp
     if(ty == EVENT_TYPE_KEYBOARD and value)
-        ShutdownGamePackage()
+        Package.Shutdown()
     end
 end
 
-InitGamePackage()
-PackageSystem.RunAfterLoad(LoadFinal)
+pkg = Package()
+pkg.InitGame()
+
 RegisterRawInputHook("screen_test_package", RawKeyHandler)
 RegisterUpdateHook("screen_test_package", updatehook);
 RegisterRenderHook(renderhook);
+
+pkg.Start(LoadFinal)

@@ -1,0 +1,13 @@
+// upon loading this script, it should go back to the menu
+
+pkg = Package()
+pkg.InitGame()
+
+function LoadFinal(x)
+    if x() // <-- here it should fail
+        // ... etc ...
+    end
+end
+
+
+pkg.Start(LoadFinal)
