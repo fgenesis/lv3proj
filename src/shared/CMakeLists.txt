@@ -33,7 +33,7 @@ VFSFile.cpp
 VFSFileLVPA.cpp
 VFSHelper.cpp
 
-// SDL_gfx files
+# SDL_gfx files
 SDL_gfx/SDL_framerate.c
 SDL_gfx/SDL_gfxPrimitives.c
 SDL_gfx/SDL_imageFilter.c
