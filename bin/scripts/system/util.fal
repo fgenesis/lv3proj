@@ -32,11 +32,39 @@ function ReadIniFileAsDict(fn)
     end
     
     d = [ => ]
-    d[""] = cp.getDictionary() // no section
-    for s in cp.getSections(): d[s] = cp.getDictionary(s)
+    root = cp.getDictionary() // no section
+    if len(root): d[""] = root
+    
+    for s in cp.getSections()
+        sect = cp.getDictionary(s)
+        if len(sect): d[s] = sect
+    end
     
     return d
 end
 
+class Array2D(w, h, arr)
+    _w = 0
+    _h = 0
+    _data = arr
+    
+    init
+        self._w = w
+        self._h = h
+        if not self._data: self._data = arrayBuffer(w * h)
+    end
+    
+    function __call(x, y)
+        return self._data[(y * self._w) + x]
+    end
+    
+    function set(x, y, val)
+        self._data[(y * self._w) + x] = val
+        return self
+    end
+    
+    function __get_w(): return self._w
+    function __get_h(): return self._h
+end
 
 export

@@ -19,7 +19,7 @@ import include, getenv, setenv, MemBufFromPtr
 import readURI, writeURI
 import dirChange, dirCurrent, dirMake, dirMakeLink, dirRemove, dirReadLink
 import fileChgroup, fileChmod, fileChown, fileCopy, fileMove, fileRemove, fileType
-import IOStream, InputStream, OutputStream, Directory, FileStat
+import IOStream, InputStream, OutputStream, Directory, FileStat, ICompiler
 
 s_safe = false
 
@@ -57,6 +57,12 @@ class FileStatOverride(s)
     end
 end
 
+class ICompilerOverride(s)
+    init
+        > "!! Attempt to use class ICompiler"
+    end
+end
+
 function overrideSystemFuncs()
     global s_safe
     
@@ -65,7 +71,7 @@ function overrideSystemFuncs()
     global readURI, writeURI
     global dirChange, dirCurrent, dirMake, dirMakeLink, dirRemove, dirReadLink
     global fileChgroup, fileChmod, fileChown, fileCopy, fileMove, fileRemove, fileType
-    global IOStream, InputStream, OutputStream, Directory, FileStat
+    global IOStream, InputStream, OutputStream, Directory, FileStat, ICompiler
     
     if s_safe: return
     
@@ -98,6 +104,7 @@ function overrideSystemFuncs()
     OutputStream  = OutputStreamOverride
     Directory     = DirectoryOverride
     FileStat      = FileStatOverride
+    ICompiler     = ICompilerOverride
     
     s_safe = true
     > "[Safe.fal] System function overrides installed"

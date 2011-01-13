@@ -19,7 +19,8 @@ function dbg_HookCountRenderHook() // note: this function is highly unoptimized 
     u = GetUpdateHookCount()
     i = GetRawInputHookCount()
     s = SNESKeyMap.GetInputHookCount()
-    str = @ "Hooks: Render = $r; Update = $u; RawInp = $i, SNESInp = $s"
+    c = CallScheduler.Count()
+    str = @ "Hooks: Render = $r; Update = $u; RawInp = $i; SNESInp = $s; Sched = $c"
     w, h = Screen.GetSize()
     font = GetFont("rpgfont")
     Screen.GetSurface().Write(0, h - font.GetHeight(), font, str)

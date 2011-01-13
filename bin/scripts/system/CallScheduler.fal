@@ -18,11 +18,18 @@ class CallScheduler
         for pair in self.calls
             time, item = pair
             if(time < Engine.GetTime())
-                item()
+                try
+                    item()
+                catch in err
+                    > "CallScheduler: Error in task '", item, "':"
+                    > err
+                end
                 continue dropping
             end
         end
     end
+    
+    function Count(): return len(self.calls)
 
 end
 
