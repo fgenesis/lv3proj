@@ -25,6 +25,8 @@ for cross platform where they have different endians.
 
 #include <algorithm>
 
+#include "SysDefs.h" // this is important to fix up any possible ***_ENDIAN misconfigurations
+
 namespace ByteConverter
 {
     template<size_t T>
@@ -44,7 +46,7 @@ namespace ByteConverter
     }
 }
 
-#if defined(BIG_ENDIAN) && BIG_ENDIAN != 0
+#if IS_BIG_ENDIAN
 template<typename T> inline void EndianConvert(T& val) { ByteConverter::apply<T>(&val); }
 template<typename T> inline void EndianConvertReverse(T&) { }
 #else
