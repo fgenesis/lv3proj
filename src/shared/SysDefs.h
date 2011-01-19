@@ -80,8 +80,10 @@
     typedef unsigned int uint32;
     typedef unsigned short uint16;
     typedef unsigned char uint8;
-    typedef uint16 WORD;
-    typedef uint32 DWORD;
+#   if PLATFORM != PLATFORM_WIN32 // however, this is defined on mingw.
+        typedef uint16 WORD;
+        typedef uint32 DWORD;
+#   endif
 #endif
 
 #ifndef _LP64
