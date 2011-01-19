@@ -20,7 +20,13 @@ class FalconProxyObject
 public:
     FalconProxyObject(BaseObject *base) : obj(base) {}
     ~FalconProxyObject();
-    Falcon::Item *CallMethod(char *m, uint32 args = 0, ...);
+
+    Falcon::Item *CallMethod(const char *m);
+    Falcon::Item *CallMethod(const char *m, const Falcon::Item& a);
+    Falcon::Item *CallMethod(const char *m, const Falcon::Item& a, const Falcon::Item& b);
+    Falcon::Item *CallMethod(const char *m, const Falcon::Item& a, const Falcon::Item& b, const Falcon::Item& c);
+    // extend if methods with more params are necessary
+
     inline fal_ObjectCarrier *self(void) { return (fal_ObjectCarrier*)gclock->item().asObject(); }
 
     Falcon::GarbageLock *gclock; // to prevent deletion of the fal_ObjectCarrier when a script drops the reference
@@ -29,6 +35,10 @@ public:
     BaseObject *obj; // to speedup access, could be done via self()->_obj, but the self() call adds too much overhead imho
     Falcon::VMachine *vm; // the VM CallMethod invokes
     const Falcon::CoreClass *coreCls; // the internal class the object belongs to
+
+private:
+    bool _PrepareMethod(const char *m, Falcon::Item& mth); // return true if method was found, changes mth param
+    Falcon::Item *_CallReadyMethod(const char *mthname, const Falcon::Item& mth, uint32 args); // mthname here only used in case of error
 };
 
 // the fal_ObjectCarrier is the actual object stored inside the falcon VM

@@ -1,4 +1,3 @@
-#include <stdarg.h>
 #include <falcon/engine.h>
 #include "common.h"
 #include "AppFalcon.h"
@@ -32,33 +31,61 @@ FalconProxyObject::~FalconProxyObject()
     delete gclock;
 }
 
-// Do NOT use other argument types than Falcon::Item
-Falcon::Item *FalconProxyObject::CallMethod(char *m, uint32 args /* = 0 */, ...)
+Falcon::Item *FalconProxyObject::CallMethod(const char *m)
 {
     Falcon::Item method;
-    if(self()->getMethod(m, method))
-    {
-        va_list ap;
-        va_start(ap, args);
-        for(uint32 i = 0; i < args; ++i)
-        {
-            Falcon::Item& itm = va_arg(ap, Falcon::Item);
-            vm->pushParam(itm);
-        }
-        va_end(ap);
+    if(!_PrepareMethod(m, method))
+        return NULL;
+    return _CallReadyMethod(m, method, 0);
+}
 
-        try
-        {
-            vm->callItem(method, args);
-        }
-        catch(Falcon::Error *err)
-        {
-            Falcon::AutoCString edesc( err->toString() );
-            logerror("FalconProxyObject::CallMethod(%s): %s", m, edesc.c_str());
-            err->decref();
-            return NULL;
-        }
+Falcon::Item *FalconProxyObject::CallMethod(const char *m, const Falcon::Item& a)
+{
+    Falcon::Item method;
+    if(!_PrepareMethod(m, method))
+        return NULL;
+    vm->pushParam(a);
+    return _CallReadyMethod(m, method, 1);
+}
+
+Falcon::Item *FalconProxyObject::CallMethod(const char *m, const Falcon::Item& a, const Falcon::Item& b)
+{
+    Falcon::Item method;
+    if(!_PrepareMethod(m, method))
+        return NULL;
+    vm->pushParam(a);
+    vm->pushParam(b);
+    return _CallReadyMethod(m, method, 2);
+}
+
+Falcon::Item *FalconProxyObject::CallMethod(const char *m, const Falcon::Item& a, const Falcon::Item& b, const Falcon::Item& c)
+{
+    Falcon::Item method;
+    if(!_PrepareMethod(m, method))
+        return NULL;
+    vm->pushParam(a);
+    vm->pushParam(b);
+    vm->pushParam(c);
+    return _CallReadyMethod(m, method, 3);
+}
+
+bool FalconProxyObject::_PrepareMethod(const char *m, Falcon::Item &mth)
+{
+    return self()->getMethod(m, mth); // checking for mth.isCallable() is not required here, done by the VM
+}
+
+Falcon::Item *FalconProxyObject::_CallReadyMethod(const char *mthname, const Falcon::Item& mth, uint32 args)
+{
+    try
+    {
+        vm->callItem(mth, args);
         return &(vm->regA());
+    }
+    catch(Falcon::Error *err)
+    {
+        Falcon::AutoCString edesc( err->toString() );
+        logerror("FalconProxyObject::CallMethod(%s): %s", mthname, edesc.c_str());
+        err->decref();
     }
     return NULL;
 }
@@ -228,7 +255,7 @@ bool fal_ObjectCarrier::setProperty( const Falcon::String &prop, const Falcon::I
     if(!_obj)
     {
         throw new Falcon::AccessError( Falcon::ErrorParam( Falcon::e_invop_unb ).
-            extra( "Object was already deleted!" ) );   
+            extra( "Object was already deleted!" ) );
     }
 
     bool rectChanged = false;
@@ -249,7 +276,7 @@ bool fal_ObjectCarrier::setProperty( const Falcon::String &prop, const Falcon::I
     if(prop.length() > 1 && prop.length() <= 3 && prop.getCharAt(1) == '2' && (prop.getCharAt(0) == 'x' || prop.getCharAt('y')))
     {
         throw new Falcon::AccessError( Falcon::ErrorParam( Falcon::e_prop_ro ).
-            extra( prop ) );   
+            extra( prop ) );
     }
 
     if(prop == "phys")
@@ -257,7 +284,7 @@ bool fal_ObjectCarrier::setProperty( const Falcon::String &prop, const Falcon::I
         if(!value.isOfClass("PhysProps"))
         {
             throw new Falcon::AccessError( Falcon::ErrorParam( Falcon::e_param_type ).
-                extra( "Object.phys can only be of type 'PhysProps'" ) );   
+                extra( "Object.phys can only be of type 'PhysProps'" ) );
         }
 
         if(_obj->GetType() >= OBJTYPE_OBJECT)
@@ -286,7 +313,7 @@ bool fal_ObjectCarrier::getProperty( const Falcon::String &prop, Falcon::Item &r
     if(!_obj)
     {
         throw new Falcon::AccessError( Falcon::ErrorParam( Falcon::e_invop_unb ).
-            extra( "Object was already deleted!" ) );   
+            extra( "Object was already deleted!" ) );
     }
 
     if(prop == "id") { ret = Falcon::int32(_obj->GetId()); return true; }
@@ -338,58 +365,57 @@ void BaseObject::unbind(void)
 void ActiveRect::OnEnter(uint8 side, ActiveRect *who)
 {
     DEBUG_ASSERT_RETURN_VOID(_falObj);
-    _falObj->CallMethod("OnEnter", 2, Falcon::Item(Falcon::int32(side)), Falcon::Item(who->_falObj->self()));
+    _falObj->CallMethod("OnEnter", Falcon::int32(side), who->_falObj->self());
 }
 
 void ActiveRect::OnEnteredBy(uint8 side, ActiveRect *who)
 {
     DEBUG_ASSERT_RETURN_VOID(_falObj);
-    _falObj->CallMethod("OnEnteredBy", 2, Falcon::Item(Falcon::int32(side)), Falcon::Item(who->_falObj->self()));
+    _falObj->CallMethod("OnEnteredBy", Falcon::int32(side), who->_falObj->self());
 }
 
 void ActiveRect::OnLeave(uint8 side, ActiveRect *who)
 {
     DEBUG_ASSERT_RETURN_VOID(_falObj);
-    _falObj->CallMethod("OnLeave", 2, Falcon::Item(Falcon::int32(side)), Falcon::Item(who->_falObj->self()));
+    _falObj->CallMethod("OnLeave", Falcon::int32(side), who->_falObj->self());
 }
 
 void ActiveRect::OnLeftBy(uint8 side, ActiveRect *who)
 {
     DEBUG_ASSERT_RETURN_VOID(_falObj);
-    _falObj->CallMethod("OnLeftBy", 2, Falcon::Item(Falcon::int32(side)), Falcon::Item(who->_falObj->self()));
+    _falObj->CallMethod("OnLeftBy", Falcon::int32(side), who->_falObj->self());
 }
 
 bool ActiveRect::OnTouch(uint8 side, ActiveRect *who)
 {
     DEBUG_ASSERT_RETURN(_falObj, true); // no further processing
-    Falcon::Item *result = _falObj->CallMethod("OnTouch", 2, Falcon::Item(Falcon::int32(side)), Falcon::Item(who->_falObj->self()));
-    return result && result->type() != FLC_ITEM_NIL ? result->asBoolean() : false;
+    Falcon::Item *result = _falObj->CallMethod("OnTouch", Falcon::int32(side), who->_falObj->self());
+    return result && result->isTrue();
 }
 
 bool ActiveRect::OnTouchedBy(uint8 side, ActiveRect *who)
 {
     DEBUG_ASSERT_RETURN(_falObj, true); // no further processing
-    Falcon::Item *result = _falObj->CallMethod("OnTouchedBy", 2, Falcon::Item(Falcon::int32(side)), Falcon::Item(who->_falObj->self()));
-    return result && result->type() != FLC_ITEM_NIL ? result->asBoolean() : false;
+    Falcon::Item *result = _falObj->CallMethod("OnTouchedBy", Falcon::int32(side), who->_falObj->self());
+    return result && result->isTrue();
 }
 
 void Object::OnUpdate(uint32 ms)
 {
     DEBUG_ASSERT_RETURN_VOID(_falObj);
-    _falObj->CallMethod("OnUpdate", 1, Falcon::Item(Falcon::int64(ms)));
+    _falObj->CallMethod("OnUpdate", Falcon::int64(ms));
 }
 
 void Object::OnTouchWall(uint8 side, float xspeed, float yspeed)
 {
     DEBUG_ASSERT_RETURN_VOID(_falObj);
-    _falObj->CallMethod("OnTouchWall", 3, Falcon::Item(Falcon::int64(side)), Falcon::Item(Falcon::numeric(xspeed)),
-        Falcon::Item(Falcon::numeric(yspeed)));
+    _falObj->CallMethod("OnTouchWall", Falcon::int64(side), Falcon::numeric(xspeed), Falcon::numeric(yspeed));
 }
 
 bool Item::OnUse(Object *who)
 {
     DEBUG_ASSERT_RETURN(_falObj, false); // no further processing
-    Falcon::Item *result = _falObj->CallMethod("OnUse", 1, Falcon::Item(who->_falObj->self()));
+    Falcon::Item *result = _falObj->CallMethod("OnUse", who->_falObj->self());
     return result && result->type() != FLC_ITEM_NIL ? result->asBoolean() : false;
 }
 
@@ -566,7 +592,7 @@ bool fal_Tile::setProperty( const Falcon::String &prop, const Falcon::Item &valu
     else if(prop == "type" || prop == "filename" || prop == "frame")
     {
         throw new Falcon::AccessError( Falcon::ErrorParam( Falcon::e_prop_ro ).
-            extra( prop ) );           
+            extra( prop ) );
     }
 
     if(bad)
