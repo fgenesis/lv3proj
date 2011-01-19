@@ -72,14 +72,14 @@
     #define I64FMTD "%llu"
     #define I64LIT(x) (x ## LL)
     #define UI64LIT(x) (x ## ULL)
-    typedef int64_t uint64;
-    typedef int32_t uint32;
-    typedef int16_t uint16;
-    typedef int8_t uint8;
-    typedef uint64_t uint64;
-    typedef uint32_t uint32;
-    typedef uint16_t uint16;
-    typedef uint8_t uint8;
+    typedef long long int64;
+    typedef int int32;
+    typedef short int16;
+    typedef char int8;
+    typedef unsigned long long uint64;
+    typedef unsigned int uint32;
+    typedef unsigned short uint16;
+    typedef unsigned char uint8;
     typedef uint16 WORD;
     typedef uint32 DWORD;
 #endif
