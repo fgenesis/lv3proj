@@ -56,9 +56,7 @@
     #define I64LIT(x) (x ## i64)
     #define UI64LIT(x) (x ## ui64)
     #define snprintf _snprintf
-    //#define vsnprintf _vsnprintf
-    //#define atoll __atoi64
-    //#define strdup _strdup
+    // TODO: fix for win64, if required
     typedef __int64            int64;
     typedef long               int32;
     typedef short              int16;
@@ -74,20 +72,20 @@
     #define I64FMTD "%llu"
     #define I64LIT(x) (x ## LL)
     #define UI64LIT(x) (x ## ULL)
-    typedef long long int64;
-    typedef long int32;
-    typedef short int16;
-    typedef char int8;
-    typedef unsigned long long uint64;
-    typedef unsigned long uint32;
-    typedef unsigned short uint16;
-    typedef unsigned char uint8;
-    typedef unsigned short WORD;
+    typedef int64_t uint64;
+    typedef int32_t uint32;
+    typedef int16_t uint16;
+    typedef int8_t uint8;
+    typedef uint64_t uint64;
+    typedef uint32_t uint32;
+    typedef uint16_t uint16;
+    typedef uint8_t uint8;
+    typedef uint16 WORD;
     typedef uint32 DWORD;
 #endif
 
 #ifndef _LP64
-#   if defined (_M_IA64) || defined (__ia64__) || defined (_M_AMD64) || defined (__amd64)
+#   if defined (_M_IA64) || defined (__ia64__) || defined (_M_AMD64) || defined (__amd64) || defined(_M_X64)
 #      define _LP64 1
 #   endif
 #endif
