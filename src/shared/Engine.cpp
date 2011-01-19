@@ -21,6 +21,7 @@ Engine::Engine()
 : _screen(NULL), _fps(0), _sleeptime(0), _framecounter(0), _paused(false),
 _debugFlags(EDBG_NONE), _reset(false), _bgcolor(0), _drawBackground(true)
 {
+    PrintSystemSpecs();
     log("Game Engine start.");
 
     _gcnImgLoader = new gcn::SDLImageLoaderManaged();
@@ -372,6 +373,7 @@ gcn::Font *Engine::LoadFont(const char *infofile, const char *gfxfile)
         delete font;
         font = NULL;
     }
+    resMgr.Drop(fontinfo);
 
     return font;
 }
@@ -417,4 +419,31 @@ void Engine::SetResizable(bool b)
         flags &= ~SDL_RESIZABLE; // remove resizable flag
 
     InitScreen(GetResX(), GetResY(), GetBPP(), flags);
+}
+
+void Engine::PrintSystemSpecs(void)
+{
+    logcustom(0, LGREEN, "System/Engine specs:");
+    logcustom(0, LGREEN, "----------------------------------");
+    logcustom(0, LGREEN, "Platform: %s", PLATFORM_NAME);
+    logcustom(0, LGREEN, "Compiler: %s (" COMPILER_VERSION_OUT ")", COMPILER_NAME, COMPILER_VERSION);
+    logcustom(0, LGREEN, "Endian:   %s", IS_LITTLE_ENDIAN ? "little" : "big");
+    logcustom(0, LGREEN, "Bits:     %u", SYSTEM_BITS);
+    logcustom(0, LGREEN, "----------------------------------");
+#ifdef _DEBUG
+    logcustom(0, LGREEN, "uint8 size:  %u%s", sizeof(uint8), sizeof(uint8) == 1 ? "" : " [WRONG, should be 1]");
+    logcustom(0, LGREEN, "uint16 size: %u%s", sizeof(uint16), sizeof(uint16) == 2 ? "" : " [WRONG, should be 2]");
+    logcustom(0, LGREEN, "uint32 size: %u%s", sizeof(uint32), sizeof(uint32) == 4 ? "" : " [WRONG, should be 4]");
+    logcustom(0, LGREEN, "uint64 size: %u%s", sizeof(uint64), sizeof(uint64) == 8 ? "" : " [WRONG, should be 8]");
+    logcustom(0, LGREEN, "int size:    %u", sizeof(int)); // int size is officially compiler/OS dependant, its here just for reference
+    logcustom(0, LGREEN, "float size:  %u%s", sizeof(float), sizeof(float) == 4 ? "" : " [WRONG, should be 4]");
+    logcustom(0, LGREEN, "double size: %u%s", sizeof(double), sizeof(double) == 8 ? "" : " [WRONG, should be 8]");
+    logcustom(0, LGREEN, "----------------------------------");
+    logcustom(0, LGREEN, "Falcon::uint8 size:   %u%s", sizeof(Falcon::uint8), sizeof(Falcon::uint8) == 1 ? "" : " [WRONG, should be 1]");
+    logcustom(0, LGREEN, "Falcon::uint16 size:  %u%s", sizeof(Falcon::uint16), sizeof(Falcon::uint16) == 2 ? "" : " [WRONG, should be 2]");
+    logcustom(0, LGREEN, "Falcon::uint32 size:  %u%s", sizeof(Falcon::uint32), sizeof(Falcon::uint32) == 4 ? "" : " [WRONG, should be 4]");
+    logcustom(0, LGREEN, "Falcon::uint64 size:  %u%s", sizeof(Falcon::uint64), sizeof(Falcon::uint64) == 8 ? "" : " [WRONG, should be 8]");
+    logcustom(0, LGREEN, "Falcon::numeric size: %u%s", sizeof(Falcon::numeric), sizeof(Falcon::numeric) == 8 ? "" : " [WRONG, should be 4]");
+    logcustom(0, LGREEN, "----------------------------------");
+#endif
 }

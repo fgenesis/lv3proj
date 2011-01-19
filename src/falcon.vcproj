@@ -1201,6 +1201,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\include\falcon\mersennetwister.h"
+				>
+			</File>
+			<File
 				RelativePath=".\include\falcon\message_defs.h"
 				>
 			</File>

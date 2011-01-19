@@ -75,6 +75,7 @@ bool GameEngine::Setup(void)
         {
             SDL_BlitSurface(loadingbg, NULL, GetSurface(), NULL);
             SDL_Flip(GetSurface());
+            resMgr.Drop(loadingbg);
         }
         else
             logerror("Init: \"Loading\" background not found!");

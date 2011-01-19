@@ -86,10 +86,18 @@
     typedef uint32 DWORD;
 #endif
 
+#ifndef _LP64
+#   if defined (_M_IA64) || defined (__ia64__) || defined (_M_AMD64) || defined (__amd64)
+#      define _LP64 1
+#   endif
+#endif
+
 #ifdef _LP64 // to be set for 64 bit compile
 #   define PTRFMT "0x"I64FMT
+#   define SYSTEM_BITS 64
 #else
-#   define PTRFMT "0x%u"
+#   define PTRFMT "0x%X"
+#   define SYSTEM_BITS 32
 #endif
 
 #ifndef SIGQUIT
@@ -97,7 +105,9 @@
 #endif
 
 #if COMPILER == COMPILER_MICROSOFT
-#  if _MSC_VER >= 1500
+#  if _MSC_VER >= 1600
+#     define COMPILER_NAME "VC100+"
+#  elif _MSC_VER >= 1500
 #    define COMPILER_NAME "VC90"
 #  elif _MSC_VER >= 1400
 #    define COMPILER_NAME "VC80"
@@ -150,10 +160,14 @@
          // We know these are little endian.
 #        undef  LITTLE_ENDIAN
 #        define LITTLE_ENDIAN 1
+#        define IS_LITTLE_ENDIAN 1
+#        define IS_BIG_ENDIAN 0
 #  else
          // Otherwise, we assume big endian.
 #        undef  BIG_ENDIAN
 #        define BIG_ENDIAN 1
+#        define IS_LITTLE_ENDIAN 0
+#        define IS_BIG_ENDIAN 1
 #  endif
 #endif
 
