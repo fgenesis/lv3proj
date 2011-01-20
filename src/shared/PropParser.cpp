@@ -6,7 +6,7 @@
 void ParsePropData(char *strbuf, char *dn)
 {
     std::vector<std::string> lines;
-    uint32 cpos; // comment?
+    size_t cpos; // comment?
     std::string file_name;
     StrSplit(strbuf, "\n\x0a\x0d", lines);
     for(std::vector<std::string>::iterator it = lines.begin(); it != lines.end(); it++)
@@ -30,14 +30,14 @@ void ParsePropData(char *strbuf, char *dn)
         if(lin[0] == '[')
         {
             file_name = lin.c_str() + 1; // skip '['
-            uint32 alen = file_name.length();
+            size_t alen = file_name.length();
             if(file_name[alen - 1] == ']') // remove trailing ']'
                 file_name.erase(alen - 1);
             file_name = AddPathIfNecessary(file_name, dn);
             continue;
         }
 
-        uint32 eqpos = lin.find('=');
+        size_t eqpos = lin.find('=');
         if(eqpos != std::string::npos && eqpos + 1 < lin.length())
         {
             std::string key = lin.substr(0, eqpos);
