@@ -14,24 +14,37 @@ function dbg_PrintDir(dir, i)
     end
 end
 
+_difftime = 0
+function dbg_UpdateDifftime(ms)
+    global _difftime
+    _difftime = ms
+end
+
 function dbg_HookCountRenderHook() // note: this function is highly unoptimized and slow
+    global _difftime
+    dt = _difftime
     r = GetRenderHookCount()
     u = GetUpdateHookCount()
     i = GetRawInputHookCount()
     s = SNESKeyMap.GetInputHookCount()
     c = CallScheduler.Count()
     str = @ "Hooks: Render = $r; Update = $u; RawInp = $i; SNESInp = $s; Sched = $c"
+    str2 = @ "Timing: MS = $dt"
     w, h = Screen.GetSize()
     font = GetFont("rpgfont")
     Screen.GetSurface().Write(0, h - font.GetHeight(), font, str)
+    Screen.GetSurface().Write(0, h - (font.GetHeight() * 2), font, str2)
 end
+
 
 function dbg_AddHookCountOverlay()
     RegisterRenderHook(dbg_HookCountRenderHook)
+    RegisterUpdateHook("dbg_UpdateDifftime", dbg_UpdateDifftime)
 end
 
 function dbg_RemoveHookCountOverlay()
     UnregisterRenderHook(dbg_HookCountRenderHook)
+    UnregisterUpdateHook("dbg_UpdateDifftime")
 end
 
 export
