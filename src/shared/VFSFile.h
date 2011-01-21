@@ -34,6 +34,9 @@ public:
     virtual const char *getSource(void) { return "<BASE>"; }
 
     SelfRefCounter<VFSFile> ref;
+
+private:
+    MLD;
 };
 
 class VFSFileReal : public VFSFile

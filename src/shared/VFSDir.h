@@ -30,6 +30,9 @@ public:
     std::string _name;
 
     SelfRefCounter<VFSDir> ref;
+
+private:
+    MLD;
 };
 
 class VFSDirReal : public VFSDir

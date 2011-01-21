@@ -381,11 +381,13 @@ gcn::Font *Engine::LoadFont(const char *infofile, const char *gfxfile)
 
 void Engine::_Reset(void)
 {
+    DEBUG(logdetail("Before Reset Cleanup: Memory leak detector says: %u", MLD_COUNTER));
     _reset = false;
     objmgr->RemoveAll();
     _layermgr->Clear();
     resMgr.pool.Cleanup();
     resMgr.DropUnused();
+    DEBUG(logdetail("After Reset Cleanup: Memory leak detector says: %u", MLD_COUNTER));
     resMgr.vfs.Prepare(true);
     resMgr.vfs.Reload(true);
 }

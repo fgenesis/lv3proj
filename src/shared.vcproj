@@ -503,6 +503,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\shared\MemoryLeaks.cpp"
+					>
+				</File>
+				<File
 					RelativePath=".\shared\MemoryLeaks.h"
 					>
 				</File>

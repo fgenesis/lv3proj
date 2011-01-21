@@ -16,6 +16,7 @@ Lzma2Enc.c
 LZMACompressor.cpp
 LzmaDec.c
 LzmaEnc.c
+MemoryLeaks.cpp
 MapFile.cpp
 ObjectMgr.cpp
 Objects.cpp
