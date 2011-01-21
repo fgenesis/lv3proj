@@ -115,3 +115,11 @@ end
 // but before executing its initialization script
 subscribe("LOAD_PACKAGE", overrideSystemFuncs)
 
+
+// -- other functions providing possible security-related things --
+function IsAllowedPath(p)
+    return p and not (p.endsWith("..") or p.startsWith("..") or ("../" in p) or (":" in p))
+end
+
+
+export IsAllowedPath

@@ -1,0 +1,41 @@
+
+pkg = Package()
+pkg.InitGame()
+
+function LoadFinal()
+    data = pkg.LoadBinaryData("test.dat")
+    inspect(data)
+    > data
+    if data
+        c = data.r32()
+    else
+        c = 0
+    end
+    
+    data = ByteBufLittleEndian()
+    data.w32(c+1)
+    saved = pkg.SaveData("test.dat", data)
+    
+    str = "Was started " + c + " times so far. Saved: " + (saved ? "Yes" : "No")
+    RegisterRenderHook([renderhook, str])
+end
+
+function RawKeyHandler(inp)
+    ty, src, which, value = inp
+    if (ty == EVENT_TYPE_KEYBOARD or ty == EVENT_TYPE_JOYSTICK_BUTTON) and value
+        Package.Shutdown()
+    end
+end
+
+RegisterRawInputHook("savedata_test_package", RawKeyHandler)
+
+
+function renderhook(str)
+    surf = Screen.GetSurface()
+    font = GetFont("rpgfont")
+    write = Screen.GetSurface().Write
+    write(10, 10, font, str)
+end
+
+
+pkg.Start(LoadFinal)

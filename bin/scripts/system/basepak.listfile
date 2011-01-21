@@ -16,6 +16,7 @@
 -p scripts/system -s PackageSystem.fal
 -p scripts/system -s SNESKeyMap.fal
 -p scripts/system -s Safe.fal
+-p scripts/system -s SaveData.fal
 -p scripts/system -s ScriptConstants.fal
 -p scripts/system -s SoundSupport.fal
 -p scripts/system -s basepak.listfile

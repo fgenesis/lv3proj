@@ -46,6 +46,11 @@ function LoadFinal()
     x = Directory(".")
     if x provides read: working += "Directory"
     
+    try
+        SaveData.WriteText("../dangerous_file_test.txt", "oops")
+        working += "Access to ../ dir"
+    end
+    
     RegisterRenderHook([renderhook, working]);
 end
 

@@ -1,0 +1,121 @@
+
+// save required symbols that are overridden by Safe.fal and not available later
+_OutputStream = OutputStream
+_InputStream = InputStream
+_IOStream = IOStream
+_dirMake = dirMake
+
+class SaveData
+
+    _path = "saved_data/packages/"
+    
+    init
+        raise "This class is a singleton and should not be instanced"
+    end
+    
+    function Init()
+        global _dirMake
+        try: _dirMake(self._path)
+    end
+    
+    function _ValidateFilename(fn)
+        if not IsAllowedPath(fn): raise "Rejected file name: " + fn
+        return self._path + fn
+    end
+    
+    function _ReadBinaryVFS(p)
+        buf = VFS.GetFileAsBuf(p)
+        if not buf: return nil
+        return ByteBufLittleEndian(buf, true)
+    end
+    
+    function ReadBinary(fn)
+        global _in
+        p = self._ValidateFilename(fn)
+        
+        // first, try to read directly from disk
+        try
+            file = _InputStream(p)
+        catch in err
+            r = self._ReadBinaryVFS(p) // if that didnt help, try VFS
+            if not r
+                > "SaveData:ReadBinary: Error opening file: " + p
+                > err
+            end
+            return r
+        end
+        
+        // read the file in blocks
+        buf = MemBuf(4096, 1)
+        bb = ByteBufLittleEndian(4096)
+        while not file.eof()
+            bytes = file.read(buf, 4096)
+            buf.position(0)
+            buf.limit(bytes)
+            bb.write(buf)
+            buf.rewind()
+        end
+        file.close()
+        
+        return bb
+    end
+    
+    function ReadText(fn, noconvert)
+        buf = self.ReadBinary(fn)
+        if not buf: return nil
+        bb = ByteBuf(buf, true)
+        s = bb.readString()
+        if noconvert
+            return s
+        else
+            ss = StringStream()
+            ss.setEncoding(getSystemEncoding(), CR_TO_CRLF)
+            return ss.closeToString()
+        end
+    end
+    
+    function WriteBinary(fn, data)
+        global _OutputStream, _dirMake
+        p = self._ValidateFilename(fn)
+        select data
+            case MemBufType
+                if data.wordSize() == 1
+                    mb = data
+                else
+                    mb = ByteBufLittleEndian(data, true).toMemBuf() // force byte size of 1
+                end
+                
+            default
+                if data provides toMemBuf
+                    mb = data.toMemBuf()
+                else
+                    raise "SaveData:WriteBinary: Can't treat type '" + data.className() + " as binary"
+                end
+        end
+        
+        try
+            try: _dirMake(StripFileName(p))
+            file = _OutputStream(p)
+            //> "File opened: ", p
+        catch in err
+            > "SaveData:WriteBinary: ERROR:"
+            > err
+            return false
+        end
+        
+        mb.rewind()
+        bytes = file.write(mb)
+        file.close()
+        
+        return bytes == mb.limit() // everything written correctly?
+    end
+    
+    function WriteText(fn, str)
+        return self.WriteBinary(fn, str) // TODO: add encoding
+    end
+        
+end
+
+SaveData.Init()
+
+export SaveData

@@ -139,6 +139,25 @@ class Package
         CallScheduler.Schedule([f, self], 1)
     end
     
+    function SaveData(fn, data)
+        dir = self.GetName() + "/" + fn
+        select data
+            case StringType
+                return SaveData.WriteText(dir, data)
+                
+            default
+                return SaveData.WriteBinary(dir, data)
+        end
+    end
+    
+    function LoadBinaryData(fn)
+        return SaveData.ReadBinary(self.GetName() + "/" + fn)
+    end
+    
+    function LoadTextData(fn)
+        return SaveData.ReadText(self.GetName() + "/" + fn)
+    end
+    
 end
 
 function renderhook_bad_dependency(str, which, req)

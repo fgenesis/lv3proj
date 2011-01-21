@@ -67,4 +67,9 @@ class Array2D(w, h, arr)
     function __get_h(): return self._h
 end
 
+function StripFileName(path)
+    return "/".merge(path.split("/")[:-1])
+end
+
+
 export
