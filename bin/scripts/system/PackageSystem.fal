@@ -128,7 +128,7 @@ class PackageSystem
         bb = ByteBuf(buf, true) // for more processing comfort, we wrap a ByteBuf around the MemBuf
         ss = StringStream(bb.readString()) // and read one string from it (which, for text files, is the entire file)
         // this is needed so the config parser will not append a newline char to config values if the original data are in windows CRLF encoding
-        ss.setEncoding(getSystemEncoding(), SYSTEM_DETECT)
+        ss.setEncoding(getSystemEncoding(), CR_TO_CRLF)
         cp = ConfParser()
         try
             cp.read(ss) // can fail if there is a parsing error

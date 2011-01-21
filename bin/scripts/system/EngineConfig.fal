@@ -29,7 +29,7 @@ EngineConfig["Save"] = function()
     
     makestrm = function()
         ostr = OutputStream("saved_data/game/engine.ini")
-        ostr.setEncoding(getSystemEncoding(), SYSTEM_DETECT)
+        ostr.setEncoding(getSystemEncoding(), CR_TO_CRLF)
         return ostr
     end
     
@@ -53,7 +53,7 @@ end
 EngineConfig["Load"] = function()
     try
         strm = InputStream("saved_data/game/engine.ini")
-        strm.setEncoding(getSystemEncoding(), SYSTEM_DETECT)
+        strm.setEncoding(getSystemEncoding(), CR_TO_CRLF)
     catch
         return false
     end
