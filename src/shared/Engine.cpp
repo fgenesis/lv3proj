@@ -13,7 +13,7 @@
 
 
 volatile uint32 Engine::s_curFrameTime; // game time
-volatile uint32 Engine::s_lastFrameTime; // last frame's clock()
+volatile uint32 Engine::s_lastFrameTime; // last frame's SDL_GetTicks()
 bool Engine::_quit;
 std::vector<SDL_Joystick*> Engine::s_joysticks;
 
@@ -30,7 +30,7 @@ _debugFlags(EDBG_NONE), _reset(false), _bgcolor(0), _drawBackground(true)
 
     _quit = false;
     _layermgr = new LayerMgr(this);
-    _fpsclock = s_lastFrameTime = clock();
+    _fpsclock = s_lastFrameTime = SDL_GetTicks();
     s_curFrameTime = 0;
 
     physmgr = new PhysicsMgr;
@@ -163,9 +163,10 @@ void Engine::Run(void)
         if(IsReset())
             _Reset();
 
-        ms = clock();
+        ms = SDL_GetTicks();
         diff = ms - s_lastFrameTime;
-        diff &= 0x7F; // 127 ms max. allowed diff time
+        if(diff > 127) // 127 ms max. allowed diff time
+            diff = 127;
         _ProcessEvents();
         if(!_paused)
         {
@@ -238,7 +239,7 @@ void Engine::_ProcessEvents(void)
 void Engine::_CalcFPS(void)
 {
     ++_framecounter;
-    uint32 ms = clock();
+    uint32 ms = SDL_GetTicks();
     if(ms - _fpsclock >= CLOCKS_PER_SEC >> 2)
     {
         char buf[100];
