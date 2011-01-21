@@ -3,9 +3,16 @@ pkg = Package()
 pkg.InitGame()
 
 function LoadFinal()
+
+    // -- text file --
+    lasttime = pkg.LoadTextData("lasttime.txt")
+    if not lasttime: lasttime = "(never)"
+    
+    pkg.SaveData("lasttime.txt", TimeStamp().currentTime().toString())
+    
+    
+    // -- binary file --
     data = pkg.LoadBinaryData("test.dat")
-    inspect(data)
-    > data
     if data
         c = data.r32()
     else
@@ -16,8 +23,12 @@ function LoadFinal()
     data.w32(c+1)
     saved = pkg.SaveData("test.dat", data)
     
+    
     str = "Was started " + c + " times so far. Saved: " + (saved ? "Yes" : "No")
-    RegisterRenderHook([renderhook, str])
+    str2 = "Last time: " + lasttime
+    > str
+    > str2
+    RegisterRenderHook([renderhook, str, str2])
 end
 
 function RawKeyHandler(inp)
@@ -30,11 +41,12 @@ end
 RegisterRawInputHook("savedata_test_package", RawKeyHandler)
 
 
-function renderhook(str)
+function renderhook(str, str2)
     surf = Screen.GetSurface()
     font = GetFont("rpgfont")
     write = Screen.GetSurface().Write
     write(10, 10, font, str)
+    write(10, 30, font, str2)
 end
 
 

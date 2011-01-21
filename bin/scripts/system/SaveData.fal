@@ -30,12 +30,13 @@ class SaveData
     end
     
     function ReadBinary(fn)
-        global _in
+        global _InputStream
         p = self._ValidateFilename(fn)
         
         // first, try to read directly from disk
         try
             file = _InputStream(p)
+            //> "InputStream opened: ", p
         catch in err
             r = self._ReadBinaryVFS(p) // if that didnt help, try VFS
             if not r
@@ -60,18 +61,11 @@ class SaveData
         return bb
     end
     
-    function ReadText(fn, noconvert)
+    function ReadText(fn)
         buf = self.ReadBinary(fn)
         if not buf: return nil
         bb = ByteBuf(buf, true)
-        s = bb.readString()
-        if noconvert
-            return s
-        else
-            ss = StringStream()
-            ss.setEncoding(getSystemEncoding(), CR_TO_CRLF)
-            return ss.closeToString()
-        end
+        return bb.readString()
     end
     
     function WriteBinary(fn, data)
@@ -96,7 +90,7 @@ class SaveData
         try
             try: _dirMake(StripFileName(p))
             file = _OutputStream(p)
-            //> "File opened: ", p
+            //> "OutputStream opened: ", p
         catch in err
             > "SaveData:WriteBinary: ERROR:"
             > err
@@ -111,7 +105,7 @@ class SaveData
     end
     
     function WriteText(fn, str)
-        return self.WriteBinary(fn, str) // TODO: add encoding
+        return self.WriteBinary(fn, str.toMemBuf()) // TODO: add encoding
     end
         
 end
