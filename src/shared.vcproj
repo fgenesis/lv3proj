@@ -63,7 +63,8 @@
 			<Tool
 				Name="VCLibrarianTool"
 				AdditionalDependencies="winmm.lib SDL.lib SDLmain.lib SDL_image.lib SDL_mixer.lib"
-				AdditionalLibraryDirectories="lib"
+				AdditionalLibraryDirectories="lib\win32"
+				IgnoreDefaultLibraryNames="libcmt.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -135,7 +136,7 @@
 			<Tool
 				Name="VCLibrarianTool"
 				AdditionalDependencies="winmm.lib SDL.lib SDLmain.lib SDL_image.lib SDL_mixer.lib"
-				AdditionalLibraryDirectories="lib"
+				AdditionalLibraryDirectories="lib\win32"
 				IgnoreDefaultLibraryNames="libcmt.lib"
 			/>
 			<Tool
