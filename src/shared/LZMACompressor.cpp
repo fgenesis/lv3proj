@@ -21,9 +21,8 @@ void myLzmaFree(void *, void *ptr)
 
 
 LZMACompressor::LZMACompressor()
+: _iscompressed(false), _real_size(0), _propsEnc(0)
 {
-    _iscompressed = false;
-    _real_size = 0;
 }
 
 void LZMACompressor::Compress(uint32 level)
@@ -66,13 +65,13 @@ void LZMACompressor::Compress(uint32 level)
     _real_size = oldsize;
 }
 
-void LZMACompressor::Decompress(uint8 propsEnc)
+void LZMACompressor::Decompress(uint8 props)
 {
     if( (!_iscompressed) || (!_real_size) || (!size()))
         return;
 
     uint32 origsize = _real_size;
-    int8 result;
+    int8 result = SZ_OK;
     uint8 *target = new uint8[_real_size];
     wpos(0);
     rpos(0);
@@ -83,8 +82,9 @@ void LZMACompressor::Decompress(uint8 propsEnc)
     alloc.Free = myLzmaFree;
 
     ELzmaStatus status;
+    const Byte propsEnc = props;
 
-    result = LzmaDecode(target, (SizeT*)&_real_size, this->contents(), &srcLen, (const Byte*)&propsEnc, sizeof(CLzmaEncProps), LZMA_FINISH_END, &status, &alloc);
+    result = LzmaDecode(target, (SizeT*)&_real_size, this->contents(), &srcLen, &propsEnc, sizeof(CLzmaEncProps), LZMA_FINISH_END, &status, &alloc);
     if( result != SZ_OK || origsize != _real_size)
     {
         DEBUG(logerror("LZMACompressor: Decompress error! result=%d cursize=%u origsize=%u realsize=%u\n",result,size(),origsize,_real_size));
@@ -96,7 +96,7 @@ void LZMACompressor::Decompress(uint8 propsEnc)
     delete [] target;
     _real_size = 0;
     _iscompressed = false;
-
+    _propsEnc = 0;
 }
 
 void LZMACompressor::clear(void)
@@ -104,5 +104,6 @@ void LZMACompressor::clear(void)
     ByteBuffer::clear();
     _real_size = 0;
     _iscompressed = false;
+    _propsEnc = 0;
 }
     

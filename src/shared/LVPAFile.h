@@ -106,17 +106,17 @@ public:
     void Free(const char *fn); // frees the memory associated with a file, leaving it in the container. if requested again, it will be loaded from disk.
     void Drop(const char *fn); // drops our reference to the file, so it will be loaded again from disk if required.
 
-    inline uint32 Count(void) { return _indexes.size(); }
-    inline uint32 HeaderCount(void) { return _headers.size(); }
-    bool HasFile(const char *fn);
-    const char *GetMyName(void) { return _ownName.c_str(); }
+    inline uint32 Count(void) const { return _indexes.size(); }
+    inline uint32 HeaderCount(void) const { return _headers.size(); }
+    bool HasFile(const char *fn) const;
+    const char *GetMyName(void) const { return _ownName.c_str(); }
 
-    bool AllGood(void);
-    const LVPAFileHeader GetFileInfo(uint32 i);
+    bool AllGood(void) const;
+    const LVPAFileHeader& GetFileInfo(uint32 i) const;
 
     // for stats. note: only call these directly after load/save, and NOT after files were added/removed!
-    inline uint32 GetRealSize(void) { return _realSize; }
-    uint32 GetPackedSize(void) { return _packedSize; }
+    inline uint32 GetRealSize(void) const { return _realSize; }
+    uint32 GetPackedSize(void) const { return _packedSize; }
 
 
 private:
@@ -127,7 +127,7 @@ private:
     FILE *_handle;
     uint32 _realSize, _packedSize; // for stats
 
-    memblock _LoadFile(LVPAFileHeader& h);
+    memblock _LoadFile(const LVPAFileHeader& h);
     bool _OpenFile(void);
     void _CloseFile(void);
     void _CreateIndexes(void);

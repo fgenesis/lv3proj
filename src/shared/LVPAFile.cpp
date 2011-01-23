@@ -162,9 +162,9 @@ bool LVPAFile::Delete(const char  *fn)
     return false;
 }
 
-bool LVPAFile::HasFile(const char  *fn)
+bool LVPAFile::HasFile(const char  *fn) const
 {
-    LVPAIndexMap::iterator it = _indexes.find(fn);
+    LVPAIndexMap::const_iterator it = _indexes.find(fn);
     return it != _indexes.end();
 }
 
@@ -373,7 +373,16 @@ bool LVPAFile::LoadFrom(const char *fn, LVPALoadFlags loadFlags)
         for(uint32 i = 0; i < masterHdr.hdrEntries; ++i)
         {
             if(_headers[i].flags & LVPAFLAG_SOLID || loadFlags & LVPALOAD_ALL)
-                _LoadFile(_headers[i]);
+            {
+                memblock fmb = _LoadFile(_headers[i]);
+                if(fmb.ptr)
+                {
+                    _headers[i].data = fmb;
+                    _headers[i].good = true;
+                }
+                else
+                    _headers[i].good = false;
+            }
         }
 
         if(loadFlags & LVPALOAD_ALL)
@@ -411,8 +420,7 @@ bool LVPAFile::SaveAs(const char *fn, uint8 compression /* = LVPA_DEFAULT_LEVEL 
     LZMACompressor zhdr;
     LZMACompressor zsolid;
     uint32 solidSize = 0;
-    
-    LVPAFileHeader solidHeader;
+    uint32 solidBlockOffset = 0;
 
     zhdr.reserve((_headers.size() + 1) * (sizeof(LVPAFileHeader) + 20)); // guess size
 
@@ -458,6 +466,9 @@ bool LVPAFile::SaveAs(const char *fn, uint8 compression /* = LVPA_DEFAULT_LEVEL 
             h.flags &= ~LVPAFLAG_PACKED; // solid files are never marked as packed, because the solid block itself is already packed
         }
 
+        LVPAFileHeader solidHeader;
+        solidHeader.filename = ""; // is defined to be a file with no name
+
         solidHeader.realSize = zsolid.size();
         {
             CRC32 crc;
@@ -472,8 +483,7 @@ bool LVPAFile::SaveAs(const char *fn, uint8 compression /* = LVPA_DEFAULT_LEVEL 
         solidHeader.props = zsolid.GetEncodedProps();
         solidHeader.algo = algo;
         solidHeader.level = compression;
-        // solidHeader.filename = "" // has that value by default
-        solidHeader.offset = ftell(outfile);
+        solidHeader.offset = ftell(outfile); // this is directly after magic and master header
         DEBUG(logdebug("solid block offset: %u", solidHeader.offset));
         fwrite(zsolid.contents(), zsolid.size(), 1, outfile);
         zhdr << solidHeader;
@@ -481,6 +491,9 @@ bool LVPAFile::SaveAs(const char *fn, uint8 compression /* = LVPA_DEFAULT_LEVEL 
 
         // for stats
         _packedSize += solidHeader.packedSize;
+
+        // for master header
+        solidBlockOffset = solidHeader.offset;
     }
     
     // write the other files into the container file, compressed (if the flag is set)
@@ -524,11 +537,13 @@ bool LVPAFile::SaveAs(const char *fn, uint8 compression /* = LVPA_DEFAULT_LEVEL 
         zhdr << h;
     }
 
-    CRC32 hcrc;
-    hcrc.Update((uint8*)zhdr.contents(), zhdr.size());
-    hcrc.Finalize();
+    {
+        CRC32 hcrc;
+        hcrc.Update((uint8*)zhdr.contents(), zhdr.size());
+        hcrc.Finalize();
+        masterHdr.hdrCrc = hcrc.Result();
+    }
     masterHdr.hdrEntries = _headers.size() + (solidSize ? 1 : 0);
-    masterHdr.hdrCrc = hcrc.Result();
     masterHdr.realHdrSize = zhdr.size();
     if(compression != LVPACOMP_NONE)
         zhdr.Compress(compression);
@@ -538,7 +553,7 @@ bool LVPAFile::SaveAs(const char *fn, uint8 compression /* = LVPA_DEFAULT_LEVEL 
     masterHdr.flags = zhdr.Compressed() ? LVPAHDR_PACKED : LVPAHDR_NONE;
     masterHdr.version = gVersion;
     masterHdr.hdrOffset = ftell(outfile);
-    masterHdr.dataOffs = solidSize ? solidHeader.offset : 4 + sizeof(LVPAMasterHeader); // +4 for "LVPA"
+    masterHdr.dataOffs = solidSize ? solidBlockOffset : 4 + sizeof(LVPAMasterHeader); // +4 for "LVPA"
     DEBUG(logdebug("master data offset: %u", masterHdr.dataOffs));
     DEBUG(logdebug("master header offset: %u", masterHdr.hdrOffset));
     fwrite(zhdr.contents(), zhdr.size(), 1, outfile);
@@ -554,38 +569,39 @@ bool LVPAFile::SaveAs(const char *fn, uint8 compression /* = LVPA_DEFAULT_LEVEL 
 }
 
 
-memblock LVPAFile::_LoadFile(LVPAFileHeader& h)
+memblock LVPAFile::_LoadFile(const LVPAFileHeader& h)
 {
     // h.good is set to false if there was a previous attempt to load the file that failed
     if( !(h.good && _OpenFile()) )
         return memblock();
 
-    if((h.flags & LVPAFLAG_SOLID) && !_solidBlock.ptr)
+    uint8 flags = h.flags;
+
+    if((flags & LVPAFLAG_SOLID) && !_solidBlock.ptr)
     {
         logerror("File '%s' is marked as solid, but there is no solid block", h.filename.c_str());
-        h.good = false;
         return memblock();
     }
 
-    if((h.flags & LVPAFLAG_SOLID) && (h.flags & LVPAFLAG_PACKED))
+    if((flags & LVPAFLAG_SOLID) && (flags & LVPAFLAG_PACKED))
     {
         logerror("File '%s' is marked as packed AND solid, not good (ignoring packed flag)", h.filename.c_str());
-        h.flags &= ~LVPAFLAG_PACKED;
+        flags &= ~LVPAFLAG_PACKED;
     }
 
     LZMACompressor buf;
     buf.resize(h.packedSize);
     buf.wpos(0);
+    buf.rpos(0);
     uint32 bytes;
 
-    if(h.flags & LVPAFLAG_SOLID)
+    if(flags & LVPAFLAG_SOLID)
     {
         if(h.offset + h.packedSize <= _solidBlock.size)
             buf.append(_solidBlock.ptr + h.offset, h.packedSize);
         else
         {
             logerror("Solid file '%s' exceeds solid block length, can't read", h.filename.c_str());
-            h.good = false;
             return memblock();
         }
     }
@@ -599,12 +615,11 @@ memblock LVPAFile::_LoadFile(LVPAFileHeader& h)
         if(bytes != h.packedSize)
         {
             logerror("Unable to read enough data for file '%s'", h.filename.c_str());
-            h.good = false;
             return memblock();
         }
     }
 
-    if(h.flags & LVPAFLAG_PACKED)
+    if(flags & LVPAFLAG_PACKED)
     {
         buf.Compressed(true); // tell the buf that it is compressed so it will allow decompression
         buf.RealSize(h.realSize);
@@ -620,7 +635,6 @@ memblock LVPAFile::_LoadFile(LVPAFileHeader& h)
         if(crc.Result() != h.crc)
         {
             logerror("CRC mismatch for '%s', file is corrupt", h.filename.c_str());
-            h.good = false;
             return memblock();
         }
     }
@@ -630,14 +644,10 @@ memblock LVPAFile::_LoadFile(LVPAFileHeader& h)
         buf.read(mb.ptr, buf.size());
     memset(mb.ptr + mb.size, 0, LVPA_EXTRA_BUFSIZE); // zero out extra space
 
-    // file is unpacked & loaded, store it
-    h.data = mb;
-    h.good = true;
-
     return mb;
 }
 
-const LVPAFileHeader LVPAFile::GetFileInfo(uint32 i)
+const LVPAFileHeader& LVPAFile::GetFileInfo(uint32 i) const
 {
     return _headers[i];
 }
@@ -654,7 +664,7 @@ void LVPAFile::_CreateIndexes(void)
     }
 }
 
-bool LVPAFile::AllGood(void)
+bool LVPAFile::AllGood(void) const
 {
     for(uint32 i = 0; i < _headers.size(); ++i)
     if(!_headers[i].good)
