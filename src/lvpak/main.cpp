@@ -1,6 +1,6 @@
 #include "common.h"
 #include "LVPAFile.h"
-#include "Crc32.h"
+#include "MyCrc32.h"
 
 struct FilenameWithProps
 {

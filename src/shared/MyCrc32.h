@@ -1,5 +1,5 @@
-#ifndef CRC32_H
-#define CRC32_H
+#ifndef MYCRC32_H
+#define MYCRC32_H
 
 
 class CRC32

@@ -1,5 +1,5 @@
 #include "common.h"
-#include "Crc32.h"
+#include "MyCrc32.h"
 #include "LZMACompressor.h"
 #include "LVPAFile.h"
 

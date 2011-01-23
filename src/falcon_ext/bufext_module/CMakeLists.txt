@@ -35,3 +35,4 @@ add_library(bufext_fm
    ${HDR_FILES}
 )
 
+target_link_libraries(bufext_fm falcon_engine)

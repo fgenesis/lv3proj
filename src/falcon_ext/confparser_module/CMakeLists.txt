@@ -14,3 +14,5 @@ add_library(confparser_fm
   confparser_mod.cpp
   confparser_st.cpp
 )
+
+target_link_libraries(confparser_fm falcon_engine)

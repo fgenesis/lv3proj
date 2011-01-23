@@ -14,3 +14,5 @@ add_library(compiler_fm
   compiler_mod.cpp
   compiler_st.cpp
 )
+
+target_link_libraries(compiler_fm falcon_engine)

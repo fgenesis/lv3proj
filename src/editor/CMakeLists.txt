@@ -1,11 +1,3 @@
-#include_directories (${LOSTVIKINGS3_SOURCE_DIR}/src/include)
-#include_directories (${LOSTVIKINGS3_SOURCE_DIR}/src/shared)
-#include_directories (${LOSTVIKINGS3_SOURCE_DIR}/src/guichan_ext)
-
-#link_directories (${LOSTVIKINGS3_BINARY_DIR}/src/shared)
-#link_directories (${LOSTVIKINGS3_BINARY_DIR}/src/falcon)
-#link_directories (${LOSTVIKINGS3_BINARY_DIR}/src/guichan)
-
 
 include_directories (${SHARED_INCLUDE_DIR})
 
@@ -27,4 +19,5 @@ TileWindow.cpp
 )
 
 add_executable (editor ${editor_SRC}) 
-target_link_libraries(editor shared guichan_ext guichan ${Falcon_ALL} SDL SDL_image SDL_mixer)
+install(TARGETS editor DESTINATION bin)
+target_link_libraries(editor shared guichan_ext guichan ${Falcon_ALL} ${ALL_SDL_LIBS})

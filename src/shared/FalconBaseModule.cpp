@@ -23,7 +23,7 @@ Base module file, providing some engine core function bindings
 #include "VFSHelper.h"
 #include "VFSDir.h"
 #include "VFSFile.h"
-#include "Crc32.h"
+#include "MyCrc32.h"
 
 // graphics/SDL related
 #include <SDL/SDL.h>

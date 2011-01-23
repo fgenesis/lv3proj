@@ -126,7 +126,7 @@ set(CORE_MODULE_SOURCES
 )
 
 
-add_library(falcon_engine
+add_library(falcon_engine SHARED
   attribmap.cpp
   autocstring.cpp
   autoucsstring.cpp
@@ -250,3 +250,4 @@ if(UNIX OR APPLE)
   target_link_libraries(falcon_engine ${SYS_LIBS})
 endif()
 
+install(TARGETS falcon_engine DESTINATION bin)

@@ -2,8 +2,9 @@
 # top include dir for external projects
 set(TOP_INCLUDE_DIR
 "${CMAKE_CURRENT_SOURCE_DIR}"
-"${CMAKE_CURRENT_SOURCE_DIR}/include"
+"${INCLUDE_ROOT_DIR}"
 "${CMAKE_CURRENT_SOURCE_DIR}/guichan_ext"
+"${CMAKE_CURRENT_SOURCE_DIR}/libpng"
 )
 
 # shared include dir with most of the things required
@@ -34,4 +35,3 @@ add_subdirectory (editor)
 add_subdirectory (tilegrab)
 add_subdirectory (lvpak)
 add_subdirectory (game)
-

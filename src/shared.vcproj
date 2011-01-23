@@ -316,19 +316,19 @@
 				Name="LVPA"
 				>
 				<File
-					RelativePath=".\shared\Crc32.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\shared\Crc32.h"
-					>
-				</File>
-				<File
 					RelativePath=".\shared\LVPAFile.cpp"
 					>
 				</File>
 				<File
 					RelativePath=".\shared\LVPAFile.h"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\MyCrc32.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\MyCrc32.h"
 					>
 				</File>
 			</Filter>

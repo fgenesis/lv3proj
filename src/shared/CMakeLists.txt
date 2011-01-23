@@ -2,7 +2,7 @@ set(shared_SRC
 AnimParser.cpp
 AppFalcon.cpp
 AsciiLevelParser.cpp
-Crc32.cpp
+MyCrc32.cpp
 Engine.cpp
 FalconBaseModule.cpp
 FalconObjectModule.cpp
@@ -43,3 +43,4 @@ SDL_gfx/SDL_rotozoom.c
 
 include_directories (${TOP_INCLUDE_DIR}) 
 add_library(shared ${shared_SRC})
+target_link_libraries(shared ${SDL_ALL_LIBS} ${Falcon_ALL} libpng)

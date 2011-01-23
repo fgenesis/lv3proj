@@ -1,5 +1,5 @@
 #include "common.h"
-#include "Crc32.h"
+#include "MyCrc32.h"
 
 uint32 CRC32::_tab[256];
 bool CRC32::_notab = true;

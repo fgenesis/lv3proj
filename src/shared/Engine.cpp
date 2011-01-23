@@ -9,7 +9,7 @@
 #include "Engine.h"
 #include "PhysicsSystem.h"
 #include "ObjectMgr.h"
-#include "Crc32.h"
+#include "MyCrc32.h"
 
 
 volatile uint32 Engine::s_curFrameTime; // game time
