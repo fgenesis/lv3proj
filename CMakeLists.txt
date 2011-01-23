@@ -46,7 +46,6 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 # Find SDL or use the included library if applicable
-set(SDL_LIB_FILES "") # currently mingw specific
 if(NOT USE_INTERNAL_SDL)
     find_package(SDL)
     find_package(SDL_mixer)
