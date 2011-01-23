@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 2.6)
+PROJECT(LV3)
 
 # TODO: - make it build on macosx
 
@@ -51,7 +52,11 @@ if(NOT USE_INTERNAL_SDL)
     find_package(SDL_mixer)
     find_package(SDL_image)
 endif()
-if(NOT SDL_FOUND)
+if(SDL_FOUND)
+    message(STATUS "Found SDL: ${SDL_LIBRARY}")
+    message(STATUS "Found SDL_image: ${SDL_image_LIBRARY}")
+    message(STATUS "Found SDL_mixer: ${SDL_mixer_LIBRARY}")
+else()
     if(NOT USE_INTERNAL_SDL)
         message("WARNING: Tried to find system SDL, but not found, falling back to included SDL")
     endif()
@@ -73,7 +78,7 @@ if(NOT SDL_FOUND)
     set(SDL_INCLUDE_DIR ${INCLUDE_ROOT_DIR}) 
     set(SDL_image_INCLUDE_DIR ${SDL_INCLUDE_DIR})
     set(SDL_mixer_INCLUDE_DIR ${SDL_INCLUDE_DIR})
-endif (NOT SDL_FOUND)
+endif ()
 
 set(SDL_ALL_LIBS
     ${SDL_LIBRARY}
@@ -102,6 +107,5 @@ endif()
 # install path
 set(CMAKE_INSTALL_PREFIX "${TOP_ROOT_DIR}" CACHE STRING "Install directory (actual installs will go into 'bin' subdir of this). This is NOT a system install!" FORCE)
 
-PROJECT(LV3)
 
 add_subdirectory (src) 
