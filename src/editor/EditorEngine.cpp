@@ -89,7 +89,7 @@ bool EditorEngine::Setup(void)
     if(!basepak->LoadFrom("basepak.lvpa", LVPALOAD_SOLID))
     {
         logerror("EditorEngine::Setup: Can't open basepak.lvpa");
-        return false;
+        //return false; // not reason to quit, the files may be on disk, simply
     }
     resMgr.vfs.LoadBase(basepak, true); // basepak is auto-deleted later
     resMgr.vfs.LoadFileSysRoot();
