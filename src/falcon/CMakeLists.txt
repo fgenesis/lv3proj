@@ -229,11 +229,6 @@ add_library(falcon_engine SHARED
   ${SYS_SPECIFIC}
 )
 
-set_target_properties(falcon_engine PROPERTIES
-  VERSION "${FALCON_SONAME_VERSION}.${FALCON_SONAME_REVISION}.${FALCON_SONAME_AGE}"
-  SOVERSION "${FALCON_SONAME_VERSION}"
-)
-
 #In unix and mac we have to add extra libraries
 if(UNIX OR APPLE)
   #also dl for linux and solaris
