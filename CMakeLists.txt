@@ -54,8 +54,8 @@ if(NOT USE_INTERNAL_SDL)
 endif()
 if(SDL_FOUND)
     message(STATUS "Found SDL: ${SDL_LIBRARY}")
-    message(STATUS "Found SDL_image: ${SDL_image_LIBRARY}")
-    message(STATUS "Found SDL_mixer: ${SDL_mixer_LIBRARY}")
+    message(STATUS "Found SDL_image: ${SDLIMAGE_LIBRARY}")
+    message(STATUS "Found SDL_mixer: ${SDLMIXER_LIBRARY}")
 else()
     if(NOT USE_INTERNAL_SDL)
         message("WARNING: Tried to find system SDL, but not found, falling back to included SDL")
@@ -70,20 +70,20 @@ else()
         else()
             set(SDL_LIBRARY "${WIN32_LIB_DIR}/SDLmain.lib" "${WIN32_LIB_DIR}/SDL.lib" CACHE STRING "Where the SDL library can be found")
         endif()
-        set(SDL_image_LIBRARY "${WIN32_LIB_DIR}/SDL_image.lib" CACHE STRING "Where the SDL library can be found")
-        set(SDL_mixer_LIBRARY "${WIN32_LIB_DIR}/SDL_mixer.lib" CACHE STRING "Where the SDL_mixer library can be found")
+        set(SDLIMAGE_LIBRARY "${WIN32_LIB_DIR}/SDL_image.lib" CACHE STRING "Where the SDL_image library can be found")
+        set(SDLMIXER_LIBRARY "${WIN32_LIB_DIR}/SDL_mixer.lib" CACHE STRING "Where the SDL_mixer library can be found")
     else()
         message(ERROR "We don't have a prebuilt SDL for this platform.")
     endif()
     set(SDL_INCLUDE_DIR ${INCLUDE_ROOT_DIR}) 
-    set(SDL_image_INCLUDE_DIR ${SDL_INCLUDE_DIR})
-    set(SDL_mixer_INCLUDE_DIR ${SDL_INCLUDE_DIR})
+    set(SDLMIXER_INCLUDE_DIR ${SDL_INCLUDE_DIR})
+    set(SDLIMAGE_INCLUDE_DIR ${SDL_INCLUDE_DIR})
 endif ()
 
 set(SDL_ALL_LIBS
     ${SDL_LIBRARY}
-    ${SDL_image_LIBRARY}
-    ${SDL_mixer_LIBRARY}
+    ${SDLIMAGE_LIBRARY}
+    ${SDLMIXER_LIBRARY}
 )
 
 # extra libs that will be included after all others, by platform
