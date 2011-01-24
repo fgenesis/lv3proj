@@ -1,9 +1,70 @@
-_________________________________
-/ We're in an early development stage, \
-\ nothing to read here. Huh.           /
- --------------------------------------
-        \   ^__^
-         \  (oo)\_______
-            (__)\       )\/\
-                ||----w |
-                ||     ||
+
+        Lost Vikings 3 Project Engine
+
+
+GET THE CODE
+============
+1.) Be sure you have Git installed.
+2.) Navigate to a folder with write access
+3.) git clone git://github.com/fgenesis/lv3proj.git
+
+Alternatively, download a tarball with the source:
+http://github.com/fgenesis/lv3proj/tarball/master
+
+
+
+BUILD INSTRUCTIONS
+==================
+
+Note: Under Windows, only building in 32 bit is supported for now.
+
+Windows, Visual Studio:
+1.) Open the LV3.sln file
+2.) Set the build configuration to Release, unless you don't mind speed.
+3.) Build the solution (Default hotkey: F7)
+4.) The exe files are now in <LV3-root>/bin.
+
+
+Windows + MinGW, CodeBlocks, Linux, and maybe Mac OSX:
+1.) Be sure you have CMake, SDL, SDL_mixer and SDL_image installed.
+2.) Go to the project root dir. (contains LV3.sln and CMakeLists.txt)
+3.) Create a new folder where the compilation process should take place.
+4.) Navigate into that folder.
+5.) Configure the build type and generate makefiles or project files as necessary.
+    On Windows, you can use cmake-gui, on linux ccmake or anything else.
+6.) Start compiling. Cross your fingers and hope that it works.
+7.) make install. The finished bins are installed to <LV3-root>/bin.
+    Does not require root. Does not install into system directories.
+
+In short, the required commands (on linux) are as follows:
+(Be in LV3 root dir)
+mkdir build
+cd build
+cmake ..
+(alternatively, 'ccmake ..' if you need to specify advanced things)
+make
+make install
+-- The bins are now in ../bin and ready. (in case compiling them actually worked)
+
+To build the basepak.lvpa file (not required, but can't be bad to have it)
+(be in <LV3-root>/bin)
+./lvpak -c9 -f basepak.listfile a basepak.lvpa
+
+
+
+MISSING FILES
+=============
+
+Some files are not included in the Git repo because of their size,
+for these, visit https://github.com/fgenesis/lv3proj/downloads
+and look for files named missing_*.zip.
+The file name should make clear where the files inside should be put,
+if not, there's maybe a description file inside.
+
+
+
+QUESTIONS? BUGS? RANTS? NOTHING WORKS?
+======================================
+
+Visit http://lostvikings.lordaeron.org
+There may be a mailing list in future, if there is any interest in it.
