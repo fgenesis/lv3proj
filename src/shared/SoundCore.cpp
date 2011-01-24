@@ -10,7 +10,7 @@ void musicFinished(void)
     // from the manual:
     // NOTE: NEVER call SDL_Mixer functions, nor SDL_LockAudio, from a callback function. 
     // oh well... works. bah.
-    if(sndCore._GetMusicPtr() && sndCore.GetLoopPoint())
+    if(sndCore._GetMusicPtr() && sndCore.GetLoopPoint() >= 0)
     {
         Mix_PlayMusic(sndCore._GetMusicPtr(), 0);
         Mix_SetMusicPosition(sndCore.GetLoopPoint());
@@ -92,7 +92,11 @@ void SoundCore::PlayMusic(char *fn)
     _music = resMgr.LoadMusic(fn);
     if(!_music)
         return;
-    SetLoopPoint(atof(resMgr.GetPropForMusic(fn, "looppoint").c_str()));
+    std::string loopstr = resMgr.GetPropForMusic(fn, "looppoint");
+    if(loopstr.length())
+        SetLoopPoint(atof(loopstr.c_str()));
+    else
+        SetLoopPoint(-1);
     Mix_PlayMusic(_music, 0);
     Mix_HookMusicFinished(musicFinished);
 }
