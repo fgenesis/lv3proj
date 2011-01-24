@@ -1,4 +1,7 @@
 
+// explicitly import symbols to be overridden
+import Sound 
+
 _audioFileExt = ["wav", "ogg", // common formats (mp3 currently not supported)
                  "mod", "xm", "it", "669", "s3m", // tracker formats, handled by MikMod
                  "stm", "med", "amf", "apun", "dsm", "far", "gdm", "imf", "mtm", "okt", "stx", "ult", "uni", // also MikMod
@@ -14,6 +17,25 @@ function IsSupportedAudioFile(fn)
     end
     return false
 end
+
+
+// sound ctor override, allows to easily auto-adjust the volume of newly created sounds
+// to the setting in EngineConfig.soundVolume.
+_Sound = Sound // save old ctor
+function _SoundCtorOverride(fn, vol) // volume multiplicator
+    global _Sound
+    s = _Sound(fn)
+    select vol
+        case NilType
+            s.SetVolume(EngineConfig.soundVolume)
+        case NumericType
+            s.SetVolume(EngineConfig.soundVolume * vol)
+        default
+            raise "Passed volume is not a number"
+    end
+    return s
+end
+Sound = _SoundCtorOverride // install override
 
 
 export IsSupportedAudioFile
