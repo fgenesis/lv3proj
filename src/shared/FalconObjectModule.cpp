@@ -841,6 +841,11 @@ FALCON_FUNC fal_Objects_GetLastId(Falcon::VMachine *vm)
     vm->retval((Falcon::int64)g_engine_ptr_s->objmgr->GetLastId());
 }
 
+FALCON_FUNC fal_Objects_GetCount(Falcon::VMachine *vm)
+{
+    vm->retval((Falcon::int64)g_engine_ptr_s->objmgr->GetCount());
+}
+
 FALCON_FUNC fal_Objects_Get(Falcon::VMachine *vm)
 {
     FALCON_REQUIRE_PARAMS_EXTRA(1, "N");
@@ -894,6 +899,7 @@ Falcon::Module *FalconObjectModule_create(void)
     m->addClassMethod(clsObjects, "GetAllInRect", fal_Objects_GetAllInRect);
     m->addClassMethod(clsObjects, "Get", fal_Objects_Get);
     m->addClassMethod(clsObjects, "GetLastId", fal_Objects_GetLastId);
+    m->addClassMethod(clsObjects, "GetCount", fal_Objects_GetCount);
 
     Falcon::Symbol *clsTileLayer = m->addClass("TileLayer", &forbidden_init);
     clsTileLayer->setWKS(true);

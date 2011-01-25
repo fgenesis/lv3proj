@@ -28,12 +28,25 @@ function dbg_HookCountRenderHook() // note: this function is highly unoptimized 
     i = GetRawInputHookCount()
     s = SNESKeyMap.GetInputHookCount()
     c = CallScheduler.Count()
+    oc = Objects.GetCount()
+    om = Objects.GetLastId()
+    gi = GC.items
+    gm = GC.usedMem
+    gmk = gm >> 10
+    tha = GC.th_active
+    thn = GC.th_normal
     str = @ "Hooks: Render = $r; Update = $u; RawInp = $i; SNESInp = $s; Sched = $c"
     str2 = @ "Timing: MS = $dt"
+    str3 = @ "Objects: Count = $oc; MaxID = $om"
+    str4 = @ "Mem: GC: Items = $gi; Bytes = $gm B, $gmk kB; Th_normal = $thn, Th_active = $tha"
     w, h = Screen.GetSize()
     font = GetFont("rpgfont")
-    Screen.GetSurface().Write(0, h - font.GetHeight(), font, str)
-    Screen.GetSurface().Write(0, h - (font.GetHeight() * 2), font, str2)
+    fh = font.GetHeight()
+    write = Screen.GetSurface().Write
+    write(0, h - (fh    ), font, str4)
+    write(0, h - (fh * 2), font, str)
+    write(0, h - (fh * 3), font, str2)
+    write(0, h - (fh * 4), font, str3)
 end
 
 

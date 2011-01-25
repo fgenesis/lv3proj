@@ -24,6 +24,7 @@ public:
     uint32 Add(BaseObject*);
     BaseObject *Get(uint32 id);
     inline uint32 GetLastId(void) { return _curId; }
+    inline uint32 GetCount(void)  { return _store.size(); }
     void Update(uint32 ms);
     void RenderLayer(uint32 id);
     void RenderBBoxes(void); // debug function
