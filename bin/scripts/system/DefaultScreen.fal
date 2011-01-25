@@ -1,6 +1,7 @@
 function InitDefaultScreen()
     Screen.SetMode(1000, 600, false, true)
     Screen.SetBGColor(0,0,0)
+    Screen.FrameLimit(60, 70)
     > "Default screen layout created"
 end
 

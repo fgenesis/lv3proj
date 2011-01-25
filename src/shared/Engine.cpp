@@ -240,24 +240,30 @@ void Engine::_CalcFPS(void)
 {
     ++_framecounter;
     uint32 ms = SDL_GetTicks();
-    if(ms - _fpsclock >= CLOCKS_PER_SEC >> 2)
+    if(ms - _fpsclock >= 1000 >> 2)
     {
         char buf[100];
         _fpsclock = ms;
         _fps = _framecounter << 2;
         _framecounter = 0;
-        sprintf(buf, "%s - %u FPS - %u sleep", _wintitle.c_str(), _fps, _sleeptime);
+        sprintf(buf, "%s - %u FPS - %u sleep [%u .. %u]%s", _wintitle.c_str(), _fps, _sleeptime, _fpsMin, _fpsMax, FrameLimit() ? "" : " (no limit)");
         SDL_WM_SetCaption((const char*)buf, NULL);
-        if(_fps > 70)
+        if(FrameLimit())
         {
-            ++_sleeptime;
+            if(_fps > _fpsMax)
+            {
+                ++_sleeptime;
+            }
+            else if(_sleeptime && _fps < _fpsMin)
+            {
+                --_sleeptime;
+            }
         }
-        else if(_sleeptime && _fps < 60)
-        {
-            --_sleeptime;
-        }
+        else
+            _sleeptime = 0;
     }
-    SDL_Delay(_sleeptime);
+    if(FrameLimit())
+        SDL_Delay(_sleeptime);
 }
 
 bool Engine::Setup(void)

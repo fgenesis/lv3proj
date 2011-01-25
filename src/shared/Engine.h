@@ -91,6 +91,10 @@ public:
     inline bool IsPaused(void) { return _paused; }
     inline void SetPaused(bool b) { _paused = b; }
 
+    inline bool FrameLimit(void) { return _fpsMax && _fpsMin <= _fpsMax; }
+    inline void FrameLimitMin(uint32 fps) { _fpsMin = fps; }
+    inline void FrameLimitMax(uint32 fps) { _fpsMax = fps; }
+
     inline LayerMgr *_GetLayerMgr(void) const { return _layermgr; }
     inline gcn::Graphics *GetGcnGfx(void) { return _gcnGfx; }
 
@@ -122,6 +126,7 @@ protected:
     uint32 _winsizey;
     uint32 _fps;
     uint32 _framecounter;
+    uint32 _fpsMin, _fpsMax; // lower/upper bound of frame limiter, it will try to keep the FPS in between
     uint32 _fpsclock;
     uint32 _sleeptime;
     uint32 _debugFlags;

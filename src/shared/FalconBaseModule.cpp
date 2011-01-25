@@ -960,6 +960,13 @@ FALCON_FUNC fal_Screen_GetSurface(Falcon::VMachine *vm)
     vm->retval(fs);
 }
 
+FALCON_FUNC fal_Screen_FrameLimit(Falcon::VMachine *vm)
+{
+    FALCON_REQUIRE_PARAMS_EXTRA(2, "I, I")
+    g_engine_ptr_->FrameLimitMin((uint32)vm->param(0)->forceInteger());
+    g_engine_ptr_->FrameLimitMax((uint32)vm->param(1)->forceInteger());
+}
+
 fal_Font::~fal_Font()
 {
     delete _font;
@@ -1046,6 +1053,7 @@ Falcon::Module *FalconBaseModule_create(void)
     m->addClassMethod(clsScreen, "SetBGColor", &fal_Screen_SetBGColor);
     m->addClassMethod(clsScreen, "CanResize", &fal_Screen_IsResizable);
     m->addClassMethod(clsScreen, "IsFullscreen", &fal_Screen_IsFullscreen);
+    m->addClassMethod(clsScreen, "FrameLimit", &fal_Screen_FrameLimit);
 
     Falcon::Symbol *symMusic = m->addSingleton("Music");
     Falcon::Symbol *clsMusic = symMusic->getInstance();
