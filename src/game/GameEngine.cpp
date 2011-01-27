@@ -84,7 +84,12 @@ bool GameEngine::Setup(void)
     // load the initialization script
     logdetail("Initializing scripts...");
     memblock *mb = resMgr.LoadTextFile("scripts/init.fal");
-    ASSERT(mb); // TODO: this must be return false, maybe
+    if(!mb)
+    {
+        logerror("Failed to load init script: 'scripts/init.fal'");
+        logerror("It is required for starting up, so the engine will now terminate.");
+        return false;
+    }
     falcon->Init((char*)mb->ptr);
     resMgr.Drop(mb);
 

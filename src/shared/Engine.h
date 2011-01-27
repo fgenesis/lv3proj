@@ -31,7 +31,8 @@ public:
     virtual ~Engine();
     void HookSignals(void);
     void UnhookSignals(void);
-    void PrintSystemSpecs(void);
+    static void PrintSystemSpecs(void);
+    static bool RelocateWorkingDir(void);
 
     virtual void InitScreen(uint32 sizex, uint32 sizey, uint8 bpp = 0, uint32 extraflags = 0);
     virtual bool Setup(void);

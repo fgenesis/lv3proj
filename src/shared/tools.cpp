@@ -12,10 +12,12 @@
 #   define WIN32_LEAN_AND_MEAN
 #   include <windows.h>
 #   include <mmsystem.h>
+#   include <direct.h>
 #else
 #   include <sys/dir.h>
 #   include <sys/stat.h>
 #   include <sys/timeb.h>
+#   include <unistd.h>
 #endif
 
 #include "MersenneTwister.h"
@@ -481,4 +483,84 @@ void SplitFilenameToProps(const char *in, std::string *fn, std::string *s1 /* = 
         *s4 = fields[4];
     if(fields.size() >= 6 && s5)
         *s5 = fields[5];
+}
+
+// taken from a post from http://www.gamedev.net/topic/459511-something-like-getmodulefilename-in-linux/
+std::string GetProgramDir(void)
+{
+#if PLATFORM == PLATFORM_WIN32
+    char szPath[1024];
+    uint32 len = GetModuleFileName( NULL, szPath, 1024 );
+    if(!len)
+        return "";
+    std::string path(szPath);
+    std::string::size_type t = path.find_last_of("/\\");
+    path = path.substr(0,t);
+    _FixFileName(path);
+    return path;
+
+#elif PLATFORM == PLATFORM_UNIX
+
+    std::stringstream ss;
+    ss << "/proc/" << getpid() << "/exe";
+    char proc[1024];
+    int ch = readlink(ss.str().c_str(), proc, 1024);
+    std::string path;
+    if (ch != -1)
+    {
+        proc[ch] = 0;
+        path = proc;
+        std::string::size_type t = path.find_last_of("/");
+        path = path.substr(0,t);
+    }
+    return path;
+
+#elif PLATFORM == PLATFORM_APPLE
+    std::string path = "./";
+    ProcessSerialNumber PSN;
+    ProcessInfoRec pinfo;
+    FSSpec pspec;
+    FSRef fsr;
+    OSStatus err;
+    /* set up process serial number */
+    PSN.highLongOfPSN = 0;
+    PSN.lowLongOfPSN = kCurrentProcess;
+    /* set up info block */
+    pinfo.processInfoLength = sizeof(pinfo);
+    pinfo.processName = NULL;
+    pinfo.processAppSpec = &pspec;
+    /* grab the vrefnum and directory */
+    err = GetProcessInformation(&PSN, &pinfo);
+    if (!err)
+    {
+        char c_path[2048];
+        FSSpec fss2;
+        int tocopy;
+        err = FSMakeFSSpec(pspec.vRefNum, pspec.parID, 0, &fss2);
+        if (!err)
+        {
+            err = FSpMakeFSRef(&fss2, &fsr);
+            if (!err)
+            {
+                char c_path2[2049];
+                err = (OSErr)FSRefMakePath(&fsr, (UInt8*)c_path2, 2048);
+                if (!err)
+                {
+                    path = c_path2;
+                }
+            }
+        }
+    }
+    return path;
+
+#endif
+}
+
+bool SetWorkingDir(std::string d)
+{
+#if PLATFORM == PLATFORM_WIN32
+    return !_chdir(d.c_str());
+#elif PLATFORM == PLATFORM_WIN32 || PLATFORM == PLATFORM_APPLE
+    return !chdir(d.c_str());
+#endif
 }

@@ -5,8 +5,13 @@ int main(int argc, char **argv)
 {
     uint32 loglevel = 1;
     DEBUG(loglevel = 3);
-    log_prepare("game_log.txt", "w");
     log_setloglevel(loglevel);
+
+    GameEngine::RelocateWorkingDir(); // a pity that this has to be done before opening the log file ...
+
+    log_prepare("game_log.txt", "w");
+    
+    GameEngine::PrintSystemSpecs();
 
     SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO | SDL_INIT_JOYSTICK | SDL_INIT_TIMER);
     SDL_EnableUNICODE(1);

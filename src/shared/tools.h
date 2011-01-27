@@ -34,6 +34,8 @@ uint32 fastintpow(uint32 base, uint32 power);
 uint64 fastintpow64(uint64 base, uint32 power);
 std::string GetTimeString(void);
 std::string GetDateString(void);
+std::string GetProgramDir(void); // file path of the exe/binary; this is NOT the working directory.
+bool SetWorkingDir(std::string);
 
 void SplitFilenameToProps(const char *in, std::string *fn = NULL, std::string *s1 = NULL, 
                                  std::string *s2 = NULL,  std::string *s3 = NULL,  std::string *s4 = NULL,

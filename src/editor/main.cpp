@@ -8,8 +8,14 @@ int main(int argc, char *argv[])
 {
     uint32 loglevel = 1;
     DEBUG(loglevel = 3);
-    log_prepare("editor_log.txt", "w");
     log_setloglevel(loglevel);
+
+    EditorEngine::RelocateWorkingDir(); // a pity that this has to be done before opening the log file ...
+
+    log_prepare("editor_log.txt", "w");
+
+    EditorEngine::PrintSystemSpecs();
+
     SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO);
     SDL_EnableUNICODE(1);
     SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY, SDL_DEFAULT_REPEAT_INTERVAL);

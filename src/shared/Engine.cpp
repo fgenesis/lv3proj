@@ -21,7 +21,6 @@ Engine::Engine()
 : _screen(NULL), _fps(0), _sleeptime(0), _framecounter(0), _paused(false),
 _debugFlags(EDBG_NONE), _reset(false), _bgcolor(0), _drawBackground(true)
 {
-    PrintSystemSpecs();
     log("Game Engine start.");
 
     _gcnImgLoader = new gcn::SDLImageLoaderManaged();
@@ -455,4 +454,29 @@ void Engine::PrintSystemSpecs(void)
     logcustom(0, LGREEN, "Falcon::numeric size: %u%s", sizeof(Falcon::numeric), sizeof(Falcon::numeric) == 8 ? "" : " [WRONG, should be 4]");
     logcustom(0, LGREEN, "----------------------------------");
 #endif
+}
+
+bool Engine::RelocateWorkingDir(void)
+{
+    std::string procdir = GetProgramDir();
+    if(procdir.length())
+    {
+        if(SetWorkingDir(procdir))
+        {
+            logdetail("Working directory successfully changed to program directory:");
+            logdetail(" '%s'", procdir.c_str());
+            return true;
+        }
+        else
+        {
+            logerror("Unable to change working directory to program directory:");
+            logerror(" '%s'", procdir.c_str());
+        }
+    }
+    else
+    {
+        logerror("WARNING: Unable to detect program directory! Be sure to run this from the correct path or set the working dir manually, "
+            "otherwise the engine may not find its data and will be unable to start up!");
+    }
+    return false;
 }
