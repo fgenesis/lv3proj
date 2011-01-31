@@ -35,18 +35,24 @@ function dbg_HookCountRenderHook() // note: this function is highly unoptimized 
     gmk = gm >> 10
     tha = GC.th_active
     thn = GC.th_normal
-    str = @ "Hooks: Render = $r; Update = $u; RawInp = $i; SNESInp = $s; Sched = $c"
-    str2 = @ "Timing: MS = $dt"
-    str3 = @ "Objects: Count = $oc; MaxID = $om"
-    str4 = @ "Mem: GC: Items = $gi; Bytes = $gm B, $gmk kB; Th_normal = $thn, Th_active = $tha"
+    g = Physics.GetGravity()
+    sx, sy = Screen.GetSize()
+    sls = Screen.GetLayerSize()
+    sr = Screen.CanResize()
+    sfs = Screen.IsFullscreen()
+    ej = Engine.JoystickCount()
     w, h = Screen.GetSize()
     font = GetFont("rpgfont")
     fh = font.GetHeight()
     write = Screen.GetSurface().Write
-    write(0, h - (fh    ), font, str4)
-    write(0, h - (fh * 2), font, str)
-    write(0, h - (fh * 3), font, str2)
-    write(0, h - (fh * 4), font, str3)
+    
+    write(0, h - (fh * 7), font, @ "Timing: MS = $dt")
+    write(0, h - (fh * 6), font, @ "Physics: Gravity = $g")
+    write(0, h - (fh * 5), font, @ "Engine: Joysticks = $ej")
+    write(0, h - (fh * 4), font, @ "Objects: Count = $oc; MaxID = $om")
+    write(0, h - (fh * 3), font, @ "Screen: $(sx)x$(sy); LayerSize = $sls; Resize = $sr; Full = $sfs")
+    write(0, h - (fh * 2), font, @ "Hooks: Render = $r; Update = $u; RawInp = $i; SNESInp = $s; Sched = $c")
+    write(0, h - (fh    ), font, @ "Mem: GC: Items = $gi; Bytes = $gm B, $gmk kB; Th_normal = $thn, Th_active = $tha")
 end
 
 

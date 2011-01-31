@@ -19,9 +19,10 @@ function ReadIniFileAsDict(fn)
     end
     
     bb = ByteBuf(buf, true) // for more processing comfort, we wrap a ByteBuf around the MemBuf
-    ss = StringStream(bb.readString()) // and read one string from it (which, for text files, is the entire file)
+    s = bb.readString() // and read one string from it (which, for text files, is the entire file)
+    ss = StringStream(s + "\n") // we use one additional whitespace, because the conf parser needs it
     // this is needed so the config parser will not append a newline char to config values if the original data are in windows CRLF encoding
-    ss.setEncoding(getSystemEncoding(), SYSTEM_DETECT)
+    ss.setEncoding(getSystemEncoding(), CR_TO_CRLF)
     cp = ConfParser()
     try
         cp.read(ss) // can fail if there is a parsing error
@@ -70,6 +71,43 @@ end
 function StripFileName(path)
     return "/".merge(path.split("/")[:-1])
 end
+
+function strIsInt(s)
+    return s.endsWith(int("0" + s).toString()) // the lazy way
+end
+
+function strIsNumeric(s)
+    dot = false
+    nums = "01234567890.-"
+    
+    pos = -1
+    for c in s.split()
+        ++pos
+        if c notin nums: return false
+        
+        switch c
+            case "."
+                if dot: return false // only one dot allowed
+                dot = true
+            case "-"
+                if pos: return false // minus can only be first char
+        end
+    end
+    return true
+end
+
+// because falcon is lacking a super()-constructor-call like java has,
+// and there is currently no comfortable way to pass params across
+// nested constructors, we use this workaround.
+// WARNING: it creates a temporary baseClass instance,
+//          keep that in mind when using globals or constructors with side effects!!
+// <caller>:     should be 'self' in calling ctor
+// <baseClass>:  the class ctor of the base class
+// <params>:     an array with params to pass (e.g. argv()) - NON-METHODIC!
+function super(caller, baseClass, params)
+    caller.apply(([baseClass] + params)().retrieve()) // some weird, dark magic happens here...
+end
+
 
 
 export
