@@ -862,12 +862,33 @@ FALCON_FUNC fal_Objects_Get(Falcon::VMachine *vm)
 
 FALCON_FUNC fal_Objects_GetAllInRect(Falcon::VMachine *vm)
 {
-    FALCON_REQUIRE_PARAMS_EXTRA(4, "N x, N y, N width, N height");
+    Falcon::Item *p0 = vm->param(0);
     BaseRect rect;
-    rect.x = (float)vm->param(0)->forceNumeric();
-    rect.y = (float)vm->param(1)->forceNumeric();
-    rect.w = (uint32)vm->param(2)->forceInteger();
-    rect.h = (uint32)vm->param(3)->forceInteger();
+    if(p0 && p0->isOfClass("ActiveRect"))
+    {
+        fal_ObjectCarrier *carrier = Falcon::dyncast<fal_ObjectCarrier*>(p0->asObject());
+        ActiveRect *arect = Falcon::dyncast<ActiveRect*>(carrier->GetObj());
+        rect = arect->cloneRect();
+    }
+    else
+    {
+        Falcon::Item *p1 = vm->param(1);
+        Falcon::Item *p2 = vm->param(2);
+        Falcon::Item *p3 = vm->param(3);
+        if(p0 && p1 && p2 && p3)
+        {
+            rect.x = float(p0->forceNumeric());
+            rect.y = float(p1->forceNumeric());
+            rect.w = uint32(p2->forceInteger());
+            rect.h = uint32(p3->forceInteger());
+        }
+        else
+        {
+            throw new Falcon::ParamError(Falcon::ErrorParam( Falcon::e_inv_params, __LINE__ )
+                .extra("Obj or {N x, N y, N width, N height}") );
+        }
+    }
+    
     ObjectWithSideSet li;
     g_engine_ptr_s->objmgr->GetAllObjectsIn(rect, li);
     if(li.empty())
