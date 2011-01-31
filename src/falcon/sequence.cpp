@@ -983,7 +983,7 @@ void Sequence::disposeIterator( Iterator& tgt ) const
    }  
    
    // we should have found an iterator of ours
-   fassert( false );
+   //fassert( false ); // --- fg EDIT: nope. ---
 }
 
 void Sequence::invalidateIteratorOnCriterion() const

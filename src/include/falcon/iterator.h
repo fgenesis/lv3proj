@@ -154,16 +154,16 @@ public:
     * \return false if the iterator couldn't be advanced (because invalid or at end).
     */
    inline bool next() {
-      fassert( m_owner != 0 );
-      return m_owner->next( *this );
+      //fassert( m_owner != 0 ); // --- fg EDIT ---
+      return m_owner && m_owner->next( *this );
    }
 
    /** Retreat to the previous item.
     * \return false if the iterator couldn't be retreated (because invalid or at begin).
     */
    inline bool prev() {
-      fassert( m_owner != 0 );
-      return m_owner->prev( *this );
+      //fassert( m_owner != 0 ); // --- fg EDIT ---
+      return m_owner && m_owner->prev( *this );
    }
 
    inline bool hasNext() const {
