@@ -735,6 +735,11 @@ FALCON_FUNC fal_Engine_GetTime(Falcon::VMachine *vm)
     vm->retval(Falcon::int64(g_engine_ptr_->GetCurFrameTime()));
 }
 
+FALCON_FUNC fal_Engine_GetName(Falcon::VMachine *vm)
+{
+    vm->retval(new Falcon::CoreString(g_engine_ptr_->GetName()));
+}
+
 FALCON_FUNC fal_Engine_LoadLevel(Falcon::VMachine *vm)
 {
     FALCON_REQUIRE_PARAMS_EXTRA(1,"S filename");
@@ -1029,6 +1034,7 @@ Falcon::Module *FalconBaseModule_create(void)
     Falcon::Symbol *symEngine = m->addSingleton("Engine");
     Falcon::Symbol *clsEngine = symEngine->getInstance();
     m->addClassMethod(clsEngine, "GetTime", fal_Engine_GetTime);
+    m->addClassMethod(clsEngine, "GetName", fal_Engine_GetName);
     m->addClassMethod(clsEngine, "LoadLevel", fal_Engine_LoadLevel);
     m->addClassMethod(clsEngine, "Exit", fal_Engine_Exit);
     m->addClassMethod(clsEngine, "LoadPropFile", fal_Engine_LoadPropFile);

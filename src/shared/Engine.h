@@ -37,6 +37,7 @@ public:
     virtual void InitScreen(uint32 sizex, uint32 sizey, uint8 bpp = 0, uint32 extraflags = 0);
     virtual bool Setup(void);
     virtual void Shutdown(void);
+    virtual const char *GetName(void) { return "engine"; } // must be overloaded
     inline bool IsQuit(void) { return _quit; }
     inline static void SetQuit(bool q = true) { _quit = q; }
     inline static SDL_Joystick *GetJoystick(uint32 i) { return i < s_joysticks.size() ? s_joysticks[i] : NULL; }

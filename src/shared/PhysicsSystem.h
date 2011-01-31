@@ -44,6 +44,8 @@ struct EnvPhysProps
 class PhysicsMgr
 {
 public:
+    PhysicsMgr();
+    void SetDefaults(void);
     void UpdatePhysics(Object *obj, uint32 ms);
 
     EnvPhysProps envPhys;

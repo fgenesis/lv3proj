@@ -7,6 +7,16 @@
 
 #include "UndefUselessCrap.h"
 
+PhysicsMgr::PhysicsMgr()
+: _layerMgr(NULL), _objMgr(NULL)
+{
+    SetDefaults();
+}
+
+void PhysicsMgr::SetDefaults(void)
+{
+    envPhys.gravity = 0.0f;
+}
 
 void PhysicsMgr::UpdatePhysics(Object *obj, uint32 ms)
 {

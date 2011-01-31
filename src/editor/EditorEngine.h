@@ -55,6 +55,7 @@ public:
     //virtual void OnWindowEvent(bool active);
     virtual bool OnRawEvent(SDL_Event& evt);
     virtual void OnWindowResize(uint32 newx, uint32 newy);
+    virtual const char *GetName(void) { return "editor"; } // must be overloaded
 
     void SaveData(void);
     void LoadData(void);

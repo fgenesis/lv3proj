@@ -19,7 +19,8 @@ std::vector<SDL_Joystick*> Engine::s_joysticks;
 
 Engine::Engine()
 : _screen(NULL), _fps(0), _sleeptime(0), _framecounter(0), _paused(false),
-_debugFlags(EDBG_NONE), _reset(false), _bgcolor(0), _drawBackground(true)
+_debugFlags(EDBG_NONE), _reset(false), _bgcolor(0), _drawBackground(true),
+_fpsMin(60), _fpsMax(70)
 {
     log("Game Engine start.");
 
@@ -390,6 +391,7 @@ void Engine::_Reset(void)
     _reset = false;
     objmgr->RemoveAll();
     _layermgr->Clear();
+    physmgr->SetDefaults();
     resMgr.pool.Cleanup();
     resMgr.DropUnused();
     DEBUG(logdetail("After Reset Cleanup: Memory leak detector says: %u", MLD_COUNTER));
