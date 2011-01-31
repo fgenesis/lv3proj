@@ -34,13 +34,13 @@ Base module file, providing some engine core function bindings
 
 
 /*#
-@module module_base base
+@module module_engine Engine core
 @brief Contains bindings to core functions of the engine
 
 This module provides bindings to engine core functions and classes,
 shared across the game and the editor.
 
-@beginmodule module_base
+@beginmodule module_engine
 */
 
 Engine *g_engine_ptr_ = NULL;
@@ -72,7 +72,7 @@ void forbidden_init(Falcon::VMachine *vm)
 
 /*#
 @function include_ex
-@ingroup functions
+@ingroup group_internal
 @brief Include a falcon source file
 @param file Filename to load, without path
 @param nil Not used.
@@ -130,6 +130,7 @@ FALCON_FUNC fal_include_ex( Falcon::VMachine *vm )
 
 /*#
 @class Sound
+@ingroup group_pkg
 @brief Sound clips that can be directly played.
 @param filename : Name of the file to load, in directory 'sfx/' or a subdirectory.
 
@@ -228,9 +229,10 @@ FALCON_FUNC fal_Sound_IsPlaying( Falcon::VMachine *vm )
 }
 /*#
 @function DbgBreak
+@ingroup group_internal
 @brief For debugging, should not be used
 
-Set a breakpoint in C++ source in this function binding and break into the debugger when this fruntion is called, whewt!
+Set a breakpoint in C++ source in this function binding and break into the debugger when this function is called, whewt!
 */
 FALCON_FUNC fal_debug_break( Falcon::VMachine *vm )
 {
@@ -253,7 +255,17 @@ FALCON_FUNC fal_InvertSide( Falcon::VMachine *vm )
 }
 
 /*#
-@method VFS AddContainer
+@class VFS
+@ingroup group_internal
+@brief Singleton class providing virtual file system access
+
+The engine organizes its data in a virtual file system tree;
+files from disk and inside packages are transparently merged and can be accessed
+as if they were in the engine's root directory.
+*/
+
+/*#
+@method AddContainer VFS
 @param filename Container (.lvpa) file to load
 @param dir Directory to load into
 @optparam overwrite If true, files in the virtual file tree will be replaced by those from the container file
@@ -305,7 +317,7 @@ FALCON_FUNC fal_VFS_AddContainer( Falcon::VMachine *vm )
 }
 
 /*#
-@method VFS Clear
+@method Clear VFS
 @brief Resets the virtual file system tree to its initial state
 
 This drops all custom paths or containers added.
@@ -316,7 +328,7 @@ FALCON_FUNC fal_VFS_Clear( Falcon::VMachine *vm )
 }
 
 /*#
-@method VFS Reload
+@method Reload VFS
 @brief Reloads all files contained in the virtual file system and refreshes files on disk
 
 This should be called if files or directories on the file system were added or removed,
@@ -328,7 +340,7 @@ FALCON_FUNC fal_VFS_Reload( Falcon::VMachine *vm )
 }
 
 /*#
-@method VFS GetDirList
+@method GetDirList VFS
 @brief Returns all subdirectories in a directory
 @return An array of strings with the names of the subdirectories of the given directory,
 or @b nil if the directory doesn't exist.
@@ -361,7 +373,7 @@ FALCON_FUNC fal_VFS_GetDirList( Falcon::VMachine *vm )
 }
 
 /*#
-@method VFS GetFileList
+@method GetFileList VFS
 @brief Returns all files in a directory
 @return An array of strings with the names of the files of the given directory,
 or @b nil if the directory doesn't exist.
@@ -394,7 +406,7 @@ FALCON_FUNC fal_VFS_GetFileList( Falcon::VMachine *vm )
 }
 
 /*#
-@method VFS HasFile
+@method HasFile VFS
 @brief Checks if a file exists in the VFS
 @return True if the file is found, false if not
 */
@@ -413,7 +425,7 @@ FALCON_FUNC fal_VFS_HasFile( Falcon::VMachine *vm )
 }
 
 /*#
-@method VFS Merge
+@method Merge VFS
 @brief Merges a directory into another directory
 @param source The directory which will be mounted into target. Must exist.
 @param target The directory where source will be merged into
@@ -446,6 +458,12 @@ FALCON_FUNC fal_VFS_Merge( Falcon::VMachine *vm )
         vm->retval(false);
 }
 
+/*#
+@method GetFileAsBuf VFS
+@brief Returns the contents of a file as MemBuf
+@param filename The filename and path of the file
+@return A valid MemBuf if the file was found, nil otherwise
+*/
 FALCON_FUNC fal_VFS_GetFileAsBuf( Falcon::VMachine *vm )
 {
     FALCON_REQUIRE_PARAMS_EXTRA(1, "S");
@@ -477,6 +495,17 @@ FALCON_FUNC fal_VFS_GetFileAsBuf( Falcon::VMachine *vm )
     vm->retval(mbuf);
 }
 
+/*#
+@method AddBufAsFile VFS
+@brief Creates a virtual file in the VFS tree
+@param filename The target file name under which the MemBuf should be stored
+@param buf The MemBuf to copy
+
+Takes a MemBuf and makes it accessible as a file in the VFS tree.
+In case a file with the given name exists, it will be overwritten (only in memory, not on the disk).
+
+If the path of the file does not exist, it is created.
+*/
 FALCON_FUNC fal_VFS_AddBufAsFile( Falcon::VMachine *vm )
 {
     FALCON_REQUIRE_PARAMS_EXTRA(2, "S, Buf");

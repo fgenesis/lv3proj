@@ -1,3 +1,37 @@
+/*#
+@beginmodule module_sc_sys
+*/
+
+/*#
+@class ScriptLoader
+@ingroup group_internal
+@brief Automatic script loader, beeing able to resolve dependencies
+
+The ScriptLoader class takes care of loading scripts from directories, or single files.
+It can be passed a list of files and directories, loading all of them with a single call,
+resolving dependencies between the scripts.
+
+In case no class instance is needed, it has static functions that can be used as well.
+Note that by default, all paths are relative to the executable directory + "/scripts".
+@code
+    // class instance
+    loader = ScriptLoader()
+    loader.AddDir("system")
+    loader.AddDir("mydir")
+    loader.AddFile("extra.fal")
+    loader.DoLoad() // load all scripts the the 2 directores, + extra.fal, resolving dependencies between all
+    
+    // static access
+    ScriptLoader.LoadDir("system")
+    ScriptLoader.LoadDir("mydir")
+    ScriptLoader.LoadFile("extra.fal")
+    // this loads all files as well, but if any scripts in "system" depend on some in "mydir",
+    // it can not be resolved, and loading will fail.
+@endcode
+
+@note External packages should use the functions provided by the @b Package class, which will take care of using the correct paths.
+
+*/
 
 class ScriptLoader
 
@@ -6,8 +40,13 @@ class ScriptLoader
         self._list = List()
     end
     
-    
-    // -- static function --
+    /*#
+    @method FillList ScriptLoader
+    @param list A list
+    @param dir The directory whose files to add the the list
+    @brief Traverses subdirectories recursively and finds all *.fal files within
+    @note This is a static function.
+    */
     function FillList(list, dir)
         > "FillList: '", dir , "'"
         subdirs = VFS.GetDirList(dir)
@@ -18,7 +57,12 @@ class ScriptLoader
         if files: for fn in files: if fn.endsWith(".fal"): list.push( [fn, dir] )
     end
 
-    // -- static function --
+    /*#
+    @method LoadFromList ScriptLoader
+    @param files A list containing script names (with realtive paths)
+    @brief Loads scripts from a list previously filled with @b FillList
+    @note This is a static function.
+    */
     function LoadFromList(files)
         done_count = 0
         collect_errors = false
@@ -73,7 +117,12 @@ class ScriptLoader
         end
     end
     
-    // -- static function --
+    /*#
+    @method LoadDir ScriptLoader
+    @param dir Relative directory name
+    @brief Recursively load *.fal files from a directory.
+    @note This is a static function.
+    */
     function LoadDir(dir)
         if not dir: raise "ScriptLoader::LoadDir() - directory is nil or empty string, oops!"
         
@@ -83,9 +132,15 @@ class ScriptLoader
         self.LoadFromList(list)
     end
     
-    // -- static function --
-    // dir: optional arg, if supplied, use this dir for loading, otherwise use "scripts"
-    // ex: if true, do not force "/scripts/" subdir, use full path instead
+    /*#
+    @method LoadFile ScriptLoader
+    @param fn File name of the scipt (without any directories)
+    @param dir If supplied, use this dir for loading, otherwise use "scripts"
+    @optparam ex If true, do not force "/scripts/" subdir, use full relative path instead
+    @brief Load a script file
+    @return true if the script was loaded successfully, false if not
+    @note This is a static function.
+    */
     function LoadFile(fn, dir, ex)
         if not dir
             dir = "" // be sure its not nil
@@ -120,7 +175,12 @@ class ScriptLoader
         return false
     end
     
-    // -- class method --
+    /*#
+    @method AddDir ScriptLoader
+    @param dir Relative directory name
+    @param ex If true, do not force "/scripts/" subdir, use full relative path instead
+    @brief Register all files in a directory for later loading, recursively
+    */
     function AddDir(dir, ex)
         if dir
             if not ex
@@ -133,7 +193,13 @@ class ScriptLoader
         end
     end 
     
-    // -- class method --
+    /*#
+    @method AddFile ScriptLoader
+    @param fn File name of the scipt (without any directories)
+    @param dir Relative directory name
+    @param ex If true, do not force "/scripts/" subdir, use full relative path instead
+    @brief Registers a file for later loading
+    */
     function AddFile(fn, dir, ex)
         if dir
             if not ex
@@ -146,7 +212,10 @@ class ScriptLoader
         end
     end
     
-    // -- class method --
+    /*#
+    @method DoLoad ScriptLoader
+    @brief Load all previously registered files
+    */
     function DoLoad()
         self.LoadFromList(self._list)
     end
@@ -156,6 +225,8 @@ end
 
 // --- initial load ---
 ScriptLoader.LoadDir("system")
+ScriptLoader.LoadDir(Engine.GetName()) // can be "game" or "editor"
+ScriptLoader.LoadDir("functors")
 
 // after we are loaded, drop the init.fal loader script from the VFS,
 // just to be on the safe side if someone reloads the scripts root dir, which would attempt to load this script again,
