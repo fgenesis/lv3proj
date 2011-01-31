@@ -1,0 +1,58 @@
+#
+# FALDOC - Falcon Documentation system
+#
+# Faldoc file for LV3proj.
+#
+
+################################################
+# Documentation generic data
+################################################
+
+Title = Lost Vikings 3 Project / Engine documentation
+Author = False.Genesis
+Version = 0.0.1a
+
+################################################
+# Faldoc Input settings
+################################################
+
+Input.directory=../src/game
+Input.directory=../src/shared
+Input.directory=../src/editor
+Input.directory=../bin/scripts
+Input.directory=../bin/packages
+
+Input.wildcard=*.cpp
+Input.wildcard=*.inl
+Input.wildcard=*.fal
+Input.recursive=true
+
+# Other files may be specified here
+Input.extra=main.fd
+
+################################################
+# Faldoc Output settings
+################################################
+
+Output.module=html
+Output.module=list
+
+################################################
+# Faldoc HTML Output settings
+# Each module can be self-configured through
+# Output.<module>.<parameters> configs
+################################################
+
+Output.html.directory=doc_html
+Output.html.url=.
+Output.html.doctitle=Lost Vikings 3 Project / Engine Documentation
+
+################################################
+# Faldoc listing Output settings
+################################################
+
+Output.list.file=doc_list.txt
+Output.list.doctitle=Lost Vikings 3 Project / Engine Documentation
+Output.list.bytype=true
+Output.list.members=true
+Output.list.brief=true

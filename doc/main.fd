@@ -1,0 +1,20 @@
+/*#
+   @main Lost Vikings 3 Engine Base
+
+   [Insert useful text here]
+*/
+
+/*#
+   @module module_sc_sys Engine support scripts
+   @brief First script API layer
+*/
+
+/*#
+   @group group_internal Internal
+   @brief Functions and classes that are part of the internal API, and should not be used by external packages
+*/
+
+/*#
+   @group group_pkg External package related
+   @brief Functions and classes that are recommended/useful for external packages
+*/
