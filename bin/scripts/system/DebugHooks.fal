@@ -1,4 +1,14 @@
 /* This file should contain functions registering themselves on startup,
 providing additional debug info */
 
-dbg_AddHookCountOverlay()
+function dbg_ApplyHooks()
+    if EngineConfig.get("enableDebugHooks")
+        dbg_AddHookCountOverlay()
+    else
+        dbg_RemoveHookCountOverlay()
+    end
+end
+
+dbg_ApplyHooks()
+
+export dbg_ApplyHooks

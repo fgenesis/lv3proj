@@ -31,6 +31,7 @@ class EngineSettingsMenu from SinusMenu
         self.Add( { => }, "Sound volume" )
         self.Add( [self.UpdateMusic, 1], "Menu music" )
         self.Add( OpenJoystickTest, "Joystick Test" )
+        self.Add( ToggleDebugOverlay, "Toggle debug overlay" )
         self.Add( self.OnGoBack, "Back" )
         self.LoadMusic()
     end
@@ -178,6 +179,11 @@ end
 function OpenJoystickTest()
     CloseCurrentMenu()
     ShowJoystickTestScreen( [OpenMenu, EngineSettingsMenu] )
+end
+
+function ToggleDebugOverlay()
+    EngineConfig["enableDebugHooks"] = not EngineConfig.get("enableDebugHooks")
+    CallScheduler.Schedule( dbg_ApplyHooks, 1 )
 end
 
 function LoadPackageFile(s)

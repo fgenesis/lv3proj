@@ -8,22 +8,20 @@ EngineConfig["menuMusic"] = "liquidat.xm"
 
 // methods
 EngineConfig["Save"] = function()
-    d = [
-        "Music" => [
-            "Volume" => EngineConfig.musicVolume
-        ],
-        "Sound" => [
-            "Volume" => EngineConfig.soundVolume
-        ],
-        "Menu" => [
-            "Music" => EngineConfig.menuMusic
-        ]
-    ]
     
     cp = ConfParser()
-    for section, entries in d
-        for key, value in entries
-            cp.set(key, value, section)
+    for key, value in EngineConfig
+        if (not isCallable(value))
+            type = "String"
+            select value
+                case NumericType // int and float
+                    if int(value) == value // using this because there is no special Int type
+                        type = "Integer"
+                    else
+                        type = "Numeric"
+                    end
+            end
+            cp.set(key, value, type)
         end
     end
     
@@ -61,13 +59,14 @@ EngineConfig["Load"] = function()
     cp.read(strm)
     strm.close()
     
-    musicd = cp.getDictionary("Music")
-    soundd = cp.getDictionary("Sound")
-    menud = cp.getDictionary("Menu")
+    strings = cp.getDictionary("String")
+    ints = cp.getDictionary("Integer")
+    nums = cp.getDictionary("Numeric")
     
-    try: EngineConfig.musicVolume = int(musicd["Volume"])
-    try: EngineConfig.soundVolume = int(soundd["Volume"])
-    try: EngineConfig.menuMusic   = menud["Music"]
+    if strings: EngineConfig.merge(strings) // can simply do this because the conf parser returns strings only
+    if ints: for key, val in nums: EngineConfig[key] = numeric(val)
+    if ints: for key, val in ints: EngineConfig[key] = int(val)
+    
     > "Engine config loaded."
     
     Music.SetVolume(EngineConfig.musicVolume)
