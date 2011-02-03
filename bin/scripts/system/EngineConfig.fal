@@ -64,7 +64,7 @@ EngineConfig["Load"] = function()
     nums = cp.getDictionary("Numeric")
     
     if strings: EngineConfig.merge(strings) // can simply do this because the conf parser returns strings only
-    if ints: for key, val in nums: EngineConfig[key] = numeric(val)
+    if nums: for key, val in nums: EngineConfig[key] = numeric(val)
     if ints: for key, val in ints: EngineConfig[key] = int(val)
     
     > "Engine config loaded."
