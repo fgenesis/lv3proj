@@ -8,7 +8,6 @@ namespace gcn { class Font; }
 
 
 Falcon::Module *FalconBaseModule_create(void);
-void FalconBaseModule_SetEnginePtr(Engine *e);
 
 // this does absolutely nothing.
 FALCON_FUNC fal_NullFunc(Falcon::VMachine *vm);

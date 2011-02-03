@@ -43,13 +43,6 @@ shared across the game and the editor.
 @beginmodule module_engine
 */
 
-Engine *g_engine_ptr_ = NULL;
-
-void FalconBaseModule_SetEnginePtr(Engine *eng)
-{
-    g_engine_ptr_ = eng;
-}
-
 
 FALCON_FUNC fal_NullFunc(Falcon::VMachine *)
 {
@@ -123,7 +116,7 @@ FALCON_FUNC fal_include_ex( Falcon::VMachine *vm )
     // otherwise, the script would load + call itself infinitely
     std::string dup((char*)mb->ptr);
     resMgr.Drop(mb, true);
-    bool result = g_engine_ptr_->falcon->EmbedStringAsModule((char*)dup.c_str(), (char*)modName.c_str(), true, true);
+    bool result = Engine::GetInstance()->falcon->EmbedStringAsModule((char*)dup.c_str(), (char*)modName.c_str(), true, true);
 
     vm->retval(result);
 }
@@ -705,7 +698,7 @@ FALCON_FUNC fal_Surface_Write( Falcon::VMachine *vm )
 
     uint32 x = (uint32)vm->param(0)->forceInteger();
     uint32 y = (uint32)vm->param(1)->forceInteger();
-    gcn::SDLGraphics *gfx = (gcn::SDLGraphics*)g_engine_ptr_->GetGcnGfx();
+    gcn::SDLGraphics *gfx = (gcn::SDLGraphics*)Engine::GetInstance()->GetGcnGfx();
     gcn::Font *font = ((fal_Font*)(i_font->asObject()->getUserData()))->GetFont();
     SDL_Surface *surf = Falcon::dyncast<fal_Surface*>(vm->self().asObject())->surface;
     Falcon::AutoCString cstr(i_str->asString());
@@ -761,12 +754,12 @@ FALCON_FUNC fal_Music_IsPlaying(Falcon::VMachine *vm)
 
 FALCON_FUNC fal_Engine_GetTime(Falcon::VMachine *vm)
 {
-    vm->retval(Falcon::int64(g_engine_ptr_->GetCurFrameTime()));
+    vm->retval(Falcon::int64(Engine::GetInstance()->GetCurFrameTime()));
 }
 
 FALCON_FUNC fal_Engine_GetName(Falcon::VMachine *vm)
 {
-    vm->retval(new Falcon::CoreString(g_engine_ptr_->GetName()));
+    vm->retval(new Falcon::CoreString(Engine::GetInstance()->GetName()));
 }
 
 FALCON_FUNC fal_Engine_LoadLevel(Falcon::VMachine *vm)
@@ -778,12 +771,12 @@ FALCON_FUNC fal_Engine_LoadLevel(Falcon::VMachine *vm)
     {
         throw new EngineError( Falcon::ErrorParam( Falcon::e_nofile ) );
     }
-    g_engine_ptr_->_GetLayerMgr()->LoadAsciiLevel(level);
+    Engine::GetInstance()->_GetLayerMgr()->LoadAsciiLevel(level);
 }
 
 FALCON_FUNC fal_Engine_Exit(Falcon::VMachine *vm)
 {
-    g_engine_ptr_->SetQuit(true);
+    Engine::GetInstance()->SetQuit(true);
 }
 
 FALCON_FUNC fal_Engine_LoadPropFile(Falcon::VMachine *vm)
@@ -799,7 +792,7 @@ FALCON_FUNC fal_Engine_CreateCollisionMap(Falcon::VMachine *vm)
     if(vm->paramCount() >= 1)
         update = vm->param(0)->asBoolean();
 
-    LayerMgr *lm = g_engine_ptr_->_GetLayerMgr();
+    LayerMgr *lm = Engine::GetInstance()->_GetLayerMgr();
     lm->CreateCollisionMap();
     if(update)
         lm->UpdateCollisionMap();
@@ -807,7 +800,7 @@ FALCON_FUNC fal_Engine_CreateCollisionMap(Falcon::VMachine *vm)
 
 FALCON_FUNC fal_Engine_UpdateCollisionMap(Falcon::VMachine *vm)
 {
-    LayerMgr *lm = g_engine_ptr_->_GetLayerMgr();
+    LayerMgr *lm = Engine::GetInstance()->_GetLayerMgr();
     if(!lm->HasCollisionMap())
     {
         throw new EngineError( Falcon::ErrorParam( Falcon::e_undef_state ).
@@ -832,7 +825,7 @@ FALCON_FUNC fal_Engine_UpdateCollisionMap(Falcon::VMachine *vm)
 
 FALCON_FUNC fal_Engine_Reset(Falcon::VMachine *vm)
 {
-    g_engine_ptr_->SetReset();
+    Engine::GetInstance()->SetReset();
 }
 
 FALCON_FUNC fal_Engine_JoystickCount(Falcon::VMachine *vm)
@@ -864,7 +857,7 @@ FALCON_FUNC fal_Screen_GetLayer(Falcon::VMachine *vm)
 {
     FALCON_REQUIRE_PARAMS(1);
     uint32 layerId = vm->param(0)->forceInteger();
-    TileLayer *layer = g_engine_ptr_->_GetLayerMgr()->GetLayer(layerId);
+    TileLayer *layer = Engine::GetInstance()->_GetLayerMgr()->GetLayer(layerId);
     if(layer)
     {
         Falcon::CoreClass *cls = vm->findWKI("TileLayer")->asClass();
@@ -877,19 +870,19 @@ FALCON_FUNC fal_Screen_GetLayer(Falcon::VMachine *vm)
 FALCON_FUNC fal_Screen_GetSize(Falcon::VMachine *vm)
 {
     Falcon::CoreArray *arr = new Falcon::CoreArray(2);
-    arr->append((Falcon::int32)g_engine_ptr_->GetResX());
-    arr->append((Falcon::int32)g_engine_ptr_->GetResY());
+    arr->append((Falcon::int32)Engine::GetInstance()->GetResX());
+    arr->append((Falcon::int32)Engine::GetInstance()->GetResY());
     vm->retval(arr);
 }
 
 FALCON_FUNC fal_Screen_GetWidth(Falcon::VMachine *vm)
 {
-    vm->retval((Falcon::int64)g_engine_ptr_->GetResX());
+    vm->retval((Falcon::int64)Engine::GetInstance()->GetResX());
 }
 
 FALCON_FUNC fal_Screen_GetHeight(Falcon::VMachine *vm)
 {
-    vm->retval((Falcon::int64)g_engine_ptr_->GetResY());
+    vm->retval((Falcon::int64)Engine::GetInstance()->GetResY());
 }
 
 FALCON_FUNC fal_Screen_SetMode(Falcon::VMachine *vm)
@@ -899,20 +892,20 @@ FALCON_FUNC fal_Screen_SetMode(Falcon::VMachine *vm)
     uint32 y = vm->param(1)->forceIntegerEx();
     bool fs = vm->param(2)->isTrue();
     bool resiz = vm->param(3)->isTrue();
-    SDL_Surface *surface = g_engine_ptr_->GetSurface();
+    SDL_Surface *surface = Engine::GetInstance()->GetSurface();
     uint32 flags = (surface ? surface->flags & ~(SDL_RESIZABLE | SDL_FULLSCREEN) : 0);
     if(fs)
         flags |= SDL_FULLSCREEN;
     if(resiz)
         flags |= SDL_RESIZABLE;
-    g_engine_ptr_->InitScreen(x, y, g_engine_ptr_->GetBPP(), flags);
+    Engine::GetInstance()->InitScreen(x, y, Engine::GetInstance()->GetBPP(), flags);
 }
 
 FALCON_FUNC fal_Screen_SetBGColor(Falcon::VMachine *vm)
 {
     if(!vm->paramCount())
     {
-        g_engine_ptr_->SetDrawBG(false);
+        Engine::GetInstance()->SetDrawBG(false);
         return;
     }
 
@@ -921,23 +914,23 @@ FALCON_FUNC fal_Screen_SetBGColor(Falcon::VMachine *vm)
     uint8 r = uint8(vm->param(0)->forceInteger());
     uint8 g = uint8(vm->param(1)->forceInteger());
     uint8 b = uint8(vm->param(2)->forceInteger());
-    g_engine_ptr_->SetBGColor(r,g,b);
-    g_engine_ptr_->SetDrawBG(true);
+    Engine::GetInstance()->SetBGColor(r,g,b);
+    Engine::GetInstance()->SetDrawBG(true);
 }
 
 FALCON_FUNC fal_Screen_IsResizable(Falcon::VMachine *vm)
 {
-    vm->retval(g_engine_ptr_->IsResizable());
+    vm->retval(Engine::GetInstance()->IsResizable());
 }
 
 FALCON_FUNC fal_Screen_IsFullscreen(Falcon::VMachine *vm)
 {
-    vm->retval(g_engine_ptr_->IsFullscreen());
+    vm->retval(Engine::GetInstance()->IsFullscreen());
 }
 
 FALCON_FUNC fal_Screen_GetLayerSize(Falcon::VMachine *vm)
 {
-    vm->retval((int64)g_engine_ptr_->_GetLayerMgr()->GetMaxDim());
+    vm->retval((int64)Engine::GetInstance()->_GetLayerMgr()->GetMaxDim());
 }
 
 FALCON_FUNC fal_Screen_GetTileInfo(Falcon::VMachine *vm)
@@ -945,7 +938,7 @@ FALCON_FUNC fal_Screen_GetTileInfo(Falcon::VMachine *vm)
     FALCON_REQUIRE_PARAMS_EXTRA(2, "N, N");
     uint32 x = vm->param(0)->forceIntegerEx();
     uint32 y = vm->param(1)->forceIntegerEx();
-    LayerMgr *lm = g_engine_ptr_->_GetLayerMgr();
+    LayerMgr *lm = Engine::GetInstance()->_GetLayerMgr();
     if(!lm->GetInfoLayer())
     {
         throw new EngineError( Falcon::ErrorParam( Falcon::e_undef_state ).
@@ -965,7 +958,7 @@ FALCON_FUNC fal_Screen_SetTileInfo(Falcon::VMachine *vm)
     uint32 x = vm->param(0)->forceIntegerEx();
     uint32 y = vm->param(1)->forceIntegerEx();
     uint32 info = vm->param(2)->forceIntegerEx();
-    LayerMgr *lm = g_engine_ptr_->_GetLayerMgr();
+    LayerMgr *lm = Engine::GetInstance()->_GetLayerMgr();
     if(!lm->GetInfoLayer())
     {
         throw new EngineError( Falcon::ErrorParam( Falcon::e_undef_state ).
@@ -981,7 +974,7 @@ FALCON_FUNC fal_Screen_SetTileInfo(Falcon::VMachine *vm)
 
 FALCON_FUNC fal_Screen_CreateInfoLayer(Falcon::VMachine *vm)
 {
-    LayerMgr *lm = g_engine_ptr_->_GetLayerMgr();
+    LayerMgr *lm = Engine::GetInstance()->_GetLayerMgr();
     lm->CreateInfoLayer();
 }
 
@@ -989,7 +982,7 @@ FALCON_FUNC fal_Screen_GetSurface(Falcon::VMachine *vm)
 {
     Falcon::CoreClass *cls = vm->findWKI("Surface")->asClass();
     fal_Surface *fs = Falcon::dyncast<fal_Surface*>(fal_Surface::factory(cls, NULL, false));
-    fs->surface = g_engine_ptr_->GetSurface();
+    fs->surface = Engine::GetInstance()->GetSurface();
     fs->adopted = true;
     vm->retval(fs);
 }
@@ -997,8 +990,8 @@ FALCON_FUNC fal_Screen_GetSurface(Falcon::VMachine *vm)
 FALCON_FUNC fal_Screen_FrameLimit(Falcon::VMachine *vm)
 {
     FALCON_REQUIRE_PARAMS_EXTRA(2, "I, I")
-    g_engine_ptr_->FrameLimitMin((uint32)vm->param(0)->forceInteger());
-    g_engine_ptr_->FrameLimitMax((uint32)vm->param(1)->forceInteger());
+    Engine::GetInstance()->FrameLimitMin((uint32)vm->param(0)->forceInteger());
+    Engine::GetInstance()->FrameLimitMax((uint32)vm->param(1)->forceInteger());
 }
 
 fal_Font::~fal_Font()
@@ -1011,7 +1004,7 @@ FALCON_FUNC fal_Font_init( Falcon::VMachine *vm )
     FALCON_REQUIRE_PARAMS_EXTRA(1, "S image, S infofile");
     Falcon::AutoCString imgfile(vm->param(0)->asString());
     Falcon::AutoCString infofile(vm->param(1)->asString());
-    gcn::Font *fnt = g_engine_ptr_->LoadFont(infofile.c_str(), imgfile.c_str());
+    gcn::Font *fnt = Engine::GetInstance()->LoadFont(infofile.c_str(), imgfile.c_str());
     if(!fnt)
     {
         vm->self().setNil();
@@ -1045,7 +1038,7 @@ FALCON_FUNC fal_Color( Falcon::VMachine *vm )
 {
     FALCON_REQUIRE_PARAMS_EXTRA(3, "I, I, I [, I]")
     Falcon::Item *i_alpha = vm->param(3);
-    SDL_PixelFormat *fmt = g_engine_ptr_->GetSurface()->format;
+    SDL_PixelFormat *fmt = Engine::GetInstance()->GetSurface()->format;
     uint8 r = vm->param(0)->forceInteger();
     uint8 g = vm->param(1)->forceInteger();
     uint8 b = vm->param(2)->forceInteger();

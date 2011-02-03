@@ -42,6 +42,7 @@ public:
     inline static void SetQuit(bool q = true) { _quit = q; }
     inline static SDL_Joystick *GetJoystick(uint32 i) { return i < s_joysticks.size() ? s_joysticks[i] : NULL; }
     inline static uint32 GetJoystickCount(void) { return s_joysticks.size(); }
+    inline static Engine *GetInstance(void) { return s_instance; }
 
     inline void SetReset(bool r = true) { _reset = r; }
     inline bool IsReset(void) { return _reset; }
@@ -144,7 +145,7 @@ protected:
 private:
     static void _InitJoystick(void); // this does nothing if joystick support was not explicitly initialized in SDL_Init()
     static void _OnSignal(int s);
-
+    static Engine *s_instance;
     static bool _quit;
 };
 

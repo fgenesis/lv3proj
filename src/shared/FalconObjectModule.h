@@ -7,7 +7,6 @@ class TileLayer;
 class BasicTile;
 
 Falcon::Module *FalconObjectModule_create(void);
-void FalconObjectModule_SetEnginePtr(Engine *eng);
 
 
 class fal_ObjectCarrier;

@@ -50,6 +50,8 @@ public:
     EditorEngine();
     ~EditorEngine();
 
+    inline static EditorEngine *GetInstance(void) { return (EditorEngine*)Engine::GetInstance(); }
+
     virtual bool Setup(void);
 
     //virtual void OnWindowEvent(bool active);

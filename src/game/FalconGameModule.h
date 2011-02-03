@@ -5,7 +5,6 @@
 #include "Objects.h"
 
 Falcon::Module *FalconGameModule_create(void);
-void FalconGameModule_SetEnginePtr(Engine *e);
 
 
 #endif

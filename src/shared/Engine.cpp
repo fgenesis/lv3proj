@@ -16,6 +16,7 @@ volatile uint32 Engine::s_curFrameTime; // game time
 volatile uint32 Engine::s_lastFrameTime; // last frame's SDL_GetTicks()
 bool Engine::_quit;
 std::vector<SDL_Joystick*> Engine::s_joysticks;
+Engine *Engine::s_instance = NULL;
 
 Engine::Engine()
 : _screen(NULL), _fps(0), _sleeptime(0), _framecounter(0), _paused(false),
@@ -23,6 +24,7 @@ _debugFlags(EDBG_NONE), _reset(false), _bgcolor(0), _drawBackground(true),
 _fpsMin(60), _fpsMax(70)
 {
     log("Game Engine start.");
+    s_instance = this;
 
     _gcnImgLoader = new gcn::SDLImageLoaderManaged();
     _gcnGfx = new gcn::SDLGraphics();

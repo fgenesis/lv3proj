@@ -13,23 +13,16 @@
 
 class fal_TileLayer;
 
-GameEngine *g_engine_ptr = NULL;
-
-void FalconGameModule_SetEnginePtr(Engine *e)
-{
-    g_engine_ptr = (GameEngine*)e;
-}
-
 
 FALCON_FUNC fal_Physics_SetGravity(Falcon::VMachine *vm)
 {
     FALCON_REQUIRE_PARAMS_EXTRA(1, "N");
-    g_engine_ptr->physmgr->envPhys.gravity = float(vm->param(0)->forceNumeric());
+    GameEngine::GetInstance()->physmgr->envPhys.gravity = float(vm->param(0)->forceNumeric());
 }
 
 FALCON_FUNC fal_Physics_GetGravity(Falcon::VMachine *vm)
 {
-    vm->retval(g_engine_ptr->physmgr->envPhys.gravity);
+    vm->retval(GameEngine::GetInstance()->physmgr->envPhys.gravity);
 }
 
 

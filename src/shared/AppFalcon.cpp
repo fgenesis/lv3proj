@@ -22,8 +22,6 @@ AppFalcon::AppFalcon(Engine *e)
     mloader.alwaysRecomp(true);
     mloader.saveModules(false);
     mloader.delayRaise(true);
-    FalconObjectModule_SetEnginePtr(e);
-    FalconBaseModule_SetEnginePtr(e);
 }
 
 AppFalcon::~AppFalcon()
