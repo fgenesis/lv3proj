@@ -9,7 +9,6 @@ end
 
 class PackageSystem
 
-    static runLoadCtr = 0
     static _pkgList = nil // internally used like a stack
     
     init
@@ -33,7 +32,7 @@ class PackageSystem
     end
     
     // load a .lvpa file in directory "packages", or a subdir with that name
-    function Load(pkg, throw)
+    function Load(pkg, throw, skipPatches)
         > "PackageSystem:Load(", pkg, ")"
         p = "packages/" + pkg
         lvpa_exists = VFS.HasFile(p + ".lvpa")
@@ -78,6 +77,24 @@ class PackageSystem
         end
         
         self._PushPkg(pkg)
+        
+        // look for patches ("PACKAGE_NAME.patch.*")
+        if not skipPatches
+            > "PackageSystem: Scanning for patches..."
+            dirs = VFS.GetDirList("packages")
+            if not (dirs and len(dirs)) // just in case Enumerate() was not called before
+                > "PackageSystem: WARNING: Forcing re-enumerate"
+                self.Enumerate()
+                dirs = VFS.GetDirList()
+            end
+            
+            matchstr = pkg + ".patch."
+            for dir in dirs
+                if dir.startsWith(matchstr, true) // because we are nice to windows users, ignore case
+                    self.Load(dir, throw, true) // do not search for patches anymore
+                end
+            end
+        end
         
         if not ScriptLoader.LoadFile("package.fal", p + "/scripts", true) // load the initialization script (absolute path)
             > "ERROR: Package '", pkg, "': Loading the 'package.fal' script failed!"
