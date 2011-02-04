@@ -1,0 +1,111 @@
+/* Original code was taken from http://gargaj.umlaut.hu/processing/sketch_081001a/applet/ and heavily modified. Thx Gargaj :) */
+
+DELAY = 30
+
+
+sintab = arrayBuffer(256)
+delay = 0
+sfc = nil
+blacksfc = nil
+targetpos = [0, 30]
+oldwidth = nil
+SCREENSURFACE = Screen.GetSurface()
+pix = { => }
+blitfunc = { => }
+blackfunc = { => }
+
+for i = 0 to 255: sintab[i] = int(sin(i/256.0 * 3.141596 * 2) * 255)
+
+function updatehook(ms)
+    global sfc, sintab, delay, DELAY, oldwidth, blacksfc, pix, blitfunc, targetpos, SCREENSURFACE, blackfunc
+    delay += ms
+    if delay < DELAY: return
+    delay = 0
+    width, height = Screen.GetSize()
+    if width != oldwidth
+        sfc = Surface(width, 50)
+        pix = sfc.Pixel;
+        blacksfc = Surface(width, 50)
+        oldwidth = width
+        bpix = blacksfc.Pixel;
+        blackfunc = [blacksfc.BlitTo, sfc, nil, nil, true]
+        blitfunc = [sfc.BlitTo, SCREENSURFACE, nil, targetpos]
+        for y = 0 to height-1: for x = 0 to width-1: bpix(x,y, 0)
+    end
+    blackfunc()
+    
+    m = Engine.GetTime() >> 6
+    y = 0
+    while y < width
+        t = sintab[ ((y >> 3) + m) && 0xFF ] + 127
+        w1 = sintab[t && 0xFF]
+        w2 = sintab[(t+64) && 0xFF]
+        w1 >>= 3
+        w2 >>= 5
+        if w1 == 0: w1 = 1
+        if w2 == 0: w2 = 1
+        s = (50 - (w1 + w2)) >> 1
+        yr = y << 1
+        
+        if w1 > 0
+            xmul = 255/w1
+            x = 0
+            while x < w1
+                pix(y,s+x,   0xFF000000 || ((x*xmul)^^yr) << 16)
+                x++
+            end
+        end
+        
+        if w2 > 0
+            xmul = 255/w2
+            x = 0
+            sw1 = s+w1
+            while x < w2
+                pix(y,sw1+x,  0xFF000000 || ((x*xmul)^^yr) << 8)
+                x++
+            end
+        end
+        
+        if w2 < 0
+            w2p = -w2
+            xmul = 255/w2p
+            x = 0
+            while x < w2p
+                pix(y,s-x,    0xFF000000 || ((x*xmul)^^yr))
+                x++
+            end
+        end
+        
+        if w1 < 0
+            w1p = -w1
+            xmul = 255/w1p
+            sw2 = s+w2
+            x = 0
+            while x < w1p
+                q = (x*xmul)^^yr
+                pix(y,sw2-x,  0xFF000000 || (q << 16) || (q << 8))
+                x++
+            end
+        end
+        y++
+    end
+
+end
+
+function renderhook()
+    global blitfunc
+    blitfunc()
+end
+
+
+function RibbonStart()
+    RegisterRenderHook(renderhook)
+    RegisterUpdateHook("ribbon_test", updatehook)
+end
+
+function RibbonEnd()
+    UnregisterRenderHook(renderhook)
+    UnregisterUpdateHook("ribbon_test")
+end
+
+export RibbonStart, RibbonEnd

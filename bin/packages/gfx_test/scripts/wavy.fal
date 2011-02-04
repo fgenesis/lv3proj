@@ -1,0 +1,84 @@
+/* Original code was taken from http://gargaj.umlaut.hu/processing/sketch_080422a/applet/ and heavily modified. Thx Gargaj :) */
+
+DELAY = 30
+
+
+
+delay = 0
+width = 16 * 6
+height = 16 * 6
+sfc = Surface(width, height)
+targetpos = [0, 0]
+SCREENSURFACE = Screen.GetSurface()
+pix = sfc.Pixel
+blitfunc = [sfc.BlitTo, SCREENSURFACE, nil, targetpos]
+
+sintab = arrayBuffer(256)
+xtab = arrayBuffer(256)
+ytab = arrayBuffer(256)
+xidxtab = arrayBuffer(width)
+coltab = arrayBuffer(256)
+
+
+for i = 0 to 255
+    sintab[i] = int(sin(i/256.0 * 3.141596 * 3) * 127 + 127)
+    xtab[i] = sintab[i] * 3 + 64
+    ytab[i] = sintab[i] * 2 + 128
+    coltab[i] = (sin(i / 256.0 * 3.14196 * 2) + 1) * 0.5
+end
+
+function updatehook(ms)
+    global sintab, delay, DELAY, pix, width, height, ytab, xtab, xidxtab, coltab
+    delay += ms
+    if delay < DELAY: return
+    delay = 0
+    
+    m = Engine.GetTime() >> 6
+    y = 0
+    x = 0
+    rmul = coltab[(4 * m) && 0xFF]
+    gmul = coltab[(4 * m + 85) && 0xFF]
+    bmul = coltab[(4 * m + 171) && 0xFF]
+    
+    while x < width
+        xidxtab[x] = xtab[((x+m*2+64)&&0xFF)]
+        x++
+    end
+    
+    while y < height
+        x = 0
+        ytabval = ytab[(y + m*3 + 12) && 0xFF]
+        y2 = y*2
+        
+        while x < width
+             
+            nx = sintab[(( x*3 + ytabval) && 0xFF)];
+            ny = sintab[(( y2 + xidxtab[x]) && 0xFF)];
+            r = (nx ^^ ny)
+            g = int(r * gmul) << 8
+            b = int(r * bmul) << 16
+            a = r << 24
+            r = int(r * rmul)
+            p = r || g || b || a
+            pix(x,y, p)
+            
+            x++
+        end
+        
+        y++
+    end
+
+end
+
+
+function WavyStart()
+    RegisterRenderHook(blitfunc)
+    RegisterUpdateHook("wavy_test", updatehook)
+end
+
+function WavyEnd()
+    UnregisterRenderHook(blitfunc)
+    UnregisterUpdateHook("wavy_test")
+end
+
+export WavyStart, WavyEnd

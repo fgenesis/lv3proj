@@ -1,0 +1,60 @@
+pkg = Package()
+pkg.InitGame()
+
+pkg.LoadScript("ribbon.fal")
+pkg.LoadScript("wavy.fal")
+
+class EffectSelectionMenu from SinusMenu
+
+    _effects = [ => ]
+
+    function Setup()
+        self.Add( [self.ToggleEffect, "Ribbon"], "Toggle Ribbon" )
+        self.Add( [self.ToggleEffect, "Wavy"], "Toggle Wavy" )
+        self.Add( self.OnGoBack, "--- Back ---" )
+    end
+    
+    function OnGoBack()
+        Package.Shutdown()
+    end
+    
+    function OnUpdate()
+        sx, sy = Screen.GetSize()
+        self.x = int((sx - self.totalW) / 2)
+        self.y = int((sy - self.totalH) / 2)
+    end
+    
+    function ToggleEffect(effect)
+        on = self._effects.get(effect)
+        call = #(effect + (on ? "End" : "Start"))
+        TriggerSoon(call)
+        self._effects[effect] = not on
+    end
+    
+
+end
+
+function TriggerSoon(func)
+    CallScheduler.Schedule(func, 1)
+end
+
+
+function LoadFinal()
+    OpenMenu(EffectSelectionMenu)
+end
+
+function EscHandler()
+    Package.Shutdown()
+end
+
+function RawKeyHandler(inp)
+    ty, src, which, value = inp
+    if(ty == EVENT_TYPE_KEYBOARD and value)
+        if(which == SDLK.ESCAPE)
+            EscHandler()
+        end
+    end
+end
+
+pkg.Start(LoadFinal)
+RegisterRawInputHook("gfx_test", RawKeyHandler)
