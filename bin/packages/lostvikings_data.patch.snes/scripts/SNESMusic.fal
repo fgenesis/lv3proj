@@ -1,0 +1,18 @@
+
+Engine.LoadPropFile("music/snes/music.prop")
+
+LVMusic.Add("SNES", "ship", "snes/ship.ogg")
+LVMusic.Add("SNES", "prehistoria", "snes/prehistoria.ogg")
+LVMusic.Add("SNES", "egypt", "snes/egypt.ogg")
+LVMusic.Add("SNES", "factory", "snes/factory.ogg")
+LVMusic.Add("SNES", "wacky", "snes/wacky.ogg")
+
+// more to come (not yet dumped)
+//LVMusic.Add("SNES", "credits", "snes/credits.ogg")
+//LVMusic.Add("SNES", "death", "snes/death.ogg")
+//LVMusic.Add("SNES", "ending", "snes/ending.ogg")
+//LVMusic.Add("SNES", "intro", "snes/intro.ogg")
+//LVMusic.Add("SNES", "timewarp", "snes/timewarp.ogg")
+//LVMusic.Add("SNES", "title", "snes/title.ogg")
+
+LVMusic.SetSystem("SNES")

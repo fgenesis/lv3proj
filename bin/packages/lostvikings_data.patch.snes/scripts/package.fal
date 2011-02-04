@@ -1,0 +1,9 @@
+
+pkg = Package()
+pkg.InitData()
+
+function LoadFinal()
+    pkg.LoadScript("SNESMusic.fal")
+end
+
+pkg.Start(LoadFinal)

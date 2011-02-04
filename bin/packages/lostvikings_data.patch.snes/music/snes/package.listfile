@@ -1,0 +1,2 @@
+-p music/snes -s package.listfile
+-p music/snes music.prop egypt.ogg factory.ogg prehistoria.ogg ship.ogg wacky.ogg

@@ -1,0 +1,3 @@
+#include snes/package.listfile
+
+-p music -s package.listfile
