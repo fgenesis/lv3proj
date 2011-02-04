@@ -1,3 +1,5 @@
+-p scripts/game -s AmigaMusic.fal
+-p scripts/game -s LVMusic.fal
 -p scripts/game -s PlayerController.fal
 -p scripts/game -s PropertiesLoader.fal
 -p scripts/game -s gen.sh

@@ -1,6 +1,3 @@
--p music lv1_snes_ship.ogg
--p music lv1_amiga_intro.ogg
--p music lv1_snes_intro.ogg
+#include amiga/package.listfile
 
--p music -s music.prop
 -p music -s package.listfile

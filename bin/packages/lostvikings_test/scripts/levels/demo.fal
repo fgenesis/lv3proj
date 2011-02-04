@@ -152,7 +152,7 @@ class WinObject(level) from Object
 end
 
 function WinLevel(level)
-    Music.Play("lv1_amiga_intro.ogg")
+    Music.Play("title", "Amiga")
     Music.SetVolume(120)
     img = ImageObject("misc/win.png")
     img.SetPos(100,100)
@@ -369,8 +369,7 @@ lvl.Init()
 
 PlayerAliveCheck(lvl.player)
 
-Music.SetVolume(70)
-Music.Play("lv1_snes_ship.ogg")
+LVMusic.Play("ship")
 
 
 

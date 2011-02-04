@@ -1,0 +1,16 @@
+
+Engine.LoadPropFile("music/amiga/music.prop")
+
+LVMusic.Add("Amiga", "credits", "amiga/credits.mod")
+LVMusic.Add("Amiga", "death", "amiga/death.mod")
+LVMusic.Add("Amiga", "egypt", "amiga/egypt.mod")
+LVMusic.Add("Amiga", "ending", "amiga/ending.mod")
+LVMusic.Add("Amiga", "factory", "amiga/factory.mod")
+LVMusic.Add("Amiga", "intro", "amiga/intro.mod")
+LVMusic.Add("Amiga", "prehistoria", "amiga/prehistoria.mod")
+LVMusic.Add("Amiga", "ship", "amiga/ship.mod")
+LVMusic.Add("Amiga", "timewarp", "amiga/timewarp.mod")
+LVMusic.Add("Amiga", "title", "amiga/title.mod")
+LVMusic.Add("Amiga", "wacky", "amiga/wacky.mod")
+
+LVMusic.SetSystem("Amiga")

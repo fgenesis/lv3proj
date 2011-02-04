@@ -1,0 +1,56 @@
+// music selector script
+
+class LVMusic
+
+    static _mus = nil
+    static _sys = nil
+
+    init
+        raise "This class is a singeton and should not be instanced!"
+    end
+    
+    function Init()
+        self._mus = [ => ]
+    end
+    
+    function Add(system, name, file)
+        sys = self._mus.get(system)
+        if not sys
+            sys = [ => ]
+            self._mus[system] = sys
+        end
+        
+        sys[name] = file
+    end
+    
+    function Play(name, system) // system can be used to explicitly specify the system to be used, if its nil, use current setting
+        if not system: system = self._sys
+        sys = self._mus.get(system)
+        mus = sys.get(name)
+        if not mus
+            > "LVMusic: ERROR: No '", name, "' music for system '", self._sys, "'"
+            return false
+        end
+        Music.Play(sys[name])
+        return true
+    end
+    
+    function GetSystems()
+        return self._sys.keys()
+    end
+    
+    function SetSystem(system)
+        if system in self._mus
+            self._sys = system
+            return true
+        end
+        > "LVMusic: Unknown system: ", system
+        return false
+    end
+    
+end
+
+LVMusic.Init()
+
+
+export LVMusic
