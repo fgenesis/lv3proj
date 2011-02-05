@@ -31,7 +31,7 @@ class LVMusic
             > "LVMusic: ERROR: No '", name, "' music for system '", self._sys, "'"
             return false
         end
-        Music.Play(sys[name])
+        Music.Play(mus)
         return true
     end
     
