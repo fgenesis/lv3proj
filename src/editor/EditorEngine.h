@@ -3,7 +3,7 @@
 
 #include <set>
 
-#include "Engine.h"
+#include "GameEngine.h"
 #include "GuichanExt.h"
 #include "TileLayer.h"
 #include "LayerMgr.h"
@@ -22,7 +22,7 @@ class TileWindow;
 
 
 
-class EditorEngine : public Engine, public gcn::ActionListener, public gcn::MouseListener,
+class EditorEngine : public GameEngine, public gcn::ActionListener, public gcn::MouseListener,
     public gcn::KeyListener, public FileDialogCallback
 {
 protected:

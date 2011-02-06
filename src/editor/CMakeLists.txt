@@ -1,5 +1,5 @@
 
-include_directories (${SHARED_INCLUDE_DIR})
+include_directories (${GAMEENGINE_INCLUDE_DIR})
 
 set(editor_SRC
 BottomBarPanel.cpp
@@ -20,4 +20,4 @@ TileWindow.cpp
 
 add_executable (editor ${editor_SRC}) 
 install(TARGETS editor DESTINATION bin)
-target_link_libraries(editor shared guichan_ext guichan ${Falcon_ALL} ${ALL_SDL_LIBS})
+target_link_libraries(editor gameengine shared guichan_ext guichan ${Falcon_ALL} ${ALL_SDL_LIBS})

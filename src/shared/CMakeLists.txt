@@ -43,4 +43,4 @@ SDL_gfx/SDL_rotozoom.c
 
 include_directories (${TOP_INCLUDE_DIR}) 
 add_library(shared ${shared_SRC})
-target_link_libraries(shared ${SDL_ALL_LIBS} ${Falcon_ALL} libpng)
+target_link_libraries(shared ${SDL_ALL_LIBS} libpng)

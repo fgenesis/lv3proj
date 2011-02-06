@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="include;shared;guichan_ext"
+				AdditionalIncludeDirectories="include;shared;guichan_ext;gameengine"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -121,7 +121,7 @@
 				EnableIntrinsicFunctions="true"
 				FavorSizeOrSpeed="1"
 				WholeProgramOptimization="true"
-				AdditionalIncludeDirectories="include;shared;guichan_ext"
+				AdditionalIncludeDirectories="include;shared;guichan_ext;gameengine"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
 				StringPooling="true"
 				RuntimeLibrary="2"
@@ -186,14 +186,6 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\game\GameEngine.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\game\GameEngine.h"
-				>
-			</File>
-			<File
 				RelativePath=".\game\main.cpp"
 				>
 			</File>
@@ -201,26 +193,6 @@
 				RelativePath=".\game\main.h"
 				>
 			</File>
-			<Filter
-				Name="falcon"
-				>
-				<File
-					RelativePath=".\game\AppFalconGame.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\game\AppFalconGame.h"
-					>
-				</File>
-				<File
-					RelativePath=".\game\FalconGameModule.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\game\FalconGameModule.h"
-					>
-				</File>
-			</Filter>
 		</Filter>
 		<Filter
 			Name="Header Files"

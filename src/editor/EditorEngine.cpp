@@ -48,7 +48,7 @@ const char *defaultLayerNames[LAYER_MAX] =
 
 
 EditorEngine::EditorEngine()
-: Engine()
+: GameEngine()
 {
     _gcnImgLoader = new gcn::SDLImageLoaderManaged();
     _gcnGfx = new gcn::SDLGraphics();
@@ -84,16 +84,8 @@ EditorEngine::~EditorEngine()
 
 bool EditorEngine::Setup(void)
 {
-    // setup the VFS and the container to read from
-    LVPAFile *basepak = new LVPAFileReadOnly;
-    if(!basepak->LoadFrom("basepak.lvpa", LVPALOAD_SOLID))
-    {
-        logerror("EditorEngine::Setup: Can't open basepak.lvpa");
-        //return false; // not reason to quit, the files may be on disk, simply
-    }
-    resMgr.vfs.LoadBase(basepak, true); // basepak is auto-deleted later
-    resMgr.vfs.LoadFileSysRoot();
-    resMgr.vfs.Prepare();
+    if(!GameEngine::Setup())
+        return false;
 
     _gcnGui->setGraphics(_gcnGfx);
     _gcnGui->setInput(_gcnInput);

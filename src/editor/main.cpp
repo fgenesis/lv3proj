@@ -30,7 +30,7 @@ int main(int argc, char *argv[])
 
     try
     {
-        editor.InitScreen(1000,600,0,SDL_RESIZABLE);
+        editor.InitScreen(320,240,0,SDL_RESIZABLE);
         editor.SetTitle("Lost Vikings 3 Project - Level Editor");
         if(!editor.Setup())
         {
