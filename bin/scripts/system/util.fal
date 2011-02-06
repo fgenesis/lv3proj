@@ -105,6 +105,7 @@ end
 // <baseClass>:  the class ctor of the base class
 // <params>:     an array with params to pass (e.g. argv()) - NON-METHODIC!
 function super(caller, baseClass, params)
+    if not (params and len(params)): return // in this case, nothing to do, subclass already initialized with no params
     caller.apply(([baseClass] + params)().retrieve()) // some weird, dark magic happens here...
 end
 

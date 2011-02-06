@@ -255,7 +255,7 @@ Anim *ResourceMgr::LoadAnim(char *name)
         memblock *mb = resMgr.LoadTextFile((char*)fn.c_str());
         if(!mb)
         {
-            logerror("LoadAnimFile: Failed to open '%s'", fn.c_str());
+            logerror("LoadAnim: Failed to open '%s'", fn.c_str());
             return NULL;
         }
 
@@ -264,7 +264,7 @@ Anim *ResourceMgr::LoadAnim(char *name)
 
         if(!ani)
         {
-            logerror("LoadAnimFile: Failed to parse '%s'", fn.c_str());
+            logerror("LoadAnim: Failed to parse '%s'", fn.c_str());
             return NULL;
         }
 
@@ -275,6 +275,12 @@ Anim *ResourceMgr::LoadAnim(char *name)
             {
                 loadpath = AddPathIfNecessary(af->filename,relpath);
                 af->surface = resMgr.LoadImg((char*)loadpath.c_str()); // get all images referenced
+                if(!af->surface)
+                {
+                    delete ani; // its not yet registered, must simply delete
+                    logerror("LoadAnim: '%s': Failed to open referenced image '%s'", fn.c_str(), loadpath.c_str());
+                    return NULL;
+                }
                 af->callback.ptr(af->surface); // register callback for auto-deletion
             }
 

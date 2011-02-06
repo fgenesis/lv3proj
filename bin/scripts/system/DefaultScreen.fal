@@ -5,6 +5,7 @@ function InitDefaultScreen()
     > "Default screen layout created"
 end
 
-InitDefaultScreen()
+// this is broadcasted by init.fal when script initialization is complete
+subscribe("INIT_DONE", InitDefaultScreen)
 
 //export
