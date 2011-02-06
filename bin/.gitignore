@@ -1,5 +1,5 @@
 # Exclude DLLs & more compiler output
-# they are supposed to be stored in src/lib or compiled
+# they are supposed to be stored in src/lib/win32 or compiled
 *.dll
 *.lib
 *.exe
@@ -10,3 +10,11 @@
 
 # generated container files
 *.lvpa
+
+# maps
+*.lvpm
+
+# others
+editor_log.txt
+game_log.txt
+saved_data/*
