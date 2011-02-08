@@ -63,7 +63,7 @@ void BottomBarPanel::action(const gcn::ActionEvent& ae)
     }
     else if(src == &btnQuit)
     {
-        _engine->Shutdown(); // TODO: "Do you really want to...? YES DAMNIT!"
+        _engine->SetQuit(true); // TODO: "Do you really want to...? YES DAMNIT!"
     }
     else if(src == &btnSaveAs)
     {

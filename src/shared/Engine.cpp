@@ -62,7 +62,7 @@ Engine::~Engine()
 
 void Engine::Shutdown(void)
 {
-    _quit = true;
+    // this should not be called from inside Engine::Run()
 }
 
 void Engine::_OnSignal(int s)
