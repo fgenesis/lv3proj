@@ -67,15 +67,17 @@ void DirLoadHelper(std::string dirname, TileLayer *layer, VFSDir *dir, uint32 ma
         BasicTile *tile = AnimatedTile::New(fn.c_str());
         if(tile)
         {
-            SDL_Surface *sf = tile->GetSurface();
-            if(sf->w == 16 && sf->h == 16) // TODO: make less hacky
+            if(SDL_Surface *sf = tile->GetSurface())
             {
-                logdebug("Using '%s' as tile", fn.c_str());
-                layer->SetTile(pos % maxwidth, pos / maxwidth, tile);
-                ++pos;
+                if(sf->w == 16 && sf->h == 16) // TODO: make less hacky
+                {
+                    logdebug("Using '%s' as tile", fn.c_str());
+                    layer->SetTile(pos % maxwidth, pos / maxwidth, tile);
+                    ++pos;
+                }
+                else
+                    logdebug("Skipping '%s' as tile, wrong size", fn.c_str());
             }
-            else
-                logdebug("Skipping '%s' as tile, wrong size", fn.c_str());
 
             tile->ref--;
         }

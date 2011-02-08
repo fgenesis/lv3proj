@@ -275,13 +275,13 @@ Anim *ResourceMgr::LoadAnim(char *name)
             {
                 loadpath = AddPathIfNecessary(af->filename,relpath);
                 af->surface = resMgr.LoadImg((char*)loadpath.c_str()); // get all images referenced
-                if(!af->surface)
+                if(af->surface)
+                    af->callback.ptr(af->surface); // register callback for auto-deletion
+                else
                 {
-                    delete ani; // its not yet registered, must simply delete
                     logerror("LoadAnim: '%s': Failed to open referenced image '%s'", fn.c_str(), loadpath.c_str());
-                    return NULL;
+                    // we keep the NULL-ptr anyways
                 }
-                af->callback.ptr(af->surface); // register callback for auto-deletion
             }
 
          logdebug("LoadAnim: '%s' [%s]" , fn.c_str(), vfs.GetFile(fn.c_str())->getSource()); // the file must exist
