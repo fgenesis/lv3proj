@@ -1,3 +1,5 @@
 #include system/basepak.listfile
+#include game/basepak.listfile
+#include editor/basepak.listfile
 
 -s -p scripts init.fal basepak.listfile

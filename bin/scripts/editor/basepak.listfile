@@ -1,0 +1,2 @@
+-p scripts/editor -s basepak.listfile
+-p scripts/editor -s gen.sh
