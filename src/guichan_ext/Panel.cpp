@@ -10,6 +10,7 @@ gcn::Panel::Panel(int initialSpaceX, int initialSpaceY)
     _usedy = 0;
     _nextx = initialSpaceX;
     _nexty = initialSpaceY;
+    _maxheight = 0;
     _spacingX = initialSpaceX;
     _spacingY = initialSpaceY;
     setFocusable(false);
