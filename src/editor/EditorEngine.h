@@ -48,7 +48,7 @@ protected:
 
 public:
     EditorEngine();
-    ~EditorEngine();
+    virtual ~EditorEngine();
 
     inline static EditorEngine *GetInstance(void) { return (EditorEngine*)Engine::GetInstance(); }
 
@@ -62,7 +62,7 @@ public:
     void SaveData(void);
     void LoadData(void);
 
-    void SetupInterface(void); // assumes widgets are already created. adjusts & repositions them
+    void SetupInterface(void); // assumes widgets are already created. adjusts & repositions them)
     void SetupInterfaceLayers(void);
     void SetupEditorLayers(void);
     void ToggleVisible(gcn::Widget *w);

@@ -32,6 +32,7 @@ protected:
 
     virtual void _Process(uint32 ms);
     virtual void _Render(void);
+    virtual void _PostRender(void);
     virtual void _Reset(void);
 
     bool _wasInit;

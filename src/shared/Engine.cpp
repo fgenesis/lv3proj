@@ -21,7 +21,7 @@ Engine *Engine::s_instance = NULL;
 Engine::Engine()
 : _screen(NULL), _fps(0), _sleeptime(0), _framecounter(0), _paused(false),
 _debugFlags(EDBG_NONE), _reset(false), _bgcolor(0), _drawBackground(true),
-_fpsMin(60), _fpsMax(70)
+_fpsMin(60), _fpsMax(70), falcon(NULL)
 {
     log("Game Engine start.");
     s_instance = this;
@@ -345,6 +345,12 @@ void Engine::_Render(void)
         SDL_FillRect(GetSurface(), NULL, _bgcolor);
 
     _layermgr->Render();
+
+    _PostRender();
+}
+
+void Engine::_PostRender(void)
+{
     SDL_Flip(_screen);
 }
 

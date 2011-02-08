@@ -300,6 +300,11 @@ void GameEngine::_Render(void)
     // -end-
 #endif
 
+    _PostRender();
+}
+
+void GameEngine::_PostRender(void)
+{
     // TODO: cache this on init and call then without invoking findGlobalItem() all the time
     Falcon::Item *item = falcon->GetVM()->findGlobalItem("PostRender");
     if(item && item->isCallable())
@@ -317,7 +322,7 @@ void GameEngine::_Render(void)
 
     }
 
-    SDL_Flip(_screen);
+    Engine::_PostRender();
 }
 
 void GameEngine::_Process(uint32 ms)

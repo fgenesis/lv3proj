@@ -139,7 +139,7 @@ void EditorEngine::OnWindowResize(uint32 newx, uint32 newy)
 void EditorEngine::_Process(uint32 ms)
 {
     _gcnGui->logic();
-    Engine::_Process(ms);
+    GameEngine::_Process(ms);
 }
 
 
@@ -148,7 +148,7 @@ void EditorEngine::_Render(void)
     // draw everything related to guichan
     _gcnGui->draw();
 
-    SDL_Flip(_screen);
+    GameEngine::_PostRender();
 }
 
 void EditorEngine::SetupEditorLayers(void)

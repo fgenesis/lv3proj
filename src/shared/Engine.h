@@ -29,6 +29,7 @@ class Engine
 public:
     Engine();
     virtual ~Engine();
+
     void HookSignals(void);
     void UnhookSignals(void);
     static void PrintSystemSpecs(void);
@@ -114,6 +115,7 @@ protected:
     virtual void _ProcessEvents(void);
     virtual void _CalcFPS(void);
     virtual void _Render(void);
+    virtual void _PostRender(void);
     virtual void _Process(uint32 ms);
     virtual void _Reset(void);
 
