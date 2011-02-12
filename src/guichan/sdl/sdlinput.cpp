@@ -240,7 +240,8 @@ namespace gcn
 
     int SDLInput::convertSDLEventToGuichanKeyValue(SDL_Event event)
     {
-        int value = -1;
+        //int value = -1;
+        int value = event.key.keysym.sym; // FG: changed this
 
         switch (event.key.keysym.sym)
         {
