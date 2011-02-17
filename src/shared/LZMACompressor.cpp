@@ -25,7 +25,7 @@ LZMACompressor::LZMACompressor()
 {
 }
 
-void LZMACompressor::Compress(uint32 level)
+void LZMACompressor::Compress(uint32 level, ProgressCallback pcb /* = NULL */)
 {
     if( _iscompressed || (!size()))
         return;
@@ -44,7 +44,7 @@ void LZMACompressor::Compress(uint32 level)
     alloc.Free = myLzmaFree;
 
     ICompressProgress progress;
-    progress.Progress = myLzmaProgressDummy;
+    progress.Progress = pcb ? pcb : myLzmaProgressDummy;
 
     SizeT propsSize = sizeof(CLzmaEncProps);
     uint32 result = LzmaEncode(buf, &newsize, this->contents(), oldsize, &props, &_propsEnc, &propsSize, 0, &progress, &alloc, &alloc);

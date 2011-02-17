@@ -8,8 +8,10 @@
 class LZMACompressor : public ByteBuffer
 {
 public:
+    typedef int (*ProgressCallback)(void *, uint64 , uint64);
+
     LZMACompressor();
-    void Compress(uint32 level = 5);
+    void Compress(uint32 level = 1, ProgressCallback pcb = NULL);
     void Decompress(uint8 propsEnc);
     bool Compressed(void) { return _iscompressed; }
     void Compressed(bool b) { _iscompressed = b; }

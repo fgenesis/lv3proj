@@ -21,6 +21,7 @@ MapFile.cpp
 ObjectMgr.cpp
 Objects.cpp
 PhysicsSystem.cpp
+ProgressBar.cpp
 PropParser.cpp
 ResourceMgr.cpp
 SDL_func.cpp

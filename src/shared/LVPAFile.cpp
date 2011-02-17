@@ -2,9 +2,22 @@
 #include "MyCrc32.h"
 #include "LZMACompressor.h"
 #include "LVPAFile.h"
+#include "ProgressBar.h"
 
-const char* gMagic = "LVPA";
-const uint32 gVersion = 0;
+static const char* gMagic = "LVPA";
+static const uint32 gVersion = 0;
+
+static ProgressBar *gProgress = NULL;
+
+static int drawCompressProgressBar(void *, uint64 in, uint64 out)
+{
+    if(gProgress)
+    {
+        gProgress->done = uint32(in) / 1024; // show in kB
+        gProgress->Update();
+    }
+    return 0; // SZ_OK
+}
 
 
 ByteBuffer &operator >> (ByteBuffer& bb, LVPAMasterHeader& hdr)
@@ -407,6 +420,10 @@ bool LVPAFile::SaveAs(const char *fn, uint8 compression /* = LVPA_DEFAULT_LEVEL 
     if(!outfile)
         return false;
 
+    // compressing is possibly going to take some time, better to show a progress bar
+    ProgressBar bar;
+    gProgress = &bar;
+
     // this is an invalid setting for the solid block
     if(compression == LVPACOMP_INHERIT)
         compression = LVPA_DEFAULT_LEVEL;
@@ -446,6 +463,9 @@ bool LVPAFile::SaveAs(const char *fn, uint8 compression /* = LVPA_DEFAULT_LEVEL 
         // for stats
         _realSize += h.realSize;
     }
+
+    bar.total = _realSize / 1024; // we know the total size now, show in kB
+
     if(solidSize)
     {
         zsolid.reserve(solidSize);
@@ -468,7 +488,7 @@ bool LVPAFile::SaveAs(const char *fn, uint8 compression /* = LVPA_DEFAULT_LEVEL 
 
         LVPAFileHeader solidHeader;
         solidHeader.filename = ""; // is defined to be a file with no name
-
+        
         solidHeader.realSize = zsolid.size();
         {
             CRC32 crc;
@@ -477,7 +497,8 @@ bool LVPAFile::SaveAs(const char *fn, uint8 compression /* = LVPA_DEFAULT_LEVEL 
             solidHeader.crc = crc.Result();
         }
         if(compression != LVPACOMP_NONE)
-            zsolid.Compress(compression);
+            zsolid.Compress(compression, drawCompressProgressBar);
+       
         solidHeader.flags = zsolid.Compressed() ? LVPAFLAG_PACKED : LVPAFLAG_NONE;
         solidHeader.packedSize = zsolid.size();
         solidHeader.props = zsolid.GetEncodedProps();
@@ -488,6 +509,8 @@ bool LVPAFile::SaveAs(const char *fn, uint8 compression /* = LVPA_DEFAULT_LEVEL 
         fwrite(zsolid.contents(), zsolid.size(), 1, outfile);
         zhdr << solidHeader;
         solidHeader.good = true;
+
+        bar.PartialFix(); // solid part is now done
 
         // for stats
         _packedSize += solidHeader.packedSize;
@@ -516,12 +539,13 @@ bool LVPAFile::SaveAs(const char *fn, uint8 compression /* = LVPA_DEFAULT_LEVEL 
             {
                 LZMACompressor compr;
                 compr.append(h.data.ptr, h.data.size);
-                compr.Compress(lvl);
+                compr.Compress(lvl, drawCompressProgressBar);
                 if(compr.Compressed())
                     h.flags |= LVPAFLAG_PACKED;
                 h.packedSize = compr.size();
                 h.props = compr.GetEncodedProps();
                 fwrite(compr.contents(), compr.size(), 1, outfile);
+                
             }
             else
             {
@@ -529,13 +553,15 @@ bool LVPAFile::SaveAs(const char *fn, uint8 compression /* = LVPA_DEFAULT_LEVEL 
                 h.props = 0;
                 fwrite(h.data.ptr, h.data.size, 1, outfile);
             }
-
+            bar.PartialFix();
             // for stats
             _packedSize += h.packedSize;
         }
 
         zhdr << h;
     }
+
+    gProgress = NULL; // here, we don't need the global ptr anymore
 
     {
         CRC32 hcrc;
@@ -564,6 +590,8 @@ bool LVPAFile::SaveAs(const char *fn, uint8 compression /* = LVPA_DEFAULT_LEVEL 
     fwrite(zhdr.contents(), zhdr.size(), 1, outfile);
 
     fclose(outfile);
+
+    bar.Finalize();
 
     return true;
 }
