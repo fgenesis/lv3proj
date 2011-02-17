@@ -261,6 +261,14 @@ bool LVPAFile::LoadFrom(const char *fn, LVPALoadFlags loadFlags)
     DEBUG(logdebug("master: packed size: %u", masterHdr.packedHdrSize));
     DEBUG(logdebug("master: real size: %u", masterHdr.realHdrSize));
 
+    // sanity check
+    if( !(masterHdr.hdrEntries && masterHdr.packedHdrSize && masterHdr.realHdrSize) )
+    {
+        logerror("Can't read headers, file contains no valid data");
+        _CloseFile();
+        return false;
+    }
+
     // ... space for additional data/headers here...
 
     // seek to the file header's offset if we are not yet there
