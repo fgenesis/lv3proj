@@ -38,6 +38,21 @@ void EditorEngine::keyPressed(gcn::KeyEvent& ke)
         panMain->SetActiveLayer((panMain->GetActiveLayerId() + LAYER_MAX - 1) % LAYER_MAX);
         break;
 
+    case 's': case 'S':
+        if(ke.isControlPressed())
+        {
+            if(ke.isShiftPressed())
+                _fileDlg->Open(true, "map");
+            else
+                _SaveCurrentMap();
+        }
+        break;
+
+    case 'o': case 'O':
+        if(ke.isControlPressed())
+            _fileDlg->Open(false, "map");
+        break;
+
         // TODO: below, fix for tile size != 16
     case gcn::Key::UP:
         PanDrawingArea(0, -16 * (ke.isControlPressed() ? 5 : 1) );
@@ -138,13 +153,11 @@ void EditorEngine::FileChosenCallback(FileDialog *dlg)
         std::string fn = dlg->GetFileName();
         if(dlg->IsSave())
         {
-            logdetail("Saving map to '%s'", fn.c_str());
-            SaveCurrentMapAs(fn.c_str());
+            _SaveCurrentMapAs(fn.c_str());
         }
         else
         {
-            logdetail("Loading map from '%s'", fn.c_str());
-            if(!LoadMapFile(fn.c_str()))
+            if(!_LoadMapFile(fn.c_str()))
             {
                 logerror("'%s' can't be loaded, invalid?", fn.c_str());
                 return; // keep file dialog open

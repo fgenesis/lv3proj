@@ -30,6 +30,7 @@ protected:
     gcn::Label laCurFolder;
     gcn::Button btnNext;
     gcn::Button btnPrev;
+    gcn::Button btnClose;
     gcn::Panel pBottom;
 };
 

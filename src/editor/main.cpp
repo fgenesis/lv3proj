@@ -16,7 +16,7 @@ int main(int argc, char *argv[])
 
     EditorEngine::PrintSystemSpecs();
 
-    SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO);
+    SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO | SDL_INIT_JOYSTICK);
     SDL_EnableUNICODE(1);
     SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY, SDL_DEFAULT_REPEAT_INTERVAL);
 

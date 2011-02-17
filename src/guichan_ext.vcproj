@@ -218,6 +218,34 @@
 				RelativePath=".\guichan_ext\SelectionFramePanel.h"
 				>
 			</File>
+			<Filter
+				Name="menu"
+				>
+				<File
+					RelativePath=".\guichan_ext\MenuBar.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\guichan_ext\MenuBar.h"
+					>
+				</File>
+				<File
+					RelativePath=".\guichan_ext\MenuButton.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\guichan_ext\MenuButton.h"
+					>
+				</File>
+				<File
+					RelativePath=".\guichan_ext\PopupMenu.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\guichan_ext\PopupMenu.h"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="Header Files"

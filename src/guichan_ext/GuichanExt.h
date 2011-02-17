@@ -5,5 +5,8 @@
 #include "ListBox2.h"
 #include "GreedyTextField.h"
 #include "SelectionFramePanel.h"
+#include "MenuBar.h"
+#include "MenuButton.h"
+#include "PopupMenu.h"
 
 #endif

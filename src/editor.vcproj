@@ -288,6 +288,18 @@
 					RelativePath=".\editor\TileWindow.h"
 					>
 				</File>
+				<Filter
+					Name="Menus"
+					>
+					<File
+						RelativePath=".\editor\TopMenus.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\editor\TopMenus.h"
+						>
+					</File>
+				</Filter>
 			</Filter>
 		</Filter>
 		<Filter

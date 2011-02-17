@@ -8,9 +8,20 @@
 #include "ByteBuffer.h"
 #include "LayerPanel.h"
 
-
-void EditorEngine::SaveCurrentMapAs(const char *fn)
+void EditorEngine::_SaveCurrentMap(void)
 {
+    _SaveCurrentMapAs(_currentMapFileName.c_str());
+}
+
+void EditorEngine::_SaveCurrentMapAs(const char *fn)
+{
+    if(!(fn && *fn))
+    {
+        logerror("_SaveCurrentMapAs: Empty file name!");
+        return;
+    }
+
+    logdetail("Saving map to '%s'", fn);
     VFSFile *vf = resMgr.vfs.GetFile(fn);
     if(!vf)
     {
@@ -35,12 +46,13 @@ void EditorEngine::SaveCurrentMapAs(const char *fn)
 
 }
 
-bool EditorEngine::LoadMapFile(const char *fn)
+bool EditorEngine::_LoadMapFile(const char *fn)
 {
+    logdetail("Loading map from '%s'", fn);
     memblock *mb = resMgr.LoadFile((char*)fn);
     if(!mb)
     {
-        logerror("EditorEngine::LoadMapFile: File not found: '%s'", fn);
+        logerror("EditorEngine::_LoadMapFile: File not found: '%s'", fn);
         return false;
     }
 
@@ -52,7 +64,7 @@ bool EditorEngine::LoadMapFile(const char *fn)
     resMgr.Drop(mb, true); // have to delete this file from memory immediately
     if(!mgr)
     {
-        logerror("EditorEngine::LoadMapFile: Error loading file: '%s' as map", fn);
+        logerror("EditorEngine::_LoadMapFile: Error loading file: '%s' as map", fn);
         return false;
     }
     ASSERT(mgr == _layermgr); // it should not return something else; in this case it has allocated a new mgr, what we dont want here
@@ -75,6 +87,8 @@ bool EditorEngine::LoadMapFile(const char *fn)
     }
 
     panLayers->UpdateSelection();
+
+    _currentMapFileName = fn; // for quick save without entering filename
 
     return true;
 }

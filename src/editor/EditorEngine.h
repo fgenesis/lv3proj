@@ -16,7 +16,7 @@ class TileboxPanel;
 class DrawAreaPanel;
 class BottomBarPanel;
 class TileWindow;
-
+class TopToolsMenu;
 
 #define PREVIEWLAYER_MAX_SIZE 4
 
@@ -86,6 +86,7 @@ public:
     inline TileboxPanel *GetTileboxPanel(void) { return panTilebox; }
     inline TileWindow *GetTileWnd(void) { return wndTiles; }
 
+    void _SaveCurrentMap(void);
 
 protected:
     void _CreateInterfaceWidgets(void); // create the widgets only (to be called on startup
@@ -111,13 +112,16 @@ protected:
     BottomBarPanel *panBottom; // bottom panel with all the buttons
     TileWindow *wndTiles; // large tile window
     LayerPanel *panLayers; // layer settings
-    
-    // gui misc config
+    gcn::MenuBar *topMenu; // the horizontal menu bar
+    TopToolsMenu *toolsMenu; // we need a pointer to this menu, because we need to update the text labels
+
+    // gui misc config / etc
     uint32 tileboxCols;
+    std::string _currentMapFileName;
 
 private:
-    void SaveCurrentMapAs(const char *fn);
-    bool LoadMapFile(const char *fn);
+    void _SaveCurrentMapAs(const char *fn);
+    bool _LoadMapFile(const char *fn);
 
 
 };
