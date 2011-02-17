@@ -16,6 +16,7 @@ TileboxPanel.cpp
 TileLayerPanel.cpp
 TilesHandler.cpp
 TileWindow.cpp
+TopMenus.cpp
 )
 
 add_executable (editor ${editor_SRC}) 

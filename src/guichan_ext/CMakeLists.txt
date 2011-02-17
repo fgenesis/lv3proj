@@ -5,7 +5,10 @@ set(guichan_ext_SRC
 FileDialog.cpp
 GreedyTextField.cpp
 ListBox2.cpp
+MenuBar.cpp
+MenuButton.cpp
 Panel.cpp
+PopupMenu.cpp
 SDLImageLoaderManaged.cpp
 SDLImageManaged.cpp
 SelectionFramePanel.cpp
