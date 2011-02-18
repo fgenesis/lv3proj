@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include "PopupMenu.h"
 
 namespace gcn {
