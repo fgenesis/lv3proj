@@ -180,7 +180,7 @@ void VFSFileReal::dropBuf(bool del)
 // ------------- VFSFileMem -----------------------
 
 VFSFileMem::VFSFileMem(const char *name, uint8 *buf, uint32 size, bool copy /* = true */)
-: _mybuf(!copy), _size(size), _pos(0)
+: _mybuf(copy), _size(size), _pos(0)
 {
     DEBUG(ASSERT(buf));
     _setName(name);
