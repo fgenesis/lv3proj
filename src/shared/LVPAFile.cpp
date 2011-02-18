@@ -200,13 +200,18 @@ memblock LVPAFile::Get(uint32 index)
     return _LoadFile(hdrRef);
 }
 
-void LVPAFile::Free(const char  *fn)
+void LVPAFile::Free(const char *fn)
 {
     LVPAIndexMap::iterator it = _indexes.find(fn);
     if(it == _indexes.end())
         return;
 
-    LVPAFileHeader& hdrRef = _headers[it->second];
+    Free(it->second);
+}
+
+void LVPAFile::Free(uint32 id)
+{
+    LVPAFileHeader& hdrRef = _headers[id];
     if(hdrRef.data.ptr)
     {
         delete [] hdrRef.data.ptr;
@@ -215,13 +220,18 @@ void LVPAFile::Free(const char  *fn)
     hdrRef.data.size = 0;
 }
 
-void LVPAFile::Drop(const char  *fn)
+void LVPAFile::Drop(const char *fn)
 {
     LVPAIndexMap::iterator it = _indexes.find(fn);
     if(it == _indexes.end())
         return;
 
-    LVPAFileHeader& hdrRef = _headers[it->second];
+    Drop(it->second);
+}
+
+void LVPAFile::Drop(uint32 id)
+{
+    LVPAFileHeader& hdrRef = _headers[id];
     hdrRef.data.ptr = NULL;
     hdrRef.data.size = 0;
 }

@@ -103,8 +103,11 @@ public:
     memblock Get(uint32 index);
     void Clear(void); // free all
     virtual bool Delete(const char *fn); // removes a file from the container and frees up memory. returns false if the file was not found.
+
     void Free(const char *fn); // frees the memory associated with a file, leaving it in the container. if requested again, it will be loaded from disk.
+    void Free(uint32 id);
     void Drop(const char *fn); // drops our reference to the file, so it will be loaded again from disk if required.
+    void Drop(uint32 id);
 
     inline uint32 Count(void) const { return _indexes.size(); }
     inline uint32 HeaderCount(void) const { return _headers.size(); }

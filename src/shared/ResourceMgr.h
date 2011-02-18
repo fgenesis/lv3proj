@@ -28,50 +28,63 @@ class ResourceMgr
 
     struct ResStruct
     {
-        ResStruct() : rt(RESTYPE_MEMBLOCK), count(1) {}
-        ResStruct(ResourceType r) : rt(r), count(1) {}
+        ResStruct() : rt(RESTYPE_MEMBLOCK), count(1), depdata(NULL) {}
+        ResStruct(ResourceType r, void *dep = NULL) : rt(r), count(1), depdata(dep) {}
         volatile Falcon::int32 count;
         ResourceType rt;
+        void *depdata;
     };
 
     typedef std::map<void*, ResStruct> PtrCountMap;
     typedef std::map<std::string, void*> FileRefMap;
 
 public:
+    ResourceMgr();
     ~ResourceMgr();
 
     template <class T> inline void Drop(T *ptr, bool del = false) { _DecRef((void*)ptr, del); }
     void DropUnused(void);
 
-    SDL_Surface *LoadImg(char *name);
-    Anim *LoadAnim(char *name);
-    Mix_Music *LoadMusic(char *name);
-    Mix_Chunk *LoadSound(char *name);
-    memblock *LoadFile(char *name);
-    memblock *LoadTextFile(char *name);
-    void SetPropForFile(char *fn, char *prop, char *what);
-    std::string GetPropForFile(char *fn, char *prop);
-    std::string GetPropForMusic(char *fn, char *prop) { return GetPropForFile((char*)(std::string("music/") + fn).c_str(), prop); }
+    SDL_Surface *LoadImg(const char *name);
+    Anim *LoadAnim(const char *name);
+    Mix_Music *LoadMusic(const char *name);
+    Mix_Chunk *LoadSound(const char *name);
+    memblock *LoadFile(const char *name);
+    memblock *LoadTextFile(const char *name);
+    void SetPropForFile(const char *fn, const char *prop, const char *what);
+    std::string GetPropForFile(const char *fn, const char *prop);
+    std::string GetPropForMusic(const char *fn, const char *prop) { return GetPropForFile((std::string("music/") + fn).c_str(), prop); }
+    uint32 GetUsedCount(void); // amount of resources
+    uint32 GetUsedMem(void); // estimated total resource memory consumption
 
     VFSHelper vfs;
     DeletablePool pool;
 
 private:
-    inline void *_GetPtr(std::string& fn)
+    memblock *_LoadFileInternal(const char *name, bool isTmp);
+    memblock *_LoadTextFileInternal(const char *name, bool isTmp);
+
+    inline void *_GetPtr(const std::string& fn)
     {
         FileRefMap::iterator it = _frmap.find(fn);
         return (it == _frmap.end() ? NULL : it->second);
     }
-    inline void _SetPtr(std::string& fn, void *ptr)
+    inline void _SetPtr(const std::string& fn, void *ptr)
     {
         _frmap[fn] = ptr;
     }
-    void _IncRef(void *ptr, ResourceType rt);
+    void _InitRef(void *ptr, ResourceType rt, void *depdata = NULL);
+    void _IncRef(void *ptr);
     void _DecRef(void *ptr, bool del = false);
-    void _Delete(void *ptr, ResourceType rt);
+    void _Delete(void *ptr, ResStruct& rt);
     PtrCountMap _ptrmap;
     FileRefMap _frmap;
     PropMap _fprops;
+
+    void _accountMem(uint32 bytes);
+    void _unaccountMem(uint32 bytes);
+    uint32 _usedMem;
+    //Mutex _memMutex; // this is not (yet) needed; unlike ref-counting, memory allocation/deallocation is done in a single thread
 };
 
 

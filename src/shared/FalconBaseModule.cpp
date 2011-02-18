@@ -853,6 +853,21 @@ FALCON_FUNC fal_Engine_JoystickInfo(Falcon::VMachine *vm)
         vm->retnil();
 }
 
+FALCON_FUNC fal_Engine_ResourceCount(Falcon::VMachine *vm)
+{
+    vm->retval((Falcon::int64)resMgr.GetUsedCount());
+}
+
+FALCON_FUNC fal_Engine_ResourceMem(Falcon::VMachine *vm)
+{
+    vm->retval((Falcon::int64)resMgr.GetUsedMem());
+}
+
+FALCON_FUNC fal_Engine_ResourceCleanup(Falcon::VMachine *vm)
+{
+    resMgr.DropUnused();
+}
+
 FALCON_FUNC fal_Screen_GetLayer(Falcon::VMachine *vm)
 {
     FALCON_REQUIRE_PARAMS(1);
@@ -1065,6 +1080,9 @@ Falcon::Module *FalconBaseModule_create(void)
     m->addClassMethod(clsEngine, "Reset", fal_Engine_Reset);
     m->addClassMethod(clsEngine, "JoystickCount", fal_Engine_JoystickCount);
     m->addClassMethod(clsEngine, "JoystickInfo", fal_Engine_JoystickInfo);
+    m->addClassMethod(clsEngine, "ResourceCount", fal_Engine_ResourceCount);
+    m->addClassMethod(clsEngine, "ResourceMem", fal_Engine_ResourceMem);
+    m->addClassMethod(clsEngine, "ResourceCleanup", fal_Engine_ResourceCleanup);
 
     Falcon::Symbol *symScreen = m->addSingleton("Screen");
     Falcon::Symbol *clsScreen = symScreen->getInstance();

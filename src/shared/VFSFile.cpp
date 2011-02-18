@@ -12,11 +12,7 @@ VFSFileReal::VFSFileReal(const char *name /* = NULL */) : VFSFile()
 VFSFileReal::~VFSFileReal()
 {
     close();
-    if(_buf)
-    {
-        delete [] _buf;
-        _buf = NULL;
-    }
+    dropBuf(true);
 }
 
 void VFSFileReal::_setName(const char *n)
@@ -34,11 +30,7 @@ bool VFSFileReal::open(const char *fn /* = NULL */, char *mode /* = NULL */)
     if(isopen())
         close();
 
-    if(_buf)
-    {
-        delete [] _buf;
-        _buf = NULL;
-    }
+    dropBuf(true);
 
     _setName(fn);
 
@@ -176,6 +168,13 @@ const uint8 *VFSFileReal::getBuf(void)
         close();
     }
     return (const uint8 *)_buf;
+}
+
+void VFSFileReal::dropBuf(bool del)
+{
+    if(del && _buf)
+        delete [] _buf;
+    _buf = NULL;
 }
 
 // ------------- VFSFileMem -----------------------

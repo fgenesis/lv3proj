@@ -31,6 +31,7 @@ public:
     virtual uint64 size(void) { return 0; }
     virtual uint64 size(uint64 newsize) { return 0; }
     virtual const uint8 *getBuf(void) { return NULL; }
+    virtual void dropBuf(bool del) {}
     virtual const char *getSource(void) { return "<BASE>"; }
 
     SelfRefCounter<VFSFile> ref;
@@ -59,6 +60,7 @@ public:
     virtual uint64 size(void);
     virtual uint64 size(uint64 newsize);
     virtual const uint8 *getBuf(void);
+    virtual void dropBuf(bool del);
     virtual const char *getSource(void) { return "disk"; }
 
 protected:
@@ -90,6 +92,7 @@ public:
     virtual uint64 size(void) { return _size; }
     virtual uint64 size(uint64 newsize) { return _size; } // cant change size
     virtual const uint8 *getBuf(void) { return _buf; }
+    virtual void dropBuf(bool) {} // we can't simply drop the internal buffer, as the file is entirely memory based
     virtual const char *getSource(void) { return "mem"; }
 
 protected:

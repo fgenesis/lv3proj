@@ -122,3 +122,11 @@ const uint8 *VFSFileLVPA::getBuf(void)
 {
     return (const uint8 *)_lvpa->Get(_headerId).ptr;
 }
+
+void VFSFileLVPA::dropBuf(bool del)
+{
+    if(del)
+        _lvpa->Free(_headerId);
+    else
+        _lvpa->Drop(_headerId);
+}

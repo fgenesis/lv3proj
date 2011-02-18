@@ -110,11 +110,7 @@ void SoundCore::StopMusic(void)
     if(_music)
     {
         Mix_HaltMusic();
-        // HACK: due to weirdness in SDL_mixer code, we force the deletion of the music,
-        // which seems necessary to really stop playback;
-        // otherwise it may crash when music is stopped and later started again.
-        // TODO: remove 'true' param as soon as someone found out what causes the crash
-        resMgr.Drop(_music, true); 
+        resMgr.Drop(_music); 
         _music = NULL;
     }
 }

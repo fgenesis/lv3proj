@@ -1,6 +1,11 @@
 #include <SDL/SDL.h>
 #include "SDL_func.h"
 
+Uint32 SDLfunc_GetSurfaceBytes(SDL_Surface *surface)
+{
+    return surface->pitch * surface->h;
+}
+
 /*
 * Return the pixel value at (x, y)
 * NOTE: The surface must be locked before calling this!

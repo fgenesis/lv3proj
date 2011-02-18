@@ -24,6 +24,7 @@ public:
     virtual uint64 size(void);
     virtual uint64 size(uint64 newsize);
     virtual const uint8 *getBuf(void);
+    virtual void dropBuf(bool del);
     virtual const char *getSource(void) { return "LVPA"; }
 
     inline LVPAFile *getLVPA(void) { return _lvpa; }
