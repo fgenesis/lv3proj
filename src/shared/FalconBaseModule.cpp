@@ -1052,15 +1052,16 @@ FALCON_FUNC fal_Font_GetHeight( Falcon::VMachine *vm )
 FALCON_FUNC fal_Color( Falcon::VMachine *vm )
 {
     FALCON_REQUIRE_PARAMS_EXTRA(3, "I, I, I [, I]")
-    Falcon::Item *i_alpha = vm->param(3);
-    SDL_PixelFormat *fmt = Engine::GetInstance()->GetSurface()->format;
     uint8 r = vm->param(0)->forceInteger();
     uint8 g = vm->param(1)->forceInteger();
     uint8 b = vm->param(2)->forceInteger();
-    if(i_alpha)
-        vm->retval((Falcon::int64)SDL_MapRGB(fmt,r,g,b));
+
+    // FIXME: setting the colors this way works only in 32 bit color mode
+    // using SDL_MapRGB[A]() messed up bad, here
+    if(Falcon::Item *i_alpha = vm->param(3))
+        vm->retval((Falcon::int64)(r | (g << 8) | (b << 16) | (i_alpha->forceInteger() << 24) ));
     else
-        vm->retval((Falcon::int64)SDL_MapRGBA(fmt,r,g,b, i_alpha->forceInteger()));
+        vm->retval((Falcon::int64)(r | (g << 8) | (b << 16) | 0xFF000000));
 }
 
 Falcon::Module *FalconBaseModule_create(void)

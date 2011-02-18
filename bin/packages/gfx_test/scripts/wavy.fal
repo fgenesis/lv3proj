@@ -51,17 +51,11 @@ function updatehook(ms)
         y2 = y*2
         
         while x < width
-             
             nx = sintab[(( x*3 + ytabval) && 0xFF)];
             ny = sintab[(( y2 + xidxtab[x]) && 0xFF)];
             r = (nx ^^ ny)
-            g = int(r * gmul) << 8
-            b = int(r * bmul) << 16
-            a = r << 24
-            r = int(r * rmul)
-            p = r || g || b || a
+            p = color(r * rmul, r * gmul, r * bmul, r)
             pix(x,y, p)
-            
             x++
         end
         
