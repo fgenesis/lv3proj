@@ -35,22 +35,22 @@ void ResourceMgr::DropUnused(void)
 {
     pool.Cleanup();
 
-    bool del;
+    uint32 c;
     do // Anims contain references to SDL_Surfaces, which may be skipped if the Anim is deleted after the
     {  // Surface's count is checked. iterate over tiles again in case we deleted something in the previous loop.
-        del = false;
+        c = _ptrmap.size();
         for(PtrCountMap::iterator it = _ptrmap.begin(); it != _ptrmap.end(); )
         {
             if(!it->second.count)
             {
                 _Delete(it->first, it->second);
                 _ptrmap.erase(it++);
-                del = true;
             }
             else
                 ++it;
         }
-    } while(del);
+    }
+    while(_ptrmap.size() != c);
 }
 
 uint32 ResourceMgr::GetUsedCount(void)

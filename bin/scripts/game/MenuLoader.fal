@@ -129,6 +129,7 @@ end
 function OpenEngineMainMenu()
     m = OpenMenu(EngineMainMenu)
     Music.Play(EngineConfig.menuMusic)
+    Engine.ResourceCleanup() // we don't want any remains from previously loaded packages
 end
 
 function OpenEnginePackageMenu()
