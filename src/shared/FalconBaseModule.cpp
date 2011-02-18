@@ -532,7 +532,10 @@ fal_Surface::fal_Surface(const Falcon::CoreClass* generator)
 bool fal_Surface::finalize()
 {
     if(!adopted)
+    {
+        Falcon::gcMemUnaccount(SDLfunc_GetSurfaceBytes(surface));
         SDL_FreeSurface(surface);
+    }
     return false; // this tells the GC to call the destructor
 }
 
@@ -575,6 +578,7 @@ void fal_Surface::init( Falcon::VMachine *vm )
     self->surface = SDL_CreateRGBSurface(SDL_SWSURFACE, w, h, vs->format->BitsPerPixel,
         0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000); // TODO: fix this for big endian
     self->adopted = false;
+    Falcon::gcMemAccount(SDLfunc_GetSurfaceBytes(self->surface));
 }
 
 FALCON_FUNC fal_Surface_Pixel( Falcon::VMachine *vm )
