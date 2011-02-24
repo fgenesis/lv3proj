@@ -1,3 +1,4 @@
+
         Lost Vikings 3 Project Engine
 
 
@@ -22,6 +23,8 @@ Windows, Visual Studio:
 2.) Set the build configuration to Release, unless you don't mind speed.
 3.) Build the solution (Default hotkey: F7)
 4.) The exe files are now in <LV3-root>/bin.
+5.) In case you need additional DLLs, look in src/lib/win32.
+    You don't need: - jpeg.dll, smpeg.dll, libtiff-3.dll -
 
 
 Windows + MinGW, CodeBlocks, Linux, and maybe Mac OSX:
@@ -34,6 +37,9 @@ Windows + MinGW, CodeBlocks, Linux, and maybe Mac OSX:
 6.) Start compiling. Cross your fingers and hope that it works.
 7.) make install. The finished bins are installed to <LV3-root>/bin.
     Does not require root. Does not install into system directories.
+    Note: Do *NOT* use DESTDIR with make install, it will horribly fail.
+    If you want to have the binaries installed somewhere, make a normal
+    make install and copy the bin folder afterwards.
 
 In short, the required commands (on linux) are as follows:
 (Be in LV3 root dir)
@@ -57,7 +63,7 @@ MISSING FILES
 Some files are not included in the Git repo because of their size,
 for these, visit https://github.com/fgenesis/lv3proj/downloads
 and look for files named missing_*.zip.
-The file name should make clear where the files inside should be put,
+The file name or folder structure should make clear where the files inside should be put,
 if not, there's maybe a description file inside.
 
 
