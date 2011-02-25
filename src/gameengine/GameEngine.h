@@ -22,6 +22,7 @@ public:
     virtual void OnKeyUp(SDLKey key, SDLMod mod);
     virtual void OnJoystickEvent(uint32 type, uint32 device, uint32 id, int32 val);
     //virtual void OnWindowEvent(bool active);
+    virtual void OnObjectCreated(BaseObject *obj);
     virtual const char *GetName(void) { return "game"; } // must be overloaded
 
     virtual bool Setup(void);

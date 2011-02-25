@@ -10,6 +10,7 @@
 #include "GameEngine.h"
 #include <falcon/engine.h>
 #include "FalconGameModule.h"
+#include "FalconObjectModule.h"
 #include "SharedDefines.h"
 
 #include "LVPAFile.h"
@@ -263,6 +264,28 @@ void GameEngine::OnMouseEvent(uint32 type, uint32 button, uint32 state, uint32 x
             }
         }
 #endif
+    }
+}
+
+void GameEngine::OnObjectCreated(BaseObject *obj)
+{
+    // TODO: cache this on init and call then without invoking findGlobalItem() all the time
+    Falcon::Item *item = falcon->GetVM()->findGlobalItem("ObjectCreated");
+    if(item && item->isCallable())
+    {
+        try
+        {
+            Falcon::Item iobj(obj->_falObj->self());
+            falcon->GetVM()->pushParam(iobj);
+            falcon->GetVM()->callItem(*item, 1);
+        }
+        catch(Falcon::Error *err)
+        {
+            Falcon::AutoCString edesc( err->toString() );
+            logerror("GameEngine::OnObjectCreated: %s", edesc.c_str());
+            err->decref();
+        }
+
     }
 }
 

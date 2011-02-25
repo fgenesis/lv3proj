@@ -79,12 +79,6 @@ class Olaf from PlayerEx
         return self.PlayerEx.OnTouchedBy(side, who)
     end
     
-    function IsBlocking(side)
-        if side == SIDE_TOP and self.shieldUp: return true
-        return self.PlayerEx.IsBlocking(side)
-    end
-    
-
 end
 
 export Olaf

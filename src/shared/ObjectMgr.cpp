@@ -113,7 +113,9 @@ void ObjectMgr::Update(uint32 ms)
             if(obj->GetSprite() && obj->GetSprite()->GetType() == TILETYPE_ANIMATED)
                 ((AnimatedTile*)(obj->GetSprite()))->Update(Engine::GetCurFrameTime());
 
-            obj->OnUpdate(ms);
+            if(obj->IsUpdate())
+                obj->OnUpdate(ms);
+
             _layerMgr->UpdateCollisionMap(obj);
         }
     }
@@ -207,14 +209,17 @@ void ObjectMgr::RenderLayer(uint32 id)
     for(ObjectSet::iterator it = _renderLayers[id].begin(); it != _renderLayers[id].end(); it++)
     {
         Object *obj = *it;
-        if(BasicTile *sprite = obj->GetSprite())
+        if(obj->IsVisible())
         {
-            SDL_Rect dst;
-            dst.x = int(obj->x) + obj->gfxoffsx;
-            dst.y = int(obj->y) + obj->gfxoffsy;
-            dst.w = obj->w;
-            dst.h = obj->h;
-            SDL_BlitSurface(sprite->GetSurface(), NULL, esf, &dst);
+            if(BasicTile *sprite = obj->GetSprite())
+            {
+                SDL_Rect dst;
+                dst.x = int(obj->x) + obj->gfxoffsx;
+                dst.y = int(obj->y) + obj->gfxoffsy;
+                dst.w = obj->w;
+                dst.h = obj->h;
+                SDL_BlitSurface(sprite->GetSurface(), NULL, esf, &dst);
+            }
         }
     }
 }

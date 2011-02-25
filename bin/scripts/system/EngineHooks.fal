@@ -8,6 +8,9 @@ _uphooks = [ => ]
 // PostRender() hooks
 _rhooks = []
 
+// ObjectCreated() hooks
+_ochooks = []
+
 // --- called by core whenever input occurs ---
 function InputEventHandler(e)
     global _rawhooks
@@ -115,7 +118,31 @@ function GetRenderHookCount()
     return len(_rhooks)
 end
 
+// called whenever an object was created
+function ObjectCreated(obj)
+    global _ochooks
+    
+    for func in _ochooks
+        try
+            func(obj)
+        catch in err
+            > "ERROR: PostRender(): unhandled exception in a hook:"
+            > func
+            > err
+            // no need to drop, here
+        end
+    end
+end
 
+function RegisterObjectCreateHook(func)
+    global _ochooks
+    arrayAdd(_ochooks, func)
+end
+
+function UnregisterObjectCreateHook(func)
+    global _ochooks
+    arrayDel(_ochooks, func)
+end
 
 export GameUpdate
 export RegisterUpdateHook, UnregisterUpdateHook, GetUpdateHookCount
@@ -125,3 +152,6 @@ export RegisterRawInputHook, UnregisterRawInputHook, GetRawInputHook, GetRawInpu
 
 export PostRender
 export RegisterRenderHook, UnregisterRenderHook, GetRenderHookCount
+
+export ObjectCreated
+export RegisterObjectCreateHook, UnregisterObjectCreateHook

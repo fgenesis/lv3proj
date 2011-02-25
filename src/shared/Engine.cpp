@@ -339,6 +339,10 @@ void Engine::OnWindowResize(uint32 newx, uint32 newy)
     SDL_SetVideoMode(newx,newy,GetBPP(), GetSurface()->flags);
 }
 
+void Engine::OnObjectCreated(BaseObject *obj)
+{
+}
+
 void Engine::_Render(void)
 {
     if(_drawBackground)

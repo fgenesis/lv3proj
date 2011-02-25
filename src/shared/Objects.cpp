@@ -21,6 +21,7 @@ void ActiveRect::Init(void)
 {
     type = OBJTYPE_RECT;
     _collisionEnabled = true;
+    _update = false;
 }
 
 void ActiveRect::SetBBox(float x_, float y_, uint32 w_, uint32 h_)
@@ -164,27 +165,27 @@ uint32 ActiveRect::CanMoveToDirection(uint8 d, uint32 pixels /* = 1 */)
     return _layermgr->CanMoveToDirection((BaseRect*)this, d, pixels);
 }
 
-float ActiveRect::GetDistanceX(ActiveRect *other)
+float ActiveRect::GetDistanceX(ActiveRect *other) const
 {
     float result;
     if(this->x < other->x)
         result = other->x - (this->x + this->w);
     else
         result = this->x - (other->x + other->w);
-    return fastsgncheck(result) ? 0.0f : result;
+    return result < 0.0f ? 0.0f : result;
 }
 
-float ActiveRect::GetDistanceY(ActiveRect *other)
+float ActiveRect::GetDistanceY(ActiveRect *other) const
 {
     float result;
     if(this->y < other->y)
         result = other->y - (this->y + this->h);
     else
         result = this->y - (other->y + other->h);
-    return fastsgncheck(result) ? 0.0f : result;
+    return result < 0.0f ? 0.0f : result;
 }
 
-float ActiveRect::GetDistance(ActiveRect *other)
+float ActiveRect::GetDistance(ActiveRect *other) const
 {
     float x = GetDistanceX(other);
     float y = GetDistanceY(other);
@@ -217,6 +218,8 @@ void Object::_GenericInit(void)
     _oldLayerRect.w = 0;
     _oldLayerRect.h = 0;
     _blocking = false;
+    _update = true;
+    _visible = true;
 }
 
 void Object::SetBBox(float x_, float y_, uint32 w_, uint32 h_)

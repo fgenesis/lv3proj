@@ -14,6 +14,7 @@ class LayerMgr;
 class ObjectMgr;
 class PhysicsMgr;
 class AppFalcon;
+class BaseObject;
 
 enum EngineDebugFlags
 {
@@ -55,6 +56,7 @@ public:
     virtual void OnWindowEvent(bool active);
     virtual void OnWindowResize(uint32 newx, uint32 newy);
     virtual bool OnRawEvent(SDL_Event& evt); // return true to pass this event to the following internal event handlers, false to proceed with next event
+    virtual void OnObjectCreated(BaseObject *obj); // called in FalconObjectModule.cpp, fal_ObjectCarrier::init()
 
 
     inline uint32 GetResX(void) { return _screen ? _screen->w : 0; }

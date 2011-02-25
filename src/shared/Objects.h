@@ -42,10 +42,9 @@ public:
     inline void SetLayerMgr(LayerMgr *mgr) { _layermgr = mgr; }
 
 protected:
+    LayerMgr *_layermgr; // required for collision checks
     uint32 _id;
     uint8 type;
-
-    LayerMgr *_layermgr; // required for collision checks
 };
 
 
@@ -72,14 +71,16 @@ public:
 
     void AlignToSideOf(ActiveRect *other, uint8 side);
 
-    inline bool HasMoved(void) { return _moved; }
+    inline bool HasMoved(void) const { return _moved; }
     inline void SetMoved(bool moved = true) { _moved = moved; }
-    inline bool IsCollisionEnabled(void) { return _collisionEnabled; }
+    inline bool IsCollisionEnabled(void) const { return _collisionEnabled; }
     inline void SetCollisionEnabled(bool b) { _collisionEnabled = b; }
+    inline void SetUpdate(bool b) { _update = b; }
+    inline bool IsUpdate(void) const { return _update; }
 
-    virtual float GetDistanceX(ActiveRect *other);
-    virtual float GetDistanceY(ActiveRect *other);
-    virtual float GetDistance(ActiveRect *other);
+    virtual float GetDistanceX(ActiveRect *other) const;
+    virtual float GetDistanceY(ActiveRect *other) const;
+    virtual float GetDistance(ActiveRect *other) const;
 
     uint32 CanMoveToDirection(uint8 d, uint32 pixels = 1);
 
@@ -87,6 +88,7 @@ protected:
 
     bool _collisionEnabled; // do collision detection at all?
     bool _moved; // do collision detection if one of the involved objects moved
+    bool _update; // if true, call OnUpdate() in every cycle
 };
 
 
@@ -103,21 +105,21 @@ public:
     virtual void SetPos(float x, float y);
 
     inline void SetAffectedByPhysics(bool b) { _physicsAffected = b; }
-    inline bool IsAffectedByPhysics(void) { return _physicsAffected; }
-    inline bool _NeedsLayerUpdate(void) { return _layerId != _oldLayerId; }
+    inline bool IsAffectedByPhysics(void) const { return _physicsAffected; }
+    inline bool _NeedsLayerUpdate(void) const { return _layerId != _oldLayerId; }
     inline void _SetLayerUpdated(void) { _oldLayerId = _layerId; }
     inline void SetLayer(uint32 newLayer) { _layerId = newLayer; } // will be updated in next cycle, before rendering
-    inline uint32 GetLayer(void) { return _layerId; }
-    inline uint32 GetOldLayer(void) { return _oldLayerId; }
+    inline uint32 GetLayer(void) const { return _layerId; }
+    inline uint32 GetOldLayer(void) const { return _oldLayerId; }
     inline void SetBlocking(bool b) { _blocking = true; }
-    inline bool IsBlocking(void) { return _blocking; }
-    void SetSprite(BasicTile *tile);
+    inline bool IsBlocking(void) const { return _blocking; }
+    inline void SetVisible(bool b) { _visible = b; }
+    inline bool IsVisible(void) const { return _visible; }
 
+    void SetSprite(BasicTile *tile);
     inline BasicTile *GetSprite(void) { return _gfx; }
 
     bool CanFallDown(void); // TODO: obsolete
-
-
 
     inline void UpdateAnchor(void)
     {
@@ -135,13 +137,14 @@ public:
 
 protected:
     void _GenericInit(void);
-    bool _physicsAffected;
-    bool _blocking; // true if this object affects the LayerMgr's CollisionMap
-    uint32 _layerId; // layer ID where this sprite is drawn on
-    uint32 _oldLayerId; // prev. layer id, if theres a difference between both, ObjectMgr::Update() has to correct the layer set assignment
+
     BasicTile *_gfx;
     Point anchor; // where this object stands on the ground (center of object) - used for CanFallDown()
-
+    uint32 _layerId; // layer ID where this sprite is drawn on
+    uint32 _oldLayerId; // prev. layer id, if theres a difference between both, ObjectMgr::Update() has to correct the layer set assignment
+    bool _physicsAffected;
+    bool _blocking; // true if this object affects the LayerMgr's CollisionMap
+    bool _visible;
 };
 
 // an item a player carries around in the inventory

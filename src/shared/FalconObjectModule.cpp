@@ -190,6 +190,8 @@ void fal_ObjectCarrier::init(Falcon::VMachine *vm)
     obj->Init(); // correctly set type of object
     obj->_falObj = fobj;
     Engine::GetInstance()->objmgr->Add(obj);
+
+    Engine::GetInstance()->OnObjectCreated(obj);
 }
 
 Falcon::CoreObject* fal_ObjectCarrier::factory( const Falcon::CoreClass *cls, void *user_data, bool )
@@ -288,10 +290,21 @@ bool fal_ObjectCarrier::setProperty( const Falcon::String &prop, const Falcon::I
 
         return true; // if trying to assign phys to an ActiveRect, simply nothing will happen
     }
+
+    // convenience accessors, bypassing function overloads
+    if(prop == "update") { ((Object*)_obj)->SetUpdate(value.isTrue()); return true; }
+    if(prop == "blocking")  { ((Object*)_obj)->SetBlocking(value.isTrue()); return true; }
+    if(prop == "collision") { ((Object*)_obj)->SetCollisionEnabled(value.isTrue()); return true; }
+
     if(_obj->GetType() >= OBJTYPE_OBJECT)
     {
         if(prop == "gfxOffsX") { ((Object*)_obj)->gfxoffsx = int32(value.forceInteger()); return true; }
         if(prop == "gfxOffsY") { ((Object*)_obj)->gfxoffsy = int32(value.forceInteger()); return true; }
+
+        // convenience accessors, bypassing function overloads
+        if(prop == "physics") { ((Object*)_obj)->SetAffectedByPhysics(value.isTrue()); return true; }
+        if(prop == "layerId") { ((Object*)_obj)->SetLayer(uint32(value.forceInteger())); return true; }
+        if(prop == "visible") { ((Object*)_obj)->SetVisible(value.isTrue()); return true; }
     }
 
     return FalconObject::setProperty(prop, value);
@@ -332,10 +345,18 @@ bool fal_ObjectCarrier::getProperty( const Falcon::String &prop, Falcon::Item &r
         }
         return true;
     }
+    if(prop == "update") { ret = ((Object*)_obj)->IsUpdate(); return true; }
+    if(prop == "blocking")  { ret = ((Object*)_obj)->IsBlocking(); return true; }
+    if(prop == "collision") { ret = ((Object*)_obj)->IsCollisionEnabled(); return true; }
+
     if(_obj->GetType() >= OBJTYPE_OBJECT)
     {
         if(prop == "gfxOffsX") { ret = Falcon::int32(((Object*)_obj)->gfxoffsx); return true; }
         if(prop == "gfxOffsY") { ret = Falcon::int32(((Object*)_obj)->gfxoffsy); return true; }
+
+        if(prop == "physics") { ret = ((Object*)_obj)->IsAffectedByPhysics(); return true; }
+        if(prop == "layerId") { ret = Falcon::uint32(((Object*)_obj)->GetLayer()); return true; }
+        if(prop == "visible") { ret = ((Object*)_obj)->IsVisible(); return true; }
 
     }
 
@@ -728,7 +749,7 @@ FALCON_FUNC fal_Object_IsBlocking(Falcon::VMachine *vm)
 FALCON_FUNC fal_Object_SetBlocking(Falcon::VMachine *vm)
 {
     FALCON_REQUIRE_PARAMS_EXTRA(1,"B");
-    bool block = vm->param(0)->asBoolean();
+    bool block = vm->param(0)->isTrue();
     fal_ObjectCarrier *self = Falcon::dyncast<fal_ObjectCarrier*>( vm->self().asObject() );
     ((Object*)self->GetObj())->SetBlocking(block);
 }
@@ -738,7 +759,7 @@ FALCON_FUNC fal_TileLayer_SetVisible(Falcon::VMachine *vm)
 {
     FALCON_REQUIRE_PARAMS(1);
     fal_TileLayer *self = Falcon::dyncast<fal_TileLayer*>( vm->self().asObject() );
-    self->GetLayer()->visible = (bool)vm->param(0)->asBoolean();
+    self->GetLayer()->visible = (bool)vm->param(0)->isTrue();
 }
 
 FALCON_FUNC fal_TileLayer_IsVisible(Falcon::VMachine *vm)
@@ -956,22 +977,23 @@ Falcon::Module *FalconObjectModule_create(void)
     Falcon::InheritDef *inhRect = new Falcon::InheritDef(clsRect); // there are other classes that inherit from ActiveRect
     clsRect->setWKS(true);
 
+    m->addClassMethod(clsRect, "OnUpdate", fal_NullFunc);
     m->addClassMethod(clsRect, "OnEnter", fal_NullFunc);
     m->addClassMethod(clsRect, "OnLeave", fal_NullFunc);
     m->addClassMethod(clsRect, "OnTouch", fal_NullFunc);
     m->addClassMethod(clsRect, "OnEnteredBy", fal_NullFunc);
-    m->addClassMethod(clsRect, "OnLeftBy", fal_NullFunc);
+    m->addClassMethod(clsRect, "OnLeftBy", fal_NullFunc); // TODO: NYI
     m->addClassMethod(clsRect, "OnTouchedBy", fal_NullFunc);
     m->addClassMethod(clsRect, "SetBBox", fal_ActiveRect_SetBBox);
     m->addClassMethod(clsRect, "SetPos", fal_ActiveRect_SetPos);
     m->addClassMethod(clsRect, "CanMoveToDir", fal_ActiveRect_CanMoveToDir);
-    m->addClassMethod(clsRect, "IsCollisionEnabled", fal_ActiveRect_IsCollisionEnabled);
+    m->addClassMethod(clsRect, "IsCollisionEnabled", fal_ActiveRect_IsCollisionEnabled); // also see .collision property
     m->addClassMethod(clsRect, "SetCollisionEnabled", fal_ActiveRect_SetCollisionEnabled);
     m->addClassMethod(clsRect, "GetDistance", fal_ActiveRect_GetDistance);
     m->addClassMethod(clsRect, "GetDistanceX", fal_ActiveRect_GetDistanceX);
     m->addClassMethod(clsRect, "GetDistanceY", fal_ActiveRect_GetDistanceY);
-    m->addClassMethod(clsRect, "SetBlocking", fal_NullFunc); // ActiveRect does not have this
-    m->addClassMethod(clsRect, "IsBlocking", fal_FalseFunc); // ActiveRect does not have this, return false
+    m->addClassMethod(clsRect, "SetBlocking", fal_NullFunc); // ActiveRect is never blocking // also see .blocking property
+    m->addClassMethod(clsRect, "IsBlocking", fal_FalseFunc);
     m->addClassProperty(clsRect, "x");
     m->addClassProperty(clsRect, "y");
     m->addClassProperty(clsRect, "w");
@@ -985,23 +1007,22 @@ Falcon::Module *FalconObjectModule_create(void)
     clsObject->getClassDef()->addInheritance(inhRect);
     Falcon::InheritDef *inhObject = new Falcon::InheritDef(clsObject); // there are other classes that inherit from Object
     clsObject->setWKS(true);
-    m->addClassMethod(clsObject, "OnUpdate", fal_NullFunc);
     m->addClassMethod(clsObject, "OnTouchWall", fal_NullFunc);
-    m->addClassMethod(clsObject, "SetSprite", fal_Object_SetSprite);
+    m->addClassMethod(clsObject, "SetSprite", fal_Object_SetSprite); // also see .sprite property
     m->addClassMethod(clsObject, "GetSprite", fal_Object_GetSprite);
-    m->addClassMethod(clsObject, "SetLayerId", fal_Object_SetLayerId);
+    m->addClassMethod(clsObject, "SetLayerId", fal_Object_SetLayerId); // also see .layerId property
     m->addClassMethod(clsObject, "GetLayerId", fal_Object_GetLayerId);
-    m->addClassMethod(clsObject, "SetAffectedByPhysics", &fal_Object_SetAffectedByPhysics);
+    m->addClassMethod(clsObject, "SetAffectedByPhysics", &fal_Object_SetAffectedByPhysics); // also see .physics property
     m->addClassMethod(clsObject, "IsAffectedByPhysics", &fal_Object_IsAffectedByPhysics);
     m->addClassMethod(clsObject, "CanFallDown", &fal_Object_CanFallDown);
-    m->addClassMethod(clsRect, "SetBlocking", fal_Object_SetBlocking);
+    m->addClassMethod(clsRect, "SetBlocking", fal_Object_SetBlocking); // also see .blocking property
     m->addClassMethod(clsRect, "IsBlocking", fal_Object_IsBlocking);
     m->addClassProperty(clsObject, "phys");
     m->addClassProperty(clsObject, "gfxOffsX");
     m->addClassProperty(clsObject, "gfxOffsY");
 
+    // TODO: is this class needed?
     Falcon::Symbol *clsItem = m->addClass("Item", &fal_ObjectCarrier::init);
-    clsItem->getClassDef()->addInheritance(inhRect);
     clsItem->getClassDef()->addInheritance(inhObject);
     clsItem->setWKS(true);
     m->addClassMethod(clsItem, "OnUse", fal_NullFunc);
