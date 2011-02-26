@@ -52,27 +52,28 @@ public:
 
     void SetMaxDim(uint32 dim); // set x and y size of all layers & collision map + resize if necessary
     void SetRenderOffset(int32 x, int32 y);
-    inline uint32 GetMaxDim(void) { return _maxdim; }
-    inline uint32 GetMaxPixelDim(void) { return _maxdim * 16; }
+    inline uint32 GetMaxDim(void) const { return _maxdim; }
+    inline uint32 GetMaxPixelDim(void)  const { return _maxdim * 16; } // TODO: FIXME for tile sizes != 16
+
+    // TODO: is the info layer really needed?
     void CreateInfoLayer(void);
     inline void SetInfoLayer(uint16 *ti) { _infoLayer.setPtr(ti); }
     inline uint16 *GetInfoLayer(void) { return _infoLayer.getPtr(); }
     inline uint16 GetTileInfo(uint32 x, uint32 y) { return _infoLayer(x,y); }
     inline void SetTileInfo(uint32 x, uint32 y, uint16 info) { _infoLayer(x,y) = info; }
 
-    inline bool HasCollisionMap(void) { return _collisionMap.size1d(); }
+    inline bool HasCollisionMap(void) const { return _collisionMap.size1d(); }
     void CreateCollisionMap(void); // create new collision map (and delete old if exists)
     void UpdateCollisionMap(uint32 x, uint32 y); // recalculates the collision map at a specific tile
     void UpdateCollisionMap(void); // recalculates the *whole* collision map - use rarely!
     void UpdateCollisionMap(Object *obj); // uses LCF_BLOCKING_OBJECT to mark the collision map
     void RemoveFromCollisionMap(Object *obj);
-    bool CollisionWith(BaseRect *rect, int32 skip = 4, uint8 flags = LCF_ALL); // check if a rectangle overlaps with at least one solid pixel in our collision map.
+    bool CollisionWith(const BaseRect *rect, int32 skip = 4, uint8 flags = LCF_ALL) const; // check if a rectangle overlaps with at least one solid pixel in our collision map.
     // when calling this function, we assume there is NO collision yet (check new position with CollisionWith() before!)
-    Point GetNonCollidingPoint(BaseRect *rect, uint8 direction, uint32 maxdist = -1);
-    uint32 CanMoveToDirection(BaseRect *rect, uint8 direction, uint32 pixels = 1); // returns the amount of pixels until the object hits the wall, up to [pixels]
-    uint32 CanMoveToDirection(BaseRect *rect, MovementDirectionInfo& mdi, uint32 pixels = 1);
-    bool CanFallDown(Point anchor, uint32 arealen);
-    void LoadAsciiLevel(AsciiLevel *level);
+    Point GetNonCollidingPoint(const BaseRect *rect, uint8 direction, uint32 maxdist = -1) const;
+    uint32 CanMoveToDirection(const BaseRect *rect, uint8 direction, uint32 pixels = 1) const; // returns the amount of pixels until the object hits the wall, up to [pixels]
+    uint32 CanMoveToDirection(const BaseRect *rect, MovementDirectionInfo& mdi, uint32 pixels = 1) const;
+    void LoadAsciiLevel(AsciiLevel *level); // TODO: obsolete, remove as soon as native map files can be loaded
 
     std::map<std::string, std::string> stringdata; // stores arbitrary content, to be used in scripts or so. // TODO: add documentation
 

@@ -297,7 +297,7 @@ void LayerMgr::UpdateCollisionMap(Object *obj)
 
 
 
-bool LayerMgr::CollisionWith(BaseRect *rect, int32 skip /* = 4 */, uint8 flags /* = LCF_ALL */)
+bool LayerMgr::CollisionWith(const BaseRect *rect, int32 skip /* = 4 */, uint8 flags /* = LCF_ALL */) const
 {
     if(!HasCollisionMap())
         return false;
@@ -329,13 +329,13 @@ bool LayerMgr::CollisionWith(BaseRect *rect, int32 skip /* = 4 */, uint8 flags /
     return false;
 }
 
-uint32 LayerMgr::CanMoveToDirection(BaseRect *rect, uint8 direction, uint32 pixels /* = 1 */ )
+uint32 LayerMgr::CanMoveToDirection(const BaseRect *rect, uint8 direction, uint32 pixels /* = 1 */ ) const
 {
     MovementDirectionInfo mdi(*rect, direction);
     return CanMoveToDirection(rect, mdi, pixels);
 }
 
-uint32 LayerMgr::CanMoveToDirection(BaseRect *rect, MovementDirectionInfo& mdi, uint32 pixels /* = 1 */ )
+uint32 LayerMgr::CanMoveToDirection(const BaseRect *rect, MovementDirectionInfo& mdi, uint32 pixels /* = 1 */ ) const
 {
     if(!HasCollisionMap())
         return pixels;
@@ -380,7 +380,7 @@ uint32 LayerMgr::CanMoveToDirection(BaseRect *rect, MovementDirectionInfo& mdi, 
     return moveable;
 }
 
-Point LayerMgr::GetNonCollidingPoint(BaseRect *rect, uint8 direction, uint32 maxdist /* = -1 */)
+Point LayerMgr::GetNonCollidingPoint(const BaseRect *rect, uint8 direction, uint32 maxdist /* = -1 */) const
 {
     DEBUG(ASSERT(direction));
     MovementDirectionInfo mdi(*rect, direction);
@@ -393,27 +393,6 @@ Point LayerMgr::GetNonCollidingPoint(BaseRect *rect, uint8 direction, uint32 max
         r.MoveRelative(mdi.xstep * moveable, mdi.ystep * moveable);
     }
     return Point(int32(r.x), int32(r.y));
-}
-
-// TODO: this method is obsolete, remove in future
-bool LayerMgr::CanFallDown(Point anchor, uint32 arealen)
-{
-    if(!HasCollisionMap())
-        return true;
-
-    // this check goes like this: 123412341234... (usually faster than linear search)
-    for(uint32 align = 0; align < 4; ++align)
-    {
-        uint32 xmax = anchor.x + arealen + align;
-        for(uint32 x = anchor.x - arealen + align; x < xmax; x += 4)
-        {
-            if(_collisionMap(x, anchor.y))
-            {
-                return false;
-            }
-        }
-    }
-    return true;
 }
 
 void LayerMgr::LoadAsciiLevel(AsciiLevel *level)

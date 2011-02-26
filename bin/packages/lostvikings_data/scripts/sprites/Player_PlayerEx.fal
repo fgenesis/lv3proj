@@ -52,8 +52,12 @@ class PlayerEx from Player
         self.phys.xspeed = self.baseSpeedX + self.ownSpeedX
     end
     
+    function CanFallDown() // TODO: ladder climbing etc
+        return self.CanMoveToDir(DIRECTION_DOWN)
+    end
+    
     function UpdateAnim()
-        if self.CanFallDown() // TODO: ladder climbing etc
+        if self.CanFallDown()
             self.AnimFall()
         elif self.ownSpeedX
             if self.CanMoveToDir(self.movingDir)

@@ -234,12 +234,6 @@ void Object::SetPos(float x_, float y_)
     UpdateAnchor();
 }
 
-// TODO: this needs correction!! maybe make this a falcon call, OR add another uint32 _standAreaSize...?
-bool Object::CanFallDown(void)
-{
-    return _layermgr->CanFallDown(anchor, w / 2);
-}
-
 void Object::SetSprite(BasicTile *tile)
 {
     if(tile == _gfx)
@@ -249,12 +243,6 @@ void Object::SetSprite(BasicTile *tile)
     if(_gfx)
         _gfx->ref--;
     _gfx = tile;
-}
-
-void Item::Init(void)
-{
-    type = OBJTYPE_ITEM;
-    _GenericInit();
 }
 
 void Unit::Init(void)

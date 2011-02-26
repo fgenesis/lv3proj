@@ -46,7 +46,7 @@ public:
     // Method to calculate the second Y corner (float)
     inline float y2f(void) const { return y + float(h); }
 
-    inline BaseRect cloneRect(void)
+    inline BaseRect cloneRect(void) const
     {
         BaseRect r;
         r.x = x;
@@ -98,7 +98,7 @@ struct MovementDirectionInfo
     int32 xoffs;
     int32 yoffs;
 
-    MovementDirectionInfo(BaseRect& rect, uint8 d)
+    MovementDirectionInfo(const BaseRect& rect, uint8 d)
     {
         xstep = 0;
         ystep = 0;

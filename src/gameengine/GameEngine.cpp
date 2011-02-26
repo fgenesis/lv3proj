@@ -23,13 +23,6 @@ GameEngine::GameEngine()
     // test
 #ifdef _DEBUG
     SetDebugFlag(EDBG_SHOW_BBOXES);
-    mouseRect.w = 32;
-    mouseRect.h = 32;
-    mouseCollision = 0;
-    collRect.w = 32;
-    collRect.h = 32;
-    collRectGood = false;
-    checkDirection = DIRECTION_RIGHT;
 #endif
 }
 
@@ -207,25 +200,6 @@ void GameEngine::OnJoystickEvent(uint32 type, uint32 device, uint32 id, int32 va
 
 void GameEngine::OnMouseEvent(uint32 type, uint32 button, uint32 state, uint32 x, uint32 y, int32 rx, int32 ry)
 {
-    // - TEST - this is all test stuff and will be removed later
-#ifdef _DEBUG
-    if(x >= uint32(mouseRect.w / 2) && y >= uint32(mouseRect.h / 2))
-    {
-        mouseRect.x = x - mouseRect.w / 2;
-        mouseRect.y = y - mouseRect.h / 2;
-        mouseCollision = _layermgr->CollisionWith(&mouseRect) ? 2 : 0;
-        if(!mouseCollision)
-        {
-            if(!_layermgr->CanFallDown(Point(x, y + (mouseRect.h / 2) - 1), 12))
-                mouseCollision = 1;
-        }
-        Point p = _layermgr->GetNonCollidingPoint(&mouseRect, checkDirection);
-        collRect.x = p.x;
-        collRect.y = p.y;
-        collRectGood = !_layermgr->CollisionWith(&collRect);
-
-    }
-#endif
     if(type == SDL_MOUSEBUTTONDOWN)
     {
         if(button == 1)
@@ -248,22 +222,6 @@ void GameEngine::OnMouseEvent(uint32 type, uint32 button, uint32 state, uint32 x
                     obj->GetType() >= OBJTYPE_OBJECT && ((Object*)obj)->IsBlocking() ? 'B' : '-');
             }
         }
-#ifdef _DEBUG
-        else if(button == 3)
-        {
-            switch(checkDirection)
-            {
-                case DIRECTION_RIGHT: checkDirection = DIRECTION_DOWNRIGHT; break;
-                case DIRECTION_DOWNRIGHT: checkDirection = DIRECTION_DOWN; break;
-                case DIRECTION_DOWN: checkDirection = DIRECTION_DOWNLEFT; break;
-                case DIRECTION_DOWNLEFT: checkDirection = DIRECTION_LEFT; break;
-                case DIRECTION_LEFT: checkDirection = DIRECTION_UPLEFT; break;
-                case DIRECTION_UPLEFT: checkDirection = DIRECTION_UP; break;
-                case DIRECTION_UP: checkDirection = DIRECTION_UPRIGHT; break;
-                case DIRECTION_UPRIGHT: checkDirection = DIRECTION_RIGHT; break;
-            }
-        }
-#endif
     }
 }
 
@@ -297,31 +255,6 @@ void GameEngine::_Render(void)
 
     // render the layers
     _layermgr->Render();
-
-    // TEST/DEBUG
-#ifdef _DEBUG
-
-    // draw the small rect that follows the mouse cursor
-    SDL_Rect mrect;
-    mrect.x = mouseRect.x;
-    mrect.y = mouseRect.y;
-    mrect.w = mouseRect.w;
-    mrect.h = mouseRect.h;
-    if(mouseCollision == 2) // collision
-        SDL_FillRect(GetSurface(), &mrect, SDL_MapRGB(GetSurface()->format,0xFF,0,0));
-    else if(mouseCollision == 1) // can stand
-        SDL_FillRect(GetSurface(), &mrect, SDL_MapRGB(GetSurface()->format,0xFF,0xFF,0));
-    else if(mouseCollision == 0) // floating
-        SDL_FillRect(GetSurface(), &mrect, SDL_MapRGB(GetSurface()->format,0,0xFF,0));
-
-    SDL_Rect cdrect;
-    cdrect.x = collRect.x;
-    cdrect.y = collRect.y;
-    cdrect.w = collRect.w;
-    cdrect.h = collRect.h;
-    SDL_FillRect(GetSurface(), &cdrect, collRectGood ? 0xFF0000FF : 0xFFFF00CC);
-    // -end-
-#endif
 
     _PostRender();
 }

@@ -20,9 +20,8 @@ enum ObjectType
 {
     OBJTYPE_RECT    = 0,
     OBJTYPE_OBJECT  = 1,
-    OBJTYPE_ITEM    = 2,
-    OBJTYPE_UNIT    = 3,
-    OBJTYPE_PLAYER  = 4
+    OBJTYPE_UNIT    = 2,
+    OBJTYPE_PLAYER  = 3
 };
 
 // basic object class, defines shared properties but can't be instantiated
@@ -119,8 +118,6 @@ public:
     void SetSprite(BasicTile *tile);
     inline BasicTile *GetSprite(void) { return _gfx; }
 
-    bool CanFallDown(void); // TODO: obsolete
-
     inline void UpdateAnchor(void)
     {
         anchor.x = int32(x) + (w / 2);
@@ -147,15 +144,6 @@ protected:
     bool _visible;
 };
 
-// an item a player carries around in the inventory
-class Item : public Object
-{
-public:
-    virtual void Init(void);
-
-    virtual bool OnUse(Object *who);
-};
-
 // unit, most likely some NPC, enemy, or player
 class Unit : public Object
 {
@@ -163,7 +151,7 @@ public:
     virtual void Init(void);
 };
 
-// the Player class, specialized for playable characters like these vikings this is all about
+// the Player class, specialized for playable characters
 class Player : public Unit
 {
 public:

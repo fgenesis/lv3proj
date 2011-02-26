@@ -1,14 +1,11 @@
-class ItemObject(cons) from Object
+class ItemObject from Object
 
     sound = "collect.ogg"
     gfx = nil
     
-    _cons = nil
     _sound = nil
     
     init
-        if not isCallable(cons): raise "ItemObject: must be passed a callable function or class constructor"
-        self._cons = cons
         self.SetAffectedByPhysics(false)
         self.SetCollisionEnabled(true)
         self.SetBBox(0,0,16,16)

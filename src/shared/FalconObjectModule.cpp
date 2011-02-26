@@ -220,10 +220,6 @@ Falcon::CoreObject* fal_ObjectCarrier::factory( const Falcon::CoreClass *cls, vo
     {
         obj = new Unit;
     }
-    else if(clsdef->inheritsFrom("Item"))
-    {
-        obj = new Item;
-    }
     else if(clsdef->inheritsFrom("Object"))
     {
         obj = new Object;
@@ -425,13 +421,6 @@ void Object::OnTouchWall(uint8 side, float xspeed, float yspeed)
 {
     DEBUG_ASSERT_RETURN_VOID(_falObj);
     _falObj->CallMethod("OnTouchWall", Falcon::int64(side), Falcon::numeric(xspeed), Falcon::numeric(yspeed));
-}
-
-bool Item::OnUse(Object *who)
-{
-    DEBUG_ASSERT_RETURN(_falObj, false); // no further processing
-    Falcon::Item *result = _falObj->CallMethod("OnUse", who->_falObj->self());
-    return result && result->type() != FLC_ITEM_NIL ? result->asBoolean() : false;
 }
 
 // -- end object proxy calls --
@@ -734,12 +723,6 @@ FALCON_FUNC fal_Object_GetSprite(Falcon::VMachine *vm)
         vm->retnil();
 }
 
-FALCON_FUNC fal_Object_CanFallDown(Falcon::VMachine *vm)
-{
-    fal_ObjectCarrier *self = Falcon::dyncast<fal_ObjectCarrier*>( vm->self().asObject() );
-    vm->retval(((Object*)self->GetObj())->CanFallDown());
-}
-
 FALCON_FUNC fal_Object_IsBlocking(Falcon::VMachine *vm)
 {
     fal_ObjectCarrier *self = Falcon::dyncast<fal_ObjectCarrier*>( vm->self().asObject() );
@@ -968,7 +951,6 @@ Falcon::Module *FalconObjectModule_create(void)
     m->addClassMethod(clsBaseObject, "remove", fal_BaseObject_Remove);
     m->addConstant("OBJTYPE_RECT", (Falcon::int64)OBJTYPE_RECT, true);
     m->addConstant("OBJTYPE_OBJECT", (Falcon::int64)OBJTYPE_OBJECT, true);
-    m->addConstant("OBJTYPE_ITEM", (Falcon::int64)OBJTYPE_ITEM, true);
     m->addConstant("OBJTYPE_UNIT", (Falcon::int64)OBJTYPE_UNIT, true);
     m->addConstant("OBJTYPE_PLAYER", (Falcon::int64)OBJTYPE_PLAYER, true);
 
@@ -1014,18 +996,11 @@ Falcon::Module *FalconObjectModule_create(void)
     m->addClassMethod(clsObject, "GetLayerId", fal_Object_GetLayerId);
     m->addClassMethod(clsObject, "SetAffectedByPhysics", &fal_Object_SetAffectedByPhysics); // also see .physics property
     m->addClassMethod(clsObject, "IsAffectedByPhysics", &fal_Object_IsAffectedByPhysics);
-    m->addClassMethod(clsObject, "CanFallDown", &fal_Object_CanFallDown);
     m->addClassMethod(clsRect, "SetBlocking", fal_Object_SetBlocking); // also see .blocking property
     m->addClassMethod(clsRect, "IsBlocking", fal_Object_IsBlocking);
     m->addClassProperty(clsObject, "phys");
     m->addClassProperty(clsObject, "gfxOffsX");
     m->addClassProperty(clsObject, "gfxOffsY");
-
-    // TODO: is this class needed?
-    Falcon::Symbol *clsItem = m->addClass("Item", &fal_ObjectCarrier::init);
-    clsItem->getClassDef()->addInheritance(inhObject);
-    clsItem->setWKS(true);
-    m->addClassMethod(clsItem, "OnUse", fal_NullFunc);
 
     Falcon::Symbol *clsUnit = m->addClass("Unit", &fal_ObjectCarrier::init);
     Falcon::InheritDef *inhUnit = new Falcon::InheritDef(clsUnit);

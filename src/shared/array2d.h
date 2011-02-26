@@ -74,14 +74,26 @@ public:
     {
         // trust the compiler to optimize this out
         if(OOBCHECK)
-        {
             if(x >= _size || y >= _size)
                 return _defaultval;
-        }
+        return data[(y << _shift) | x];
+    }
+
+    inline const T& operator () (uint32 x, uint32 y) const
+    {
+        // trust the compiler to optimize this out
+        if(OOBCHECK)
+            if(x >= _size || y >= _size)
+                return _defaultval;
         return data[(y << _shift) | x];
     }
 
     inline T& operator [] (uint16 pos)
+    {
+        return data[pos];
+    }
+
+    inline const T& operator [] (uint16 pos) const
     {
         return data[pos];
     }
@@ -91,11 +103,17 @@ public:
         return &data[0];
     }
 
-    inline uint32 size1d(void) { return _size; }
-    inline uint32 size2d(void) { return _size * _size; }
+    inline const T* array(void) const
+    {
+        return &data[0];
+    }
+
+    inline uint32 size1d(void) const { return _size; }
+    inline uint32 size2d(void) const { return _size * _size; }
 
     // use at your own risk
     inline T* getPtr(void) { return data; }
+    inline const T* getPtr(void) const { return data; }
     inline void setPtr(T *p) { data = p; }
     inline void resizeNoAlloc(uint32 s)
     {

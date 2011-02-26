@@ -37,16 +37,6 @@ protected:
     virtual void _Reset(void);
 
     bool _wasInit;
-
-    // TEMP: for debugging/testing
-#ifdef _DEBUG
-    ActiveRect mouseRect;
-    ActiveRect collRect;
-    bool collRectGood;
-    uint8 mouseCollision; // 0: floating; 1: standing; 2: collision
-    uint8 checkDirection;
-#endif
-
 };
 
 #endif

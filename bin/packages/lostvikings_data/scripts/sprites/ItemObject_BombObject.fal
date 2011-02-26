@@ -1,4 +1,4 @@
-class BombObject from ItemObject(BombItem)
+class BombObject from ItemObject
 
     gfx = "sprites/bomb.png"
 
