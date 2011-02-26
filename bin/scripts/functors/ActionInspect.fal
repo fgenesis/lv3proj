@@ -1,0 +1,24 @@
+
+class ActionInspect from ActionNull
+    type: "action"
+    name: "Inspect objects"
+    desc: "Output object information on the console"
+    energyIn: -1
+    energyOut: false
+    
+    init
+        super(self, ActionNull, argv())
+    end
+    
+    function __call()
+        size = len(self._sources)
+        if size
+            for i = 0 to size - 1
+                inspect(^* self._sources[i])
+            end
+        end
+    end
+    
+end
+
+export

@@ -1,0 +1,59 @@
+
+class EventMethod from EventNull
+    type: "event"
+    name: "EventMethod"
+    desc: "Trigger an event whenever a method of an object is called"
+    energyIn: -1
+    energyOut: 1
+    invertEdges: true // this is very important, and must be true for all events
+    
+    name = "" // Must be set
+    
+    function setup(obj)
+        if not self.name: raise "EventMethod: no method name given!"
+        
+        for i = 0 to len(self._params) - 1
+            obj = ^* self._params[i]
+            select obj
+                case ArrayType
+                    for j = 0 to len(obj) - 1: self._hookObject(^* obj[j])
+                default
+                    self._hookObject(obj)
+            end
+        end
+    end
+    
+    function _hookObject(obj)
+        props = obj.properties()
+        if not self.name in props
+            > "[WARNING] EventMethod:_hookObject(): '", self.name, "' not found in '", obj.className(), "'"
+            return
+        end
+        
+        mth = obj.getProperty(self.name) // save original method
+        mycall = self.__call             // store __call operator (defined in EventNull)
+        
+        override = function()
+            a = argv()
+            
+             // first, process the our original call method (= trigger this event)
+            call = [mycall]
+            if a: call += a // if we have additional params, append
+            try
+                call()
+            catch in err
+                > "EventMethod HOOK OVERRIDE ERROR:"
+                > err
+            end
+            
+             // then, call the original object method with its original paramters
+            call[0] = mth
+            return call()
+        end
+        
+        obj.setProperty(obj, self.name, override)
+    end
+    
+end
+
+export EventMethod

@@ -1,0 +1,40 @@
+
+// this is the minimal interface every functor needs,
+// and must be used as base class for all functors
+class Functor
+    type: "any"
+    name: "Null functor (base)"
+    desc: "DO NOT USE!"
+    hidden: true
+    
+    // this is only relevant for the editor
+    x = 0
+    y = 0
+    
+    function add(source)
+        raise "Functor: add()"
+    end
+    
+    function remove()
+        raise "Functor: remove()"
+    end
+    
+    // this function is intended to finish setup, after parameters were possibly changed from outside
+    function setup()
+        raise "Functor: setup()"
+    end
+    
+    function addParam(p)
+        raise "Functor: addParam()"
+    end
+    
+    function removeParam(p)
+        raise "Functor: removeParam()"
+    end
+    
+    function __call()
+        raise "Functor: __call()"
+    end
+end
+
+export

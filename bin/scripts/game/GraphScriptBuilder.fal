@@ -1,0 +1,451 @@
+/*
+    GraphScriptBuilder v0.01 WIP
+    
+    Converts a graph description file into a graph,
+    then further transforms that into a set of class functors,
+    which can be registered in a callbacks.
+    
+    Basically, the whole graph model can be described as a canal,
+    where data flow from source nodes via intermediate nodes to sink nodes,
+    each intermediate node serving as a connector and data mangler.
+    
+    Connections between nodes are 2 types of edges, "primary", modeling data flow
+    and function calls, and "secondary", which can deliver additional input to functors.
+    
+    Valid graph node types, along with special params, are:
+    
+    edge        - connectes 2 nodes (primary input channel)
+       from        - ID of source node (more see below)
+       to          - ID of target node
+       
+    edge2       - same as above, but connects something to the secondary channel
+    
+    functor     - one of functors (varying node)
+       class       - name of functor class
+       
+    object      - a reference to an object, as specified in the objects INI file (node)
+       id          - object ID or name (as returned by ObjectLoader)
+       alias       - can be used instead of the <id> field, and refer to an object alias as defined in the objects ini file
+       
+    type        - a class type symbol
+       class       - name of the class
+       
+                  
+    Anything else will be ignored.
+       
+       
+    Currently, the following functor types are supported:
+    (Note that the functor type is specified in the source file of each functor!)
+    
+    any          - can be used for anything
+                      (any graph node, type is variable, can serve as any type)
+                      
+    selector     - produces a sequence of data
+                      (source node)
+                      
+    transformer  - transforms one or more sequences into another sequence
+                      (intermediate graph node)
+                      
+    action       - takes a sequence and does something with it
+                      (sink node)
+                      
+    event        - a standalone event, when it occurs, all sink nodes connected with it
+                   will be called, so they can collect data from their sources and do whatever.
+                   May deliver arguments with each call.
+    
+    
+    The INI file to be processed has the following format:
+    # <ID>    - instance nuber, needs to be unique
+    
+    [<ID>]
+    type = functor
+    class = AnyLambda
+    text = "[1,2,3]"  # property of AnyLambda
+    
+    [<ID>]
+    type = edge
+    from = <ID>
+    to = <ID>
+*/
+
+reservedFields = [
+     [ "from", "to" ]   // edge
+    ,[ "from", "to" ]   // edge2
+    ,[ "class" ]        // functor
+    ,[ "id", "alias" ]  // object
+    ,[ "class" ]        // type
+]
+
+// node energies
+// left - incoming energy; right - outgoing energy
+// an edge is balanced, if the sum of its source node ougoing energy and target node incoming energy is 0.
+// there are some special meanings:
+// 0     - node has no energy, must be connected to another node with 0 energy
+// false - does not work, can't connect an edge there
+// true  - do not care, can connect anything (= ignore unbalanced energy)
+function getEnergyIn(item)
+    return item.energies[0]
+end
+
+function getEnergyOut(item)
+    return item.energies[1]
+end
+
+EdgeT         = 0 // secondary edge
+Edge2T        = 1 // primary edge
+FunctorT      = 2
+ObjectT       = 3
+TypeT         = 4
+
+/*
+function genCtor(  )
+    s = ""
+    for i = 0 to paramCount() - 1
+        p = parameter(i)
+        select p
+            case NumericType // also covers the deprecated IntegerType
+                s += p
+            
+            case StringType
+                s += '"' + p + '"'
+                
+            case ArrayType, DictionaryType, List
+                s += "["
+                for a in p: s += genCtor( a)
+                s += "]"
+                
+            default
+                s += p.className() + "(" + genCtor(p) + ")"
+        end
+        
+        formiddle: s += ", "
+    end
+    
+    return s
+end
+*/
+
+function isReservedField(item, s)
+    return s == "type" or (s in reservedFields[item.itemtype])
+end
+
+function lookupCtor(className)
+    try
+        return (#className)
+    catch
+        raise "GraphScriptBuilder: Unknown class: '" + className + "'"
+    end
+end
+
+class GraphItem
+    itemtype = nil // to be set by derived classes
+    energies = nil
+    gid = nil // internal graph id
+    graph = nil // back-reference to owning graph
+    
+    // used by the editor
+    x = nil
+    y = nil
+    w = nil
+    h = nil
+    
+    // the function is used to get whatever the item/node is mainly providing
+    function get(): raise "OOPS! get() not overloaded!"
+end
+
+class _Edge(src, targ, ty) from GraphItem
+    sourceid = src
+    targetid = targ
+    itemtype = ty
+    source = nil // nodes
+    target = nil
+    energies = nil
+    
+    _energy = nil
+    
+    // if true, exchange edgeFrom and edgeTo calls (reqired for events, where the edges have the opposite direction)
+    // note that this does not affect energy calculation, nor the actual edge direction.
+    _inverted = false
+    
+    function get(): return nil // nothing interesting
+    
+    // invert direction
+    function flip()
+        self.unregisterSelf()
+        tmp = self.sourceid
+        self.sourceid = self.targetid
+        self.targetid = tmp
+        self.registerSelf()
+    end
+    
+    function unregisterSelf()
+        self.source.edgesOut -= self
+        self.target.edgesIn -= self
+        self.source = nil
+        self.target = nil
+        self._inverted = false
+        self._energy = nil
+    end
+    
+    function registerSelf()
+        self.source = self.graph[self.sourceid]
+        self.target = self.graph[self.targetid]
+        
+        // before linking up, check if the edge must be treated as inverted
+        invertSrc = self.source.itemtype == FunctorT and self.source.get().attributes().get("invertEdges")
+        invertTrg = self.source.itemtype == FunctorT and self.target.get().attributes().get("invertEdges")
+        if invertSrc or invertTrg // also invert if both say invert
+            self._inverted = true
+        end
+        
+        self.source.edgesOut += self
+        self.target.edgesIn += self
+        switch self.itemtype
+            case EdgeT
+                if self._inverted
+                    self.source.edgeFrom(self.target)
+                    self.target.edgeTo(self.source)
+                else // normal case
+                    self.source.edgeTo(self.target)
+                    self.target.edgeFrom(self.source)
+                end
+            case Edge2T
+                self.source.edge2To(self.target)
+                self.target.edge2From(self.source)
+            default
+                raise "_Edge:registerSelf(): Unknown Edge type: " + self.itemtype
+        end
+        self.calculateEnergy()
+        //> "EDGE: ", self.sourceid, " -> ", self.targetid, " [invert: ", self._inverted, "; energy: ", self._energy, "]" 
+        if not self.isBalanced()
+            > "[WARNING] Edge #", self.gid, " [", self.sourceid, " -> ", self.targetid, "] not balanced; energy = ", self.getEnergy()
+        end
+    end
+    
+    function calculateEnergy()
+        eSrc = getEnergyOut(self.source)
+        eTrg = getEnergyIn(self.target)
+        if eSrc == false or eTrg == false // disallow if connected to any false
+            self._energy = 999
+        elif eSrc == true or eTrg == true // allow if connected to any true
+            self._energy = 0
+        else
+            self._energy = eSrc + eTrg // otherwise, sum up (see above for energy definition)
+        end
+    end
+    
+    function getEnergy(): return self._energy
+    
+    function isBalanced(): return self._energy == 0 // if its 0, we are balanced
+end
+
+class GNode from GraphItem
+    edgesIn = [] // incoming edges
+    edgesOut = [] // outgoing edges
+    classname = nil // type / class name
+    obj = nil // the object itself, if exists
+    type = nil // holds the type / ctor
+    
+    // when the graph edges are built, and this node is linked to another, this
+    // method is called, so further data can be prepared that isn't known before
+    // e.g. a method node does now know which object it is connected to.
+    // The edge direction is this way (self) --> (other)
+    // adding the edges to the internal arrays is done by the edge itself, and should not be done here
+    // !! Must return true to indicate linking was successful, or false if something is wrong, or the edge is bogus
+    function edgeTo(other)
+        return true
+    end
+   
+    // (self) <-- (other)
+    function edgeFrom(other)
+        return true
+    end
+   
+    // secondary edge (secondary data channel or additional input to be treated specially)
+    // (self) ~~> (other)
+    function edge2To(other)
+        return true
+    end
+    
+    // secondary edge
+    // (self) <~~ (other)
+    function edge2From(other)
+        return true
+    end
+end
+
+// provides basic typing info, and can act as type reference
+class _TypeNode(className) from GNode
+    itemtype = TypeT
+    energies = [false, 1]
+    init
+        self.classname = className
+        self.type = lookupCtor(className)
+    end
+    
+    function get(): return self.type
+end
+
+// represents a to-be-created object (like a functor), and can also act as type reference
+class _FunctorNode(className) from _TypeNode(className)
+    
+    itemtype = FunctorT
+    
+    init
+        self.obj = self.type() // call the ctor and save the created object
+        
+        // figure out energies
+        attrib = self.obj.attributes()
+        
+        energyIn = attrib.get("energyIn")
+        if energyIn == nil : energyIn = true // if not set, allow everything
+        
+        energyOut = attrib.get("energyOut")
+        if energyOut == nil : energyOut = true // if not set, allow everything
+        
+        self.energies = [energyIn, energyOut]
+    end
+    
+    function get()
+        return self.obj
+    end
+    
+    // (other) --> (self) // means other provides data for us
+    function edgeFrom(other)
+        self.obj.add(other.get()) // TODO FIXME
+    end
+    
+    function edge2From(other)
+        self.obj.addParam(other.get())
+    end
+end
+
+// this node accepts an already existing object (that is, Player, Unit, Object, Item types, mainly)
+// and represents a reference to this very object as used in the game engine
+// also a type reference
+class _ObjectNode(obj) from GNode
+
+    itemtype = ObjectT
+    energies = [false, 1]
+    
+    init
+        self.obj = obj
+        self.type = obj.baseClass()
+        self.classname = obj.className()
+    end
+    function get(): return self.obj
+end
+
+class GraphScriptBuilder
+    _dict = nil // the parsed INI file as dict[section => dict[key, value]]
+    _graph = nil // all graph components
+    _objs = nil // object dict as returned by ObjectLoader
+
+    function edgeFactory(o)
+        return _Edge(int(o["from"]), int(o["to"]), EdgeT)
+    end
+
+    function edge2Factory(o)
+        return _Edge(int(o["from"]), int(o["to"]), Edge2T)
+    end
+
+    function functorFactory(o)
+        n = _FunctorNode(o["class"])
+        return n
+    end
+
+    function typeFactory(o)
+        n = _TypeNode(o["class"])
+        return n
+    end
+
+    function objectFactory(o)
+        alias = o.get("alias")
+        if alias
+            realObj = self._objs[alias]
+        else
+            realObj = self._objs[int(o["id"])]
+        end
+        return _ObjectNode(realObj)
+    end
+
+    function initialFactory(o)
+        item = nil
+        switch o["type"]
+            case "edge"
+                item = self.edgeFactory(o)
+            case "edge2"
+                item =  self.edge2Factory(o)
+            case "functor"
+                item =  self.functorFactory(o)
+            case "type"
+                item =  self.typeFactory(o)
+            case "object"
+                item =  self.objectFactory(o)
+            default
+                > "GraphScriptBuilder:objFactory: unknown type '", o["type"], "'"
+                return nil
+        end
+        
+        // assign additional properties defined in the ini file
+        for key, val in o
+            obj = item.get()
+            if not obj: continue
+            if isReservedField(item, key): continue
+            
+            AssignValueHelper(obj, key, val)
+        end
+        return item
+    end
+    
+    function LoadFile(fn)
+        self._dict = ReadIniFileAsDict(fn)
+    end
+    
+    function SetObjects(objdict)
+        self._objs = objdict
+    end
+    
+    function GetItem(id)
+        node = self._graph.get(id)
+        return node ? node.get() : nil
+    end
+    
+    function BuildGraph()
+        self._graph = [ => ]
+        for k, o in self._dict
+            node = self.initialFactory(o)
+            gid = int(k)
+            self._graph[gid] = node
+            node.gid = gid
+            node.graph = self._graph
+        end
+        
+        self._LinkGraph()
+    end
+    
+    function _LinkGraph()
+        for k, o in self._graph
+            select o
+                case _Edge
+                    o.registerSelf(self._graph)
+                    
+                default
+                    // do something ?
+            end
+        end
+    end
+    
+    function Finalize()
+        for k, o in self._graph
+            select o
+                case _FunctorNode
+                    o.get().setup() // finalize functor
+            end
+        end
+    end
+
+end
+
+
+export GraphScriptBuilder

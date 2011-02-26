@@ -1,0 +1,97 @@
+/* Generic code compilation functor, for single expressions.
+ * This functor takes a code snippet (ideally a one-liner, or a lambda expression)
+ * compiles it on the fly, and executes the code when it is called, returning the result of the code.
+ * This class tries to handle different ways of serving the data:
+ * If the text does not compile (it needs at least one named symbol,
+ * or an anonymous function which will be given an internal name),
+ * the whole string is wrapped in a lambda expession: "{ => ... }"
+ * This makes it possible to pass simple values like arrays as code text, which can then be used directly.
+*/
+
+class AnyLambda from AnyNullMulti
+    type: "any"
+    name: "Lambda"
+    desc: "Execute a code snippet on the fly; any functor passed to this class is available in the global array 'F'"
+    
+    text = "" // This is to be set
+    name = "" // The name of the callable item to be used. If not set, try auto-detection.
+    
+    init
+        super(self, AnyNullMulti, argv())
+    end
+    
+    function setup()
+        if not self._compile(): raise "AnyLambda: Compilation failure!"
+    end
+    
+    function _compile()
+        if not self.text: raise "AnyLambda: no source code given!"
+        
+        // TODO: if text is array, join to 1 string?
+        
+        cc = Compiler()
+        cc.compileInMemory = true
+        cc.alwaysRecomp = true
+        cc.saveModules = false
+        try
+            m = cc.compile("_AnyLambda_", self.text)
+        catch
+            try
+                m = cc.compile("_AnyLambda_", "{ => " + self.text + " }") // HACK: for simple expressions, try wrapping a lambda call around it if it does not compile
+                > "AnyLambda: ... compile fix worked ..."
+            catch
+                return false // return false to indicate compilation failure
+            end
+        end
+        
+        try : m.set("F", self._sources) // can fail if the symbol is not used
+        
+        // try to get something useful from the just compiled module
+        // IMPORTANT: the compiled module MUST be unloaded, otherwise re-using the same name all the time will
+        // give us the old module instance already compiled, instead of a new one!
+        try
+            func = nil
+            fn = self.name
+            if not fn: fn = "_lambda#_id_1" // HACK - can this be done nicer? -- the first unnamed global function will have this name
+            func = m.get(fn)
+            m.unload() // if we are here, it didn't throw an error, so we must have found something at least. the compiled module is no longer needed now.
+            if not isCallable(func)
+                if not func: return nil // can this happen?
+                // ok, we have something that is not callable, but the user wants to return it.
+                // so, we wrap it in a lambda expression, and replace our call operator with it. done.
+                func = func.clone() // clone, so so the module unload can be finished
+                self.__call = { => func }
+                return true
+            end
+        catch
+            if self.name: return nil // if we got an explicit function name to use, and end up here, something is wrong. do not try to detect something callable.
+            expo = m.globals()
+            if len(expo)
+                for i = 0 to len(expo) - 1
+                    sym = expo[i]
+                    if sym == "F": continue // this is the sources array, we dont want that
+                    func = m.get(sym) // try whatever we can get
+                    if isCallable(func)
+                        break // good, now we have something callable
+                    else
+                        func = nil
+                    end
+                end
+            end
+            m.unload() // free the name for further compilations
+            if not func: return nil // return nil to indicate that we didnt find a callable function
+        end
+        
+        // use our just compiled function as call operator.
+        self.__call = func.clone()
+        
+        return true
+    end
+    
+    function __call()
+        raise "AnyLambda: __call() operator not replaced" // i think this can't happen...
+    end
+    
+end
+
+export

@@ -1,0 +1,38 @@
+
+class EventPeriodicTimer from EventNull
+    type: "event"
+    name: "Interval Timer"
+    desc: "Periodic timer, triggering at a fixed rate. Time is in milliseconds."
+    energyIn: -1
+    energyOut: 1
+    invertEdges: true // this is very important, and must be true for all events
+
+    interval = 0
+    
+    init
+        super(self, EventNull, argv())
+    end
+    
+    function setup()
+        self.Start()
+    end
+    
+    function SetInterval(interval): self.interval = interval
+    function GetInterval(): return self.interval
+    
+    function _update()
+        self.Start() // register again
+        self() // process calls
+    end
+    
+    function Start()
+        if self.interval: CallScheduler.Schedule(self._update, self.interval)
+    end
+    
+    function Stop()
+        self.SetInterval(0)
+    end
+    
+end
+
+export

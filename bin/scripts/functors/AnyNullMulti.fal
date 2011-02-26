@@ -1,0 +1,47 @@
+
+// this is the minimal interface every multi-arg functor should have,
+// can be used as base class for functors taking multiple inputs
+// (does not forward any calls; always delivers empty array)
+class AnyNullMulti
+    type: "any"
+    name: "Null functor (multi input)"
+    desc: "Does nothing, and returns an empty array"
+    hidden: true
+
+    // data store array, must both be non-methodic so they will not be called accidentally
+    // NM() also prevents a few really nasty problems with super()
+    _sources = [].NM() // primary input (via constructor or .add method)
+    _params = [].NM() // secondary input (via .addParam method)
+    
+    init
+        a = argv() // can be nil
+        if a: for i = 0 to len(a) - 1: self.add(a[i])
+    end
+    
+    // this function is intended to finish setup, after parameters were possibly changed from outside
+    function setup()
+    end
+    
+    function add(source)
+        if not source: raise Error("penis")//raise "Functor: Can't add nil to source list"
+        self._sources.add(source)
+    end
+    
+    function remove(source)
+        return self._sources.del(source) // TODO: which remove mode to use? allow removing multiple?
+    end
+    
+    function addParam(p)
+        self._params.add(p)
+    end
+    
+    function removeParam(p)
+        return self._params.del(p)
+    end
+    
+    function __call()
+        return []
+    end
+end
+
+export

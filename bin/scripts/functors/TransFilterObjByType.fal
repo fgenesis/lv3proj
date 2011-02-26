@@ -1,0 +1,46 @@
+
+class TransFilterObjByType from AnyNullSingle
+    type: "transform"
+    name: "Filter objects by type"
+    desc: "Filter objects by type" // TODO: more detail
+    energyIn: -1
+    energyOut: 1
+
+    init
+        super(self, AnyNullSingle, argv())
+    end
+    
+    function addParam(p)
+        self._addType(p)
+    end
+    
+    function _addType(ty)
+        select ty
+            case ArrayType
+                for i = 0 to ty.len() - 1: self._addType(ty[i]) // use counted loop to be sure no for..in evaluation takes place
+            case List
+                for e in ty: self._addType(e)
+            case DictionaryType
+                for key, val in ty: self._addType(val)
+            case StringType, ClassType
+                self._params += ty
+            case ObjectType
+                self._params += ty.className()
+            default
+                raise "TransFilterObjByType: unknown type handle: " + ty
+        end
+    end
+    
+    function _goodType(obj)
+        for ty in self._params
+            if obj.derivedFrom(ty): return true
+        end
+        return false
+    end
+    
+    function __call()
+        return filter(self._goodType, ^* self._source)
+    end
+end
+
+export

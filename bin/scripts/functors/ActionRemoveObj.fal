@@ -1,0 +1,24 @@
+
+class ActionRemoveObj from ActionNull
+    type: "action"
+    name: "Remove objects"
+    desc: "Remove objects from the game completely"
+    energyIn: -1
+    energyOut: false
+    
+    // TODO: add something that allows only simulation of removal (for the editor)
+    
+    init
+        super(self, AnyNullMulti, argv())
+    end
+
+    function __call()
+        for i = 0 to len(self._sources) - 1
+            objs = ^* self._sources[i]
+            for o in objs: o.remove()
+        end
+    end
+end
+
+
+export

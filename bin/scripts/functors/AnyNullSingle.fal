@@ -1,0 +1,44 @@
+
+// this is the minimal interface every single-arg functor needs,
+// can be used as base class for functors taking one input
+// (does not forward any calls; always delivers empty array)
+class AnyNullSingle
+    type: "any"
+    name: "Null functor (single input)"
+    desc: "Does nothing, and returns an empty array"
+    hidden: true
+
+    _source = { => [] } // primary input (via constructor only)
+    _params = [].NM() // secondary input (via .addParam method)
+    
+    init
+        func = parameter(0)
+        if func: self.add(func)
+    end
+    
+    function add(source)
+        self._source = source
+    end
+    
+    function remove()
+        return self._source = { => [] }
+    end
+    
+    // this function is intended to finish setup, after parameters were possibly changed from outside
+    function setup()
+    end
+    
+    function addParam(p)
+        self._params.add(p)
+    end
+    
+    function removeParam(p)
+        return self._params.del(p)
+    end
+    
+    function __call()
+        return []
+    end
+end
+
+export

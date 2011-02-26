@@ -1,0 +1,32 @@
+
+class EventNull from AnyNullMulti
+    type: "event"
+    name: "Null event"
+    desc: "Does never happen, unless manually triggered"
+    energyIn: -1
+    energyOut: 1
+    invertEdges: true // this is very important, and must be true for all events
+    
+    active = true
+    
+    init
+        super(self, AnyNullMulti, argv())
+    end
+    
+    function Enable(): self.active = true
+    function Disable(): self.active = false
+    function IsActive(): return self.active
+    
+    function __call()
+        if not self.IsActive(): return
+        p = argv()
+        if p // if we have one or more paramters, create parametric callable array with extra params
+            ([brigade, self._sources] + p)()
+        else // and if not, we just call normally (maybe less overhead)
+            brigade(self._sources)
+        end
+    end
+    
+end
+
+export

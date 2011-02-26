@@ -1,0 +1,26 @@
+
+class ActionBroadcastMessage from ActionNull
+    type: "action"
+    name: "Broadcast message"
+    desc: "Broadcast a named message, which will be received by a Message event listening to the same name"
+    // TODO: write something about ignoring any call args + does not evaluate any input
+    energyIn: -1
+    energyOut: false
+
+    name = nil
+    
+    init
+        super(self, ActionNull, argv())
+    end
+    
+    function setup()
+        if not self.name: raise "ActionBroadcastMessage: no message name defined!"
+    end
+    
+    function __call()
+        broadcast(self.name, self._sources)
+    end
+
+end
+
+export

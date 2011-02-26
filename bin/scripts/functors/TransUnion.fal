@@ -1,0 +1,24 @@
+
+class TransUnion from AnyNullMulti
+    type: "transformer"
+    name: "Union"
+    desc: "Performs the union operation on an arbitrary amount of input sequences: Remove duplicates, and return as one large sequence"
+    energyIn: -1
+    energyOut: 1
+
+    init
+        super(self, AnyNullMulti, argv())
+    end
+    
+    function __call()
+        ret = [].NM()
+        filt = { q => q notin ret ? q : oob(1) } // only add to return list what is not already present (make unique)
+        // try to evaluate each item and add the result to the return list
+        // note that if using a for...in loop, _items may be treated as generator, which delivers the wrong results
+        for i = 0 to len(self._sources) - 1: ret.comp(^* self._sources[i], filt)
+        return ret
+    end
+    
+end
+
+export

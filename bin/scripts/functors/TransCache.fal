@@ -1,0 +1,28 @@
+
+class TransCache from AnyNullSingle
+    type: "transformer"
+    name: "Cache"
+    desc: "Caches the result of one call, and uses it for subsequent calls"
+    energyIn: -1
+    energyOut: 1
+    
+    _cached = nil
+    
+    init
+        super(self, AnyNullSingle, argv())
+    end
+    
+    function __call()
+        if self._cached: return self._cached
+        res = ^* self._source
+        self._cached = res
+        return res
+    end
+    
+    function flush()
+        self._cached = nil
+    end
+    
+end
+
+export

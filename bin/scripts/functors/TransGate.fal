@@ -1,0 +1,29 @@
+
+class TransGate from AnyNullSingle
+    type: "transformer"
+    name: "Gate"
+    desc: "Only lets a sequence through if open; otherwise, return empty array"
+    energyIn: -1
+    energyOut: 1
+    
+    open = true
+    
+    function IsOpen(): return self.open
+    function Open(): self.open = true
+    function Close(): self.open = false
+
+    init
+        super(self, AnyNullSingle, argv())
+    end
+    
+    function __call()
+        if self.open
+            return self._source // we do not need to evaluate that here
+        else
+            return [].NM()
+        end
+    end
+    
+end
+
+export

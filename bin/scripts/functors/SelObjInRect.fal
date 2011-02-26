@@ -1,0 +1,44 @@
+
+class SelObjInRect from AnyNullMulti
+    type: "selector"
+    name: "Objects in Rect"
+    desc: "Selects all objects that are completely or partially contained in another object (e.g. a rectangle). Works for multiple objects as well."
+    energyIn: -1
+    energyOut: 1
+    
+    init
+        super(self, AnyNullMulti, argv())
+    end
+    
+    function __call()
+        li = [].NM()
+        
+        // evaluate primary input
+        src = (^* self._sources)
+        select src
+            case ArrayType
+                for j = 0 to len(src) - 1
+                    li += (^* src[j])
+                end
+            default
+                li += src
+        end
+        
+        // do not evaluate secondary input
+        li += self._params
+        
+        res = [].NM()
+        
+        for rect in li
+            select rect
+                case ActiveRect
+                    res += Objects.GetAllInRect(rect)
+                default
+                    res += Objects.GetAllInRect(rect.x, rect.y, rect.w, rect.h) // hope it works
+            end
+        end
+        return res
+    end
+end
+
+export

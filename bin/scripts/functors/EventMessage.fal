@@ -1,0 +1,23 @@
+
+class EventMessage from EventNull
+    type: "event"
+    name: "Received named message"
+    desc: "Triggers whenever a message is received"
+    energyIn: -1
+    energyOut: 1
+    invertEdges: true // this is very important, and must be true for all events
+    
+    name = "" // must be set
+    
+    init
+        super(self, EventNull, argv())
+    end
+    
+    function setup()
+        if not self.name: raise "EventMessage: no message name defined!"
+        subscribe(self.name, self)
+    end
+    
+end
+
+export

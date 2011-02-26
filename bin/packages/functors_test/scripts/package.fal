@@ -1,0 +1,93 @@
+
+pkg = Package()
+pkg.LoadDependency("lostvikings_data")
+pkg.InitGame()
+
+function LoadFinal()
+    str = "error creating loader"
+    str2 = "error executing loader"
+    loader = nil
+    RegisterRenderHook([renderhook, $str, $str2]) // using references here, we possibly change the strings later
+    
+    try
+        loader = MakeObjectLoader("maps/map.obj.ini")
+        str = "Loader created!"
+    catch in err
+        > err
+    end
+    
+    if loader
+        try
+            objects = loader()
+            str2 = "Loader executed!"
+        catch in err
+            > err
+        end
+    end
+    
+    if not objects: return
+    
+    for id, obj in objects: > "[", describe(id), "] => ", obj
+    
+    gb = GraphScriptBuilder()
+    gb.LoadFile("maps/map.func.ini")
+    gb.SetObjects(objects)
+    gb.BuildGraph()
+    
+    // first way to start the example
+    gb.Finalize() // <-- this activates all functors in the graph
+    
+    // second way to start the example
+    //testFunctors(objects)
+    
+end
+
+// this method is the actual graph made from the ini file, as the actual code representation
+// not used, serves as an example how everything works together
+function testFunctors(objects)
+
+    // part 1 (useless data mangling)
+    a1 = [1,2,3]
+    a2 = [2,7,7,8]
+    union = TransUnion(a1, a2)
+    insp = ActionInspect(union)
+    
+    // part 2 (do something with objects)
+    sel = SelObjInRect(objects["someRect1"])
+    tyfilt = TransFilterObjByType(sel)
+    tyfilt.addParam("IronBlock")
+    remv = ActionRemoveObj(tyfilt)
+    
+    // putting everything together
+    evt = EventPeriodicTimer(remv, insp)
+    evt.interval = 2000
+    
+    // final setup
+    union.setup()
+    insp.setup()
+    sel.setup()
+    tyfilt.setup()
+    remv.setup()
+    evt.setup()
+end
+
+function RawKeyHandler(inp)
+    ty, src, which, value = inp
+    if (ty == EVENT_TYPE_KEYBOARD or ty == EVENT_TYPE_JOYSTICK_BUTTON) and value and which == SDLK.ESCAPE
+        Package.Shutdown()
+    end
+end
+
+RegisterRawInputHook("functors_test_package", RawKeyHandler)
+
+
+function renderhook(str, str2)
+    surf = Screen.GetSurface()
+    font = GetFont("rpgfont")
+    write = Screen.GetSurface().Write
+    write(10, 10, font, str)
+    write(10, 30, font, str2)
+end
+
+
+pkg.Start(LoadFinal)

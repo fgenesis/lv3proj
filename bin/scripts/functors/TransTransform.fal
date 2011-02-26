@@ -1,0 +1,18 @@
+
+class TransTransform from AnyNullSingle
+    type: "transformer"
+    name: "Transform"
+    desc: "Apply a transforming function to a sequence"
+    energyIn: -1
+    energyOut: 1
+    
+    init
+        super(self, AnyNullSingle, argv())
+    end
+    
+    function __call()
+        return map(cascade(self._params), ^* self._source)
+    end
+end
+
+export 

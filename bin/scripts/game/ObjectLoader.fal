@@ -1,0 +1,150 @@
+/*
+    Object Loader script v0.01-WIP
+    
+    This script reads a .ini file, and returns a function, which,
+    upon called, creates all objects and populates the map.
+    The function returns a dict, mapping the an object's ID to the object.
+    
+    The ini file is expected to have the following format:
+     
+    [42]
+    class = ObjectClassName
+    
+    The ID in [..] is mandatory, as well as the class specification.
+    The given class name must be a class known at the time the objects are spawned.
+    Everything else is up to the script/reader.
+    There are a few entries that have a special meaning:
+    
+    arg.file = "image.png"
+    arg.num = 33
+    -- This means that a parameter with the name "file" will be passed to ObjectClassName's constructor.
+    -- In falcon, the late/future bindings created will be: file|"image.png", num|33.
+    -- The order of named parameters / future bindings does not matter.
+    
+    args = "image.png"
+    args = 33
+    -- values assigned to args will be passed to the constructor **in the order they appear in the file**.
+    -- for example, this would call ObjectClassName("image.png", 33)
+    
+    So parameters can either be passed by call order, or param name, or both (not recommended).
+    If unsure about the mechanics of future bindings, refer to:
+    http://falconpl.org/index.ftd?page_id=sitewiki&prj_id=_falcon_site&sid=wiki&pwid=Survival+Guide&wid=Survival%3AFunctions
+    Section "Non positional parameters" for more info.
+    
+    A few more common parameters are "x" and "y", which indicate the spawn position on the map and are also used by the editor.
+    The "non-special" parameters (that is, everything that is not "args" or "class",
+    nor starts with "arg.") are assigned to the object after it was created.
+    
+    More complete example:
+    
+    [10]
+    class = ImageObject
+    arg.sprite = "image.png"
+    x = 100
+    y = 20
+    
+    would translate into an equivalent of the following code:
+    
+    obj = ImageObject( sprite|"image.png" )
+    obj.x = 100
+    obj.y = 20
+    OBJECTS[10] = obj // object array, mapping IDs to the actual objects (for later reference)
+*/
+
+function GetClassCtor(className)
+    try
+        return (#className)
+    catch
+        raise "ObjectLoader: Unknown class: '" + className + "'"
+    end
+end
+
+function MakeObjectParametricCtor(obj, parray)
+    className = obj["class"]
+    ctor = [GetClassCtor(className)]
+    ctor.merge(parray)
+    return ctor
+end
+
+function MakeSelfRegisteringObjectParametricCtor(id, obj, dict, parray)
+    ctor = MakeObjectParametricCtor(obj, parray)
+    alias = obj.get("alias")
+    f = function()
+        realObj = ctor()
+        dict[id] = realObj
+        if alias: dict[alias] = realObj
+        return realObj
+    end
+    return f
+end
+
+function MakeDoEverythingCtor(id, obj, dict, parray)
+    ctor = MakeSelfRegisteringObjectParametricCtor(id, obj, dict, parray)
+    f = function()
+        realObj = ctor()
+        AssignValues(realObj, obj)
+        return realObj
+    end
+    return f
+end
+
+function MakeSpawnFunction(objdict)
+    calls = []
+    ret = [=>]
+    for id, obj in objdict
+    
+        // sanity check, must exist
+        if not obj.get("class")
+            raise "ObjectLoader: [" + id + "] has no 'class' entry!"
+        end
+    
+        // positional params
+        params = obj.get("args")
+        if not params: params = []
+        if typeOf(params) == StringType: params = [params] // must be array
+        
+        // future bindings
+        posArgs = obj.get("arg")
+        if posArgs
+            for pn, pv in posArgs
+                lb = lbind(pn, pv)
+                params += lb
+            end
+        end
+        
+        ctor = MakeDoEverythingCtor(id, obj, ret, params)
+        calls += ctor
+    end
+    
+    spawnf = function()
+        brigade(calls) // call all in array
+        return ret
+    end
+    
+    return spawnf
+end
+
+reservedKeys = ["arg", "args", "class", "alias"]
+
+function AssignValues(objReal, objProto)
+    for key, val in objProto
+        if key in reservedKeys: continue
+        select val
+            case StringType, NumericType
+                AssignValueHelper(objReal, key, val)
+            
+            default
+                AssignValues(objReal.getProperty(key), val)
+        end
+    end
+    return objReal
+end
+
+function MakeObjectLoader(inifile)
+    d = ReadIniFileAsDict(inifile)
+    fixed = FixObjectTree(d)
+    return MakeSpawnFunction(fixed)
+end
+
+
+export MakeObjectLoader

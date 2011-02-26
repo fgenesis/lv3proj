@@ -1,0 +1,19 @@
+
+class ActionNull from AnyNullMulti
+    type: "action"
+    name: "Null action"
+    desc: "Does nothing"
+    hidden: true
+    energyIn: -1
+    energyOut: false
+    
+    init
+        super(self, AnyNullMulti, argv())
+    end
+    
+    function __call()
+    end
+
+end
+
+export

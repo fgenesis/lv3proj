@@ -1,0 +1,62 @@
+
+// do some post-processing on the tree,
+// like splitting "arg.text" into ["arg" => ["text" => ...]]
+function FixObjectTree(t)
+    out = [=>]
+    for sid, obj in t
+        id = int(sid)
+        for label, value in obj
+            arr = label.split(".")
+            if not out.get(id)
+                subtree = [=>]
+                out[id] = subtree
+            else
+                subtree = out[id]
+            end
+            if len(arr) > 1
+                for i = 0 to len(arr) - 2 // skip last elem
+                    s = arr[i]
+                    probe = subtree.get(s)
+                    if probe  // already have a subtree with that name?
+                        subtree = probe
+                    else
+                        ins = [=>]
+                        subtree[s] = ins
+                        subtree = ins
+                    end
+                end
+                label = arr[len(arr) - 1] // last elem
+            end
+            subtree[label] = value
+        end
+    end
+    return out
+end
+
+function AssignValueHelper(who, key, val)
+    ok = true
+    try // try to guess value type
+        if strIsInt(val)
+            who.setProperty(key, int(val))
+        elif strIsNumeric(val)
+            who.setProperty(key, numeric(val))
+        elif val == "true"
+            who.setProperty(key, true)
+        elif val == "false"
+            who.setProperty(key, false)
+        else
+            ok = false // set as string, below
+        end
+    catch
+        ok = false
+    end
+    
+    // if that above didn't work, try again to set as string arg.
+    // maybe that works, and if the desired property does not exist, it will raise an error anyways.
+    if not ok
+        who.setProperty(key, val)
+    end
+end
+
+
+export
