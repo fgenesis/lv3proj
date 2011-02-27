@@ -17,7 +17,8 @@ void EditorEngine::_SaveCurrentMapAs(const char *fn)
 {
     if(!(fn && *fn))
     {
-        logerror("_SaveCurrentMapAs: Empty file name!");
+        logdebug("_SaveCurrentMapAs: Empty file name!");
+        GetFileDlg()->Open(true, "map"); // HACK: make this call nicer (also see TopMenus.cpp for this)
         return;
     }
 
