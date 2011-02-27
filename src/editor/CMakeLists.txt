@@ -2,11 +2,16 @@
 include_directories (${GAMEENGINE_INCLUDE_DIR})
 
 set(editor_SRC
+AppFalconEditor.cpp
 BottomBarPanel.cpp
 DrawAreaPanel.cpp
 EditorEngine.cpp
 EventHandler.cpp
+FalconEditorModule.cpp
+GraphNode.cpp
 GUIHandler.cpp
+InputHandlerDrawTiles.cpp
+InputHandlerObjects.cpp
 LayerPanel.cpp
 main.cpp
 MapFileHandler.cpp

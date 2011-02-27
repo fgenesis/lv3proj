@@ -21,7 +21,7 @@ Engine *Engine::s_instance = NULL;
 Engine::Engine()
 : _screen(NULL), _fps(0), _sleeptime(0), _framecounter(0), _paused(false),
 _debugFlags(EDBG_NONE), _reset(false), _bgcolor(0), _drawBackground(true),
-_fpsMin(60), _fpsMax(70), falcon(NULL)
+_fpsMin(60), _fpsMax(70), falcon(NULL), _mouseX(0), _mouseY(0)
 {
     log("Game Engine start.");
     s_instance = this;
@@ -156,6 +156,11 @@ void Engine::_InitJoystick(void)
     }
 }
 
+bool Engine::_InitFalcon(void)
+{
+    return true; // nothing to do here
+}
+
 void Engine::Run(void)
 {
     uint32 ms;
@@ -270,7 +275,7 @@ void Engine::_CalcFPS(void)
 
 bool Engine::Setup(void)
 {
-    return true;
+    return _InitFalcon();
 }
 
 void Engine::_Process(uint32 ms)
@@ -296,6 +301,8 @@ void Engine::OnWindowEvent(bool active)
 
 void Engine::OnMouseEvent(uint32 type, uint32 button, uint32 state, uint32 x, uint32 y, int32 rx, int32 ry)
 {
+    _mouseX = x;
+    _mouseY = y;
 }
 
 void Engine::OnJoystickEvent(uint32 type, uint32 device, uint32 id, int32 val)

@@ -6,7 +6,7 @@
 class AppFalconGame : public AppFalcon
 {
 public:
-    AppFalconGame(Engine *e);
+    AppFalconGame();
 
 
 protected:

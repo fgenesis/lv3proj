@@ -4,7 +4,7 @@
 
 #include "FalconGameModule.h"
 
-AppFalconGame::AppFalconGame(Engine *e) : AppFalcon(e)
+AppFalconGame::AppFalconGame() : AppFalcon()
 {
 }
 

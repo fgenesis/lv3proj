@@ -206,6 +206,7 @@ void ObjectMgr::HandleObjectCollision(ActiveRect *base, ActiveRect *other, uint8
 void ObjectMgr::RenderLayer(uint32 id)
 {
     SDL_Surface *esf = _engine->GetSurface();
+    Point cam = _engine->GetCameraPos();
     for(ObjectSet::iterator it = _renderLayers[id].begin(); it != _renderLayers[id].end(); it++)
     {
         Object *obj = *it;
@@ -214,8 +215,8 @@ void ObjectMgr::RenderLayer(uint32 id)
             if(BasicTile *sprite = obj->GetSprite())
             {
                 SDL_Rect dst;
-                dst.x = int(obj->x) + obj->gfxoffsx;
-                dst.y = int(obj->y) + obj->gfxoffsy;
+                dst.x = int(obj->x) + obj->gfxoffsx - cam.x;
+                dst.y = int(obj->y) + obj->gfxoffsy - cam.y;
                 dst.w = obj->w;
                 dst.h = obj->h;
                 SDL_BlitSurface(sprite->GetSurface(), NULL, esf, &dst);
@@ -234,11 +235,12 @@ void ObjectMgr::GetAllObjectsIn(BaseRect& rect, ObjectWithSideSet& result, uint8
 void ObjectMgr::RenderBBoxes(void)
 {
     SDL_Rect r;
+    Point cam = _engine->GetCameraPos();
     for(ObjectMap::iterator it = _store.begin(); it != _store.end(); it++)
     {
         BaseRect br = ((ActiveRect*)it->second)->cloneRect();
-        r.x = int32(br.x);
-        r.y = int32(br.y);
+        r.x = int32(br.x) - cam.x;
+        r.y = int32(br.y) - cam.y;
         r.h = br.h;
         r.w = br.w;
         SDLfunc_drawRectangle(_engine->GetSurface(), r, 0xDF, 0xDF, 0xDF, 0);

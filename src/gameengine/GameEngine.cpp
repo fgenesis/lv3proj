@@ -18,7 +18,7 @@
 GameEngine::GameEngine()
 : Engine(), _wasInit(false)
 {
-    falcon = new AppFalconGame(this);
+    
 
     // test
 #ifdef _DEBUG
@@ -37,6 +37,12 @@ void GameEngine::Shutdown(void)
     Falcon::Engine::PerformGC();
     Falcon::Engine::Shutdown();
     Engine::Shutdown();
+}
+
+bool GameEngine::_InitFalcon(void)
+{
+    falcon = new AppFalconGame(); // this is overloaded by the editor
+    return true;
 }
 
 bool GameEngine::Setup(void)
@@ -200,29 +206,9 @@ void GameEngine::OnJoystickEvent(uint32 type, uint32 device, uint32 id, int32 va
 
 void GameEngine::OnMouseEvent(uint32 type, uint32 button, uint32 state, uint32 x, uint32 y, int32 rx, int32 ry)
 {
-    if(type == SDL_MOUSEBUTTONDOWN)
-    {
-        if(button == 1)
-        {
-            logcustom(0, YELLOW, "Mouse position: (%u, %u), tile position: (%u, %u)", x, y, x / 16, y / 16);
-            BaseRect r;
-            r.x = x;
-            r.y = y;
-            r.h = r.w = 1;
-            ObjectWithSideSet objs;
-            objmgr->GetAllObjectsIn(r, objs);
-            for(ObjectWithSideSet::iterator it = objs.begin(); it != objs.end(); it++)
-            {
-                ActiveRect *obj = (ActiveRect*)it->first;
-                logcustom(0, YELLOW, "-> Object(%u): type %u, xywh=(%d,%d,%u,%u), layer=%d [%c%c%c]",
-                    obj->GetId(), obj->GetType(), int32(obj->x), int32(obj->y), obj->w, obj->h,
-                    obj->GetType() >= OBJTYPE_OBJECT ? ((Object*)obj)->GetLayer() : -1,
-                    obj->IsCollisionEnabled() ? 'C' : '-', 
-                    obj->GetType() >= OBJTYPE_OBJECT && ((Object*)obj)->IsAffectedByPhysics() ? 'P' : '-',
-                    obj->GetType() >= OBJTYPE_OBJECT && ((Object*)obj)->IsBlocking() ? 'B' : '-');
-            }
-        }
-    }
+    Engine::OnMouseEvent(type, button, state, x, y, rx, ry);
+
+    // TODO: forward mouse events to falcon
 }
 
 void GameEngine::OnObjectCreated(BaseObject *obj)

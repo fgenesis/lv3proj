@@ -1,2 +1,4 @@
+-p scripts/editor -s EditorKeys.fal
+-p scripts/editor -s ObjectOverrides.fal
 -p scripts/editor -s basepak.listfile
 -p scripts/editor -s gen.sh

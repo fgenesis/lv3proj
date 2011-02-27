@@ -46,10 +46,10 @@ void TileLayerPanel::draw(gcn::Graphics *g)
     if(IsCovered())
         return;
 
-    gcn::Panel::draw(g);
+    gcn::Panel::draw(g); // we call the normal panel draw routine here, because the selection frame is treated specially below
     if(_mgr)
         _mgr->Render();
     for(uint32 i = 0; i < _layers.size(); ++i)
         _layers[i]->Render();
-    drawSelection(g);
+    drawSelection(g); // last; it would be overdrawn otherwise
 }

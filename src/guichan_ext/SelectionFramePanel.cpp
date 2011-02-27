@@ -21,8 +21,6 @@ void gcn::SelectionFramePanel::drawSelection(Graphics *g)
 
     Rectangle r = _frame;
     _fixRect(r);
-    //r.x += getX();
-    //r.y += getY();
 
     if(_hilightSelRect)
         g->setColor(Color(255,255,255,255));
@@ -55,6 +53,8 @@ void gcn::SelectionFramePanel::mousePressed(MouseEvent& me)
     _mouseBaseY = me.getY();
     _hilightSelRect = true;
     _initRect(me.getX(), me.getY());
+
+    InputHandlerBase::mousePressed(me);
 }
 
 void gcn::SelectionFramePanel::_alignRect(Rectangle& r)
@@ -81,6 +81,7 @@ void gcn::SelectionFramePanel::mouseMoved(MouseEvent& me)
 {
     _showSelRect = true;
     _initRect(me.getX(), me.getY());
+    InputHandlerBase::mouseMoved(me);
 }
 
 void gcn::SelectionFramePanel::mouseDragged(MouseEvent& me)
@@ -118,22 +119,27 @@ void gcn::SelectionFramePanel::mouseDragged(MouseEvent& me)
     }
 
     _alignRect(_frame);
+
+    InputHandlerBase::mouseDragged(me);
 }
 
 void gcn::SelectionFramePanel::mouseReleased(MouseEvent& me)
 {
     _initRect(me.getX(), me.getY(), true);
     _hilightSelRect = false;
+    InputHandlerBase::mouseReleased(me);
 }
 
 void gcn::SelectionFramePanel::mouseEntered(MouseEvent& me)
 {
     _showSelRect = true;
+    InputHandlerBase::mouseEntered(me);
 }
 
 void gcn::SelectionFramePanel::mouseExited(MouseEvent& me)
 {
     _showSelRect = false;
+    InputHandlerBase::mouseExited(me);
 }
 
 void gcn::SelectionFramePanel::_fixRect(Rectangle& r)

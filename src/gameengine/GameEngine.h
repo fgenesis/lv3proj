@@ -35,6 +35,7 @@ protected:
     virtual void _Render(void);
     virtual void _PostRender(void);
     virtual void _Reset(void);
+    virtual bool _InitFalcon(void);
 
     bool _wasInit;
 };

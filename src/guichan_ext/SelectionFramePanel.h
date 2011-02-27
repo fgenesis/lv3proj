@@ -38,6 +38,8 @@ public:
     inline uint32 GetSelBlocksW(void) { return _frame.width / _blockW; }
     inline uint32 GetSelBlocksH(void) { return _frame.height / _blockH; }
 
+    inline void SetInputHandler(InputHandlerBase *h) { _rootHandler.subHandler = h; }
+
 protected:
     void _initRect(uint32 x, uint32 y, bool resetWH = false);
     void _fixRect(Rectangle& r);

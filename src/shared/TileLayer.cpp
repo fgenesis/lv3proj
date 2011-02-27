@@ -150,7 +150,10 @@ void TileLayer::Resize(uint32 dim)
     // enlarging is easy as no tiles will disappear
     uint32 newsize = clp2(dim); // always n^2
     if(newsize >= tilearray.size1d())
+    {
         tilearray.resize(dim, NULL);
+        return;
+    }
 
     // if shrinking the map, the tiles that are going to disappear have to be reference counted down properly
     // example: (not powers of 2 but who cares)

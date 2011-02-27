@@ -1,0 +1,16 @@
+
+// in the editor, we do not always actually remove objects, just hide them.
+// i.e. when testing a map is done, the map objects should not be gone
+function ObjectCreateHook(obj)
+    rm = obj.remove
+    obj.remove = [Object_remove, obj, rm]
+end
+
+function Object_remove(obj, rm)
+    // TEST: for now, just print when an object is removed; we will take appropriate measures later
+    > "REMOVE: ", obj
+    rm()
+end
+
+
+RegisterObjectCreateHook(ObjectCreateHook)

@@ -8,7 +8,7 @@ class EditorEngine;
 class TileLayer;
 class LayerMgr;
 
-// generic tile layer panel that provides 
+// generic tile layer panel that provides a selection frame and a LayerMgr to draw tiles
 class TileLayerPanel : public gcn::SelectionFramePanel
 {
 public:

@@ -9,6 +9,7 @@
 #include "LayerPanel.h"
 #include "EditorEngine.h"
 #include "DrawAreaPanel.h"
+#include "AppFalconEditor.h"
 
 const char *defaultLayerNames[LAYER_MAX] =
 {
@@ -81,6 +82,11 @@ EditorEngine::~EditorEngine()
     delete _gcnGui;
 }
 
+bool EditorEngine::_InitFalcon(void)
+{
+    falcon = new AppFalconEditor();
+    return true;
+}
 
 bool EditorEngine::Setup(void)
 {

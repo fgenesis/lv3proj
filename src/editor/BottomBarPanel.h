@@ -12,19 +12,12 @@ public:
     virtual ~BottomBarPanel();
 
     virtual void action(const gcn::ActionEvent& ae);
-    virtual void logic(void);
 
 
 protected:
     EditorEngine *_engine;
-    gcn::Button btnQuit;
-    gcn::Button btnNew;
-    gcn::Button btnToggleTilebox;
-    gcn::Button btnSaveAs;
-    gcn::Button btnLoad;
-    gcn::Button btnData;
-    gcn::Button btnTiles;
-    gcn::Button btnToggleLayers;
+    gcn::Button btnTileBrush;
+    gcn::Button btnObjBrush;
 };
 
 #endif

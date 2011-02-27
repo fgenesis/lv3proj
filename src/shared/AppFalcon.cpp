@@ -14,7 +14,7 @@ Falcon::Module *falcon_confparser_module_init(void);
 Falcon::Module *bufext_module_init(void);
 
 
-AppFalcon::AppFalcon(Engine *e)
+AppFalcon::AppFalcon()
 : vm(NULL)
 {
     mloader.compileTemplate(false);

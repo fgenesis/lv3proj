@@ -93,6 +93,7 @@ protected:
 
     virtual void _Process(uint32 ms);
     virtual void _Render(void);
+    virtual bool _InitFalcon(void);
 
     gcn::Gui *_gcnGui;
     gcn::SDLInput* _gcnInput;

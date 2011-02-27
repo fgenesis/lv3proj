@@ -31,23 +31,22 @@ public:
     Engine();
     virtual ~Engine();
 
-    void HookSignals(void);
-    void UnhookSignals(void);
+    static void HookSignals(void);
+    static void UnhookSignals(void);
     static void PrintSystemSpecs(void);
     static bool RelocateWorkingDir(void);
-
-    virtual void InitScreen(uint32 sizex, uint32 sizey, uint8 bpp = 0, uint32 extraflags = 0);
-    virtual bool Setup(void);
-    virtual void Shutdown(void);
-    virtual const char *GetName(void) { return "engine"; } // must be overloaded
     inline bool IsQuit(void) { return _quit; }
     inline static void SetQuit(bool q = true) { _quit = q; }
     inline static SDL_Joystick *GetJoystick(uint32 i) { return i < s_joysticks.size() ? s_joysticks[i] : NULL; }
     inline static uint32 GetJoystickCount(void) { return s_joysticks.size(); }
     inline static Engine *GetInstance(void) { return s_instance; }
+    inline static uint32 GetCurFrameTime(void) { return s_curFrameTime; }
 
-    inline void SetReset(bool r = true) { _reset = r; }
-    inline bool IsReset(void) { return _reset; }
+    virtual void InitScreen(uint32 sizex, uint32 sizey, uint8 bpp = 0, uint32 extraflags = 0);
+    virtual bool Setup(void);
+    virtual void Shutdown(void);
+    virtual const char *GetName(void) { return "engine"; } // must be overloaded
+    virtual void Run(void);
 
     virtual void OnMouseEvent(uint32 type, uint32 button, uint32 state, uint32 x, uint32 y, int32 rx, int32 ry);
     virtual void OnKeyDown(SDLKey key, SDLMod mod);
@@ -57,8 +56,10 @@ public:
     virtual void OnWindowResize(uint32 newx, uint32 newy);
     virtual bool OnRawEvent(SDL_Event& evt); // return true to pass this event to the following internal event handlers, false to proceed with next event
     virtual void OnObjectCreated(BaseObject *obj); // called in FalconObjectModule.cpp, fal_ObjectCarrier::init()
+    virtual void SetTitle(char *title);
 
-
+    inline void SetReset(bool r = true) { _reset = r; }
+    inline bool IsReset(void) { return _reset; }
     inline uint32 GetResX(void) { return _screen ? _screen->w : 0; }
     inline uint32 GetResY(void) { return _screen ? _screen->h : 0; }
     inline uint8 GetBPP(void) { return _screen ? _screen->format->BitsPerPixel : 0; }
@@ -66,11 +67,10 @@ public:
     inline Point *GetCameraPosPtr(void) { return &_cameraPos; }
     inline SDL_Surface *GetSurface(void) { return _screen; }
     SDL_Rect *GetVisibleBlockRect(void);
-    virtual void SetTitle(char *title);
     inline uint32 GetFPS(void) { return _fps; }
-    inline static uint32 GetCurFrameTime(void) { return s_curFrameTime; }
+    inline int32 GetMouseX(void) { return _mouseX + _cameraPos.x; }
+    inline int32 GetMouseY(void) { return _mouseY + _cameraPos.y; }
     inline void SetSleepTime(uint32 t) { _sleeptime = t; }
-    virtual void Run(void);
     inline bool HasDebugFlag(uint32 flag) { return _debugFlags & flag; }
     inline void SetDebugFlag(uint32 flag) { _debugFlags |= flag; }
     inline void UnsetDebugFlag(uint32 flag) { _debugFlags &= ~flag; }
@@ -120,6 +120,7 @@ protected:
     virtual void _PostRender(void);
     virtual void _Process(uint32 ms);
     virtual void _Reset(void);
+    virtual bool _InitFalcon(void);
 
     gcn::SDLGraphics* _gcnGfx;
     gcn::SDLImageLoader* _gcnImgLoader;
@@ -138,6 +139,7 @@ protected:
     uint32 _sleeptime;
     uint32 _debugFlags;
     uint32 _bgcolor;
+    int32 _mouseX, _mouseY;
     Point _cameraPos; // camera / "screen anchor" position in 2D-space, top-left corner (starts with (0,0) )
     bool _paused;
     bool _reset;

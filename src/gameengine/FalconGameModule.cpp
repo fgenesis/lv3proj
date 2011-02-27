@@ -1,17 +1,8 @@
-#include <stdarg.h>
 #include <falcon/engine.h>
 #include "common.h"
 #include "GameEngine.h"
-#include "AppFalconGame.h"
 #include "PhysicsSystem.h"
-
-
-#include "FalconBaseModule.h"
-#include "FalconObjectModule.h"
-#include "FalconGameModule.h"
-
-
-class fal_TileLayer;
+#include "AppFalcon.h"
 
 
 FALCON_FUNC fal_Physics_SetGravity(Falcon::VMachine *vm)

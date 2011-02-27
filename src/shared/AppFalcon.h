@@ -8,7 +8,7 @@ class Engine;
 class AppFalcon
 {
 public:
-    AppFalcon(Engine *e);
+    AppFalcon();
     ~AppFalcon();
     bool Init(char *initscript = NULL);
     void DeleteVM(void);

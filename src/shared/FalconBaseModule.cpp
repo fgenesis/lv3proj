@@ -834,7 +834,7 @@ FALCON_FUNC fal_Engine_Reset(Falcon::VMachine *vm)
 
 FALCON_FUNC fal_Engine_JoystickCount(Falcon::VMachine *vm)
 {
-    vm->retval((Falcon::int64)Engine::GetJoystickCount());
+    vm->retval((Falcon::int32)Engine::GetJoystickCount());
 }
 
 FALCON_FUNC fal_Engine_JoystickInfo(Falcon::VMachine *vm)
@@ -847,10 +847,10 @@ FALCON_FUNC fal_Engine_JoystickInfo(Falcon::VMachine *vm)
         Falcon::CoreArray *ca = new Falcon::CoreArray(5);
         Falcon::CoreString *jname = new Falcon::CoreString(SDL_JoystickName(id));
         ca->append(jname);
-        ca->append((Falcon::int64)SDL_JoystickNumAxes(jst));
-        ca->append((Falcon::int64)SDL_JoystickNumButtons(jst));
-        ca->append((Falcon::int64)SDL_JoystickNumHats(jst));
-        ca->append((Falcon::int64)SDL_JoystickNumBalls(jst));
+        ca->append((Falcon::int32)SDL_JoystickNumAxes(jst));
+        ca->append((Falcon::int32)SDL_JoystickNumButtons(jst));
+        ca->append((Falcon::int32)SDL_JoystickNumHats(jst));
+        ca->append((Falcon::int32)SDL_JoystickNumBalls(jst));
         vm->retval(ca);
     }
     else
@@ -859,7 +859,7 @@ FALCON_FUNC fal_Engine_JoystickInfo(Falcon::VMachine *vm)
 
 FALCON_FUNC fal_Engine_ResourceCount(Falcon::VMachine *vm)
 {
-    vm->retval((Falcon::int64)resMgr.GetUsedCount());
+    vm->retval((Falcon::int32)resMgr.GetUsedCount());
 }
 
 FALCON_FUNC fal_Engine_ResourceMem(Falcon::VMachine *vm)
@@ -896,12 +896,12 @@ FALCON_FUNC fal_Screen_GetSize(Falcon::VMachine *vm)
 
 FALCON_FUNC fal_Screen_GetWidth(Falcon::VMachine *vm)
 {
-    vm->retval((Falcon::int64)Engine::GetInstance()->GetResX());
+    vm->retval((Falcon::int32)Engine::GetInstance()->GetResX());
 }
 
 FALCON_FUNC fal_Screen_GetHeight(Falcon::VMachine *vm)
 {
-    vm->retval((Falcon::int64)Engine::GetInstance()->GetResY());
+    vm->retval((Falcon::int32)Engine::GetInstance()->GetResY());
 }
 
 FALCON_FUNC fal_Screen_SetMode(Falcon::VMachine *vm)
@@ -949,7 +949,7 @@ FALCON_FUNC fal_Screen_IsFullscreen(Falcon::VMachine *vm)
 
 FALCON_FUNC fal_Screen_GetLayerSize(Falcon::VMachine *vm)
 {
-    vm->retval((int64)Engine::GetInstance()->_GetLayerMgr()->GetMaxDim());
+    vm->retval((Falcon::int32)Engine::GetInstance()->_GetLayerMgr()->GetMaxDim());
 }
 
 FALCON_FUNC fal_Screen_GetTileInfo(Falcon::VMachine *vm)
@@ -1044,13 +1044,13 @@ FALCON_FUNC fal_Font_GetWidth( Falcon::VMachine *vm )
     gcn::Font *font = ((fal_Font*)(vm->self().asObject()->getFalconData()))->GetFont();
     Falcon::AutoCString cstr(s);
 
-    vm->retval((int64)font->getWidth(cstr.c_str()));
+    vm->retval((Falcon::int32)font->getWidth(cstr.c_str()));
 }
 
 FALCON_FUNC fal_Font_GetHeight( Falcon::VMachine *vm )
 {
     gcn::Font *font = ((fal_Font*)(vm->self().asObject()->getFalconData()))->GetFont();
-    vm->retval((int64)font->getHeight());
+    vm->retval((Falcon::int32)font->getHeight());
 }
 
 FALCON_FUNC fal_Color( Falcon::VMachine *vm )
@@ -1066,6 +1066,16 @@ FALCON_FUNC fal_Color( Falcon::VMachine *vm )
         vm->retval((Falcon::int64)(r | (g << 8) | (b << 16) | (i_alpha->forceInteger() << 24) ));
     else
         vm->retval((Falcon::int64)(r | (g << 8) | (b << 16) | 0xFF000000));
+}
+
+FALCON_FUNC fal_GetMouseX( Falcon::VMachine *vm )
+{
+    vm->retval(Falcon::int32(Engine::GetInstance()->GetMouseX()));
+}
+
+FALCON_FUNC fal_GetMouseY( Falcon::VMachine *vm )
+{
+    vm->retval(Falcon::int32(Engine::GetInstance()->GetMouseY()));
 }
 
 Falcon::Module *FalconBaseModule_create(void)
@@ -1152,6 +1162,8 @@ Falcon::Module *FalconBaseModule_create(void)
     m->addExtFunc("DbgBreak", fal_debug_break);
     m->addExtFunc("InvertSide", fal_InvertSide);
     m->addExtFunc("color", fal_Color);
+    m->addExtFunc("GetMouseX", fal_GetMouseX);
+    m->addExtFunc("GetMouseY", fal_GetMouseY);
 
     m->addConstant("MAX_VOLUME", Falcon::int64(MIX_MAX_VOLUME));
 
