@@ -27,7 +27,7 @@ ResourceMgr::~ResourceMgr()
     }
     for(PtrCountMap::iterator it = _ptrmap.begin(); it != _ptrmap.end(); ++it)
     {
-        DEBUG(logerror("ResourceMgr: Ptr not unloaded: "PTRFMT" count %u", it->first, it->second));
+        DEBUG(logerror("ResourceMgr: Ptr not unloaded: "PTRFMT" count %u", it->first, it->second.count));
     }
 }
 
