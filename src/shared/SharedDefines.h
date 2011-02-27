@@ -57,4 +57,11 @@ enum CoreEventTypes
     EVENT_TYPE_JOYSTICK_HAT = 3
 };
 
+enum CoreMouseEventTypes
+{
+    EVENT_TYPE_MOUSE_MOVE = 0,
+    EVENT_TYPE_MOUSE_BUTTONDOWN = 1,
+    EVENT_TYPE_MOUSE_BUTTONUP = 2
+};
+
 #endif

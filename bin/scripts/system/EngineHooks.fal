@@ -11,6 +11,9 @@ _rhooks = []
 // ObjectCreated() hooks
 _ochooks = []
 
+// MouseEventHandler() hooks
+_mhooks = []
+
 // --- called by core whenever input occurs ---
 function InputEventHandler(e)
     global _rawhooks
@@ -144,11 +147,40 @@ function UnregisterObjectCreateHook(func)
     arrayDel(_ochooks, func)
 end
 
+// called whenever an the mouse was moved or clicked
+function MouseEventHandler(e)
+    global _mhooks
+    
+    for func in _mhooks
+        try
+            func(e)
+        catch in err
+            > "ERROR: PostRender(): unhandled exception in a hook:"
+            > func
+            > err
+            // no need to drop, here
+        end
+    end
+end
+
+function RegisterMouseInputHook(func)
+    global _mhooks
+    arrayAdd(_mhooks, func)
+end
+
+function UnregisterMouseInputHook(func)
+    global _mhooks
+    arrayDel(_mhooks, func)
+end
+
 export GameUpdate
 export RegisterUpdateHook, UnregisterUpdateHook, GetUpdateHookCount
 
 export InputEventHandler
 export RegisterRawInputHook, UnregisterRawInputHook, GetRawInputHook, GetRawInputHookCount
+
+export MouseEventHandler
+export RegisterMouseInputHook, UnregisterMouseInputHook
 
 export PostRender
 export RegisterRenderHook, UnregisterRenderHook, GetRenderHookCount

@@ -206,9 +206,32 @@ void GameEngine::OnJoystickEvent(uint32 type, uint32 device, uint32 id, int32 va
 
 void GameEngine::OnMouseEvent(uint32 type, uint32 button, uint32 state, uint32 x, uint32 y, int32 rx, int32 ry)
 {
-    Engine::OnMouseEvent(type, button, state, x, y, rx, ry);
+    Engine::OnMouseEvent(type, button, state, x, y, rx, ry); // must be called here, so GetMouseX/Y() hold the correct values
 
-    // TODO: forward mouse events to falcon
+    // TODO: cache this on init and call then without invoking findGlobalItem() all the time
+    Falcon::Item *item = falcon->GetVM()->findGlobalItem("MouseEventHandler");
+    if(item && item->isCallable())
+    {
+        try
+        {
+            Falcon::CoreArray *arr = new Falcon::CoreArray(9);
+            arr->append(Falcon::int32(type - SDL_MOUSEMOTION)); // map to CoreMouseEventTypes enum value
+            arr->append(Falcon::int32(button)); // 0 if moved, 1 - button# if clicked
+            arr->append(Falcon::int32(state)); // 0 if moved, (1 << (button# - 1)) when dragged
+            arr->append(Falcon::int32(x)); // absolute mouse position
+            arr->append(Falcon::int32(y));
+            arr->append(Falcon::int32(rx)); // relative movement
+            arr->append(Falcon::int32(ry));
+            falcon->GetVM()->pushParam(arr);
+            falcon->GetVM()->callItem(*item, 1);
+        }
+        catch(Falcon::Error *err)
+        {
+            Falcon::AutoCString edesc( err->toString() );
+            logerror("GameEngine::OnMouseEvent: %s", edesc.c_str());
+            err->decref();
+        }
+    }
 }
 
 void GameEngine::OnObjectCreated(BaseObject *obj)

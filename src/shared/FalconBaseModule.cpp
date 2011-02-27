@@ -1172,6 +1172,10 @@ Falcon::Module *FalconBaseModule_create(void)
     m->addConstant("EVENT_TYPE_JOYSTICK_AXIS",   Falcon::int64(EVENT_TYPE_JOYSTICK_AXIS));
     m->addConstant("EVENT_TYPE_JOYSTICK_HAT",    Falcon::int64(EVENT_TYPE_JOYSTICK_HAT));
 
+    m->addConstant("EVENT_TYPE_MOUSE_MOVE",      Falcon::int64(EVENT_TYPE_MOUSE_MOVE));
+    m->addConstant("EVENT_TYPE_MOUSE_BUTTONDOWN",Falcon::int64(EVENT_TYPE_MOUSE_BUTTONDOWN));
+    m->addConstant("EVENT_TYPE_MOUSE_BUTTONUP",  Falcon::int64(EVENT_TYPE_MOUSE_BUTTONUP));
+
     m->addConstant("DIRECTION_NONE",      Falcon::int64(DIRECTION_NONE));
     m->addConstant("DIRECTION_UP",        Falcon::int64(DIRECTION_UP));
     m->addConstant("DIRECTION_UPLEFT",    Falcon::int64(DIRECTION_UPLEFT));
