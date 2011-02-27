@@ -179,6 +179,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\guichan_ext\InputHandlerBase.h"
+				>
+			</File>
+			<File
 				RelativePath=".\guichan_ext\ListBox2.cpp"
 				>
 			</File>

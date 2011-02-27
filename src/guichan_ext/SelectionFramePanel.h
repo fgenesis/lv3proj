@@ -3,11 +3,12 @@
 
 #include "guichan/mouselistener.hpp"
 #include "Panel.h"
+#include "InputHandlerBase.h"
 
 namespace gcn
 {
 
-class SelectionFramePanel : public Panel, public MouseListener
+class SelectionFramePanel : public Panel, public InputHandlerBase
 {
 public:
     SelectionFramePanel();
@@ -15,6 +16,7 @@ public:
 
     virtual void draw(Graphics* g);
     virtual void drawSelection(Graphics *g);
+
     virtual void mousePressed(MouseEvent& me);
     virtual void mouseDragged(MouseEvent& me);
     virtual void mouseMoved(MouseEvent& me);
@@ -40,6 +42,9 @@ protected:
     void _initRect(uint32 x, uint32 y, bool resetWH = false);
     void _fixRect(Rectangle& r);
     void _alignRect(Rectangle& r);
+
+    InputHandlerBase _rootHandler;
+
     int32 _blockW, _blockH;
     int32 _blockOffsX, _blockOffsY;
     bool _hilightSelRect;

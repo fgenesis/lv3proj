@@ -5,7 +5,9 @@ gcn::SelectionFramePanel::SelectionFramePanel()
 : Panel(0, 0), _showSelRect(false), _hilightSelRect(false), _selRectDrag(true),
 _blockOffsX(0), _blockOffsY(0)
 {
-    addMouseListener(this);
+    addKeyListener(&_rootHandler);
+    addMouseListener(&_rootHandler);
+    _rootHandler.subHandler = this; // this handler now acts as "gateway" and forwards all input to us (this may change later!)
 }
 
 gcn::SelectionFramePanel::~SelectionFramePanel()
