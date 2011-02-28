@@ -45,7 +45,7 @@ function dbg_HookCountRenderHook() // note: this function is highly unoptimized 
     rm =  Engine.ResourceMem() >> 10 // bytes -> kB
     font = GetFont("rpgfont")
     fh = font.GetHeight()
-    write = Screen.GetSurface().Write
+    write = Screen.GetSurfaceRaw().Write
     
     write(0, h - (fh * 7), font, @ "Timing: MS = $dt")
     write(0, h - (fh * 6), font, @ "Physics: Gravity = $g")
