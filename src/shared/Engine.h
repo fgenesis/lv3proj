@@ -63,8 +63,8 @@ public:
     inline uint32 GetResX(void) { return _screen ? _screen->w : 0; }
     inline uint32 GetResY(void) { return _screen ? _screen->h : 0; }
     inline uint8 GetBPP(void) { return _screen ? _screen->format->BitsPerPixel : 0; }
-    inline Point GetCameraPos(void) { return _cameraPos; }
-    inline Point *GetCameraPosPtr(void) { return &_cameraPos; }
+    inline Camera GetCamera(void) const { return _cameraPos; }
+    inline const Camera *GetCameraPtr(void) const { return &_cameraPos; }
     inline SDL_Surface *GetSurface(void) { return _screen; }
     SDL_Rect *GetVisibleBlockRect(void);
     inline uint32 GetFPS(void) { return _fps; }
@@ -140,7 +140,7 @@ protected:
     uint32 _debugFlags;
     uint32 _bgcolor;
     int32 _mouseX, _mouseY;
-    Point _cameraPos; // camera / "screen anchor" position in 2D-space, top-left corner (starts with (0,0) )
+    Camera _cameraPos; // camera / "screen anchor" position in 2D-space, top-left corner (starts with (0,0) )
     bool _paused;
     bool _reset;
     bool _drawBackground;

@@ -524,8 +524,10 @@ FALCON_FUNC fal_VFS_AddBufAsFile( Falcon::VMachine *vm )
     --(vf->ref);
 }
 
+const Camera fal_Surface::s_camera;
+
 fal_Surface::fal_Surface(const Falcon::CoreClass* generator)
-: Falcon::FalconObject( generator )
+: Falcon::FalconObject( generator ), camera(&s_camera)
 {
 }
 
@@ -589,6 +591,7 @@ FALCON_FUNC fal_Surface_Pixel( Falcon::VMachine *vm )
     int32 c = (uint32)vm->param(2)->forceInteger();
     fal_Surface *self = Falcon::dyncast<fal_Surface*>( vm->self().asObject() );
     SDL_Surface *s = self->surface;
+    self->camera->TranslatePoints(x,y);
     if(x < s->w && y < s->h)
         SDLfunc_putpixel(s, x, y, c);
 }
@@ -606,6 +609,7 @@ FALCON_FUNC fal_Surface_Rect( Falcon::VMachine *vm )
     bool fill = i_fill && i_fill->isTrue();
     fal_Surface *self = Falcon::dyncast<fal_Surface*>( vm->self().asObject() );
     SDL_Surface *s = self->surface;
+    self->camera->TranslatePoints(rect.x, rect.y);
     if(fill)
         SDL_FillRect(s, &rect, c);
     else
@@ -622,8 +626,10 @@ FALCON_FUNC fal_Surface_BlitTo( Falcon::VMachine *vm )
         throw new Falcon::ParamError(Falcon::ErrorParam( Falcon::e_inv_params, __LINE__ )
             .extra("Object is not a surface") );
     }
-    SDL_Surface *src = (Falcon::dyncast<fal_Surface*>(vm->self().asObject()))->surface;
-    SDL_Surface *dst = (Falcon::dyncast<fal_Surface*>(i_surface->asObject()))->surface;
+    fal_Surface *srcCarrier = Falcon::dyncast<fal_Surface*>(vm->self().asObject());
+    fal_Surface *dstCarrier = Falcon::dyncast<fal_Surface*>(vm->self().asObject());
+    SDL_Surface *src = srcCarrier->surface;
+    SDL_Surface *dst = dstCarrier->surface;
 
     Falcon::Item *i_srcrect = vm->param(1);
     Falcon::Item *i_dstrect = vm->param(2);
@@ -643,6 +649,8 @@ FALCON_FUNC fal_Surface_BlitTo( Falcon::VMachine *vm )
             srcrect.y = a_srcrect->at(1).forceIntegerEx();
             srcrect.w = a_srcrect->at(2).forceIntegerEx();
             srcrect.h = a_srcrect->at(3).forceIntegerEx();
+
+            srcCarrier->camera->TranslatePoints(srcrect.x, srcrect.y);
         }
         else if(i_srcrect->isNil())
         {
@@ -661,6 +669,9 @@ FALCON_FUNC fal_Surface_BlitTo( Falcon::VMachine *vm )
         {
             dstrect.x = a_dstrect->at(0).forceIntegerEx();
             dstrect.y = a_dstrect->at(1).forceIntegerEx();
+
+            dstCarrier->camera->TranslatePoints(dstrect.x, dstrect.y);
+
             // w and h are ignored by SDL
         }
         else if(i_dstrect->isNil())
@@ -700,15 +711,16 @@ FALCON_FUNC fal_Surface_Write( Falcon::VMachine *vm )
             .extra("x, y, Font, S") );
     }
 
-    uint32 x = (uint32)vm->param(0)->forceInteger();
-    uint32 y = (uint32)vm->param(1)->forceInteger();
+    int32 x = (int32)vm->param(0)->forceInteger();
+    int32 y = (int32)vm->param(1)->forceInteger();
     gcn::SDLGraphics *gfx = (gcn::SDLGraphics*)Engine::GetInstance()->GetGcnGfx();
     gcn::Font *font = ((fal_Font*)(i_font->asObject()->getUserData()))->GetFont();
-    SDL_Surface *surf = Falcon::dyncast<fal_Surface*>(vm->self().asObject())->surface;
+    fal_Surface *surf = Falcon::dyncast<fal_Surface*>(vm->self().asObject());
     Falcon::AutoCString cstr(i_str->asString());
+    surf->camera->TranslatePoints(x,y);
     
     SDL_Surface *orig = gfx->getTarget();
-    gfx->setTarget(surf);
+    gfx->setTarget(surf->surface);
     gfx->setFont(font);
     gfx->_beginDraw();
     gfx->drawText(cstr.c_str(), x, y);
@@ -997,12 +1009,14 @@ FALCON_FUNC fal_Screen_CreateInfoLayer(Falcon::VMachine *vm)
     lm->CreateInfoLayer();
 }
 
-FALCON_FUNC fal_Screen_GetSurface(Falcon::VMachine *vm)
+template <bool ENGINE_CAM> FALCON_FUNC fal_Screen_GetSurface(Falcon::VMachine *vm)
 {
     Falcon::CoreClass *cls = vm->findWKI("Surface")->asClass();
     fal_Surface *fs = Falcon::dyncast<fal_Surface*>(fal_Surface::factory(cls, NULL, false));
     fs->surface = Engine::GetInstance()->GetSurface();
     fs->adopted = true;
+    if(ENGINE_CAM)
+        fs->camera = Engine::GetInstance()->GetCameraPtr();
     vm->retval(fs);
 }
 
@@ -1109,7 +1123,8 @@ Falcon::Module *FalconBaseModule_create(void)
     m->addClassMethod(clsScreen, "SetTileInfo", &fal_Screen_SetTileInfo);
     m->addClassMethod(clsScreen, "GetTileInfo", &fal_Screen_GetTileInfo);
     m->addClassMethod(clsScreen, "CreateInfoLayer", &fal_Screen_CreateInfoLayer);
-    m->addClassMethod(clsScreen, "GetSurface", &fal_Screen_GetSurface);
+    m->addClassMethod(clsScreen, "GetSurface", &fal_Screen_GetSurface<true>); // with camera correction
+    m->addClassMethod(clsScreen, "GetSurfaceRaw", &fal_Screen_GetSurface<false>); // without camera correction
     m->addClassMethod(clsScreen, "SetMode", &fal_Screen_SetMode);
     m->addClassMethod(clsScreen, "SetBGColor", &fal_Screen_SetBGColor);
     m->addClassMethod(clsScreen, "CanResize", &fal_Screen_IsResizable);
@@ -1221,16 +1236,16 @@ Falcon::Module *FalconBaseModule_create(void)
     m->addClassProperty( c_sdlk, "MINUS" ).setInteger( SDLK_MINUS );
     m->addClassProperty( c_sdlk, "PERIOD" ).setInteger( SDLK_PERIOD );
     m->addClassProperty( c_sdlk, "SLASH" ).setInteger( SDLK_SLASH );
-    m->addClassProperty( c_sdlk, "0" ).setInteger( SDLK_0 );
-    m->addClassProperty( c_sdlk, "1" ).setInteger( SDLK_1 );
-    m->addClassProperty( c_sdlk, "2" ).setInteger( SDLK_2 );
-    m->addClassProperty( c_sdlk, "3" ).setInteger( SDLK_3 );
-    m->addClassProperty( c_sdlk, "4" ).setInteger( SDLK_4 );
-    m->addClassProperty( c_sdlk, "5" ).setInteger( SDLK_5 );
-    m->addClassProperty( c_sdlk, "6" ).setInteger( SDLK_6 );
-    m->addClassProperty( c_sdlk, "7" ).setInteger( SDLK_7 );
-    m->addClassProperty( c_sdlk, "8" ).setInteger( SDLK_8 );
-    m->addClassProperty( c_sdlk, "9" ).setInteger( SDLK_9 );
+    m->addClassProperty( c_sdlk, "N0" ).setInteger( SDLK_0 );
+    m->addClassProperty( c_sdlk, "N1" ).setInteger( SDLK_1 );
+    m->addClassProperty( c_sdlk, "N2" ).setInteger( SDLK_2 );
+    m->addClassProperty( c_sdlk, "N3" ).setInteger( SDLK_3 );
+    m->addClassProperty( c_sdlk, "N4" ).setInteger( SDLK_4 );
+    m->addClassProperty( c_sdlk, "N5" ).setInteger( SDLK_5 );
+    m->addClassProperty( c_sdlk, "N6" ).setInteger( SDLK_6 );
+    m->addClassProperty( c_sdlk, "N7" ).setInteger( SDLK_7 );
+    m->addClassProperty( c_sdlk, "N8" ).setInteger( SDLK_8 );
+    m->addClassProperty( c_sdlk, "N9" ).setInteger( SDLK_9 );
     m->addClassProperty( c_sdlk, "COLON" ).setInteger( SDLK_COLON );
     m->addClassProperty( c_sdlk, "SEMICOLON" ).setInteger( SDLK_SEMICOLON );
     m->addClassProperty( c_sdlk, "LESS" ).setInteger( SDLK_LESS );

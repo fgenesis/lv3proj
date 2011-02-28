@@ -32,7 +32,7 @@ TileLayer *LayerMgr::CreateLayer(bool collision /* = false */, uint32 xoffs /* =
     layer->visible = true;
     layer->xoffs = xoffs;
     layer->yoffs = yoffs;
-    layer->camera = _engine->GetCameraPosPtr();
+    layer->camera = _engine->GetCameraPtr();
     layer->mgr = this;
 
     return layer;

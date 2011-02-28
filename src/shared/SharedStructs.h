@@ -7,6 +7,7 @@ struct Point
 {
     Point() : x(0), y(0) {}
     Point(int32 x_, int32 y_) : x(x_), y(y_) {}
+    Point(const Point& p): x(p.x), y(p.y) {}
     int32 x, y;
 
     inline bool operator==(Point& p) { return x == p.x && y == p.y; }
@@ -25,6 +26,23 @@ struct FPoint
     inline bool operator!=(Point& p) { return !(x == p.x && y == p.y); }
     void invalidate(void) { *((int*)&x) = *((int*)&y) = 0xFF800000; } // 0xFF800000 == -1.#INF00
     bool valid(void) { return *((int*)&x) != 0xFF800000 && *((int*)&y) != 0xFF800000; }
+};
+
+struct Camera : public Point
+{
+    Camera() : Point() {}
+    Camera(int32 x_, int32 y_) : Point(x_, y_) {}
+    Camera(const Point& p): Point(p) {}
+    inline void TranslatePoints(int32& ax, int32& ay) const
+    {
+        ax -= x;
+        ay -= y;
+    }
+    inline void TranslatePoints(int16& ax, int16& ay) const
+    {
+        ax -= (int16)x;
+        ay -= (int16)y;
+    }
 };
 
 

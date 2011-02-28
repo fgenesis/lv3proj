@@ -206,7 +206,7 @@ void ObjectMgr::HandleObjectCollision(ActiveRect *base, ActiveRect *other, uint8
 void ObjectMgr::RenderLayer(uint32 id)
 {
     SDL_Surface *esf = _engine->GetSurface();
-    Point cam = _engine->GetCameraPos();
+    Point cam = _engine->GetCamera();
     for(ObjectSet::iterator it = _renderLayers[id].begin(); it != _renderLayers[id].end(); it++)
     {
         Object *obj = *it;
@@ -235,7 +235,7 @@ void ObjectMgr::GetAllObjectsIn(BaseRect& rect, ObjectWithSideSet& result, uint8
 void ObjectMgr::RenderBBoxes(void)
 {
     SDL_Rect r;
-    Point cam = _engine->GetCameraPos();
+    Point cam = _engine->GetCamera();
     for(ObjectMap::iterator it = _store.begin(); it != _store.end(); it++)
     {
         BaseRect br = ((ActiveRect*)it->second)->cloneRect();

@@ -36,7 +36,7 @@ void DrawAreaPanel::logic(void)
 
     TileLayerPanel::logic();
 
-    Point cam = _engine->GetCameraPos();
+    Point cam = _engine->GetCamera();
     _blockOffsX = -cam.x; // if camera goes top-left (negative), the screen pans to bottom-right (positive)...
     _blockOffsY = -cam.y;
     int maxwidth = _blockW * 4;
@@ -68,7 +68,7 @@ void DrawAreaPanel::draw(gcn::Graphics *g)
     
     // draw box around the drawing area
     uint32 pixdim = _mgr->GetMaxPixelDim() + 2;
-    Point cam = _engine->GetCameraPos();
+    Point cam = _engine->GetCamera();
     gcn::Rectangle clip(
         -cam.x - 1,
         -cam.y - 1,
@@ -130,7 +130,7 @@ void DrawAreaPanel::_DrawSelTiles(void)
 
     // offset correction - if the camera is not at (0, 0).
     // TODO: make this less hacky
-    Point cam = _engine->GetCameraPos();
+    Point cam = _engine->GetCamera();
     if(cam.x >= 0)
         x += ((cam.x + (int32)GetBlockW() - 1) / (int32)GetBlockW());
     else

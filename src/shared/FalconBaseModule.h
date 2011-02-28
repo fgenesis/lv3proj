@@ -71,8 +71,11 @@ public:
     virtual bool getProperty( const Falcon::String &prop, Falcon::Item &ret ) const;
 
     SDL_Surface *surface;
+    const Camera *camera; // if != NULL, this camera's offsets will be added to the x/y before drawing ;
     bool adopted;
 
+private:
+   static const Camera s_camera; // dummy camera, for more branch-free code
 };
 
 class fal_TileLayer : public Falcon::CoreObject

@@ -9,7 +9,7 @@ struct SDL_Rect;
 class AnimatedTile;
 class BasicTile;
 class LayerMgr;
-struct Point;
+struct Camera;
 
 typedef std::map<AnimatedTile*, uint32> AnimTileMap;
 
@@ -36,7 +36,7 @@ public:
     bool visible;
     bool collision; // do collision checking against this layer for non-transparent areas
     SDL_Rect *visible_area; // what to render - Engine::GetVisibleBlockRect()
-    Point *camera;
+    const Camera *camera;
     SDL_Surface *target; // where to render to - should be set to Engine::GetSurface(). set visible=false if this is NULL!
     int32 xoffs;
     int32 yoffs;
