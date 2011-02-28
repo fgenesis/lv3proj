@@ -1,6 +1,8 @@
 #ifndef FALCON_BASE_MODULE_H
 #define FALCON_BASE_MODULE_H
 
+#include "SharedStructs.h"
+
 class SoundFile;
 class TileLayer;
 struct SDL_Surface;
