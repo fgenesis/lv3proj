@@ -6,10 +6,10 @@ function ObjectCreateHook(obj)
     obj.remove = [Object_remove, obj, rm]
 end
 
-function Object_remove(obj, rm)
+function Object_remove(obj, rm, really)
     // TEST: for now, just print when an object is removed; we will take appropriate measures later
-    > "REMOVE: ", obj
-    rm()
+    > "REMOVE: ", obj, " really: ", really
+    if really: rm()
 end
 
 

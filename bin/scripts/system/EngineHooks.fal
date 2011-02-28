@@ -129,7 +129,7 @@ function ObjectCreated(obj)
         try
             func(obj)
         catch in err
-            > "ERROR: PostRender(): unhandled exception in a hook:"
+            > "ERROR: ObjectCreated(): unhandled exception in a hook:"
             > func
             > err
             // no need to drop, here
@@ -155,7 +155,7 @@ function MouseEventHandler(e)
         try
             func(e)
         catch in err
-            > "ERROR: PostRender(): unhandled exception in a hook:"
+            > "ERROR: MouseEventHandler(): unhandled exception in a hook:"
             > func
             > err
             // no need to drop, here

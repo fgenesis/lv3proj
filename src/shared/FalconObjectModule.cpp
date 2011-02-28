@@ -414,13 +414,13 @@ bool ActiveRect::OnTouchedBy(uint8 side, ActiveRect *who)
 void Object::OnUpdate(uint32 ms)
 {
     DEBUG_ASSERT_RETURN_VOID(_falObj);
-    _falObj->CallMethod("OnUpdate", Falcon::int64(ms));
+    _falObj->CallMethod("OnUpdate", Falcon::int32(ms));
 }
 
 void Object::OnTouchWall(uint8 side, float xspeed, float yspeed)
 {
     DEBUG_ASSERT_RETURN_VOID(_falObj);
-    _falObj->CallMethod("OnTouchWall", Falcon::int64(side), Falcon::numeric(xspeed), Falcon::numeric(yspeed));
+    _falObj->CallMethod("OnTouchWall", Falcon::int32(side), Falcon::numeric(xspeed), Falcon::numeric(yspeed));
 }
 
 // -- end object proxy calls --
@@ -433,6 +433,26 @@ FALCON_FUNC fal_BaseObject_Remove(Falcon::VMachine *vm)
     BaseObject *obj = self->GetObj();
     if(obj) // it can happen that the object is already deleted here, and the ptr is NULL
         obj->SetDelete();
+}
+
+FALCON_FUNC fal_BaseObject_compare(Falcon::VMachine *vm)
+{
+    fal_ObjectCarrier *self = Falcon::dyncast<fal_ObjectCarrier*>( vm->self().asObject() );
+    BaseObject *obj = self->GetObj();
+    if(obj) // it can happen that the object is already deleted here, and the ptr is NULL
+    {
+        Falcon::Item *cmp = vm->param(0);
+        if(cmp->isOfClass("BaseObject"))
+        {
+            fal_ObjectCarrier *other = Falcon::dyncast<fal_ObjectCarrier*>(cmp->asObject());
+            if(BaseObject *otherObj = other->GetObj())
+            {
+                vm->retval(Falcon::int32(obj->GetId() - otherObj->GetId())); // if obj < otherObj, this will return < 0.. like falcon expects
+                return;
+            }
+        }
+    }
+    vm->retnil();
 }
 
 FALCON_FUNC fal_ActiveRect_SetBBox(Falcon::VMachine *vm)
@@ -854,7 +874,7 @@ FALCON_FUNC fal_Objects_Get(Falcon::VMachine *vm)
         return;
     }
     DEBUG(ASSERT(obj->_falObj && obj->_falObj->coreCls));
-    fal_ObjectCarrier *co = new fal_ObjectCarrier(obj->_falObj->coreCls, obj->_falObj);
+    fal_ObjectCarrier *co = obj->_falObj->self();
     vm->retval(co);
 }
 
@@ -899,7 +919,7 @@ FALCON_FUNC fal_Objects_GetAllInRect(Falcon::VMachine *vm)
     {
         BaseObject *obj = it->first;
         DEBUG(ASSERT(obj->_falObj && obj->_falObj->coreCls));
-        fal_ObjectCarrier *co = new fal_ObjectCarrier(obj->_falObj->coreCls, obj->_falObj);
+        fal_ObjectCarrier *co = obj->_falObj->self();
         arr->append(co);
     }
     vm->retval(arr);
@@ -949,6 +969,7 @@ Falcon::Module *FalconObjectModule_create(void)
     m->addClassProperty(clsBaseObject, "type");
     m->addClassProperty(clsBaseObject, "valid");
     m->addClassMethod(clsBaseObject, "remove", fal_BaseObject_Remove);
+    m->addClassMethod(clsBaseObject, "compare", fal_BaseObject_compare); // override falcon comparison operator
     m->addConstant("OBJTYPE_RECT", (Falcon::int64)OBJTYPE_RECT, true);
     m->addConstant("OBJTYPE_OBJECT", (Falcon::int64)OBJTYPE_OBJECT, true);
     m->addConstant("OBJTYPE_UNIT", (Falcon::int64)OBJTYPE_UNIT, true);

@@ -20,9 +20,8 @@ GameEngine::GameEngine()
 {
     
 
-    // test
 #ifdef _DEBUG
-    SetDebugFlag(EDBG_SHOW_BBOXES);
+    //SetDebugFlag(EDBG_SHOW_BBOXES);
 #endif
 }
 
