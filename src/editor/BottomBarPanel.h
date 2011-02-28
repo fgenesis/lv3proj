@@ -12,12 +12,15 @@ public:
     virtual ~BottomBarPanel();
 
     virtual void action(const gcn::ActionEvent& ae);
+    virtual void clear(void);
+
+    // add a mode selection button. when it is pressed, ActivateMode() falcon func is called
+    void addButton(const char *text);
 
 
 protected:
     EditorEngine *_engine;
-    gcn::Button btnTileBrush;
-    gcn::Button btnObjBrush;
+    std::vector<gcn::Button*> _buttons;
 };
 
 #endif

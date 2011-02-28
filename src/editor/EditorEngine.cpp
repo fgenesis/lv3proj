@@ -10,6 +10,7 @@
 #include "EditorEngine.h"
 #include "DrawAreaPanel.h"
 #include "AppFalconEditor.h"
+#include "BottomBarPanel.h"
 
 const char *defaultLayerNames[LAYER_MAX] =
 {
@@ -49,7 +50,7 @@ const char *defaultLayerNames[LAYER_MAX] =
 
 
 EditorEngine::EditorEngine()
-: GameEngine()
+: GameEngine(), _wasInitEditor(false)
 {
     _gcnImgLoader = new gcn::SDLImageLoaderManaged();
     _gcnGfx = new gcn::SDLGraphics();
@@ -58,6 +59,7 @@ EditorEngine::EditorEngine()
     _topWidget = new gcn::Container();
     _fileDlg = NULL;
     _drawBackground = false; // here, guichan draws the black background, no reason to do it twice
+    _ignoreInput = false;
 }
 
 EditorEngine::~EditorEngine()
@@ -82,6 +84,12 @@ EditorEngine::~EditorEngine()
     delete _gcnGui;
 }
 
+void EditorEngine::_Reset(void)
+{
+    panBottom->clear();
+    GameEngine::_Reset();
+}
+
 bool EditorEngine::_InitFalcon(void)
 {
     falcon = new AppFalconEditor();
@@ -93,35 +101,43 @@ bool EditorEngine::Setup(void)
     if(!GameEngine::Setup())
         return false;
 
-    _gcnGui->setGraphics(_gcnGfx);
-    _gcnGui->setInput(_gcnInput);
+    if(!_wasInitEditor)
+    {
+        _gcnGui->setGraphics(_gcnGfx);
+        _gcnGui->setInput(_gcnInput);
 
-    _gcnGui->setTop(_topWidget);
-    _gcnGui->addLateGlobalKeyListener(this);
+        _gcnGui->setTop(_topWidget);
+        _gcnGui->addLateGlobalKeyListener(this);
 
-    // fixedfont.png
-    _gcnFont = LoadFont("gfx/font/fixedfont.txt", "font/fixedfont.png");
-    gcn::Widget::setGlobalFont(_gcnFont);
+        // fixedfont.png
+        _gcnFont = LoadFont("gfx/font/fixedfont.txt", "font/fixedfont.png");
+        gcn::Widget::setGlobalFont(_gcnFont);
 
-    // rpgfont.png
-    _largeFont = LoadFont("gfx/font/rpgfont.txt", "font/rpgfont.png");
+        // rpgfont.png
+        _largeFont = LoadFont("gfx/font/rpgfont.txt", "font/rpgfont.png");
 
-    _layermgr->Clear();
-    _layermgr->SetMaxDim(64);
+        // default config
+        tileboxCols = 8;
 
-    // default config
-    tileboxCols = 8;
+        LoadPackages();
+        _CreateInterfaceWidgets();
+        SetupInterface();
+        SetupEditorLayers();
+        LoadData();
+        panLayers->UpdateSelection(); // after layers are created, update buttons to assign text correctly
+        FillUseableTiles();
 
-    LoadPackages();
-    _CreateInterfaceWidgets();
-    SetupInterface();
-    SetupEditorLayers();
-    LoadData();
-    panLayers->UpdateSelection(); // after layers are created, update buttons to assign text correctly
-    FillUseableTiles();
+        // TEMP -- DEBUG
+        _layermgr->stringdata["__PACKAGES"] = "lostvikings_data";
 
-    // TEMP -- DEBUG
-    _layermgr->stringdata["__PACKAGES"] = "lostvikings_data";
+        _wasInitEditor = true;
+    }
+    else
+    {
+        SetupInterface();
+        SetupEditorLayers();
+        panLayers->UpdateSelection();
+    }
 
     logdetail("EditorEngine setup completed.");
 
@@ -130,7 +146,8 @@ bool EditorEngine::Setup(void)
 
 bool EditorEngine::OnRawEvent(SDL_Event &evt)
 {
-    _gcnInput->pushInput(evt);
+    if(!_ignoreInput)
+        _gcnInput->pushInput(evt);
     return true;
 }
 

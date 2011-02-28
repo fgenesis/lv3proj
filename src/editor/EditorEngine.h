@@ -85,6 +85,10 @@ public:
     inline DrawAreaPanel *GetDrawPanel(void) { return panMain; }
     inline TileboxPanel *GetTileboxPanel(void) { return panTilebox; }
     inline TileWindow *GetTileWnd(void) { return wndTiles; }
+    inline BottomBarPanel *GetBottomPanel(void) { return panBottom; }
+
+    inline void SetIgnoreInput(bool b) { _ignoreInput = b; } // if true, input will not be forwarded to guichan at all
+    inline bool IsIgnoreInput(void) { return _ignoreInput; }
 
     void _SaveCurrentMap(void);
 
@@ -94,6 +98,7 @@ protected:
     virtual void _Process(uint32 ms);
     virtual void _Render(void);
     virtual bool _InitFalcon(void);
+    virtual void _Reset(void);
 
     gcn::Gui *_gcnGui;
     gcn::SDLInput* _gcnInput;
@@ -119,6 +124,9 @@ protected:
     // gui misc config / etc
     uint32 tileboxCols;
     std::string _currentMapFileName;
+
+    bool _ignoreInput;
+    bool _wasInitEditor;
 
 private:
     void _SaveCurrentMapAs(const char *fn);
