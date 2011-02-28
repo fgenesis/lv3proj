@@ -28,7 +28,7 @@ private:
 
 public:
     SelfRefCounter(T *p): self(p), c(1) {}
-    ~SelfRefCounter() { DEBUG(ASSERT(c == 0)); }
+    ~SelfRefCounter() { DEBUG(ASSERT(c <= 1)); } // its ok if the last reference calls delete instead of _deref()
     inline uint32 count(void) { return c; }
 
     // post-increment
