@@ -6,14 +6,20 @@ gcn::Panel::Panel(int initialSpaceX, int initialSpaceY)
 {
     _slotsx = -1;
     _slotsy = -1;
-    _usedx = 0;
-    _usedy = 0;
-    _nextx = initialSpaceX;
-    _nexty = initialSpaceY;
     _maxheight = 0;
     _spacingX = initialSpaceX;
     _spacingY = initialSpaceY;
     setFocusable(false);
+    clear();
+}
+
+void gcn::Panel::clear(void)
+{
+    _usedx = 0;
+    _usedy = 0;
+    _nextx = _spacingX;
+    _nexty = _spacingY;
+    gcn::Container::clear();
 }
 
 void gcn::Panel::SetSpacing(int x, int y)

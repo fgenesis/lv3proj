@@ -18,6 +18,7 @@ namespace gcn
         // overloaded
         virtual void draw(Graphics* graphics);
         virtual void add(Widget* widget);
+        virtual void clear(void);
 
         virtual void SetSpacing(int x, int y);
         virtual int GetSpacingX(void) { return _spacingX; }
