@@ -1,0 +1,194 @@
+
+// mouse button constants
+LMB = 1
+RMB = 3
+
+// probe state value bits with this to find out which button is pressed while dragging
+LMB_DRAG = 1 << (LMB - 1)
+RMB_DRAG = 1 << (RMB - 1)
+
+selList = [] // list of all objects that are currently selected
+selRect = nil // x,y,x2,y2
+savedProps = [ => ] // stores properties by objects in the list
+clickedLMB = false
+
+_funcmap = [
+    SDLK.SPACE => spaceHandler,
+    SDLK.DELETE => deleteHandler,
+    SDLK.ESCAPE => escHandler
+]
+
+// transform x,y,x2,y2 rect into x,y,w,h rect
+function MakeXYWHRect(a)
+    r = arrayBuffer(4)
+    r[0] = min(a[0], a[2])
+    r[1] = min(a[1], a[3])
+    r[2] = max(a[0], a[2]) - r[0] // calc w and h
+    r[3] = max(a[1], a[3]) - r[1]
+    return r
+end
+
+function MouseInputHook(e)
+    global selRect, selList, clickedLMB
+    ty, btn, state, x, y, rx, ry = e
+    // we do not need screen corrds, use translated coords instead
+    x = GetMouseX()
+    y = GetMouseY()
+    //> @ "ty=$ty btn=$btn state=$state x=$x y=$y rx=$rx ry=$ry"
+    
+    if ty == EVENT_TYPE_MOUSE_MOVE
+        if (state && LMB_DRAG) and not (state && RMB_DRAG)
+            if selRect // resize selection rect
+                selRect[2] = x
+                selRect[3] = y
+            elif len(selList) // drag around already selected objects
+                for obj in selList
+                    obj.x += rx
+                    obj.y += ry
+                end
+            end
+        end
+            
+    end
+    
+    if btn == LMB
+        switch ty
+            case EVENT_TYPE_MOUSE_BUTTONDOWN
+                clickedLMB = true
+                objs = Objects.GetAllInRect(x,y,1,1)
+                if len(objs)
+                    arrayResize(objs, 1) // when selecting single object, we want only one, not all on this spot
+                    if (not len(selList)) or arrayFind(selList, objs[0]) < 0
+                        selList = objs
+                    end
+                    // we are maybe going to be moved now
+                    storeSelObjProps()
+                    
+                else // not clicked on an object, maybe user draws a selection rect now
+                    selRect = [x,y,x,y]
+                end
+            
+            case EVENT_TYPE_MOUSE_BUTTONUP
+                clickedLMB = false
+                if selRect
+                    selRect[2] = x
+                    selRect[3] = y
+                    sx,sy,sw,sh = MakeXYWHRect(selRect)
+                    selList = Objects.GetAllInRect(sx,sy,sw,sh)
+                    selRect = nil
+                else
+                    restoreSelObjProps()
+                end
+        end
+    end
+end
+
+function KeyInputHook(e)
+    global selList, _funcmap
+    
+    ty, src, which, value = e
+    if ty == EVENT_TYPE_KEYBOARD and value
+        f = _funcmap.get(which)
+        if f: f()
+    end
+end
+
+function deleteHandler()
+    global selList
+    restoreSelObjProps()
+    for obj in selList
+        obj.remove(true) // true because we really mean it
+    end
+    selList = []
+end
+
+function escHandler()
+    clearSelList()
+end
+
+function spaceHandler()
+    img = ImageObject("misc/noimage32.png")
+    x = GetMouseX()
+    y = GetMouseY()
+    L = Editor.GetActiveLayerId()
+    img.x = x
+    img.y = y
+    img.w = img.h = 32
+    img.SetLayerId(L)
+end
+
+function clearSelList()
+    global selList
+    restoreSelObjProps()
+    selList = []
+end
+
+function storeObjectProps(obj)
+    global savedProps
+    p = [obj.physics, obj.collision, obj.update]
+    savedProps[obj] = p // this has do be done via temp var, dont ask me why.. i have seen this store -1 otherwise
+    obj.physics = false
+    obj.collision = false
+    obj.update = false
+end
+
+function restoreObjectProps(obj)
+    global savedProps
+    p = savedProps.get(obj)
+    if not p: return
+    obj.physics, obj.collision, obj.update = p
+    savedProps -= obj // remove from dict, as we have now restored the old properties
+end
+
+function storeSelObjProps()
+    global selList
+    for obj in selList: storeObjectProps(obj)
+end
+
+function restoreSelObjProps()
+    global selList
+    for obj in selList: restoreObjectProps(obj)
+end
+
+function renderhook()
+    global selRect, selList
+    
+    rect = Screen.GetSurface().Rect
+    
+    // -- blinking is a bit annoying, better to disable that
+    //if Engine.GetTime() && 64
+        c = color(0,255,0)
+    //else
+    //    c = color(255,0,255)
+    //end
+    
+    if selRect
+        sx,sy,sw,sh = MakeXYWHRect(selRect)
+        rect(sx,sy,sw,sh, color(255,40,0))
+    end
+    
+    for obj in selList
+        rect(obj.x, obj.y, obj.w, obj.h, c)
+    end
+end
+
+function _ObjectModeStart()
+    RegisterRawInputHook("editor-obj-keys", KeyInputHook)
+    RegisterMouseInputHook(MouseInputHook)
+    RegisterRenderHook(renderhook)
+end
+
+function _ObjectModeEnd()
+    clearSelList() // just in case something is still selected
+    UnregisterRawInputHook("editor-obj-keys")
+    UnregisterMouseInputHook(MouseInputHook)
+    UnregisterRenderHook(renderhook)
+end
+
+RegisterMode("Objects", _ObjectModeStart, _ObjectModeEnd)
+
+/* TODO
+- disable physics & update & etc for dragged object
+- when unmarking selected objects, restore old state
+- when deleting solid objects, remove from collision map
+*/

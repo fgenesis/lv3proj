@@ -1,0 +1,18 @@
+_funcmap = [
+    SDLK.N0 => [ActivateMode, "Test"],
+    SDLK.N1 => [ActivateMode, "Tiles"],
+    SDLK.N2 => [ActivateMode, "Objects"]
+]
+
+function KeyInputHook(e)
+    global _funcmap
+    
+    ty, src, which, value = e
+    if ty == EVENT_TYPE_KEYBOARD and value
+        f = _funcmap.get(which)
+        if f: f()
+    end
+end
+
+
+RegisterRawInputHook("editor-mode-hotkeys", KeyInputHook)

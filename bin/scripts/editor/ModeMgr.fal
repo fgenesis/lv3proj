@@ -1,0 +1,101 @@
+
+_modes = [ => ]
+_curMode = nil
+_lastMode = nil
+
+_font = GetFont("rpgfont")
+
+function RegisterMode(name, startfunc, endfunc)
+    global _modes
+    _modes[name] = [startfunc, endfunc]
+end
+
+// -- called by the editor on mode switch --
+function ActivateMode(name)
+    global _modes, _curMode, _lastMode
+    if name == _curMode: return
+    
+    > "ActivateMode '", name, "'"
+    
+    t = _modes.get(name)
+    if not t: return false
+    
+    startfunc, dummy = t
+    
+    t = _modes.get(_curMode)
+    if t
+        dummy, endfunc = t
+        endfunc() // if we have an old mode, end it
+    end
+    
+    _lastMode = _curMode
+    _curMode = name
+    
+    return startfunc() // start the new mode
+end
+
+// this function should be called only ONCE!
+function _CreateModeButtons()
+    global _modes
+    for m, dummy in _modes
+        Editor.AddModeButton(m)
+    end
+end
+
+function _TestModeStart()
+    Editor.SetIgnoreInput(true)
+    RegisterRenderHook(renderhook_testmode)
+    RegisterRawInputHook("testmode-inp", inputhook_lastmode)
+    // TODO: hide other panels and stuff
+end
+
+function _TestModeEnd()
+    Editor.SetIgnoreInput(false)
+    UnregisterRenderHook(renderhook_testmode)
+    UnregisterRawInputHook("testmode-inp")
+    // TODO: show other panels again
+end
+
+
+function _TileModeStart()
+    Editor.EnableTileDrawing(true)
+end
+
+function _TileModeEnd()
+    Editor.EnableTileDrawing(false)
+end
+
+function renderhook_testmode()
+    global _font
+    txt = "-- Test Mode - press Backspace to return --"
+    write = Screen.GetSurfaceRaw().Write
+    fw = _font.GetWidth(txt)
+    sw = Screen.GetWidth()
+    write(sw - fw, 3, _font, txt)
+end
+
+function inputhook_lastmode(e)
+    global _lastMode
+    ty, src, which, value = e
+    if ty == EVENT_TYPE_KEYBOARD and value
+        if which == SDLK.BACKSPACE
+            CallScheduler.Schedule( [ActivateMode, _lastMode], 1 )
+        end
+    end
+end
+    
+
+RegisterMode("Tiles", _TileModeStart, _TileModeEnd)
+RegisterMode("Test", _TestModeStart, _TestModeEnd) 
+
+subscribe("INIT_DONE", _InitializeMode)
+
+function _InitializeMode()
+    CallScheduler.Schedule( function()
+        _CreateModeButtons()
+        ActivateMode("Tiles")
+    end, 1) // schedule for next engine loop, right now, not everything is initialized, and it would crash
+end
+
+
+export RegisterMode, ActivateMode

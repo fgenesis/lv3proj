@@ -20,7 +20,7 @@ class ItemObject from Object
         //> "ItemObject::OnTouchedBy(", side, ", ", who, ")"
         if who.type == OBJTYPE_PLAYER
             //if who.AddItem(self._cons()) // NYI
-                > "ItemObject::OnTouchedBy(): '", self._cons, "' to '", who, "'"
+                //> "ItemObject::OnTouchedBy(): '", self._cons, "' to '", who, "'"
                 if self._sound: self._sound.Play()
                 self.remove()
             //end
