@@ -7,15 +7,16 @@ RMB = 3
 LMB_DRAG = 1 << (LMB - 1)
 RMB_DRAG = 1 << (RMB - 1)
 
+selPivot = nil // "pivot" object, that represents the current selection. not nil if at least 1 object is selected
 selList = [] // list of all objects that are currently selected
 selRect = nil // x,y,x2,y2
 savedProps = [ => ] // stores properties by objects in the list
-clickedLMB = false
 
 _funcmap = [
     SDLK.SPACE => spaceHandler,
     SDLK.DELETE => deleteHandler,
-    SDLK.ESCAPE => escHandler
+    SDLK.ESCAPE => escHandler,
+    SDLK.BACKSPACE => escHandler
 ]
 
 // transform x,y,x2,y2 rect into x,y,w,h rect
@@ -29,7 +30,7 @@ function MakeXYWHRect(a)
 end
 
 function MouseInputHook(e)
-    global selRect, selList, clickedLMB
+    global selRect, selList, selPivot
     ty, btn, state, x, y, rx, ry = e
     // we do not need screen corrds, use translated coords instead
     x = GetMouseX()
@@ -54,13 +55,13 @@ function MouseInputHook(e)
     if btn == LMB
         switch ty
             case EVENT_TYPE_MOUSE_BUTTONDOWN
-                clickedLMB = true
                 objs = Objects.GetAllInRect(x,y,1,1)
                 if len(objs)
                     arrayResize(objs, 1) // when selecting single object, we want only one, not all on this spot
                     if (not len(selList)) or arrayFind(selList, objs[0]) < 0
                         selList = objs
                     end
+                    selPivot = objs[0]
                     // we are maybe going to be moved now
                     storeSelObjProps()
                     
@@ -69,13 +70,13 @@ function MouseInputHook(e)
                 end
             
             case EVENT_TYPE_MOUSE_BUTTONUP
-                clickedLMB = false
                 if selRect
                     selRect[2] = x
                     selRect[3] = y
                     sx,sy,sw,sh = MakeXYWHRect(selRect)
                     selList = Objects.GetAllInRect(sx,sy,sw,sh)
                     selRect = nil
+                    selPivot = len(selList) ? selList[0] : nil
                 else
                     restoreSelObjProps()
                 end
@@ -94,12 +95,13 @@ function KeyInputHook(e)
 end
 
 function deleteHandler()
-    global selList
+    global selList, selPivot
     restoreSelObjProps()
     for obj in selList
         obj.remove(true) // true because we really mean it
     end
     selList = []
+    selPivot = nil
 end
 
 function escHandler()
@@ -107,20 +109,52 @@ function escHandler()
 end
 
 function spaceHandler()
-    img = ImageObject("misc/noimage32.png")
-    x = GetMouseX()
-    y = GetMouseY()
-    L = Editor.GetActiveLayerId()
-    img.x = x
-    img.y = y
-    img.w = img.h = 32
-    img.SetLayerId(L)
+    global selList, selPivot
+    
+    mx = GetMouseX()
+    my = GetMouseY()
+    activeLayer = Editor.GetActiveLayerId()
+    
+    if len(selList)
+        px = selPivot.x
+        py = selPivot.y
+        dx = mx - px
+        dy = my - py
+        
+        for template in selList
+            obj = nil
+            try
+                obj = template.baseClass()() // construct with empty ctor...
+                try
+                    obj.apply(template.retrieve()) // and then try to copy all properties
+                end
+            end
+            
+            if not obj
+                obj = ImageObject("misc/noimage32.png")
+                obj.w = obj.h = 32
+            end
+            
+            obj.x = template.x + dx
+            obj.y = template.y + dy
+            obj.SetLayerId(activeLayer)
+        end
+        
+    else // debug spawn
+        obj = ImageObject("misc/noimage32.png")
+        obj.w = obj.h = 32
+        obj.x = mx
+        obj.y = my
+        obj.SetLayerId(activeLayer)
+    end
+    
 end
 
 function clearSelList()
-    global selList
+    global selList, selPivot
     restoreSelObjProps()
     selList = []
+    selPivot = nil
 end
 
 function storeObjectProps(obj)
@@ -151,16 +185,17 @@ function restoreSelObjProps()
 end
 
 function renderhook()
-    global selRect, selList
+    global selRect, selList, selPivot
     
     rect = Screen.GetSurface().Rect
+    c = color(0,255,0)
     
-    // -- blinking is a bit annoying, better to disable that
-    //if Engine.GetTime() && 64
-        c = color(0,255,0)
-    //else
-    //    c = color(255,0,255)
-    //end
+    // blink only if more then 1 obj selected
+    if len(selList) > 1 and Engine.GetTime() && 64
+        cp = color(255,0,255)
+    else
+        cp = c
+    end
     
     if selRect
         sx,sy,sw,sh = MakeXYWHRect(selRect)
@@ -168,7 +203,7 @@ function renderhook()
     end
     
     for obj in selList
-        rect(obj.x, obj.y, obj.w, obj.h, c)
+        rect(obj.x, obj.y, obj.w, obj.h, obj == selPivot ? cp : c)
     end
 end
 
@@ -186,9 +221,3 @@ function _ObjectModeEnd()
 end
 
 RegisterMode("Objects", _ObjectModeStart, _ObjectModeEnd)
-
-/* TODO
-- disable physics & update & etc for dragged object
-- when unmarking selected objects, restore old state
-- when deleting solid objects, remove from collision map
-*/
