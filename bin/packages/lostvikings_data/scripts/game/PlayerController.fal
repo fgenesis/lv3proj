@@ -6,65 +6,109 @@
 
 class PlayerController
     
-    _playerReg = nil
-    _activeChar = nil
+    static _playerReg = nil // player object registry. contains all selectable players in the order they were added
+    static _activeChar = nil // index: human player number, value: currently controlled player or nil
     
     init
-        self._playerReg = [] // player object registry. countains all selectable players in the order they were added
-        self._activeChar = [] // index: human player number, value: currently controlled player or nil
-        
+        raise "This class is a singleton and should not be instanced"
+    end
+    
+    function Init()
+        self._playerReg = []
+        self._activeChar = [ => ]
     end
     
     function register()
         SNESKeyMap.RegisterInputHook(self, self.OnInput)
+        RegisterObjectCreateHook(HookPlayerEx)
     end
     
     function unregister()
         SNESKeyMap.UnregisterInputHook(self)
+        UnregisterObjectCreateHook(HookPlayerEx)
     end
     
     function Add(who)
         self._playerReg += who
-        self._activeChar += nil
+        
+        // hook player remove function, otherwise this would cause errors
+        rm = who.remove
+        rmreg = self.Remove
+        who.remove = function()
+            rmreg(who) // deregister
+            passvp(rm) // call old who.remove() with params passed to this lambda func
+        end
+        
+        if not self._activeChar.get(1)
+            self.Assign(1, who)
+        end
     end
     
     function Remove(who)
+    
+        // first, pick next player
+        for num, char in self._activeChar
+            if char == who
+                self.SwitchPlayer(num, 1)
+            end
+        end
+        
+        // if this one is STILL played now, then selecting a new unit was not possible, just unregister
+        for num, char in self._activeChar
+            if char == who
+                self.Assign(num, nil)
+            end
+        end
+        
         arrayDel(self._playerReg, who)
-        pos = arrayFind(self._activeChar, who)
-        if pos >= 0: self._activeChar[pos] = nil
     end
     
-    // active a player object for a human player, so that all input from this person is forwarded to the player class object
+    // assign a player object to a human player, so that all input from this person is forwarded to the player class object
     // @params:
     //    playerNum: which human player (in case of multiplayer), starts with 1.
-    //    who: player class object
+    //    who: player class object; can be nil, to unassign
     function Assign(playerNum, who)
         if not who
-            self._activeChar[playerNum - 1] = nil
+            self._activeChar.remove(playerNum)
+            > "PlayerController:Assign: Unassigned #", playerNum
         elif who in self._playerReg
-            self._activeChar[playerNum - 1] = who
+            self._activeChar[playerNum] = who
+            if who: > "PlayerController:Assign: Player #", playerNum, " has now Object #", who.id, ": ", who
         else
-            > "ERROR: PlayerController::AssignPlayer(): '", who, "' not registered!"
+            > "ERROR: PlayerController::Assign: '", who, "' not registered!"
         end
     end
     
     // switches a player to next or previous available one
     // @params: playerNum: human player number to switch; direction: 0 - left, 1 - right
     function SwitchPlayer(playerNum, direction)
-        cur = self._activeChar[playerNum - 1]
-        if not cur
-            > "PlayerController::SwitchPlayer(): can't switch player for #", playerNum, ", not active right now"
-            return
+        cur = self._activeChar.get(playerNum)
+        if cur
+            pos = arrayFind(self._playerReg, cur)
+            if (pos < 0) // this should never happen o_O
+                > "ERROR: PlayerController::SwitchPlayer(): currently active player was not registered!"
+                return
+            end
+            self.Assign(playerNum, nil) // temp. unassign (if current slot is the only one left, use that again)
+        else
+            pos = -1 // will be 0 when used in first array access, or m (see below) otherwise
         end
-        pos = arrayFind(self._playerReg, cur)
-        if (pos < 0) // this should never happen o_O
-            > "ERROR: PlayerController::SwitchPlayer(): currently active player was not registered!"
-            return
+        
+        m = len(self._playerReg) - 1
+        played = self._activeChar.values()
+        
+        for i = 0 to m + 1
+            pos = climit(pos + (direction ? -1 : 1), 0, m)
+            if self._playerReg[pos] notin played
+                self.Assign(playerNum, self._playerReg[pos])
+                return
+            end
         end
-        pos = climit(pos + (direction ? -1 : 1), 0, len(self._playerReg) - 1)
-        self.Assign(self._playerReg[pos], playerNum)
+        
+        > "PlayerController:SwitchPlayer: No free Player for #", playerNum, ", controls lost"
     end
     
+    // expects input from SNESKeyMap
     function OnInput(inp)
         vkey, pl, val = inp
 
@@ -76,12 +120,22 @@ class PlayerController
                 if val: self.SwitchPlayer(pl, 1)
                 
             default
-                who = self._activeChar[pl - 1]          
+                who = self._activeChar.get(pl)
                 if(who): who.OnInput(vkey, val)
         end
     end
         
 end
+
+function HookPlayerEx(p)
+    select p
+        case PlayerEx
+            PlayerController.Add(p)
+    end
+end
+
+PlayerController.Init()
+PlayerController.register()
 
 
 export PlayerController

@@ -1,4 +1,4 @@
-class PlayerEx from Player
+class PlayerEx from SNESControlledPlayer
     
     gfx = nil
     gfxOffs = nil
@@ -84,39 +84,6 @@ class PlayerEx from Player
                 self.ownSpeedX = 0
         end
         self.movingDir = d
-    end
-        
-    
-    function OnInput(vkey, val)
-        if self.dead: return
-        switch vkey
-            case KeyLEFT
-                self.OnKeyLeft(val)
-                
-            case KeyRIGHT
-                self.OnKeyRight(val)
-                
-            case KeyUP
-                self.OnKeyUp(val)
-                
-            case KeyDOWN
-                self.OnKeyDown(val)
-                
-            case KeyA
-                self.OnKeyA(val)
-                
-            case KeyB
-                self.OnKeyB(val)
-                
-            case KeyX
-                self.OnKeyX(val)
-                
-            case KeyY
-                self.OnKeyY(val)
-                
-            default
-                > "PlayerEx::OnInput(", vkey, ", ", val, ") for '", self, "' unhandled!"
-        end
     end
     
     function OnKeyLeft(pressed)
@@ -275,22 +242,29 @@ class PlayerEx from Player
     function Kill(how)
         if self.godmode: return
         self.dead = true
+        self.SetCollisionEnabled(false)
+        self.SetAffectedByPhysics(false)
+        
         switch how
             case DEATH_ELECTRO
-                p = self.phys
-                self.SetCollisionEnabled(false)
-                self.SetAffectedByPhysics(false)
                 self.AnimElectro()
                 Sound("elecbuzz.ogg").Play()
                 
             case DEATH_CRUSH
-                self.SetCollisionEnabled(false)
-                self.SetAffectedByPhysics(false)
                 self.AnimDeathNormal() // TODO: this must be changed to crush anim
                 Sound("crush.ogg").Play()
         end
-    end
         
+        self._DoRemoveSelf()
+    end
+    
+    function _DoRemoveSelf()
+        if self.dead and self.GetSprite().name == "invis"
+            self.remove()
+        else
+            CallScheduler.Schedule(self._DoRemoveSelf, 500)
+        end
+    end
         
     
     

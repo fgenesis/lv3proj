@@ -30,10 +30,6 @@ olaf = Olaf()
 olaf.SetLayerId(4)
 olaf.SetPos(72,48)
 olaf.canDebugJump = true
-pcontrol = PlayerController()
-pcontrol.Add(olaf)
-pcontrol.Assign(1, olaf)
-pcontrol.register()
 
 img = ImageObject("sprites/lv3logo.png")
 CallScheduler.Schedule(img.remove, 4000)
@@ -286,7 +282,7 @@ function RandomizeTest(fill)
 end
 
 function PlayerAliveCheck(who)
-    if who.dead and who.GetSprite().name == "invis"
+    if (not who.valid) or (who.dead and who.GetSprite().name == "invis")
         img = ImageObject("misc/fail.png")
         img.SetPos(100,100)
         Sound("klaxonloop.ogg").Play()

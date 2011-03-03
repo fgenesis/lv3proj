@@ -1,0 +1,84 @@
+class SNESControlledPlayer from Player
+
+    dead = false // dead means can't move
+    
+    function OnInput(vkey, val)
+        if self.dead: return
+        switch vkey
+            case KeyLEFT
+                self.OnKeyLeft(val)
+                
+            case KeyRIGHT
+                self.OnKeyRight(val)
+                
+            case KeyUP
+                self.OnKeyUp(val)
+                
+            case KeyDOWN
+                self.OnKeyDown(val)
+                
+            case KeyA
+                self.OnKeyA(val)
+                
+            case KeyB
+                self.OnKeyB(val)
+                
+            case KeyX
+                self.OnKeyX(val)
+                
+            case KeyY
+                self.OnKeyY(val)
+                
+            case KeyL
+                self.OnKeyL(val)
+                
+            case KeyR
+                self.OnKeyR(val)
+                
+            case KeySELECT
+                self.OnKeySelect(val)
+                
+            case KeySTART
+                self.OnKeyStart(val)
+        end
+    end
+    
+    function OnKeyLeft(pressed)
+    end
+    
+    function OnKeyRight(pressed)
+    end
+    
+    function OnKeyUp(pressed)
+    end
+    
+    function OnKeyDown(pressed)
+    end
+    
+    function OnKeyA(pressed)
+    end
+    
+    function OnKeyB(pressed)
+    end
+    
+    function OnKeyX(pressed)
+    end
+    
+    function OnKeyY(pressed)
+    end
+    
+    function OnKeyL(pressed)
+    end
+    
+    function OnKeyR(pressed)
+    end
+    
+    function OnKeySelect(pressed)
+    end
+    
+    function OnKeyStart(pressed)
+    end  
+end
+
+
+export SNESControlledPlayer

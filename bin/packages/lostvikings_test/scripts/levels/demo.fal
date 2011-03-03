@@ -152,8 +152,7 @@ class WinObject(level) from Object
 end
 
 function WinLevel(level)
-    Music.Play("title", "Amiga")
-    Music.SetVolume(120)
+    LVMusic.Play("title", "Amiga")
     img = ImageObject("misc/win.png")
     img.SetPos(100,100)
     level.player.godmode = true
@@ -208,10 +207,6 @@ class Demolevel
         olaf = Olaf()
         olaf.SetLayerId(4)
         olaf.SetPos(72,48)
-        self.pcontrol = PlayerController()
-        self.pcontrol.Add(olaf)
-        self.pcontrol.Assign(1, olaf)
-        self.pcontrol.register()
         self.player = olaf
     end
     
@@ -354,7 +349,7 @@ class Demolevel
 end
 
 function PlayerAliveCheck(who)
-    if who.dead and who.GetSprite().name == "invis"
+    if (not who.valid) or (who.dead and who.GetSprite().name == "invis")
         img = ImageObject("misc/fail.png")
         img.SetPos(100,100)
         Sound("klaxonloop.ogg").Play()

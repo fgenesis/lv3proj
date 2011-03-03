@@ -9,7 +9,7 @@ end
 function Object_remove(obj, rm, really)
     // TEST: for now, just print when an object is removed; we will take appropriate measures later
     > "REMOVE: ", obj, " really: ", really
-    if really: rm()
+    if really: passvp(rm) // pass all undeclared parameters to old obj.remove and call it
 end
 
 
