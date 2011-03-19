@@ -1,15 +1,33 @@
 
+plr = 1
+joy = 0
 // right now, this reflects me own gamepad config -- fg
 // TODO: change this to some more probable values before release
-SNESKeyMap.Bind(EVENT_TYPE_JOYSTICK_AXIS, 0, AxisUp(1) , KeyUP, 1)
-SNESKeyMap.Bind(EVENT_TYPE_JOYSTICK_AXIS, 0, AxisDown(1), KeyDOWN, 1)
-SNESKeyMap.Bind(EVENT_TYPE_JOYSTICK_AXIS, 0, AxisLeft(0), KeyLEFT, 1)
-SNESKeyMap.Bind(EVENT_TYPE_JOYSTICK_AXIS, 0, AxisRight(0), KeyRIGHT, 1)
-SNESKeyMap.Bind(EVENT_TYPE_JOYSTICK_BUTTON, 0, 4, KeyA, 1)
-SNESKeyMap.Bind(EVENT_TYPE_JOYSTICK_BUTTON, 0, 2, KeyB, 1)
-SNESKeyMap.Bind(EVENT_TYPE_JOYSTICK_BUTTON, 0, 5, KeyX, 1)
-SNESKeyMap.Bind(EVENT_TYPE_JOYSTICK_BUTTON, 0, 3, KeyY, 1)
-SNESKeyMap.Bind(EVENT_TYPE_JOYSTICK_BUTTON, 0, 6, KeyL, 1)
-SNESKeyMap.Bind(EVENT_TYPE_JOYSTICK_BUTTON, 0, 8, KeyR, 1)
-SNESKeyMap.Bind(EVENT_TYPE_JOYSTICK_BUTTON, 0, 11, KeySTART, 1)
-SNESKeyMap.Bind(EVENT_TYPE_JOYSTICK_BUTTON, 0, 10, KeySELECT, 1)
+SNESKeyMap.Bind(EVENT_TYPE_JOYSTICK_AXIS, joy, AxisUp(1) , KeyUP, plr)
+SNESKeyMap.Bind(EVENT_TYPE_JOYSTICK_AXIS, joy, AxisDown(1), KeyDOWN, plr)
+SNESKeyMap.Bind(EVENT_TYPE_JOYSTICK_AXIS, joy, AxisLeft(0), KeyLEFT, plr)
+SNESKeyMap.Bind(EVENT_TYPE_JOYSTICK_AXIS, joy, AxisRight(0), KeyRIGHT, plr)
+SNESKeyMap.Bind(EVENT_TYPE_JOYSTICK_BUTTON, joy, 4, KeyA, plr)
+SNESKeyMap.Bind(EVENT_TYPE_JOYSTICK_BUTTON, joy, 2, KeyB, plr)
+SNESKeyMap.Bind(EVENT_TYPE_JOYSTICK_BUTTON, joy, 5, KeyX, plr)
+SNESKeyMap.Bind(EVENT_TYPE_JOYSTICK_BUTTON, joy, 3, KeyY, plr)
+SNESKeyMap.Bind(EVENT_TYPE_JOYSTICK_BUTTON, joy, 6, KeyL, plr)
+SNESKeyMap.Bind(EVENT_TYPE_JOYSTICK_BUTTON, joy, 8, KeyR, plr)
+SNESKeyMap.Bind(EVENT_TYPE_JOYSTICK_BUTTON, joy, 11, KeySTART, plr)
+SNESKeyMap.Bind(EVENT_TYPE_JOYSTICK_BUTTON, joy, 10, KeySELECT, plr)
+
+
+plr = 2
+joy = 1
+SNESKeyMap.Bind(EVENT_TYPE_JOYSTICK_AXIS, joy, AxisUp(1) , KeyUP, plr)
+SNESKeyMap.Bind(EVENT_TYPE_JOYSTICK_AXIS, joy, AxisDown(1), KeyDOWN, plr)
+SNESKeyMap.Bind(EVENT_TYPE_JOYSTICK_AXIS, joy, AxisLeft(0), KeyLEFT, plr)
+SNESKeyMap.Bind(EVENT_TYPE_JOYSTICK_AXIS, joy, AxisRight(0), KeyRIGHT, plr)
+SNESKeyMap.Bind(EVENT_TYPE_JOYSTICK_BUTTON, joy, 2, KeyA, plr)
+SNESKeyMap.Bind(EVENT_TYPE_JOYSTICK_BUTTON, joy, 0, KeyB, plr)
+SNESKeyMap.Bind(EVENT_TYPE_JOYSTICK_BUTTON, joy, 3, KeyX, plr)
+SNESKeyMap.Bind(EVENT_TYPE_JOYSTICK_BUTTON, joy, 1, KeyY, plr)
+SNESKeyMap.Bind(EVENT_TYPE_JOYSTICK_BUTTON, joy, 4, KeyL, plr)
+SNESKeyMap.Bind(EVENT_TYPE_JOYSTICK_BUTTON, joy, 6, KeyR, plr)
+SNESKeyMap.Bind(EVENT_TYPE_JOYSTICK_BUTTON, joy, 8, KeySTART, plr)
+SNESKeyMap.Bind(EVENT_TYPE_JOYSTICK_BUTTON, joy, 9, KeySELECT, plr)

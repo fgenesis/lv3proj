@@ -100,12 +100,12 @@ end
 
 function RibbonStart()
     RegisterRenderHook(renderhook)
-    RegisterUpdateHook("ribbon_test", updatehook)
+    RegisterUpdateHook(updatehook)
 end
 
 function RibbonEnd()
     UnregisterRenderHook(renderhook)
-    UnregisterUpdateHook("ribbon_test")
+    UnregisterUpdateHook(updatehook)
 end
 
 export RibbonStart, RibbonEnd

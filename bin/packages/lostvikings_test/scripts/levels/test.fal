@@ -63,12 +63,12 @@ function DoSomeResets(who, k, e)
     end
 end
 
-RegisterRawInputHook("DoSomeResets", .[DoSomeResets olaf SDLK.TAB] )
-RegisterRawInputHook("DisableInputOn", .[DisableInputOn SDLK.END])
-RegisterRawInputHook("CycleGravityOn", .[CycleGravityOn SDLK.PAGEDOWN])
-RegisterRawInputHook("ToggleBounceOn", .[ToggleBounceOn olaf SDLK.PAGEUP])
-RegisterRawInputHook("ToggleGodmode", .[ToggleGodmode olaf SDLK.COMMA])
-RegisterRawInputHook("ResetBlockTest", .[ResetBlockTest blk SDLK.m])
+RegisterRawInputHook( .[DoSomeResets olaf SDLK.TAB] )
+RegisterRawInputHook( .[DisableInputOn SDLK.END])
+RegisterRawInputHook( .[CycleGravityOn SDLK.PAGEDOWN])
+RegisterRawInputHook( .[ToggleBounceOn olaf SDLK.PAGEUP])
+RegisterRawInputHook( .[ToggleGodmode olaf SDLK.COMMA])
+RegisterRawInputHook( .[ResetBlockTest blk SDLK.m])
 //RegisterRawInputHook("RemovePlayerTest", .[RemovePlayerTest olaf SDLK.q])
 PlayerAliveCheck(olaf)
 

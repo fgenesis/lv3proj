@@ -176,7 +176,6 @@ end
 class Demolevel
 
     player = nil
-    pcontrol = nil
 
     function Load()
         Engine.LoadLevel("demolevel.txt")

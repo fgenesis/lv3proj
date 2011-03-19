@@ -45,14 +45,14 @@ end
 function _TestModeStart()
     Editor.SetIgnoreInput(true)
     RegisterRenderHook(renderhook_testmode)
-    RegisterRawInputHook("testmode-inp", inputhook_lastmode)
+    RegisterRawInputHook(inputhook_lastmode)
     // TODO: hide other panels and stuff
 end
 
 function _TestModeEnd()
     Editor.SetIgnoreInput(false)
     UnregisterRenderHook(renderhook_testmode)
-    UnregisterRawInputHook("testmode-inp")
+    UnregisterRawInputHook(inputhook_lastmode)
     // TODO: show other panels again
 end
 

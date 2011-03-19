@@ -105,7 +105,7 @@ function ShowJoystickTestScreen(returnfunc)
     end
     
     Screen.SetMode(320, 240, false, true)
-    RegisterRawInputHook("JoystickTest.fal", inputhook)
+    RegisterRawInputHook(inputhook)
     RegisterRenderHook(renderhook)
 end
 

@@ -75,7 +75,7 @@ class Package
                 ty, src, which, value = inp
                 if (ty == EVENT_TYPE_KEYBOARD or ty == EVENT_TYPE_JOYSTICK_BUTTON) and value
                     f = function()
-                        UnregisterRawInputHook("Package.fal-depfail")
+                        UnregisterRawInputHook(fself)
                         UnregisterRenderHook(rfunc)
                         Package.Shutdown() // nothing better to do, we dont know which other packages were already loaded
                     end
@@ -85,7 +85,7 @@ class Package
             
             CloseCurrentMenu()
             RegisterRenderHook(rfunc)
-            RegisterRawInputHook("Package.fal-depfail", escfunc)
+            RegisterRawInputHook(escfunc)
             
              // we do not throw a PackageError here, otherwise it might be caught half-way up the callstack.
              // instead, this one is supposed to reach the menu, or at least something that is aware of possible errors
@@ -123,7 +123,7 @@ class Package
                     ty, src, which, value = inp
                     if (ty == EVENT_TYPE_KEYBOARD or ty == EVENT_TYPE_JOYSTICK_BUTTON) and value
                         rescue = function()
-                            UnregisterRawInputHook("Package.fal-startfail")
+                            UnregisterRawInputHook(fself)
                             UnregisterRenderHook(rfunc)
                             Package.Shutdown() // nothing better to do, we dont know which other packages were already loaded
                         end
@@ -133,7 +133,7 @@ class Package
                 
                 CloseCurrentMenu()
                 RegisterRenderHook(rfunc)
-                RegisterRawInputHook("Package.fal-startfail", escfunc)
+                RegisterRawInputHook(escfunc)
             end
         end
         CallScheduler.Schedule([f, self], 1)

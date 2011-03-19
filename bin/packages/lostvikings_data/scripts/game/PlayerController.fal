@@ -19,12 +19,12 @@ class PlayerController
     end
     
     function register()
-        SNESKeyMap.RegisterInputHook(self, self.OnInput)
+        SNESKeyMap.RegisterInputHook(self.OnInput)
         RegisterObjectCreateHook(HookPlayerEx)
     end
     
     function unregister()
-        SNESKeyMap.UnregisterInputHook(self)
+        SNESKeyMap.UnregisterInputHook(self.OnInput)
         UnregisterObjectCreateHook(HookPlayerEx)
     end
     
@@ -121,7 +121,7 @@ class PlayerController
                 
             default
                 who = self._activeChar.get(pl)
-                if(who): who.OnInput(vkey, val)
+                if(who): who.OnInput(inp)
         end
     end
         

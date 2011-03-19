@@ -1,9 +1,9 @@
 
 // InputEventHandler() input hooks
-_rawhooks = [ => ]
+_rawhooks = []
 
 // GameUpdate() hooks
-_uphooks = [ => ]
+_uphooks = []
 
 // PostRender() hooks
 _rhooks = []
@@ -18,33 +18,34 @@ _mhooks = []
 function InputEventHandler(e)
     global _rawhooks
     
-    for name,func in _rawhooks
+    for func in _rawhooks
         try
             func(e)
         catch in err
-            > "ERROR: InputEventHandler(): unhandled exception in hook '", name, "'"
+            > "ERROR: InputEventHandler(): unhandled exception in hook '", func, "'"
             inspect(func)
             > err
         end
     end
 end
 
-function RegisterRawInputHook(who,func)
-    global _rawhooks
-    if not isCallable(func): raise "RegisterRawInputHook(): func for '" + who + "' not callable, is: " + func
-    _rawhooks[who] = func
+function _EnsureCallable(by, func)
+    if not isCallable(func) // helps to find errors
+        inspect(func)
+        raise by.toString() + "(): '" + func + "' not callable"
+    end
 end
 
-function UnregisterRawInputHook(who)
+function RegisterRawInputHook(func)
     global _rawhooks
-    _rawhooks -= who
+    _EnsureCallable(fself, func)
+    _rawhooks.add(func)
 end
 
-function GetRawInputHook(who)
+function UnregisterRawInputHook(func)
     global _rawhooks
-    iter = dictFind(_rawhooks, who)
-    if iter: return iter.value()
-    return nil
+    _EnsureCallable(fself, func) // for debug only
+    _rawhooks.del(func)
 end
 
 function GetRawInputHookCount()
@@ -58,11 +59,11 @@ function GameUpdate(ms)
     global _uphooks
     
     // process registered functions. if one returns true, remove from list
-    for name, func in _uphooks
+    for func in _uphooks
         try
-            if func(ms): continue dropping
+            func(ms)
         catch in err
-            > "ERROR: GameUpdate(): unhandled exception in hook '", name, "'"
+            > "ERROR: GameUpdate(): unhandled exception in hook '", func, "'"
             inspect(func)
             > err
             > "---> Dropping hook to prevent further console spam"
@@ -71,15 +72,16 @@ function GameUpdate(ms)
     end
 end
 
-function RegisterUpdateHook(who, func)
+function RegisterUpdateHook(func)
     global _uphooks
-    if not isCallable(func): raise "RegisterUpdateHook(): func for '" + who + "' not callable, is: " + func
-    _uphooks[who] = func
+    _EnsureCallable(fself, func)
+    _uphooks.add(func)
 end
 
-function UnregisterUpdateHook(who)
+function UnregisterUpdateHook(func)
     global _uphooks
-    _uphooks -= who
+    _EnsureCallable(fself, func) // for debug only
+    _uphooks.del(func)
 end
 
 function GetUpdateHookCount()
@@ -91,10 +93,9 @@ end
 function PostRender()
     global _rhooks
     
-    // process registered functions. if one returns true, remove from list
     for func in _rhooks
         try
-            if func(): continue dropping
+            func()
         catch in err
             > "ERROR: PostRender(): unhandled exception in a hook:"
             > func
@@ -107,13 +108,14 @@ end
 
 function RegisterRenderHook(func)
     global _rhooks
-    if not isCallable(func): raise "RegisterRenderHook(): '" + func + "' not callable!"
-    arrayAdd(_rhooks, func)
+    _EnsureCallable(fself, func)
+    _rhooks.add(func)
 end
 
 function UnregisterRenderHook(func)
     global _rhooks
-    arrayDel(_rhooks, func)
+    _EnsureCallable(fself, func) // for debug only
+    _rhooks.del(func)
 end
 
 function GetRenderHookCount()
@@ -139,12 +141,14 @@ end
 
 function RegisterObjectCreateHook(func)
     global _ochooks
-    arrayAdd(_ochooks, func)
+    _EnsureCallable(fself, func)
+    _ochooks.add(func)
 end
 
 function UnregisterObjectCreateHook(func)
     global _ochooks
-    arrayDel(_ochooks, func)
+    _EnsureCallable(fself, func)
+    _ochooks.del(func)
 end
 
 // called whenever an the mouse was moved or clicked
@@ -165,19 +169,21 @@ end
 
 function RegisterMouseInputHook(func)
     global _mhooks
-    arrayAdd(_mhooks, func)
+    _EnsureCallable(fself, func)
+    _mhooks.add(func)
 end
 
 function UnregisterMouseInputHook(func)
     global _mhooks
-    arrayDel(_mhooks, func)
+    _EnsureCallable(fself, func) // for debug only
+    _mhooks.del(func)
 end
 
 export GameUpdate
 export RegisterUpdateHook, UnregisterUpdateHook, GetUpdateHookCount
 
 export InputEventHandler
-export RegisterRawInputHook, UnregisterRawInputHook, GetRawInputHook, GetRawInputHookCount
+export RegisterRawInputHook, UnregisterRawInputHook, GetRawInputHookCount
 
 export MouseEventHandler
 export RegisterMouseInputHook, UnregisterMouseInputHook

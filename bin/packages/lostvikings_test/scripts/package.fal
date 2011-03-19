@@ -48,4 +48,4 @@ function RawKeyHandler(inp)
 end
 
 pkg.Start(LoadFinal)
-RegisterRawInputHook("lostvikings_test", RawKeyHandler)
+RegisterRawInputHook(RawKeyHandler)

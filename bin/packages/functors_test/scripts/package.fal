@@ -78,7 +78,7 @@ function RawKeyHandler(inp)
     end
 end
 
-RegisterRawInputHook("functors_test_package", RawKeyHandler)
+RegisterRawInputHook(RawKeyHandler)
 
 
 function renderhook(str, str2)

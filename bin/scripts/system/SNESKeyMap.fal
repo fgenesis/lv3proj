@@ -103,24 +103,18 @@ class SNESKeyMap
         ty, src, which, value = e
         key = self.Translate(ty, src, which, value)
         if key
-            for who,func in self.hooks
+            for func in self.hooks
                 func(key)
             end
         end
     end
     
-    function RegisterInputHook(who,func)
-        self.hooks[who] = func
+    function RegisterInputHook(func)
+        self.hooks.add(func)
     end
 
-    function UnregisterInputHook(who)
-        self.hooks -= who
-    end
-
-    function GetInputHook(who)
-        iter = dictFind(self.hooks, who)
-        if iter: return iter.value()
-        return nil
+    function UnregisterInputHook(func)
+        self.hooks.del(func)
     end
 
     function ClearInputHooks()
@@ -130,13 +124,32 @@ class SNESKeyMap
     function GetInputHookCount()
         return len(self.hooks)
     end
+    
+    // wrapper function
+    function AddControlledPlayer(p)
+        select p
+            case SNESControlledPlayer
+                self.RegisterInputHook(p.OnInput)
+                
+                // hook player remove function, otherwise this would cause errors
+                rm = p.remove
+                rmreg = self.UnregisterInputHook
+                p.remove = function()
+                    rmreg(p.OnInput) // unregister input hook
+                    passvp(rm) // call old p.remove() with params passed to this lambda func
+                end
+                
+                return true
+        end
+        raise "Object not of type SNESControlledPlayer"
+    end
 
 end
 
 SNESKeyMap.binds = [ => ]
 SNESKeyMap.joystickState = [ => ]
-SNESKeyMap.hooks = [ => ]
+SNESKeyMap.hooks = []
 
-RegisterRawInputHook("SNESKeyMap", SNESKeyMap.ProcessHooks)
+RegisterRawInputHook(SNESKeyMap.ProcessHooks)
 
 export

@@ -34,16 +34,16 @@ class Menu
         if not self.sndSelect: raise "Menu: Sound " + self.soundselect + " not found"
         self.sndBack = Sound(self.soundback)
         if not self.sndBack: raise "Menu: Sound " + self.soundback + " not found"
-        SNESKeyMap.RegisterInputHook(self, self.OnInput)
-        RegisterRawInputHook(self, self.OnRawInput)
-        RegisterUpdateHook(self, self.OnUpdate)
+        SNESKeyMap.RegisterInputHook(self.OnInput)
+        RegisterRawInputHook(self.OnRawInput)
+        RegisterUpdateHook(self.OnUpdate)
         RegisterRenderHook(self.Draw)
     end
     
     function Close()
-        SNESKeyMap.UnregisterInputHook(self, self.OnInput)
-        UnregisterRawInputHook(self, self.OnRawInput)
-        UnregisterUpdateHook(self)
+        SNESKeyMap.UnregisterInputHook(self.OnInput)
+        UnregisterRawInputHook(self.OnRawInput)
+        UnregisterUpdateHook(self.OnUpdate)
         UnregisterRenderHook(self.Draw)
     end
     
@@ -173,6 +173,14 @@ class Menu
     function OnRawInput(e)
         global _currentMenu
         if not _currentMenu == self: return
+        
+        // time guard, accept only 1 key press in 1 engine loop,
+        // because if both the SNESKeyMap and raw input are processed,
+        // a key press may be counted twice
+        t = Engine.GetTime()
+        if self.inputTime == t: return
+        self.inputTime = t
+        
         ty, src, which, value = e
         if(ty == EVENT_TYPE_KEYBOARD and value != 0)
             if(which == SDLK.RETURN)

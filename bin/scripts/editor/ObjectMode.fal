@@ -208,14 +208,14 @@ function renderhook()
 end
 
 function _ObjectModeStart()
-    RegisterRawInputHook("editor-obj-keys", KeyInputHook)
+    RegisterRawInputHook(KeyInputHook)
     RegisterMouseInputHook(MouseInputHook)
     RegisterRenderHook(renderhook)
 end
 
 function _ObjectModeEnd()
     clearSelList() // just in case something is still selected
-    UnregisterRawInputHook("editor-obj-keys")
+    UnregisterRawInputHook(KeyInputHook)
     UnregisterMouseInputHook(MouseInputHook)
     UnregisterRenderHook(renderhook)
 end

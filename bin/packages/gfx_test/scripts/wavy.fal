@@ -67,12 +67,12 @@ end
 
 function WavyStart()
     RegisterRenderHook(blitfunc)
-    RegisterUpdateHook("wavy_test", updatehook)
+    RegisterUpdateHook(updatehook)
 end
 
 function WavyEnd()
     UnregisterRenderHook(blitfunc)
-    UnregisterUpdateHook("wavy_test")
+    UnregisterUpdateHook(updatehook)
 end
 
 export WavyStart, WavyEnd

@@ -2,8 +2,9 @@ class SNESControlledPlayer from Player
 
     dead = false // dead means can't move
     
-    function OnInput(vkey, val)
+    function OnInput(inp)
         if self.dead: return
+        vkey, pl, val = inp
         switch vkey
             case KeyLEFT
                 self.OnKeyLeft(val)

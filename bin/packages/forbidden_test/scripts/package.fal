@@ -61,7 +61,7 @@ function RawKeyHandler(inp)
     end
 end
 
-RegisterRawInputHook("forbidden_test_package", RawKeyHandler)
+RegisterRawInputHook(RawKeyHandler)
 
 
 function renderhook(working)

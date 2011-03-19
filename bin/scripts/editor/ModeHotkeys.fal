@@ -15,4 +15,4 @@ function KeyInputHook(e)
 end
 
 
-RegisterRawInputHook("editor-mode-hotkeys", KeyInputHook)
+RegisterRawInputHook(KeyInputHook)

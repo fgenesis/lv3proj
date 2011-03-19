@@ -2,20 +2,24 @@
 
 class CallScheduler
     
-    static calls = nil
+    static _calls = nil
     
     init
         raise "CallScheduler: This class should not be instanced."
     end 
     
+    function Init()
+        self._calls = []
+    end
+    
     function Schedule(item, ms)
         if not isCallable(item): return false
-        arrayAdd(self.calls, [Engine.GetTime() + ms, item]);
+        self._calls.add( [Engine.GetTime() + ms, item] )
         return true
     end
     
     function CallDue()
-        for pair in self.calls
+        for pair in self._calls
             time, item = pair
             if(time < Engine.GetTime())
                 try
@@ -29,14 +33,14 @@ class CallScheduler
         end
     end
     
-    function Count(): return len(self.calls)
+    function Count(): return len(self._calls)
 
 end
 
-CallScheduler.calls = []
+CallScheduler.Init()
 
 // process events that were registered with CallScheduler.Schedule on every engine tick
-RegisterUpdateHook("CallScheduler", CallScheduler.CallDue)
+RegisterUpdateHook(CallScheduler.CallDue)
 
 
 export CallScheduler

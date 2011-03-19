@@ -59,12 +59,12 @@ end
 
 function dbg_AddHookCountOverlay()
     RegisterRenderHook(dbg_HookCountRenderHook)
-    RegisterUpdateHook("dbg_UpdateDifftime", dbg_UpdateDifftime)
+    RegisterUpdateHook(dbg_UpdateDifftime)
 end
 
 function dbg_RemoveHookCountOverlay()
     UnregisterRenderHook(dbg_HookCountRenderHook)
-    UnregisterUpdateHook("dbg_UpdateDifftime")
+    UnregisterUpdateHook(dbg_UpdateDifftime)
 end
 
 export

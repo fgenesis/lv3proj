@@ -57,4 +57,4 @@ function RawKeyHandler(inp)
 end
 
 pkg.Start(LoadFinal)
-RegisterRawInputHook("gfx_test", RawKeyHandler)
+RegisterRawInputHook(RawKeyHandler)
