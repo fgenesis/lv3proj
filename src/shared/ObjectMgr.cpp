@@ -225,9 +225,9 @@ void ObjectMgr::RenderLayer(uint32 id)
     }
 }
 
-void ObjectMgr::GetAllObjectsIn(BaseRect& rect, ObjectWithSideSet& result, uint8 force_side /* = SIDE_NONE */)
+void ObjectMgr::GetAllObjectsIn(BaseRect& rect, ObjectWithSideSet& result, uint8 force_side /* = SIDE_NONE */) const
 {
-    for(ObjectMap::iterator it = _store.begin(); it != _store.end(); it++)
+    for(ObjectMap::const_iterator it = _store.begin(); it != _store.end(); it++)
         if(uint8 side = ((ActiveRect*)it->second)->CollisionWith(&rect))
             result.insert(std::pair<BaseObject*,uint8>(it->second, force_side ? force_side : side));
 }

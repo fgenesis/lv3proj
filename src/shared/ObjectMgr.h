@@ -23,8 +23,8 @@ public:
     ~ObjectMgr();
     uint32 Add(BaseObject*);
     BaseObject *Get(uint32 id);
-    inline uint32 GetLastId(void) { return _curId; }
-    inline uint32 GetCount(void)  { return _store.size(); }
+    inline uint32 GetLastId(void) const { return _curId; }
+    inline uint32 GetCount(void) const { return _store.size(); }
     void Update(uint32 ms);
     void RenderLayer(uint32 id);
     void RenderBBoxes(void); // debug function
@@ -34,7 +34,8 @@ public:
     void RemoveAll(void);
     void HandleObjectCollision(ActiveRect *base, ActiveRect *other, uint8 side);
 
-    void GetAllObjectsIn(BaseRect& rect, ObjectWithSideSet& result, uint8 force_side = SIDE_NONE);
+    void GetAllObjectsIn(BaseRect& rect, ObjectWithSideSet& result, uint8 force_side = SIDE_NONE) const;
+    const ObjectMap& GetAllObjects(void) const { return _store; }
 
     inline void SetPhysicsMgr(PhysicsMgr *pm) { _physMgr = pm; }
     inline void SetLayerMgr(LayerMgr *layers) {_layerMgr = layers; }

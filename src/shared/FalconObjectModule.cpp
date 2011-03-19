@@ -196,15 +196,7 @@ void fal_ObjectCarrier::init(Falcon::VMachine *vm)
 
 Falcon::CoreObject* fal_ObjectCarrier::factory( const Falcon::CoreClass *cls, void *user_data, bool )
 {
-    Falcon::String classname = cls->symbol()->name();
-
-    // do not allow direct instantiation of the base classes, except ActiveRect
-    // with rect, it is good to replace member functions such as: rect.OnEnter = some_func
-    if(classname == "Player" || classname == "Unit"
-        || classname == "Item" || classname == "Object")
-    {
-        throw new Falcon::AccessError( Falcon::ErrorParam( Falcon::e_noninst_cls ) );
-    }
+    const Falcon::String& classname = cls->symbol()->name();
 
     // TODO: automatic class selection does NOT work for chain inheritance (no idea why):
     // e.g. Olaf from PlayerEx from Player
@@ -212,15 +204,15 @@ Falcon::CoreObject* fal_ObjectCarrier::factory( const Falcon::CoreClass *cls, vo
     Falcon::ClassDef *clsdef = cls->symbol()->getClassDef();
     BaseObject *obj = NULL;
 
-    if(clsdef->inheritsFrom("Player"))
+    if(clsdef->inheritsFrom("Player") || classname == "Player")
     {
         obj = new Player;
     }
-    else if(clsdef->inheritsFrom("Unit"))
+    else if(clsdef->inheritsFrom("Unit") || classname == "Unit")
     {
         obj = new Unit;
     }
-    else if(clsdef->inheritsFrom("Object"))
+    else if(clsdef->inheritsFrom("Object") || classname == "Object")
     {
         obj = new Object;
     }
@@ -264,7 +256,7 @@ bool fal_ObjectCarrier::setProperty( const Falcon::String &prop, const Falcon::I
         return true;
     }
 
-    // faster check for x2, y2, x2f, y2f
+    // faster check for x2, y2, x2f, y2f (FIXME: this is not 100% correct)
     if(prop.length() > 1 && prop.length() <= 3 && prop.getCharAt(1) == '2' && (prop.getCharAt(0) == 'x' || prop.getCharAt('y')))
     {
         throw new Falcon::AccessError( Falcon::ErrorParam( Falcon::e_prop_ro ).
@@ -925,7 +917,19 @@ FALCON_FUNC fal_Objects_GetAllInRect(Falcon::VMachine *vm)
     vm->retval(arr);
 }
 
-
+FALCON_FUNC fal_Objects_GetAll(Falcon::VMachine *vm)
+{
+    const ObjectMap& m = Engine::GetInstance()->objmgr->GetAllObjects();
+    Falcon::CoreArray *arr = new Falcon::CoreArray(m.size());
+    for(ObjectMap::const_iterator it = m.begin(); it != m.end(); ++it)
+    {
+        BaseObject *obj = it->second;
+        DEBUG(ASSERT(obj->_falObj && obj->_falObj->coreCls));
+        fal_ObjectCarrier *co = obj->_falObj->self();
+        arr->append(co);
+    }
+    vm->retval(arr);
+}
 
 
 Falcon::Module *FalconObjectModule_create(void)

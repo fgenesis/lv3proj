@@ -136,7 +136,7 @@ protected:
     void _GenericInit(void);
 
     BasicTile *_gfx;
-    Point anchor; // where this object stands on the ground (center of object) - used for CanFallDown()
+    Point anchor; // where this object stands on the ground (center of object) - used for CanFallDown() // TODO: obsolete
     uint32 _layerId; // layer ID where this sprite is drawn on
     uint32 _oldLayerId; // prev. layer id, if theres a difference between both, ObjectMgr::Update() has to correct the layer set assignment
     bool _physicsAffected;

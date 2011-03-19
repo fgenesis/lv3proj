@@ -1011,7 +1011,7 @@ FALCON_FUNC fal_Screen_CreateInfoLayer(Falcon::VMachine *vm)
 
 template <bool ENGINE_CAM> FALCON_FUNC fal_Screen_GetSurface(Falcon::VMachine *vm)
 {
-    Falcon::CoreClass *cls = vm->findWKI("Surface")->asClass();
+    Falcon::CoreClass *cls = vm->findWKI("Surface")->asClass(); // TODO: speed this up
     fal_Surface *fs = Falcon::dyncast<fal_Surface*>(fal_Surface::factory(cls, NULL, false));
     fs->surface = Engine::GetInstance()->GetSurface();
     fs->adopted = true;
