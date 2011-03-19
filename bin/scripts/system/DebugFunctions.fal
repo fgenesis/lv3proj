@@ -43,7 +43,7 @@ function dbg_HookCountRenderHook() // note: this function is highly unoptimized 
     w, h = Screen.GetSize()
     rc = Engine.ResourceCount()
     rm =  Engine.ResourceMem() >> 10 // bytes -> kB
-    font = GetFont("rpgfont")
+    font = GetFont("consolefont")
     fh = font.GetHeight()
     write = Screen.GetSurfaceRaw().Write
     
