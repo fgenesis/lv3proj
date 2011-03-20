@@ -112,7 +112,7 @@ end
 function _Return()
     global _retfunc
     f = function()
-        UnregisterRawInputHook("JoystickTest.fal")
+        UnregisterRawInputHook(inputhook)
         UnregisterRenderHook(renderhook)
         _retfunc()
     end
