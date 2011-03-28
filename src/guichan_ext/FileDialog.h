@@ -5,6 +5,7 @@
 #include "Panel.h"
 
 class FileDialogCallback;
+class VFSDir;
 
 // a file dialog that works directly on the VFS
 class FileDialog : public gcn::Window, gcn::ActionListener, gcn::ListModel,
@@ -34,13 +35,15 @@ protected:
     void _DoCallback(void);
     void _Update(void);
     void _HandleSelection(void);
-    void _Descend(VFSDir *vd);
+    void _Descend(const std::string& subdir);
     void _Ascend(void);
+    VFSDir *_GetCurrentVFSDir(void);
     bool _save;
     std::string _operation; // unique name to be able to identify the process later
-    std::list<VFSDir*> _dirstack;
+    std::list<std::string> _dirstack;
     VFSFile *_selFile;
     FileDialogCallback *_callback;
+    VFSDir *_curDir; // caches current dir, re-scan if NULL
 
     // GUI elements
     gcn::ListBox *lbFiles;

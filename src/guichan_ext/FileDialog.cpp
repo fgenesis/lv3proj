@@ -7,7 +7,7 @@
 
 
 FileDialog::FileDialog()
-: _selFile(NULL)
+: _selFile(NULL), _curDir(NULL)
 {
     uint32 sx = 500;
     uint32 sy = 400;
@@ -66,10 +66,6 @@ void FileDialog::Open(bool save, const char *opr /* = NULL */)
         return;
     _operation = opr ? opr : "";
     resMgr.vfs.Reload(true); // refresh eventually changed files
-    if(_dirstack.empty())
-    {
-        _dirstack.push_back(resMgr.vfs.GetDirRoot());
-    }
     setVisible(true);
     _save = save;
     bOk->setCaption(save ? "Save" : "Open");
@@ -83,18 +79,16 @@ void FileDialog::Close(void)
 
 std::string FileDialog::GetDirName(void)
 {
-    if(_dirstack.size() <= 1)
-        return "";
     std::string str;
     str.reserve(_dirstack.size() * 15); // guess size
-    std::list<VFSDir*>::iterator next;
-    for(std::list<VFSDir*>::iterator it = _dirstack.begin(); it != _dirstack.end(); it = next)
+    std::list<std::string>::iterator next;
+    for(std::list<std::string>::iterator it = _dirstack.begin(); it != _dirstack.end(); it = next)
     {
         next = it;
         next++;
-        const char *dn = (*it)->name();
+        const char *dn = it->c_str();
         str += dn;
-        if(strlen(dn) && next != _dirstack.end()) // root is always empty string, so not put '/' after it
+        if(*dn && next != _dirstack.end()) // root is always empty string, so not put '/' after it
             str += '/';
     }
     return str;
@@ -111,6 +105,7 @@ std::string FileDialog::GetFileName(void)
 
 void FileDialog::_Update(void)
 {
+    _curDir = NULL;
     std::string capt(_save ? "Save to..." : "Open file...");
     capt += " [";
     capt += GetDirName();
@@ -118,15 +113,15 @@ void FileDialog::_Update(void)
     gcn::Window::setCaption(capt);
 }
 
-void FileDialog::_Descend(VFSDir *vd)
+void FileDialog::_Descend(const std::string& subdir)
 {
-    _dirstack.push_back(vd);
+    _dirstack.push_back(subdir);
     _Update();
 }
 
 void FileDialog::_Ascend(void)
 {
-    if(_dirstack.size() > 1) // do not pop root dir
+    if(_dirstack.size())
     {
         _dirstack.pop_back();
         _Update();
@@ -155,18 +150,21 @@ void FileDialog::_HandleSelection(void)
     }
     --sel; // skip [../]
 
-    VFSDir *vd = _dirstack.back();
+    VFSDir *vd = _GetCurrentVFSDir();
     if(sel < vd->_subdirs.size())
     {
         VFSDirMap::iterator it = vd->_subdirs.begin();
         advance(it, sel);
-        _Descend(it->second);
+        _Descend(it->second->name());
     }
     else
     {
         sel -= vd->_subdirs.size();
         if(sel >= vd->_files.size())
+        {
+            logerror("FileDialog::_HandleSelection: sel=%u, vd->_files.size()=%u. HUH??", sel, vd->_files.size());
             return; // oops?!
+        }
         VFSFileMap::iterator it = vd->_files.begin();
         advance(it, sel);
         _selFile = it->second;
@@ -174,6 +172,24 @@ void FileDialog::_HandleSelection(void)
         _DoCallback();
     }
 
+}
+
+VFSDir *FileDialog::_GetCurrentVFSDir(void)
+{
+    if(!_curDir)
+    {
+        VFSDir *vd = resMgr.vfs.GetDirRoot();
+        VFSDir *next;
+        for(std::list<std::string>::iterator it = _dirstack.begin(); it != _dirstack.end(); ++it)
+        {
+            next = vd->getDir(it->c_str());
+            if(!next)
+                break;
+            vd = next;
+        }
+        _curDir = vd;
+    }
+    return _curDir;
 }
 
 void FileDialog::_DoCallback(void)
@@ -187,7 +203,7 @@ void FileDialog::_DoCallback(void)
 bool FileDialog::IsFileSelected(void)
 {
     int i =  lbFiles->getSelected();
-    return i >= int(_dirstack.back()->_subdirs.size()) + 1; // +1 because of [../] at index 0
+    return i >= int(_GetCurrentVFSDir()->_subdirs.size()) + 1; // +1 because of [../] at index 0
 }
 
 // -- from gcn::ListModel --
@@ -198,7 +214,7 @@ std::string FileDialog::getElementAt(int i)
         return "[../]";
     --i;
     // directories first, then files
-    VFSDir *vd = _dirstack.back();
+    VFSDir *vd = _GetCurrentVFSDir();
     if(uint32(i) < vd->_subdirs.size())
     {
         VFSDirMap::iterator it = vd->_subdirs.begin();
@@ -221,7 +237,8 @@ std::string FileDialog::getElementAt(int i)
 
 int FileDialog::getNumberOfElements(void)
 {
-    return _dirstack.size() ? (_dirstack.back()->_subdirs.size() + _dirstack.back()->_files.size() + 1) : 0;
+    VFSDir *cur = _GetCurrentVFSDir();
+    return cur->_subdirs.size() + cur->_files.size() + 1; // +1 because of [../] at index 0
 }
 
 // -- from gcn::ActionListener --
