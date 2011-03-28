@@ -58,6 +58,7 @@ public:
     virtual bool OnRawEvent(SDL_Event& evt);
     virtual void OnWindowResize(uint32 newx, uint32 newy);
     virtual const char *GetName(void) { return "editor"; } // must be overloaded
+    virtual bool LoadMapFile(const char *fn);
 
     void SaveData(void);
     void LoadData(void);
@@ -130,7 +131,7 @@ protected:
 
 private:
     void _SaveCurrentMapAs(const char *fn);
-    bool _LoadMapFile(const char *fn);
+    
 
 
 };

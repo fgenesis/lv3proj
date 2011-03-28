@@ -47,44 +47,24 @@ void EditorEngine::_SaveCurrentMapAs(const char *fn)
 
 }
 
-bool EditorEngine::_LoadMapFile(const char *fn)
+bool EditorEngine::LoadMapFile(const char *fn)
 {
-    logdetail("Loading map from '%s'", fn);
-    memblock *mb = resMgr.LoadFile((char*)fn);
-    if(!mb)
-    {
-        logerror("EditorEngine::_LoadMapFile: File not found: '%s'", fn);
+    if(!Engine::LoadMapFile(fn))
         return false;
-    }
 
     // reset camera
+    // TODO: move this to falcon?
     _cameraPos.x = 0;
     _cameraPos.y = 0;
-
-    LayerMgr *mgr = MapFile::Load(mb, this, _layermgr);
-    resMgr.Drop(mb, true); // have to delete this file from memory immediately
-    if(!mgr)
-    {
-        logerror("EditorEngine::_LoadMapFile: Error loading file: '%s' as map", fn);
-        return false;
-    }
-    ASSERT(mgr == _layermgr); // it should not return something else; in this case it has allocated a new mgr, what we dont want here
-
-    for(std::map<std::string, std::string>::iterator it = _layermgr->stringdata.begin(); it != _layermgr->stringdata.end(); ++it)
-    {
-        DEBUG_LOG("STRING: %s -> '%s'", it->first.c_str(), it->second.c_str());
-    }
-
 
     // initialize missing layers
     for(uint32 i = 0; i < LAYER_MAX; i++)
     {
-        TileLayer *layer = mgr->GetLayer(i);
+        TileLayer *layer = _layermgr->GetLayer(i);
         if(!layer)
-        {
-            layer = mgr->CreateLayer();
-            mgr->SetLayer(mgr->CreateLayer(), i);
-        }
+            layer = _layermgr->CreateLayer();
+
+        _layermgr->SetLayer(layer, i);
     }
 
     panLayers->UpdateSelection();

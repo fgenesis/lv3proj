@@ -10,6 +10,7 @@
 #include "PhysicsSystem.h"
 #include "ObjectMgr.h"
 #include "MyCrc32.h"
+#include "MapFile.h"
 
 
 volatile uint32 Engine::s_curFrameTime; // game time
@@ -103,7 +104,7 @@ void Engine::UnhookSignals(void)
 #endif
 }
 
-void Engine::SetTitle(char *title)
+void Engine::SetTitle(const char *title)
 {
     _wintitle = title;
 }
@@ -448,6 +449,32 @@ void Engine::SetResizable(bool b)
         flags &= ~SDL_RESIZABLE; // remove resizable flag
 
     InitScreen(GetResX(), GetResY(), GetBPP(), flags);
+}
+
+bool Engine::LoadMapFile(const char *fn)
+{
+    logdetail("Loading map from '%s'", fn);
+    memblock *mb = resMgr.LoadFile((char*)fn);
+    if(!mb)
+    {
+        logerror("EditorEngine::_LoadMapFile: File not found: '%s'", fn);
+        return false;
+    }
+
+    LayerMgr *mgr = MapFile::Load(mb, this, _layermgr);
+    resMgr.Drop(mb, true); // have to delete this file from memory immediately
+    if(!mgr)
+    {
+        logerror("EditorEngine::_LoadMapFile: Error loading file: '%s' as map", fn);
+        return false;
+    }
+    ASSERT(mgr == _layermgr); // it should not return something else; in this case it has allocated a new mgr, what we dont want here
+
+    for(std::map<std::string, std::string>::iterator it = _layermgr->stringdata.begin(); it != _layermgr->stringdata.end(); ++it)
+    {
+        DEBUG_LOG("STRING: %s -> '%s'", it->first.c_str(), it->second.c_str());
+    }
+    return true;
 }
 
 void Engine::PrintSystemSpecs(void)

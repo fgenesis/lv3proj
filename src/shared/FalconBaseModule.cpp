@@ -778,6 +778,7 @@ FALCON_FUNC fal_Engine_GetName(Falcon::VMachine *vm)
     vm->retval(new Falcon::CoreString(Engine::GetInstance()->GetName()));
 }
 
+// TODO: deprecate
 FALCON_FUNC fal_Engine_LoadLevel(Falcon::VMachine *vm)
 {
     FALCON_REQUIRE_PARAMS_EXTRA(1,"S filename");
@@ -790,6 +791,13 @@ FALCON_FUNC fal_Engine_LoadLevel(Falcon::VMachine *vm)
     Engine::GetInstance()->_GetLayerMgr()->LoadAsciiLevel(level);
 }
 
+FALCON_FUNC fal_Engine_LoadMap(Falcon::VMachine *vm)
+{
+    FALCON_REQUIRE_PARAMS_EXTRA(1,"S filename");
+    Falcon::AutoCString cstr(vm->param(0)->asString());
+    vm->retval(Engine::GetInstance()->LoadMapFile(cstr.c_str()));
+}
+
 FALCON_FUNC fal_Engine_Exit(Falcon::VMachine *vm)
 {
     Engine::GetInstance()->SetQuit(true);
@@ -800,6 +808,18 @@ FALCON_FUNC fal_Engine_LoadPropFile(Falcon::VMachine *vm)
     FALCON_REQUIRE_PARAMS_EXTRA(1, "S filename");
     Falcon::AutoCString cstr(vm->param(0)->asString());
     LoadPropFile((char*)cstr.c_str());
+}
+
+FALCON_FUNC fal_Engine_SetFileProperty(Falcon::VMachine *vm)
+{
+    FALCON_REQUIRE_PARAMS_EXTRA(1, "S filename, S propname, S value");
+    Falcon::Item *i_fn, *i_prop, *i_val;
+    i_fn = vm->param(0);
+    i_prop = vm->param(1);
+    i_val = vm->param(2);
+
+    Falcon::AutoCString fn(*i_fn), prop(*i_prop), val(*i_val);
+    resMgr.SetPropForFile(fn.c_str(), prop.c_str(), val.c_str());
 }
 
 FALCON_FUNC fal_Engine_CreateCollisionMap(Falcon::VMachine *vm)
@@ -1101,9 +1121,11 @@ Falcon::Module *FalconBaseModule_create(void)
     Falcon::Symbol *clsEngine = symEngine->getInstance();
     m->addClassMethod(clsEngine, "GetTime", fal_Engine_GetTime);
     m->addClassMethod(clsEngine, "GetName", fal_Engine_GetName);
-    m->addClassMethod(clsEngine, "LoadLevel", fal_Engine_LoadLevel);
+    m->addClassMethod(clsEngine, "LoadLevel", fal_Engine_LoadLevel); // TODO: deprecate
+    m->addClassMethod(clsEngine, "LoadMap", fal_Engine_LoadMap);
     m->addClassMethod(clsEngine, "Exit", fal_Engine_Exit);
     m->addClassMethod(clsEngine, "LoadPropFile", fal_Engine_LoadPropFile);
+    m->addClassMethod(clsEngine, "SetFileProperty", fal_Engine_SetFileProperty);
     m->addClassMethod(clsEngine, "CreateCollisionMap", fal_Engine_CreateCollisionMap);
     m->addClassMethod(clsEngine, "UpdateCollisionMap", fal_Engine_UpdateCollisionMap);
     m->addClassMethod(clsEngine, "Reset", fal_Engine_Reset);

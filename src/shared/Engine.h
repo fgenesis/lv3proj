@@ -56,8 +56,9 @@ public:
     virtual void OnWindowResize(uint32 newx, uint32 newy);
     virtual bool OnRawEvent(SDL_Event& evt); // return true to pass this event to the following internal event handlers, false to proceed with next event
     virtual void OnObjectCreated(BaseObject *obj); // called in FalconObjectModule.cpp, fal_ObjectCarrier::init()
-    virtual void SetTitle(char *title);
+    virtual bool LoadMapFile(const char *fn);
 
+    void SetTitle(const char *title);
     inline void SetReset(bool r = true) { _reset = r; }
     inline bool IsReset(void) { return _reset; }
     inline uint32 GetResX(void) { return _screen ? _screen->w : 0; }
