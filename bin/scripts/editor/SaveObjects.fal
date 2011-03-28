@@ -1,0 +1,40 @@
+
+// it will be replaced later by Safe.fal
+_OutputStream = OutputStream
+
+class ObjectSaver(fn)
+    _ini = nil
+    
+    init
+        self._ini = ConfParser()
+    end
+    
+    function SaveObject(obj)
+        v = obj.retrieve()
+        for name, val in v
+            // TODO: descend into sub-objects
+            //       save only required things (non-protected, no superclass entries)
+            self._ini.set(name, val, obj.id.toString())
+        end
+    end
+    
+    function SaveAllObjects(name)
+        objs = Objects.GetAll()
+        save = self.SaveObject
+        for o in objs
+            save(o)
+        end
+        self.WriteFile(name)
+    end
+    
+    function WriteFile(name)
+        if not IsAllowedPath(name): raise "ObjectSaver:WriteFile: Bad path (" + name + ")"
+        fn = name + ".objs"
+        fs = _OutputStream(fn)
+        self._ini.write(fs)
+        fs.close()
+    end
+        
+end
+
+export ObjectSaver

@@ -1,0 +1,16 @@
+
+// called when loading a map.
+function OnLoadMap(fn)
+    // TODO: load objects and misc data.
+    return Engine.LoadMap(fn) // for now, we just let the engine load the map.
+end
+
+// called before saving map. if the function returns true, the map will be saved, otherwise not!
+// this function can be used to save additional data associated with this map
+function OnSaveMap(fn)
+    sav = ObjectSaver()
+    sav.SaveAllObjects(fn)
+    return true
+end
+
+export OnLoadMap, OnSaveMap
