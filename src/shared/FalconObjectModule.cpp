@@ -940,6 +940,7 @@ Falcon::Module *FalconObjectModule_create(void)
     Falcon::Symbol *symObjects = m->addSingleton("Objects");
     Falcon::Symbol *clsObjects = symObjects->getInstance();
     m->addClassMethod(clsObjects, "GetAllInRect", fal_Objects_GetAllInRect);
+    m->addClassMethod(clsObjects, "GetAll", fal_Objects_GetAll);
     m->addClassMethod(clsObjects, "Get", fal_Objects_Get);
     m->addClassMethod(clsObjects, "GetLastId", fal_Objects_GetLastId);
     m->addClassMethod(clsObjects, "GetCount", fal_Objects_GetCount);
