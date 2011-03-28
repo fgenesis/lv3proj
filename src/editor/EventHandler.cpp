@@ -1,5 +1,6 @@
 #include "common.h"
 #include "EditorEngine.h"
+#include "AppFalcon.h"
 #include "TileLayer.h"
 #include "FileDialog.h"
 #include "TileboxPanel.h"
@@ -151,16 +152,62 @@ void EditorEngine::FileChosenCallback(FileDialog *dlg)
     if(!strcmp(dlg->GetOperation(), "map"))
     {
         std::string fn = dlg->GetFileName();
+        Falcon::VMachine *vm = falcon->GetVM();
         if(dlg->IsSave())
         {
-            _SaveCurrentMapAs(fn.c_str());
+            Falcon::Item *item = vm->findGlobalItem("OnSaveMap");
+            if(item && item->isCallable())
+            {
+                try
+                {
+                    vm->pushParam(new Falcon::CoreString(fn.c_str()));
+                    vm->callItem(*item, 1);
+                    if(!vm->regA().isTrue())
+                    {
+                        logerror("OnSaveMap: Saving aborted");
+                        return;
+                    }
+                    _SaveCurrentMapAs(fn.c_str());
+                }
+                catch(Falcon::Error *err)
+                {
+                    Falcon::AutoCString edesc( err->toString() );
+                    logerror("OnSaveMap: %s", edesc.c_str());
+                    err->decref();
+                }
+            }
+            else
+            {
+                logerror("WARNING: OnSaveMap() not present or not callable, saving map directly. Additional map data may be lost!");
+                _SaveCurrentMapAs(fn.c_str()); // FALLBACK
+            }
         }
         else
         {
-            if(!_LoadMapFile(fn.c_str()))
+            Falcon::Item *item = vm->findGlobalItem("OnLoadMap");
+            if(item && item->isCallable())
             {
-                logerror("'%s' can't be loaded, invalid?", fn.c_str());
-                return; // keep file dialog open
+                try
+                {
+                    vm->pushParam(new Falcon::CoreString(fn.c_str()));
+                    vm->callItem(*item, 1);
+                    if(!vm->regA().isTrue())
+                    {
+                        logerror("'%s' can't be loaded, invalid?", fn.c_str());
+                        return; // keep file dialog open
+                    }
+                }
+                catch(Falcon::Error *err)
+                {
+                    Falcon::AutoCString edesc( err->toString() );
+                    logerror("OnLoadMap: %s", edesc.c_str());
+                    err->decref();
+                }
+            }
+            else
+            {
+                logerror("WARNING: OnLoadMap() not present or not callable, loading map directly. Additional map data may be lost if saved!");
+                LoadMapFile(fn.c_str()); // FALLBACK
             }
         }
     }
