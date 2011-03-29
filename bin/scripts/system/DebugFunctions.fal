@@ -43,12 +43,15 @@ function dbg_HookCountRenderHook() // note: this function is highly unoptimized 
     w, h = Screen.GetSize()
     rc = Engine.ResourceCount()
     rm =  Engine.ResourceMem() >> 10 // bytes -> kB
+    camx = Screen.GetCameraX()
+    camy = Screen.GetCameraY()
     font = GetFont("consolefont")
     fh = font.GetHeight()
     write = Screen.GetSurfaceRaw().Write
     
-    write(0, h - (fh * 7), font, @ "Timing: MS = $dt")
-    write(0, h - (fh * 6), font, @ "Physics: Gravity = $g")
+    write(0, h - (fh * 8), font, @ "Timing: MS = $dt")
+    write(0, h - (fh * 7), font, @ "Physics: Gravity = $g")
+    write(0, h - (fh * 6), font, @ "Camera: ($camx, $camy)")
     write(0, h - (fh * 5), font, @ "Engine: Joysticks = $ej; ResCount = $rc; ResMem = $rm kB")
     write(0, h - (fh * 4), font, @ "Objects: Count = $oc; MaxID = $om")
     write(0, h - (fh * 3), font, @ "Screen: $(sx)x$(sy); LayerSize = $sls; Resize = $sr; Full = $sfs")

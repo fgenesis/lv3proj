@@ -31,6 +31,10 @@ olaf.SetLayerId(4)
 olaf.SetPos(72,48)
 olaf.canDebugJump = true
 
+/*if not IsEditor()
+    RegisterUpdateHook( [CenterView, olaf] ) // defined in package.fal
+end*/
+        
 img = ImageObject("sprites/lv3logo.png")
 CallScheduler.Schedule(img.remove, 4000)
 

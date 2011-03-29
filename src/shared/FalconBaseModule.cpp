@@ -1005,9 +1005,27 @@ template <bool ENGINE_CAM> FALCON_FUNC fal_Screen_GetSurface(Falcon::VMachine *v
 
 FALCON_FUNC fal_Screen_FrameLimit(Falcon::VMachine *vm)
 {
-    FALCON_REQUIRE_PARAMS_EXTRA(2, "I, I")
+    FALCON_REQUIRE_PARAMS_EXTRA(2, "I, I");
     Engine::GetInstance()->FrameLimitMin((uint32)vm->param(0)->forceInteger());
     Engine::GetInstance()->FrameLimitMax((uint32)vm->param(1)->forceInteger());
+}
+
+FALCON_FUNC fal_Screen_SetCamera(Falcon::VMachine *vm)
+{
+    FALCON_REQUIRE_PARAMS_EXTRA(2, "I, I");
+    Camera *cam = Engine::GetInstance()->GetCameraPtr();
+    cam->x = (uint32)vm->param(0)->forceInteger();
+    cam->y = (uint32)vm->param(1)->forceInteger();
+}
+
+FALCON_FUNC fal_Screen_GetCameraX(Falcon::VMachine *vm)
+{
+    vm->retval(Engine::GetInstance()->GetCamera().x);
+}
+
+FALCON_FUNC fal_Screen_GetCameraY(Falcon::VMachine *vm)
+{
+    vm->retval(Engine::GetInstance()->GetCamera().y);
 }
 
 FALCON_FUNC fal_EngineMap_UpdateCollisionMap(Falcon::VMachine *vm)
@@ -1084,6 +1102,7 @@ FALCON_FUNC fal_EngineMap_GetStringDict(Falcon::VMachine *vm)
         val = new Falcon::CoreString(it->second.c_str());
         dict->put(key, val);
     }
+    vm->retval(dict);
 }
 
 fal_Font::~fal_Font()
@@ -1184,6 +1203,9 @@ Falcon::Module *FalconBaseModule_create(void)
     m->addClassMethod(clsScreen, "CanResize", &fal_Screen_IsResizable);
     m->addClassMethod(clsScreen, "IsFullscreen", &fal_Screen_IsFullscreen);
     m->addClassMethod(clsScreen, "FrameLimit", &fal_Screen_FrameLimit);
+    m->addClassMethod(clsScreen, "SetCamera", &fal_Screen_SetCamera);
+    m->addClassMethod(clsScreen, "GetCameraX", &fal_Screen_GetCameraX);
+    m->addClassMethod(clsScreen, "GetCameraY", &fal_Screen_GetCameraY);
 
     Falcon::Symbol *symEngineMap = m->addSingleton("EngineMap");
     Falcon::Symbol *clsEngineMap = symEngineMap->getInstance();
@@ -1195,6 +1217,7 @@ Falcon::Module *FalconBaseModule_create(void)
     m->addClassMethod(clsEngineMap, "UpdateCollisionMap", fal_EngineMap_UpdateCollisionMap);
     m->addClassMethod(clsEngineMap, "SetString", fal_EngineMap_SetString);
     m->addClassMethod(clsEngineMap, "GetString", fal_EngineMap_SetString);
+    m->addClassMethod(clsEngineMap, "GetStringDict", fal_EngineMap_GetStringDict);
 
     Falcon::Symbol *symMusic = m->addSingleton("Music");
     Falcon::Symbol *clsMusic = symMusic->getInstance();

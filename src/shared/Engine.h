@@ -65,7 +65,7 @@ public:
     inline uint32 GetResY(void) { return _screen ? _screen->h : 0; }
     inline uint8 GetBPP(void) { return _screen ? _screen->format->BitsPerPixel : 0; }
     inline Camera GetCamera(void) const { return _cameraPos; }
-    inline const Camera *GetCameraPtr(void) const { return &_cameraPos; }
+    inline Camera *GetCameraPtr(void) { return &_cameraPos; }
     inline SDL_Surface *GetSurface(void) { return _screen; }
     SDL_Rect *GetVisibleBlockRect(void);
     inline uint32 GetFPS(void) { return _fps; }

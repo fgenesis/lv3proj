@@ -1,4 +1,11 @@
 
+// static global vars
+_isEditor = Engine.GetName() == "editor"
+
+
+function IsEditor(): return _isEditor
+    
+
 function climit(cur, lower, upper)
     if(cur < lower)
         cur = upper

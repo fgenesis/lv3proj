@@ -207,6 +207,10 @@ class Demolevel
         olaf.SetLayerId(4)
         olaf.SetPos(72,48)
         self.player = olaf
+        
+        if not IsEditor()
+            RegisterUpdateHook( [CenterView, olaf] ) // defined in package.fal
+        end
     end
     
     function CreateObjects()

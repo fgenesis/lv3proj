@@ -129,6 +129,7 @@ end
 function OpenEngineMainMenu()
     m = OpenMenu(EngineMainMenu)
     Music.Play(EngineConfig.menuMusic)
+    Screen.SetCamera(0, 0)
     Engine.ResourceCleanup() // we don't want any remains from previously loaded packages
 end
 

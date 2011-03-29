@@ -47,5 +47,16 @@ function RawKeyHandler(inp)
     end
 end
 
+function CenterView(who)
+    w = Screen.GetWidth()
+    h = Screen.GetHeight()
+    x = who.x - (w >> 1)
+    y = who.y - (h >> 1)
+    Screen.SetCamera(x, y)
+end
+
 pkg.Start(LoadFinal)
 RegisterRawInputHook(RawKeyHandler)
+
+
+export CenterView

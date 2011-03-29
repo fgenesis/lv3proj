@@ -73,7 +73,7 @@ public:
     virtual bool getProperty( const Falcon::String &prop, Falcon::Item &ret ) const;
 
     SDL_Surface *surface;
-    const Camera *camera; // if != NULL, this camera's offsets will be added to the x/y before drawing ;
+    const Camera *camera; // this camera's offsets will be added to the x/y before drawing. must be != NULL.
     bool adopted;
 
 private:
