@@ -63,6 +63,7 @@ public:
     inline void SetTileInfo(uint32 x, uint32 y, uint16 info) { _infoLayer(x,y) = info; }
 
     inline bool HasCollisionMap(void) const { return _collisionMap.size1d(); }
+    inline const CollisionMap& GetCollisionMap(void) const { return _collisionMap; }
     void CreateCollisionMap(void); // create new collision map (and delete old if exists)
     void UpdateCollisionMap(uint32 x, uint32 y); // recalculates the collision map at a specific tile
     void UpdateCollisionMap(void); // recalculates the *whole* collision map - use rarely!

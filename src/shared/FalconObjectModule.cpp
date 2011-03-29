@@ -827,6 +827,7 @@ FALCON_FUNC fal_TileLayer_GetTile(Falcon::VMachine *vm)
         vm->retnil();
 }
 
+// TODO: deprecate?
 FALCON_FUNC fal_TileLayer_GetArraySize(Falcon::VMachine *vm)
 {
     fal_TileLayer *self = Falcon::dyncast<fal_TileLayer*>( vm->self().asObject() );
@@ -951,7 +952,7 @@ Falcon::Module *FalconObjectModule_create(void)
     m->addClassMethod(clsTileLayer, "SetVisible", &fal_TileLayer_SetVisible);
     m->addClassMethod(clsTileLayer, "SetTile", &fal_TileLayer_SetTile);
     m->addClassMethod(clsTileLayer, "GetTile", &fal_TileLayer_GetTile);
-    m->addClassMethod(clsTileLayer, "GetArraySize", &fal_TileLayer_GetArraySize);
+    m->addClassMethod(clsTileLayer, "GetArraySize", &fal_TileLayer_GetArraySize); // TODO: deprecate?
     m->addClassMethod(clsTileLayer, "SetCollisionEnabled", &fal_TileLayer_SetCollisionEnabled);
     m->addClassMethod(clsTileLayer, "IstCollisionEnabled", &fal_TileLayer_IsCollisionEnabled);
     m->addConstant("TILEFLAG_SOLID", (Falcon::int64)TILEFLAG_SOLID, true);

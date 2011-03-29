@@ -40,7 +40,7 @@ class ContinousBlockDestructor(dir, ms, layer)
     sound = nil
     
     init
-        self.layerRef = Screen.GetLayer(self.layerId)
+        self.layerRef = EngineMap.GetLayer(self.layerId)
         self.store = []
         self.sound = Sound("blockbreak.ogg")
     end
@@ -182,12 +182,12 @@ class Demolevel
     end
     
     function Init()
-        Screen.GetLayer(2).SetCollisionEnabled(false); // layer 2 for background
-        Screen.GetLayer(3).SetCollisionEnabled(false); // layer 3: buttons and other objects behind olaf
-        Screen.GetLayer(4).SetCollisionEnabled(false); // layer 4: olaf himself
-        Screen.GetLayer(5).SetCollisionEnabled(false); // layer 5: sprite overlay
-        Screen.GetLayer(6).SetCollisionEnabled(true); // layer 6: for solid wall (fixed for ASCII maps)
-        Screen.GetLayer(7).SetCollisionEnabled(false); // layer 7 is for animated tiles (fixed for ASCII maps)
+        EngineMap.GetLayer(2).SetCollisionEnabled(false); // layer 2 for background
+        EngineMap.GetLayer(3).SetCollisionEnabled(false); // layer 3: buttons and other objects behind olaf
+        EngineMap.GetLayer(4).SetCollisionEnabled(false); // layer 4: olaf himself
+        EngineMap.GetLayer(5).SetCollisionEnabled(false); // layer 5: sprite overlay
+        EngineMap.GetLayer(6).SetCollisionEnabled(true); // layer 6: for solid wall (fixed for ASCII maps)
+        EngineMap.GetLayer(7).SetCollisionEnabled(false); // layer 7 is for animated tiles (fixed for ASCII maps)
         
         // this is not needed for this level
         //Screen.CreateInfoLayer()
@@ -196,7 +196,7 @@ class Demolevel
         self.CreateObjects()
         self.SetupPlayer()
         
-        Engine.CreateCollisionMap(true)
+        EngineMap.UpdateCollisionMap()
         
         // setup environment
         TurnOnGravity(true)
@@ -237,8 +237,8 @@ class Demolevel
         brokenTile = Tile("ship/broken.png")
         buttonCounter = 0
         
-        maxpos = Screen.GetLayerSize() - 1
-        for ly in [Screen.GetLayer(6), Screen.GetLayer(7)] // Engine.LoadLevel() puts the tiles for ascii levels to the layers 6 and 7
+        maxpos = EngineMap.GetLayerSize() - 1
+        for ly in [EngineMap.GetLayer(6), EngineMap.GetLayer(7)] // Engine.LoadLevel() puts the tiles for ascii levels to the layers 6 and 7
             for y = 0 to maxpos
                 for x = 0 to maxpos
                     tile = ly.GetTile(x,y)
@@ -268,7 +268,7 @@ class Demolevel
                                     
                                 case 3
                                     // special 3 (green energy lines) must be moved to a different layer (overlay)
-                                    Screen.GetLayer(layerId).SetTile(x,y, tile)
+                                    EngineMap.GetLayer(layerId).SetTile(x,y, tile)
                                     obj.SetSprite(nil)
                             end
                             
@@ -276,10 +276,10 @@ class Demolevel
                             // destroyable grey block, add broken background behind them,
                             // so we can see remains if they get destroyed
                             if special == 4
-                                Screen.GetLayer(layerId).SetTile(x,y,brokenTile)
+                                EngineMap.GetLayer(layerId).SetTile(x,y,brokenTile)
                             elif special == 3
                                 ly.SetTile(x,y,nil)
-                                Screen.GetLayer(layerId).SetTile(x,y, tile)
+                                EngineMap.GetLayer(layerId).SetTile(x,y, tile)
                                 obj.SetSprite(nil)
                             end
                         end

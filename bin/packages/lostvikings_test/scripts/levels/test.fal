@@ -2,23 +2,23 @@
 // some test stuff to see what the falcon bindings can do
 > "-- Setting up test Level --"
 Music.Stop()
-Engine.LoadLevel("testlevel.txt")
+Engine.LoadLevel("testlevel.txt") // TODO: deprecate
 
-Screen.CreateInfoLayer()
+EngineMap.CreateInfoLayer() // TODO: deprecate?
 
-Screen.GetLayer(2).SetCollisionEnabled(false); // layer 2 for background
-Screen.GetLayer(3).SetCollisionEnabled(false); // layer 3: buttons and other objects behind olaf
-Screen.GetLayer(4).SetCollisionEnabled(false); // layer 4: olaf himself
-Screen.GetLayer(5).SetCollisionEnabled(false); // layer 5: sprite overlay
-Screen.GetLayer(6).SetCollisionEnabled(true); // layer 6: for solid wall (fixed for ASCII maps)
-Screen.GetLayer(7).SetCollisionEnabled(false); // layer 7 is for animated tiles (fixed for ASCII maps)
+EngineMap.GetLayer(2).SetCollisionEnabled(false); // layer 2 for background
+EngineMap.GetLayer(3).SetCollisionEnabled(false); // layer 3: buttons and other objects behind olaf
+EngineMap.GetLayer(4).SetCollisionEnabled(false); // layer 4: olaf himself
+EngineMap.GetLayer(5).SetCollisionEnabled(false); // layer 5: sprite overlay
+EngineMap.GetLayer(6).SetCollisionEnabled(true); // layer 6: for solid wall (fixed for ASCII maps)
+EngineMap.GetLayer(7).SetCollisionEnabled(false); // layer 7 is for animated tiles (fixed for ASCII maps)
 
 InitialMapSetup()
 > "-- Created & set up info layer --"
 
 
 // at this point, the ASCII level loader already populated the layers with tiles, create & update the collision map
-Engine.CreateCollisionMap(true)
+EngineMap.UpdateCollisionMap()
 > "-- Calculated collision map --"
 
 // set game constants
@@ -48,9 +48,6 @@ blk4.SetPos(495,299)
 
 blk5 = IronBlock()
 blk5.SetPos(536,320)
-
-//Engine.SetMusicVolume(80)
-//Engine.PlayMusic("lv1_snes_ship.ogg")
 
 
 
@@ -174,15 +171,15 @@ buttonActions = .[
         
     buttonCounter = 0
     
-    d = Screen.GetLayerSize() - 1
-    for ly in [Screen.GetLayer(6), Screen.GetLayer(7)]
+    d = EngineMap.GetLayerSize() - 1
+    for ly in [EngineMap.GetLayer(6), EngineMap.GetLayer(7)]
         for y = 0 to d
             for x = 0 to d
                 t = ly.GetTile(x,y)
                 if(t and (t.filename in tileInfoSetup) )
                     flag, overlay, objcons, special, layerId = tileInfoSetup[t.filename]
-                    Screen.SetTileInfo(x,y, flag)
-                    if overlay: Screen.GetLayer(8).SetTile(x,y,overlay)
+                    EngineMap.SetTileInfo(x,y, flag)
+                    if overlay: EngineMap.GetLayer(8).SetTile(x,y,overlay)
                     if isCallable(objcons)
                         xpos = x * 16
                         ypos = y * 16
@@ -221,8 +218,8 @@ end
 function BA_KillGreyBlocks1(who, trigger)
     trigger.SetOnPush(nil)
     PlaySoundMulti("blockbreak.ogg", 3, 60)
-    ly = Screen.GetLayer(6) // solid tile layer
-    ly2 = Screen.GetLayer(2) // background layer
+    ly = EngineMap.GetLayer(6) // solid tile layer
+    ly2 = EngineMap.GetLayer(2) // background layer
     blk = Tile("ship/broken.png")
     for x = 9 to 11
         for y = 5 to 6
@@ -273,7 +270,7 @@ function RandomizeTest(fill)
         Tile("ship/girder1.png")
         Tile("ship/block1.png")
     ]
-    ly = Screen.GetLayer(5)
+    ly = EngineMap.GetLayer(5)
     for y = 28 to 37
         for x = 0 to 62
             ly.SetTile(x,y,fill ? randomPick(tiles) : nil,false)
@@ -305,10 +302,10 @@ end
 
 // replace all blue energy lines with green ones
 function ReplaceEnergyStreams()
-    dim = Screen.GetLayerSize()
+    dim = EngineMap.GetLayerSize()
     enx = Tile("sprites/enx.anim")
     en  = Tile("sprites/en.anim")
-    for ly in [Screen.GetLayer(6), Screen.GetLayer(7)]
+    for ly in [EngineMap.GetLayer(6), EngineMap.GetLayer(7)]
         for y = 0 to dim - 1
             for x = 0 to dim - 1
                 t = ly.GetTile(x,y)
@@ -327,7 +324,7 @@ end
 
 
 function FillScreenWithWater()
-    layer = Screen.GetLayer(8)
+    layer = EngineMap.GetLayer(8)
     dim = layer.GetArraySize()
     tile = Tile("water/waterfull.png")
     if(layer and tile)
@@ -342,7 +339,7 @@ end
 
 // completely delete the transparent tiles after the water was drained, row-wise
 function DeleteWaterRow(y)
-    layer = Screen.GetLayer(8)
+    layer = EngineMap.GetLayer(8)
     dim = layer.GetArraySize()
     for x = 0 to dim - 1
         layer.SetTile(x,y,nil)
@@ -355,7 +352,7 @@ function DrainWaterRow(y)
         tile.name = "sink" // toggle animation
         tile.frame = 0 // and start it
     end
-    layer = Screen.GetLayer(8)
+    layer = EngineMap.GetLayer(8)
     dim = layer.GetArraySize()
     // place the tile along the whole row
     for x = 0 to dim - 1

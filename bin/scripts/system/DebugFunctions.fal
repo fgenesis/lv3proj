@@ -36,7 +36,7 @@ function dbg_HookCountRenderHook() // note: this function is highly unoptimized 
     thn = GC.th_normal >> 10 // bytes -> kB
     g = Physics.GetGravity()
     sx, sy = Screen.GetSize()
-    sls = Screen.GetLayerSize()
+    sls = EngineMap.GetLayerSize()
     sr = Screen.CanResize()
     sfs = Screen.IsFullscreen()
     ej = Engine.JoystickCount()

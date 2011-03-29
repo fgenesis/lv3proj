@@ -822,43 +822,6 @@ FALCON_FUNC fal_Engine_SetFileProperty(Falcon::VMachine *vm)
     resMgr.SetPropForFile(fn.c_str(), prop.c_str(), val.c_str());
 }
 
-FALCON_FUNC fal_Engine_CreateCollisionMap(Falcon::VMachine *vm)
-{
-    bool update = false;
-    if(vm->paramCount() >= 1)
-        update = vm->param(0)->asBoolean();
-
-    LayerMgr *lm = Engine::GetInstance()->_GetLayerMgr();
-    lm->CreateCollisionMap();
-    if(update)
-        lm->UpdateCollisionMap();
-}
-
-FALCON_FUNC fal_Engine_UpdateCollisionMap(Falcon::VMachine *vm)
-{
-    LayerMgr *lm = Engine::GetInstance()->_GetLayerMgr();
-    if(!lm->HasCollisionMap())
-    {
-        throw new EngineError( Falcon::ErrorParam( Falcon::e_undef_state ).
-            extra( "CollisionMap not created" ) );
-    }
-    if(!vm->paramCount())
-    {
-        lm->UpdateCollisionMap();
-    }
-    else if(vm->paramCount() >= 2)
-    {
-        uint32 x = vm->param(0)->forceIntegerEx();
-        uint32 y = vm->param(1)->forceIntegerEx();
-        lm->UpdateCollisionMap(x,y);
-    }
-    else
-    {
-        throw new Falcon::ParamError( Falcon::ErrorParam( Falcon::e_missing_params ).
-            extra( "No args or N,N" ) );
-    }
-}
-
 FALCON_FUNC fal_Engine_Reset(Falcon::VMachine *vm)
 {
     Engine::GetInstance()->SetReset();
@@ -904,7 +867,7 @@ FALCON_FUNC fal_Engine_ResourceCleanup(Falcon::VMachine *vm)
     resMgr.DropUnused();
 }
 
-FALCON_FUNC fal_Screen_GetLayer(Falcon::VMachine *vm)
+FALCON_FUNC fal_EngineMap_GetLayer(Falcon::VMachine *vm)
 {
     FALCON_REQUIRE_PARAMS(1);
     uint32 layerId = vm->param(0)->forceInteger();
@@ -979,12 +942,12 @@ FALCON_FUNC fal_Screen_IsFullscreen(Falcon::VMachine *vm)
     vm->retval(Engine::GetInstance()->IsFullscreen());
 }
 
-FALCON_FUNC fal_Screen_GetLayerSize(Falcon::VMachine *vm)
+FALCON_FUNC fal_EngineMap_GetLayerSize(Falcon::VMachine *vm)
 {
     vm->retval((Falcon::int32)Engine::GetInstance()->_GetLayerMgr()->GetMaxDim());
 }
 
-FALCON_FUNC fal_Screen_GetTileInfo(Falcon::VMachine *vm)
+FALCON_FUNC fal_EngineMap_GetTileInfo(Falcon::VMachine *vm)
 {
     FALCON_REQUIRE_PARAMS_EXTRA(2, "N, N");
     uint32 x = vm->param(0)->forceIntegerEx();
@@ -1003,7 +966,7 @@ FALCON_FUNC fal_Screen_GetTileInfo(Falcon::VMachine *vm)
     vm->retval((int64)lm->GetTileInfo(x,y));
 }
 
-FALCON_FUNC fal_Screen_SetTileInfo(Falcon::VMachine *vm)
+FALCON_FUNC fal_EngineMap_SetTileInfo(Falcon::VMachine *vm)
 {
     FALCON_REQUIRE_PARAMS_EXTRA(3, "N, N, N");
     uint32 x = vm->param(0)->forceIntegerEx();
@@ -1023,7 +986,7 @@ FALCON_FUNC fal_Screen_SetTileInfo(Falcon::VMachine *vm)
     lm->SetTileInfo(x,y,info);
 }
 
-FALCON_FUNC fal_Screen_CreateInfoLayer(Falcon::VMachine *vm)
+FALCON_FUNC fal_EngineMap_CreateInfoLayer(Falcon::VMachine *vm)
 {
     LayerMgr *lm = Engine::GetInstance()->_GetLayerMgr();
     lm->CreateInfoLayer();
@@ -1045,6 +1008,82 @@ FALCON_FUNC fal_Screen_FrameLimit(Falcon::VMachine *vm)
     FALCON_REQUIRE_PARAMS_EXTRA(2, "I, I")
     Engine::GetInstance()->FrameLimitMin((uint32)vm->param(0)->forceInteger());
     Engine::GetInstance()->FrameLimitMax((uint32)vm->param(1)->forceInteger());
+}
+
+FALCON_FUNC fal_EngineMap_UpdateCollisionMap(Falcon::VMachine *vm)
+{
+    LayerMgr *lm = Engine::GetInstance()->_GetLayerMgr();
+    if(!lm->HasCollisionMap() || lm->GetMaxPixelDim() != lm->GetCollisionMap().size1d()) // TODO: move 2nd check to a better place?
+    {
+        lm->CreateCollisionMap();
+    }
+    if(!vm->paramCount())
+    {
+        lm->UpdateCollisionMap();
+    }
+    else if(vm->paramCount() >= 2)
+    {
+        uint32 x = vm->param(0)->forceIntegerEx();
+        uint32 y = vm->param(1)->forceIntegerEx();
+        lm->UpdateCollisionMap(x,y);
+    }
+    else
+    {
+        throw new Falcon::ParamError( Falcon::ErrorParam( Falcon::e_missing_params ).
+            extra( "No args or N,N" ) );
+    }
+}
+
+FALCON_FUNC fal_EngineMap_SetString(Falcon::VMachine *vm)
+{
+    //FALCON_REQUIRE_PARAMS_EXTRA(2, "S, S");
+    Falcon::Item *i_name = vm->param(0);
+    Falcon::Item *i_text = vm->param(1);
+    if(!(i_name && i_text && i_name->isString() && i_text->isString()))
+    {
+        throw new Falcon::ParamError(Falcon::ErrorParam( Falcon::e_inv_params, __LINE__ )
+            .extra("S, S") );
+    }
+    LayerMgr *lm = Engine::GetInstance()->_GetLayerMgr();
+    Falcon::AutoCString name(i_name->asString());
+    if(i_text->isNil())
+        lm->stringdata.erase(name.c_str());
+    else
+    {
+        Falcon::AutoCString text(i_text->asString());
+        lm->stringdata[name.c_str()] = text.c_str();
+    }
+}
+
+FALCON_FUNC fal_EngineMap_GetString(Falcon::VMachine *vm)
+{
+    //FALCON_REQUIRE_PARAMS_EXTRA(1, "S");
+    Falcon::Item *i_name = vm->param(0);
+    if(!(i_name && i_name->isString()))
+    {
+        throw new Falcon::ParamError(Falcon::ErrorParam( Falcon::e_inv_params, __LINE__ )
+            .extra("S") );
+    }
+    LayerMgr *lm = Engine::GetInstance()->_GetLayerMgr();
+    Falcon::AutoCString name(i_name->asString());
+    std::map<std::string, std::string>::iterator it = lm->stringdata.find(name.c_str());
+    if(it == lm->stringdata.end())
+        vm->retnil();
+    else
+        vm->retval(new Falcon::CoreString(it->second.c_str()));
+}
+
+FALCON_FUNC fal_EngineMap_GetStringDict(Falcon::VMachine *vm)
+{
+    LayerMgr *lm = Engine::GetInstance()->_GetLayerMgr();
+    Falcon::CoreDict *dict = new Falcon::CoreDict(new Falcon::LinearDict(lm->stringdata.size()));
+    Falcon::Item key, val;
+    for(std::map<std::string, std::string>::iterator it = lm->stringdata.begin(); it != lm->stringdata.end(); ++it)
+    {
+        key = new Falcon::CoreString(it->first.c_str());
+        val = new Falcon::CoreString(it->second.c_str());
+        dict->put(key, val);
+    }
 }
 
 fal_Font::~fal_Font()
@@ -1126,8 +1165,6 @@ Falcon::Module *FalconBaseModule_create(void)
     m->addClassMethod(clsEngine, "Exit", fal_Engine_Exit);
     m->addClassMethod(clsEngine, "LoadPropFile", fal_Engine_LoadPropFile);
     m->addClassMethod(clsEngine, "SetFileProperty", fal_Engine_SetFileProperty);
-    m->addClassMethod(clsEngine, "CreateCollisionMap", fal_Engine_CreateCollisionMap);
-    m->addClassMethod(clsEngine, "UpdateCollisionMap", fal_Engine_UpdateCollisionMap);
     m->addClassMethod(clsEngine, "Reset", fal_Engine_Reset);
     m->addClassMethod(clsEngine, "JoystickCount", fal_Engine_JoystickCount);
     m->addClassMethod(clsEngine, "JoystickInfo", fal_Engine_JoystickInfo);
@@ -1137,14 +1174,9 @@ Falcon::Module *FalconBaseModule_create(void)
 
     Falcon::Symbol *symScreen = m->addSingleton("Screen");
     Falcon::Symbol *clsScreen = symScreen->getInstance();
-    m->addClassMethod(clsScreen, "GetLayer", &fal_Screen_GetLayer);
     m->addClassMethod(clsScreen, "GetSize", &fal_Screen_GetSize);
     m->addClassMethod(clsScreen, "GetWidth", &fal_Screen_GetWidth);
     m->addClassMethod(clsScreen, "GetHeight", &fal_Screen_GetHeight);
-    m->addClassMethod(clsScreen, "GetLayerSize", &fal_Screen_GetLayerSize);
-    m->addClassMethod(clsScreen, "SetTileInfo", &fal_Screen_SetTileInfo);
-    m->addClassMethod(clsScreen, "GetTileInfo", &fal_Screen_GetTileInfo);
-    m->addClassMethod(clsScreen, "CreateInfoLayer", &fal_Screen_CreateInfoLayer);
     m->addClassMethod(clsScreen, "GetSurface", &fal_Screen_GetSurface<true>); // with camera correction
     m->addClassMethod(clsScreen, "GetSurfaceRaw", &fal_Screen_GetSurface<false>); // without camera correction
     m->addClassMethod(clsScreen, "SetMode", &fal_Screen_SetMode);
@@ -1152,6 +1184,17 @@ Falcon::Module *FalconBaseModule_create(void)
     m->addClassMethod(clsScreen, "CanResize", &fal_Screen_IsResizable);
     m->addClassMethod(clsScreen, "IsFullscreen", &fal_Screen_IsFullscreen);
     m->addClassMethod(clsScreen, "FrameLimit", &fal_Screen_FrameLimit);
+
+    Falcon::Symbol *symEngineMap = m->addSingleton("EngineMap");
+    Falcon::Symbol *clsEngineMap = symEngineMap->getInstance();
+    m->addClassMethod(clsEngineMap, "GetLayer", &fal_EngineMap_GetLayer);
+    m->addClassMethod(clsEngineMap, "GetLayerSize", &fal_EngineMap_GetLayerSize);
+    m->addClassMethod(clsEngineMap, "SetTileInfo", &fal_EngineMap_SetTileInfo); // TODO: deprecate?
+    m->addClassMethod(clsEngineMap, "GetTileInfo", &fal_EngineMap_GetTileInfo); // TODO: deprecate?
+    m->addClassMethod(clsEngineMap, "CreateInfoLayer", &fal_EngineMap_CreateInfoLayer); // TODO: deprecate?
+    m->addClassMethod(clsEngineMap, "UpdateCollisionMap", fal_EngineMap_UpdateCollisionMap);
+    m->addClassMethod(clsEngineMap, "SetString", fal_EngineMap_SetString);
+    m->addClassMethod(clsEngineMap, "GetString", fal_EngineMap_SetString);
 
     Falcon::Symbol *symMusic = m->addSingleton("Music");
     Falcon::Symbol *clsMusic = symMusic->getInstance();
