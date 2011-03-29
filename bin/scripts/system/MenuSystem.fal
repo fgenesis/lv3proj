@@ -130,7 +130,7 @@ class Menu
         call()
     end
     
-    function OnInput(inp)
+    function ProcessInput(key)
         global _currentMenu
         if not _currentMenu == self: return
         if not len(self.items): return
@@ -142,9 +142,6 @@ class Menu
         if self.inputTime == t: return
         self.inputTime = t
         
-        key, player, state = inp // player not used
-            
-        if not state: return // do nothing if button was released
         switch key
             case KeyLEFT
                 self.OnKeyLeft()
@@ -166,6 +163,12 @@ class Menu
         UpdateCurrentMenu()
     end
     
+    function OnInput(inp)
+        key, player, state = inp // player not used
+        if not state: return
+        self.ProcessInput(key)
+    end
+    
     // raw key translation
     // raw input has always a higher priority then "tanslated" keys
     // this is done so that the menu is always useable and does not
@@ -174,29 +177,22 @@ class Menu
         global _currentMenu
         if not _currentMenu == self: return
         
-        // time guard, accept only 1 key press in 1 engine loop,
-        // because if both the SNESKeyMap and raw input are processed,
-        // a key press may be counted twice
-        t = Engine.GetTime()
-        if self.inputTime == t: return
-        self.inputTime = t
-        
         ty, src, which, value = e
-        if(ty == EVENT_TYPE_KEYBOARD and value != 0)
+        if(ty == EVENT_TYPE_KEYBOARD and value)
             if(which == SDLK.RETURN)
-                self.OnInput( .[KeySTART nil 1] )
+                self.ProcessInput(KeySTART)
             elif(which == SDLK.ESCAPE)
                 // need special condition here because of key unbinding in main menu
                 if(not self.accept_esc): return
-                self.OnInput( .[KeyY nil 1] )
+                self.ProcessInput(KeyY)
             elif(which == SDLK.UP)
-                self.OnInput( .[KeyUP nil 1] )
+                self.ProcessInput(KeyUP)
             elif(which == SDLK.DOWN)
-                self.OnInput( .[KeyDOWN nil 1])
+                self.ProcessInput(KeyDOWN)
             elif(which == SDLK.LEFT)
-                self.OnInput( .[KeyLEFT nil 1])
+                self.ProcessInput(KeyLEFT)
             elif(which == SDLK.RIGHT)
-                self.OnInput( .[KeyRIGHT nil 1] )
+                self.ProcessInput(KeyRIGHT)
             end
         end
     end
@@ -240,9 +236,11 @@ end
 
 function OpenMenu(mcons)
     global _currentMenu
+    inputTime = _currentMenu ? _currentMenu.inputTime : 0
     CloseCurrentMenu()
     _currentMenu = mcons()
     _currentMenu.Setup()
+    _currentMenu.inputTime = inputTime
     UpdateCurrentMenu()
     return _currentMenu
 end
