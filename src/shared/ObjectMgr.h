@@ -29,8 +29,7 @@ public:
     void RenderLayer(uint32 id);
     void RenderBBoxes(void); // debug function
     void FlagForRemove(BaseObject *obj);
-    ObjectMap::iterator GetIterator(uint32 id);
-    ObjectMap::iterator Remove(uint32 id);
+    
     void RemoveAll(void);
     void HandleObjectCollision(ActiveRect *base, ActiveRect *other, uint8 side);
 
@@ -43,6 +42,8 @@ public:
     void dbg_setcoll(bool b);
 
 protected:
+    ObjectMap::iterator _Remove(uint32 id);
+
     uint32 _curId;
     ObjectMap _store;
     PhysicsMgr *_physMgr;

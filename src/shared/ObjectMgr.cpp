@@ -52,18 +52,12 @@ BaseObject *ObjectMgr::Get(uint32 id)
     return NULL;
 }
 
-ObjectMap::iterator ObjectMgr::GetIterator(uint32 id)
+ObjectMap::iterator ObjectMgr::_Remove(uint32 id)
 {
     ObjectMap::iterator it = _store.find(id);
-    if(it != _store.end())
+    if(it == _store.end())
         return it;
 
-    return _store.end();
-}
-
-ObjectMap::iterator ObjectMgr::Remove(uint32 id)
-{
-    ObjectMap::iterator it = GetIterator(id);
     BaseObject *obj = it->second;
     if(obj)
     {
@@ -154,14 +148,14 @@ void ObjectMgr::Update(uint32 ms)
         if(obj->CanBeDeleted())
         {
             // remove expired objects
-            it = Remove(obj->GetId());
+            it = _Remove(obj->GetId());
         }
         else
         {
             // reset moved state for all objects.
             // collision detection and everything done. next movement may be done in next cycle.
             ((ActiveRect*)it->second)->SetMoved(false);
-            it++;
+            ++it;
         }
     }
 }
