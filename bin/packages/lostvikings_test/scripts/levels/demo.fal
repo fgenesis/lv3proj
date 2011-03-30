@@ -209,7 +209,10 @@ class Demolevel
         self.player = olaf
         
         if not IsEditor()
-            RegisterUpdateHook( [CenterView, olaf] ) // defined in package.fal
+            cv = { => CenterView(olaf) }
+            // should olaf get killed, stop centering view
+            HookClassMethod(olaf, "remove", { => UnregisterUpdateHook(cv) } )
+            RegisterUpdateHook(cv) // defined in package.fal
         end
     end
     

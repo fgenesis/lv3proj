@@ -116,6 +116,14 @@ function super(caller, baseClass, params)
     caller.apply(([baseClass] + params)().retrieve()) // some weird, dark magic happens here...
 end
 
+function HookClassMethod(obj, mthName, hook)
+    m = obj.getProperty(mthName)
+    f = function()
+        passvp(hook)
+        passvp(m)
+    end
+    obj.setProperty(mthName, f)
+end
 
 
 export
