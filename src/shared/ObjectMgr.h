@@ -25,7 +25,7 @@ public:
     BaseObject *Get(uint32 id);
     inline uint32 GetLastId(void) const { return _curId; }
     inline uint32 GetCount(void) const { return _store.size(); }
-    void Update(uint32 ms);
+    void Update(uint32 ms, float frac, uint32 frametime);
     void RenderLayer(uint32 id);
     void RenderBBoxes(void); // debug function
     void FlagForRemove(BaseObject *obj);

@@ -31,8 +31,15 @@ class PackageSystem
         return VFS.AddContainer(p + ".lvpa", p, false) // add the container contents into package/<name> directory, keeping files on disk with a higher priority 
     end
     
+    function LoadRoot(pkg, throw)
+        // before loading the desired package and its requirements, reset the engine timers, so that everything starts fresh.
+        CallScheduler.Init()
+        Engine.ResetTime()
+        return self.Load(pkg, throw)
+    end
+    
     // load a .lvpa file in directory "packages", or a subdir with that name
-    function Load(pkg, throw, skipPatches)
+    function Load(pkg, throw, isRecursive)
         > "PackageSystem:Load(", pkg, ")"
         p = "packages/" + pkg
         lvpa_exists = VFS.HasFile(p + ".lvpa")
@@ -79,7 +86,7 @@ class PackageSystem
         self._PushPkg(pkg)
         
         // look for patches ("PACKAGE_NAME.patch.*")
-        if not skipPatches
+        if not isRecursive // ... but only if this is not a recursive call
             > "PackageSystem: Scanning for patches..."
             dirs = VFS.GetDirList("packages")
             if not (dirs and len(dirs)) // just in case Enumerate() was not called before
@@ -87,6 +94,8 @@ class PackageSystem
                 self.Enumerate()
                 dirs = VFS.GetDirList()
             end
+            
+
             
             matchstr = pkg + ".patch."
             for dir in dirs

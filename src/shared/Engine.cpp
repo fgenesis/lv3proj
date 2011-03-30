@@ -13,9 +13,16 @@
 #include "MapFile.h"
 
 
-volatile uint32 Engine::s_curFrameTime; // game time
-volatile uint32 Engine::s_lastFrameTime; // last frame's SDL_GetTicks()
-bool Engine::_quit;
+// see Engine.h for comments about these
+volatile uint32 Engine::s_curFrameTime;
+volatile uint32 Engine::s_lastFrameTimeReal;
+bool Engine::s_quit;
+float Engine::s_speed;
+float Engine::s_accuTime;
+uint32 Engine::s_diffTime;
+uint32 Engine::s_diffTimeReal;
+float Engine::s_fracTime;
+uint32 Engine::s_ignoredTicks;
 std::vector<SDL_Joystick*> Engine::s_joysticks;
 Engine *Engine::s_instance = NULL;
 
@@ -25,17 +32,21 @@ _debugFlags(EDBG_NONE), _reset(false), _bgcolor(0), _drawBackground(true),
 _fpsMin(60), _fpsMax(70), falcon(NULL), _mouseX(0), _mouseY(0)
 {
     log("Game Engine start.");
+
+    // static members
     s_instance = this;
+    s_curFrameTime = 0;
+    s_quit = false;
+    s_speed = 1.0;
+    s_accuTime = 0;
 
     _gcnImgLoader = new gcn::SDLImageLoaderManaged();
     _gcnGfx = new gcn::SDLGraphics();
     gcn::Image::setImageLoader(_gcnImgLoader);
 
-    _quit = false;
     _layermgr = new LayerMgr(this);
-    _fpsclock = s_lastFrameTime = SDL_GetTicks();
-    s_curFrameTime = 0;
-
+    _fpsclock = s_lastFrameTimeReal  = s_ignoredTicks = SDL_GetTicks();
+    
     physmgr = new PhysicsMgr;
     physmgr->SetLayerMgr(_layermgr);
     objmgr = new ObjectMgr(this);
@@ -43,6 +54,8 @@ _fpsMin(60), _fpsMax(70), falcon(NULL), _mouseX(0), _mouseY(0)
     objmgr->SetLayerMgr(_layermgr);
     objmgr->SetPhysicsMgr(physmgr);
     _InitJoystick();
+
+    _resPoolTimer.SetInterval(5000);
 }
 
 Engine::~Engine()
@@ -116,8 +129,6 @@ void Engine::InitScreen(uint32 sizex, uint32 sizey, uint8 bpp /* = 0 */, uint32 
 
     if(_screen)
         SDL_FreeSurface(_screen);
-    _winsizex = sizex;
-    _winsizey = sizey;
     _screenFlags = SDL_HWSURFACE | SDL_DOUBLEBUF | SDL_ANYFORMAT | SDL_HWACCEL | extraflags;
     _screen = SDL_SetVideoMode(sizex, sizey, bpp, _screenFlags);
     _screenFlags &= ~SDL_FULLSCREEN; // this depends on current setting and should not be stored
@@ -166,33 +177,42 @@ void Engine::Run(void)
 {
     uint32 ms;
     uint32 diff;
-    while(!_quit)
+    float diff_scaled;
+    while(!s_quit)
     {
         if(IsReset())
             _Reset();
 
-        ms = SDL_GetTicks();
-        diff = ms - s_lastFrameTime;
+        ms = GetTicks();
+        diff = ms - s_lastFrameTimeReal;
         if(diff > 127) // 127 ms max. allowed diff time
             diff = 127;
+        diff_scaled = diff * s_speed;
+        s_fracTime = diff_scaled / 1000.0f;
+
+        s_accuTime += diff_scaled;
+        s_diffTime = uint32(s_accuTime);
+        s_accuTime -= s_diffTime; // s_accuTime stores the remaining sub-milliseconds
+        s_diffTimeReal = diff; // limiting this to 127 max is intentional (its not the real REAL diff then, but oh well)
+        
         _ProcessEvents();
         if(!_paused)
         {
-            s_curFrameTime += diff;
-            _Process(diff);
+            s_curFrameTime += s_diffTime;
+            _Process();
             if(_screen)
                 _Render();
         }
 
         _CalcFPS();
-        s_lastFrameTime = ms;
+        s_lastFrameTimeReal = ms;
     }
 }
 
 void Engine::_ProcessEvents(void)
 {
     SDL_Event evt;
-    while(!_quit && SDL_PollEvent(&evt))
+    while(!s_quit && SDL_PollEvent(&evt))
     {
         if(!OnRawEvent(evt))
             continue;
@@ -271,7 +291,12 @@ void Engine::_CalcFPS(void)
             _sleeptime = 0;
     }
     if(FrameLimit())
-        SDL_Delay(_sleeptime);
+        _Idle(_sleeptime);
+}
+
+void Engine::_Idle(uint32 ms)
+{
+    SDL_Delay(_sleeptime);
 }
 
 bool Engine::Setup(void)
@@ -279,13 +304,18 @@ bool Engine::Setup(void)
     return _InitFalcon();
 }
 
-void Engine::_Process(uint32 ms)
+void Engine::_Process(void)
 {
     _layermgr->Update(GetCurFrameTime());
-    objmgr->Update(ms);
+    objmgr->Update(GetTimeDiff(), GetTimeDiffF(), GetCurFrameTime());
 
-    // TODO: do not call this every frame!
-    resMgr.pool.Cleanup();
+    _resPoolTimer.Update(s_diffTimeReal);
+
+    if(_resPoolTimer.Passed())
+    {
+        _resPoolTimer.Reset();
+        resMgr.pool.Cleanup();
+    }
 }
 
 // Handle a raw SDL_Event before anything else. return true for further processing,
@@ -417,6 +447,14 @@ void Engine::_Reset(void)
     DEBUG(logdetail("After Reset Cleanup: Memory leak detector says: %u", MLD_COUNTER));
     resMgr.vfs.Prepare(true);
     resMgr.vfs.Reload(true);
+    ResetTime();
+}
+
+void Engine::ResetTime(void)
+{
+    s_ignoredTicks = SDL_GetTicks();
+    s_accuTime = 0;
+    s_curFrameTime = 0;
 }
 
 void Engine::SetFullscreen(bool b)

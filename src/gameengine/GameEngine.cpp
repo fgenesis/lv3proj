@@ -251,18 +251,33 @@ void GameEngine::OnObjectCreated(BaseObject *obj)
             logerror("GameEngine::OnObjectCreated: %s", edesc.c_str());
             err->decref();
         }
+    }
+}
 
+void GameEngine::_Idle(uint32 ms)
+{
+    if(ms)
+    {
+        falcon->GetVM()->idle(); // this allows the GC to collect stuff while we are waiting
+        Engine::_Idle(ms);
+        falcon->GetVM()->unidle();
     }
 }
 
 void GameEngine::_Render(void)
 {
+    // while we are rendering, the falcon VM won't change, so we can allow the falcon GC to clean up (from another thread)
+    // this improves performance a bit on dualcore systems, and does not hinder performance on single core.
+    falcon->GetVM()->idle();
+
     // blank screen
     if(_drawBackground)
         SDL_FillRect(GetSurface(), NULL, _bgcolor);
 
     // render the layers
     _layermgr->Render();
+
+    falcon->GetVM()->unidle();
 
     _PostRender();
 }
@@ -283,13 +298,12 @@ void GameEngine::_PostRender(void)
             logerror("GameEngine::Render: %s", edesc.c_str());
             err->decref();
         }
-
     }
 
     Engine::_PostRender();
 }
 
-void GameEngine::_Process(uint32 ms)
+void GameEngine::_Process(void)
 {
     // TODO: cache this on init and call then without invoking findGlobalItem() all the time
     Falcon::Item *item = falcon->GetVM()->findGlobalItem("GameUpdate");
@@ -297,7 +311,7 @@ void GameEngine::_Process(uint32 ms)
     {
         try
         {
-            falcon->GetVM()->pushParam(Falcon::int64(ms));
+            falcon->GetVM()->pushParam(Falcon::int64(GetTimeDiff()));
             falcon->GetVM()->callItem(*item, 1);
         }
         catch(Falcon::Error *err)
@@ -306,10 +320,9 @@ void GameEngine::_Process(uint32 ms)
             logerror("GameEngine::_Process: %s", edesc.c_str());
             err->decref();
         }
-
     }
     
-    Engine::_Process(ms);
+    Engine::_Process();
 }
 
 void GameEngine::_Reset(void)

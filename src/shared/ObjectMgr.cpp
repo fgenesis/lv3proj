@@ -73,11 +73,11 @@ ObjectMap::iterator ObjectMgr::_Remove(uint32 id)
     return it;
 }
 
-void ObjectMgr::Update(uint32 ms)
+void ObjectMgr::Update(uint32 diff, float frac, uint32 frametime)
 {
     // if no time passed, do nothing
     // TODO: this is *maybe* wrong, check how it works out
-    if(!ms)
+    if(!frac)
         return;
 
     // first, update all objects, handle physics, movement, etc.
@@ -95,7 +95,7 @@ void ObjectMgr::Update(uint32 ms)
             _layerMgr->RemoveFromCollisionMap(obj);
             // physics
             if(obj->IsAffectedByPhysics())        // the collision with walls is handled in here. also sets HasMoved() to true if required.
-                _physMgr->UpdatePhysics(obj, ms); // also takes care of triggering OnTouch() for solid objects vs Players and other specific things
+                _physMgr->UpdatePhysics(obj, frac); // also takes care of triggering OnTouch() for solid objects vs Players and other specific things
             // update layer sets if changed
             if(obj->_NeedsLayerUpdate())
             {
@@ -105,10 +105,10 @@ void ObjectMgr::Update(uint32 ms)
             }
             // update gfx if required
             if(obj->GetSprite() && obj->GetSprite()->GetType() == TILETYPE_ANIMATED)
-                ((AnimatedTile*)(obj->GetSprite()))->Update(Engine::GetCurFrameTime());
+                ((AnimatedTile*)(obj->GetSprite()))->Update(frametime);
 
             if(obj->IsUpdate())
-                obj->OnUpdate(ms);
+                obj->OnUpdate(diff);
 
             _layerMgr->UpdateCollisionMap(obj);
         }

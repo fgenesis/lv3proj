@@ -46,7 +46,7 @@ class PhysicsMgr
 public:
     PhysicsMgr();
     void SetDefaults(void);
-    void UpdatePhysics(Object *obj, uint32 ms);
+    void UpdatePhysics(Object *obj, float frac);
 
     EnvPhysProps envPhys;
     

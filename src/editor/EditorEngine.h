@@ -96,7 +96,7 @@ public:
 protected:
     void _CreateInterfaceWidgets(void); // create the widgets only (to be called on startup
 
-    virtual void _Process(uint32 ms);
+    virtual void _Process(void);
     virtual void _Render(void);
     virtual bool _InitFalcon(void);
     virtual void _Reset(void);

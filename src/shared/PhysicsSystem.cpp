@@ -18,14 +18,13 @@ void PhysicsMgr::SetDefaults(void)
     envPhys.gravity = 0.0f;
 }
 
-void PhysicsMgr::UpdatePhysics(Object *obj, uint32 ms)
+void PhysicsMgr::UpdatePhysics(Object *obj, float tf)
 {
     // affected by physics already checked in ObjectMgr::Update
 
     DEBUG(ASSERT(obj->GetType() >= OBJTYPE_OBJECT));
 
     PhysProps& phys = obj->phys;
-    float tf =  ms * 0.001f; // time factor
     uint8 speedsSet = 0; // can be 0, 1 or 2
     bool neg;
     int32 begin_ix = int32(obj->x);

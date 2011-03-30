@@ -8,7 +8,7 @@ function GarbageCheckPeriodic()
     CallScheduler.Schedule(GarbageCheckPeriodic, 5000)
 end
 
-GC.adjust(GC.ADJ_STRICT)
+GC.adjust(GC.ADJ_LOOSE)
 GC.enable(true)
 > "Garbage collection policy: ", GC.adjust()
 

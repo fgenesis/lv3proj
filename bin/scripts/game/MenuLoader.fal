@@ -130,6 +130,7 @@ function OpenEngineMainMenu()
     m = OpenMenu(EngineMainMenu)
     Music.Play(EngineConfig.menuMusic)
     Screen.SetCamera(0, 0)
+    Engine.SetSpeed(1.0)
     Engine.ResourceCleanup() // we don't want any remains from previously loaded packages
 end
 
@@ -192,7 +193,7 @@ function LoadPackageFile(s)
     > "Selected Package: ", s
     loadfunc = function()
         try
-            return PackageSystem.Load(s) // there may be an explicitly raised error somewhere in the package dependencies upon loading
+            return PackageSystem.LoadRoot(s) // there may be an explicitly raised error somewhere in the package dependencies upon loading
         end
     end
     CallScheduler.Schedule( loadfunc, 1 )

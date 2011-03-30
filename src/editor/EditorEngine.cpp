@@ -156,10 +156,10 @@ void EditorEngine::OnWindowResize(uint32 newx, uint32 newy)
     panLayers->UpdateSelection();
 }
 
-void EditorEngine::_Process(uint32 ms)
+void EditorEngine::_Process()
 {
     _gcnGui->logic();
-    GameEngine::_Process(ms);
+    GameEngine::_Process();
 }
 
 

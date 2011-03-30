@@ -35,12 +35,20 @@ public:
     static void UnhookSignals(void);
     static void PrintSystemSpecs(void);
     static bool RelocateWorkingDir(void);
-    inline bool IsQuit(void) { return _quit; }
-    inline static void SetQuit(bool q = true) { _quit = q; }
+    inline static bool IsQuit(void) { return s_quit; }
+    inline static void SetQuit(bool q = true) { s_quit = q; }
     inline static SDL_Joystick *GetJoystick(uint32 i) { return i < s_joysticks.size() ? s_joysticks[i] : NULL; }
     inline static uint32 GetJoystickCount(void) { return s_joysticks.size(); }
     inline static Engine *GetInstance(void) { return s_instance; }
+    inline static void SetSpeed(float s) { s_speed = s; }
+    inline static float GetSpeed(void) { return s_speed; }
     inline static uint32 GetCurFrameTime(void) { return s_curFrameTime; }
+    inline static double GetCurFrameTimeF(void) { return s_curFrameTime + (double)s_accuTime; } // float is not precise enough, as this can get very high
+    inline static uint32 GetTimeDiff(void) { return s_diffTime; } // 1000 == 1 second (scaled by speed)
+    inline static float GetTimeDiffF(void) { return s_fracTime; } // 1.0f == 1 second (scaled by speed)
+    inline static float GetTimeDiffReal(void) { return s_diffTimeReal; } // 1000 = 1 second (real)
+    inline static uint32 GetTicks(void) { return SDL_GetTicks() - s_ignoredTicks; }
+    static void ResetTime(void);
 
     virtual void InitScreen(uint32 sizex, uint32 sizey, uint8 bpp = 0, uint32 extraflags = 0);
     virtual bool Setup(void);
@@ -119,20 +127,22 @@ protected:
     virtual void _CalcFPS(void);
     virtual void _Render(void);
     virtual void _PostRender(void);
-    virtual void _Process(uint32 ms);
+    virtual void _Process(void);
     virtual void _Reset(void);
     virtual bool _InitFalcon(void);
+    virtual void _Idle(uint32 ms);
 
     gcn::SDLGraphics* _gcnGfx;
     gcn::SDLImageLoader* _gcnImgLoader;
 
+    // timers
+    IntervalTimer _resPoolTimer;
+
     std::string _wintitle;
     SDL_Surface *_screen;
     uint32 _screenFlags; // stores surface flags set on screen creation
-    static volatile uint32 s_curFrameTime, s_lastFrameTime;
+    
     SDL_Rect _visibleBlockRect;
-    uint32 _winsizex;
-    uint32 _winsizey;
     uint32 _fps;
     uint32 _framecounter;
     uint32 _fpsMin, _fpsMax; // lower/upper bound of frame limiter, it will try to keep the FPS in between
@@ -147,13 +157,21 @@ protected:
     bool _drawBackground;
 
     static std::vector<SDL_Joystick*> s_joysticks;
+    static volatile uint32 s_curFrameTime; // game time (scaled by speed)
+    static volatile uint32 s_lastFrameTimeReal; // last frame's SDL_GetTicks() -- not scaled by speed!
+    static float s_speed; // speed multiplicator, 1.0 = normal speed. should NOT be negative!
+    static float s_accuTime; // accumulated time, for cases when s_speed is very small and the resulting frame time less then 1 ms
+    static uint32 s_diffTime; // time diff per tick [uint32(s_fracTime)]
+    static uint32 s_diffTimeReal; // time diff per tick, real time (not scaled by s_speed)
+    static float s_fracTime; // (_diffTime * _speed) / 1000.0f
     
 
 private:
     static void _InitJoystick(void); // this does nothing if joystick support was not explicitly initialized in SDL_Init()
     static void _OnSignal(int s);
     static Engine *s_instance;
-    static bool _quit;
+    static bool s_quit;
+    static uint32 s_ignoredTicks; // this value is subtracted from SDL_GetTicks(), to make the time start at 0 for every new Engine state. updated on Engine::_Reset().
 };
 
 #endif

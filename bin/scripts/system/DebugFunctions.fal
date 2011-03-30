@@ -14,15 +14,11 @@ function dbg_PrintDir(dir, i)
     end
 end
 
-_difftime = 0
-function dbg_UpdateDifftime(ms)
-    global _difftime
-    _difftime = ms
-end
-
 function dbg_HookCountRenderHook() // note: this function is highly unoptimized and slow
     global _difftime
-    dt = _difftime
+    dt = Engine.GetTimeDiff()
+    dtr = Engine.GetTimeDiffReal()
+    etm = Engine.GetFloatTime()
     r = GetRenderHookCount()
     u = GetUpdateHookCount()
     i = GetRawInputHookCount()
@@ -48,8 +44,9 @@ function dbg_HookCountRenderHook() // note: this function is highly unoptimized 
     font = GetFont("consolefont")
     fh = font.GetHeight()
     write = Screen.GetSurfaceRaw().Write
+    spd = Engine.GetSpeed()
     
-    write(0, h - (fh * 8), font, @ "Timing: MS = $dt")
+    write(0, h - (fh * 8), font, @ "Timing: Speed = $(spd:.4); Diff = $(dt:3); RealDiff = $(dtr:3); Time = $(etm:.4)")
     write(0, h - (fh * 7), font, @ "Physics: Gravity = $g")
     write(0, h - (fh * 6), font, @ "Camera: ($camx, $camy)")
     write(0, h - (fh * 5), font, @ "Engine: Joysticks = $ej; ResCount = $rc; ResMem = $rm kB")
@@ -62,12 +59,10 @@ end
 
 function dbg_AddHookCountOverlay()
     RegisterRenderHook(dbg_HookCountRenderHook)
-    RegisterUpdateHook(dbg_UpdateDifftime)
 end
 
 function dbg_RemoveHookCountOverlay()
     UnregisterRenderHook(dbg_HookCountRenderHook)
-    UnregisterUpdateHook(dbg_UpdateDifftime)
 end
 
 export

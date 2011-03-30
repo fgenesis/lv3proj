@@ -768,14 +768,34 @@ FALCON_FUNC fal_Music_IsPlaying(Falcon::VMachine *vm)
     sndCore.IsPlayingMusic();
 }
 
-FALCON_FUNC fal_Engine_GetTime(Falcon::VMachine *vm)
-{
-    vm->retval(Falcon::int64(Engine::GetInstance()->GetCurFrameTime()));
-}
-
 FALCON_FUNC fal_Engine_GetName(Falcon::VMachine *vm)
 {
     vm->retval(new Falcon::CoreString(Engine::GetInstance()->GetName()));
+}
+
+FALCON_FUNC fal_Engine_GetTime(Falcon::VMachine *vm)
+{
+    vm->retval(Falcon::int64(Engine::GetCurFrameTime()));
+}
+
+FALCON_FUNC fal_Engine_GetTimeDiff(Falcon::VMachine *vm)
+{
+    vm->retval(Falcon::int64(Engine::GetTimeDiff()));
+}
+
+FALCON_FUNC fal_Engine_GetTimeDiffReal(Falcon::VMachine *vm)
+{
+    vm->retval(Falcon::int64(Engine::GetTimeDiffReal()));
+}
+
+FALCON_FUNC fal_Engine_GetFloatTime(Falcon::VMachine *vm)
+{
+    vm->retval(Falcon::numeric(Engine::GetCurFrameTimeF()));
+}
+
+FALCON_FUNC fal_Engine_GetFloatTimeDiff(Falcon::VMachine *vm)
+{
+    vm->retval(Falcon::numeric(Engine::GetTimeDiffF()));
 }
 
 // TODO: deprecate
@@ -865,6 +885,33 @@ FALCON_FUNC fal_Engine_ResourceMem(Falcon::VMachine *vm)
 FALCON_FUNC fal_Engine_ResourceCleanup(Falcon::VMachine *vm)
 {
     resMgr.DropUnused();
+}
+
+FALCON_FUNC fal_Engine_GetSpeed(Falcon::VMachine *vm)
+{
+    vm->retval(Falcon::numeric(Engine::GetSpeed()));
+}
+
+FALCON_FUNC fal_Engine_ResetTime(Falcon::VMachine *vm)
+{
+    Engine::ResetTime();
+}
+
+FALCON_FUNC fal_Engine_SetSpeed(Falcon::VMachine *vm)
+{
+    Falcon::Item *i_speed = vm->param(0);
+    if(i_speed && i_speed->isScalar())
+    {
+        float speed = i_speed->forceNumeric();
+        if(speed >= 0.0f)
+        {
+            Engine::SetSpeed(float(vm->param(0)->forceNumeric()));
+            return;
+        }
+    }
+
+    throw new Falcon::ParamError(Falcon::ErrorParam( Falcon::e_inv_params, __LINE__ )
+        .extra("N >= 0") );
 }
 
 FALCON_FUNC fal_EngineMap_GetLayer(Falcon::VMachine *vm)
@@ -1178,6 +1225,10 @@ Falcon::Module *FalconBaseModule_create(void)
     Falcon::Symbol *symEngine = m->addSingleton("Engine");
     Falcon::Symbol *clsEngine = symEngine->getInstance();
     m->addClassMethod(clsEngine, "GetTime", fal_Engine_GetTime);
+    m->addClassMethod(clsEngine, "GetTimeDiff", fal_Engine_GetTimeDiff);
+    m->addClassMethod(clsEngine, "GetTimeDiffReal", fal_Engine_GetTimeDiffReal);
+    m->addClassMethod(clsEngine, "GetFloatTime", fal_Engine_GetFloatTime);
+    m->addClassMethod(clsEngine, "GetFloatTimeDiff", fal_Engine_GetFloatTimeDiff);
     m->addClassMethod(clsEngine, "GetName", fal_Engine_GetName);
     m->addClassMethod(clsEngine, "LoadLevel", fal_Engine_LoadLevel); // TODO: deprecate
     m->addClassMethod(clsEngine, "LoadMap", fal_Engine_LoadMap);
@@ -1190,6 +1241,9 @@ Falcon::Module *FalconBaseModule_create(void)
     m->addClassMethod(clsEngine, "ResourceCount", fal_Engine_ResourceCount);
     m->addClassMethod(clsEngine, "ResourceMem", fal_Engine_ResourceMem);
     m->addClassMethod(clsEngine, "ResourceCleanup", fal_Engine_ResourceCleanup);
+    m->addClassMethod(clsEngine, "SetSpeed", fal_Engine_SetSpeed);
+    m->addClassMethod(clsEngine, "GetSpeed", fal_Engine_GetSpeed);
+    m->addClassMethod(clsEngine, "ResetTime", fal_Engine_ResetTime);
 
     Falcon::Symbol *symScreen = m->addSingleton("Screen");
     Falcon::Symbol *clsScreen = symScreen->getInstance();

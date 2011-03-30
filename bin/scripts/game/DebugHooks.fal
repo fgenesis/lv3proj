@@ -11,4 +11,24 @@ end
 
 dbg_ApplyHooks()
 
+// debug keys
+
+function DebugKeyHandler(e)
+    ty, src, which, value = e
+    if ty == EVENT_TYPE_KEYBOARD and value
+    
+        if which == SDLK.F5 // <-- slowmotion
+            s = Engine.GetSpeed() - 0.1
+            if s < 0: s = 0
+            Engine.SetSpeed(s)
+        elif which == SDLK.F6 // <-- speed up
+            Engine.SetSpeed(Engine.GetSpeed() + 0.1)
+        end
+        
+    end
+end
+
+RegisterRawInputHook(DebugKeyHandler)
+
+
 export dbg_ApplyHooks

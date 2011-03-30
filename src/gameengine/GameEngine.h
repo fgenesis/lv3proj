@@ -31,11 +31,12 @@ public:
 
 protected:
 
-    virtual void _Process(uint32 ms);
+    virtual void _Process(void);
     virtual void _Render(void);
     virtual void _PostRender(void);
     virtual void _Reset(void);
     virtual bool _InitFalcon(void);
+    virtual void _Idle(uint32 ms);
 
     bool _wasInit;
 };
