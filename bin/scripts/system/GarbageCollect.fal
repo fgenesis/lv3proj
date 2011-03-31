@@ -1,18 +1,5 @@
 
-function GarbageCheck()
-    > "GC: items: ", GC.items, ", Mem: ", GC.usedMem >> 10, "k  (normal: ", GC.th_active >> 10, "k, active: ", GC.th_active >> 10, "k)"
-end
-
-function GarbageCheckPeriodic()
-    GarbageCheck()
-    CallScheduler.Schedule(GarbageCheckPeriodic, 5000)
-end
-
-GC.adjust(GC.ADJ_LOOSE)
+GC.adjust(GC.ADJ_SMOOTH_SLOW)
 GC.enable(true)
 > "Garbage collection policy: ", GC.adjust()
 
-// DEBUG: turn on GC logging to keep track of allocated items
-//GarbageCheckPeriodic()
-
-export

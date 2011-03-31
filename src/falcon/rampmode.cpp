@@ -35,6 +35,8 @@ RampNone::~RampNone()
 
 void RampNone::onScanInit()
 {
+    m_active = memPool->thresholdActive();
+    m_normal = memPool->thresholdNormal();
 }
 
 void RampNone::onScanComplete()
@@ -71,12 +73,13 @@ RampLoose::~RampLoose()
 
 void RampLoose::onScanInit()
 {
-   m_active = (size_t)(gcMemAllocated() );
-   m_normal = (size_t)(gcMemAllocated() / 2 );
+   m_normal = gcMemAllocated();
+   m_active = m_normal * 2;
 }
 
 void RampLoose::onScanComplete()
 {
+    m_normal = (m_normal + gcMemAllocated()) / 2;
 }
 
 //=========================================================
@@ -109,26 +112,26 @@ void RampSmooth::onScanInit()
    if ( m_pNormal == 0 )
    {
       m_pNormal = gcMemAllocated();
+      m_normal = m_pNormal;
+      m_active = (size_t)(m_normal * m_factor);
    }
-   else {
-      // size_t is usually unsigned.
-      size_t allocated = gcMemAllocated();
-      if( m_pNormal > allocated )
-      {
-         // we're getting smaller
-         m_pNormal -= (size_t)((m_pNormal - allocated) / m_factor);
-      }
-      else {
-         m_pNormal += size_t((allocated-m_pNormal) / m_factor);
-      }
-   }
-
-   m_normal = m_pNormal;
-   m_active = (size_t)(m_normal * m_factor);
 }
 
 void RampSmooth::onScanComplete()
 {
+   // size_t is usually unsigned.
+   size_t allocated = gcMemAllocated();
+   if( m_pNormal > allocated )
+   {
+       // we're getting smaller
+       m_pNormal -= (size_t)((m_pNormal - allocated) / m_factor);
+   }
+   else {
+       m_pNormal += size_t((allocated-m_pNormal) / m_factor);
+   }
+
+   m_normal = m_pNormal;
+   m_active = (size_t)(m_normal * m_factor);
 }
 
 }
