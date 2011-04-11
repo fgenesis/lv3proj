@@ -65,6 +65,7 @@ ObjectMap::iterator ObjectMgr::_Remove(uint32 id)
         _store.erase(it++);
         if(obj->GetType() >= OBJTYPE_OBJECT)
         {
+            //_layerMgr->RemoveFromCollisionMap((Object*)obj);
             _renderLayers[((Object*)obj)->GetLayer()].erase((Object*)obj);
         }
         obj->unbind();
@@ -85,14 +86,15 @@ void ObjectMgr::Update(uint32 diff, float frac, uint32 frametime)
     {
         ActiveRect *base = (ActiveRect*)it->second;
 
-        // do not touch objects flagged for deletion
-        if(base->CanBeDeleted())
-            continue;
-
         if(base->GetType() >= OBJTYPE_OBJECT)
         {
             Object *obj = (Object*)base;
             _layerMgr->RemoveFromCollisionMap(obj);
+
+            // do not touch objects flagged for deletion
+            if(base->CanBeDeleted())
+                continue;
+
             // physics
             if(obj->IsAffectedByPhysics())        // the collision with walls is handled in here. also sets HasMoved() to true if required.
                 _physMgr->UpdatePhysics(obj, frac); // also takes care of triggering OnTouch() for solid objects vs Players and other specific things
