@@ -1,29 +1,24 @@
-#include "LzmaDec.h"
-#include "LzmaEnc.h"
+#include "lzma/Lzma2Dec.h"
+#include "lzma/Lzma2Enc.h"
 #include "common.h"
 #include "LZMACompressor.h"
 
-SRes myLzmaProgressDummy(void *, UInt64 , UInt64 )
+static SRes myLzmaProgressDummy(void *, UInt64 , UInt64 )
 {
     return SZ_OK;
 }
 
-void *myLzmaAlloc(void *, size_t size)
+static void *myLzmaAlloc(void *, size_t size)
 {
     return malloc(size);
 }
 
-void myLzmaFree(void *, void *ptr)
+static void myLzmaFree(void *, void *ptr)
 {
     if(ptr)
         free(ptr);
 }
 
-
-LZMACompressor::LZMACompressor()
-: _iscompressed(false), _real_size(0), _propsEnc(0)
-{
-}
 
 void LZMACompressor::Compress(uint32 level, ProgressCallback pcb /* = NULL */)
 {
@@ -38,6 +33,7 @@ void LZMACompressor::Compress(uint32 level, ProgressCallback pcb /* = NULL */)
     SizeT newsize = oldsize / 20 * 21 + (1 << 16); // we allocate 105% of original size for output buffer
 
     Byte *buf = new Byte[newsize];
+    
 
     ISzAlloc alloc;
     alloc.Alloc = myLzmaAlloc;
@@ -46,17 +42,21 @@ void LZMACompressor::Compress(uint32 level, ProgressCallback pcb /* = NULL */)
     ICompressProgress progress;
     progress.Progress = pcb ? pcb : myLzmaProgressDummy;
 
-    SizeT propsSize = sizeof(CLzmaEncProps);
-    uint32 result = LzmaEncode(buf, &newsize, this->contents(), oldsize, &props, &_propsEnc, &propsSize, 0, &progress, &alloc, &alloc);
+    SizeT propsSize = LZMA_PROPS_SIZE;
+    Byte propsEnc[LZMA_PROPS_SIZE];
+
+    uint32 result = LzmaEncode(buf, &newsize, this->contents(), oldsize, &props, &propsEnc[0], &propsSize, 0, &progress, &alloc, &alloc);
     if(result != SZ_OK || !newsize || newsize > oldsize)
     {
         delete [] buf;
         return;
     }
+    ASSERT(propsSize == LZMA_PROPS_SIZE); // this should not be changed by the library
 
     resize(newsize);
     rpos(0);
     wpos(0);
+    append(&propsEnc[0], LZMA_PROPS_SIZE);
     append(buf,newsize);
     delete [] buf;
 
@@ -65,7 +65,7 @@ void LZMACompressor::Compress(uint32 level, ProgressCallback pcb /* = NULL */)
     _real_size = oldsize;
 }
 
-void LZMACompressor::Decompress(uint8 props)
+void LZMACompressor::Decompress(void)
 {
     if( (!_iscompressed) || (!_real_size) || (!size()))
         return;
@@ -75,35 +75,32 @@ void LZMACompressor::Decompress(uint8 props)
     uint8 *target = new uint8[_real_size];
     wpos(0);
     rpos(0);
-    SizeT srcLen = this->size();
+    SizeT srcLen = this->size() - LZMA_PROPS_SIZE;
+
+    SizeT propsSize = LZMA_PROPS_SIZE;
+    Byte propsEnc[LZMA_PROPS_SIZE];
+    read(&propsEnc[0], LZMA_PROPS_SIZE);
 
     ISzAlloc alloc;
     alloc.Alloc = myLzmaAlloc;
     alloc.Free = myLzmaFree;
 
     ELzmaStatus status;
-    const Byte propsEnc = props;
+    Byte *dataPtr = (Byte*)this->contents() + LZMA_PROPS_SIZE; // first 5 bytes are encoded props
 
-    result = LzmaDecode(target, (SizeT*)&_real_size, this->contents(), &srcLen, &propsEnc, sizeof(CLzmaEncProps), LZMA_FINISH_END, &status, &alloc);
+    result = LzmaDecode(target, (SizeT*)&_real_size, dataPtr, &srcLen, &propsEnc[0], propsSize, LZMA_FINISH_END, &status, &alloc);
     if( result != SZ_OK || origsize != _real_size)
     {
         DEBUG(logerror("LZMACompressor: Decompress error! result=%d cursize=%u origsize=%u realsize=%u\n",result,size(),origsize,_real_size));
         delete [] target;
         return;
     }
-    clear();
+    ASSERT(propsSize == LZMA_PROPS_SIZE); // this should not be changed by the library
+    resize(origsize);
+    wpos(0);
+    rpos(0);
     append(target, origsize);
     delete [] target;
     _real_size = 0;
     _iscompressed = false;
-    _propsEnc = 0;
 }
-
-void LZMACompressor::clear(void)
-{
-    ByteBuffer::clear();
-    _real_size = 0;
-    _iscompressed = false;
-    _propsEnc = 0;
-}
-    
