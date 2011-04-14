@@ -68,7 +68,7 @@ elseif(WIN32)
     time_sys_win.cpp
     vm_sys_win.cpp
     vfs_file_win.cpp
-    falcon_engine.rc
+    #falcon_engine.rc
     signals_win.cpp
   )
 endif()

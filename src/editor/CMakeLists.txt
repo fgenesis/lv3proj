@@ -22,6 +22,7 @@ TileLayerPanel.cpp
 TilesHandler.cpp
 TileWindow.cpp
 TopMenus.cpp
+editor.rc
 )
 
 add_executable (editor ${editor_SRC}) 
