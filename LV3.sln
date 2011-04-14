@@ -59,6 +59,11 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gameengine", "src\gameengin
 		{4CA929A3-1073-4120-AE68-BD7E111F82A3} = {4CA929A3-1073-4120-AE68-BD7E111F82A3}
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tests", "src\tests.vcproj", "{054FFF96-EDA4-4414-84EB-FF8435C8F52A}"
+	ProjectSection(ProjectDependencies) = postProject
+		{4CA929A3-1073-4120-AE68-BD7E111F82A3} = {4CA929A3-1073-4120-AE68-BD7E111F82A3}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -109,6 +114,10 @@ Global
 		{282412AE-E42F-4CCE-AA68-7A5952123AA6}.Debug|Win32.Build.0 = Debug|Win32
 		{282412AE-E42F-4CCE-AA68-7A5952123AA6}.Release|Win32.ActiveCfg = Release|Win32
 		{282412AE-E42F-4CCE-AA68-7A5952123AA6}.Release|Win32.Build.0 = Release|Win32
+		{054FFF96-EDA4-4414-84EB-FF8435C8F52A}.Debug|Win32.ActiveCfg = Debug|Win32
+		{054FFF96-EDA4-4414-84EB-FF8435C8F52A}.Debug|Win32.Build.0 = Debug|Win32
+		{054FFF96-EDA4-4414-84EB-FF8435C8F52A}.Release|Win32.ActiveCfg = Release|Win32
+		{054FFF96-EDA4-4414-84EB-FF8435C8F52A}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -49,11 +49,7 @@ cmake ..
 (alternatively, 'ccmake ..' if you need to specify advanced things)
 make
 make install
--- The bins are now in ../bin and ready. (in case compiling them actually worked)
-
-To build the basepak.lvpa file (not required, but can't be bad to have it)
-(be in <LV3-root>/bin)
-./lvpak -c9 -f basepak.listfile a basepak.lvpa
+-- The bins are now in ../bin and ready.
 
 
 
@@ -72,5 +68,6 @@ QUESTIONS? BUGS? RANTS? NOTHING WORKS?
 ======================================
 
 Visit http://lostvikings.lordaeron.org
+IRC: irc.freenode.net, #lostvikings (irc://irc.freenode.net/lostvikings)
 
 There is also a mailing list, see http://lists.barfooze.de/ for more information.
