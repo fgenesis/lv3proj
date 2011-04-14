@@ -36,7 +36,7 @@ void CRC32::Finalize(void)
     _crc ^= 0xFFFFFFFF;
 }
 
-void CRC32::Update(uint8 *buf, uint32 size)
+void CRC32::Update(const uint8 *buf, uint32 size)
 {
     for (uint32 i = 0; i < size; i++)
         _crc = ((_crc >> 8) & 0x00FFFFFF) ^ _tab[(_crc ^ *buf++) & 0xFF];

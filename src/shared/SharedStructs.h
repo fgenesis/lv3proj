@@ -3,6 +3,7 @@
 #include <limits.h>
 #include "SharedDefines.h"
 
+
 struct Point
 {
     Point() : x(0), y(0) {}
@@ -54,6 +55,10 @@ public:
     float x, y; // we have to use floats for correct movement, so that rounding does not make fuss with movements < 1 pixel per step.
     uint32 w, h;
 
+    BaseRect() : x(0), y(0), w(0), h(0) {}
+    BaseRect(float ax, float ay, int32 aw, int32 ah) : x(ax), y(ay), w(aw), h(ah) {}
+    BaseRect(const BaseRect& r) : x(r.x), y(r.y), w(r.w), h(r.h) {}
+
     // Method to calculate the second X corner
     inline int x2(void) const { return int32(x) + w; }
     // Method to calculate the second Y corner
@@ -102,6 +107,23 @@ public:
     inline bool operator!=(BaseRect& other)
     {
         return int32(x) != int32(other.x) || int32(y) != int32(other.y) || w != other.w || h != other.h;
+    }
+
+    inline BaseRect overlapRect(const BaseRect& r)
+    {
+        int32 nx = int32(x);
+        int32 ny = int32(y);
+        int32 tx2 = x2();
+        int32 ty2 = y2();
+        int32 rx2 = r.x2();
+        int32 ry2 = r.y2();
+        if (x < r.x) nx = r.x;
+        if (x < r.y) ny = r.y;
+        if (tx2 > rx2) tx2 = rx2;
+        if (ty2 > ry2) ty2 = ry2;
+        tx2 -= x;
+        ty2 -= y;
+        return BaseRect(nx, ny, tx2, ty2);
     }
 
     // in Objects.cpp
