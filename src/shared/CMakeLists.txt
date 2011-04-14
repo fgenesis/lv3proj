@@ -1,3 +1,5 @@
+file(GLOB lzo_SRC lzo/*.c)
+
 set(shared_SRC
 AnimParser.cpp
 AppFalcon.cpp
@@ -10,12 +12,9 @@ IMG_savepng.c
 LayerMgr.cpp
 log.cpp
 LVPAFile.cpp
-LzFind.c
-Lzma2Dec.c
-Lzma2Enc.c
+LVPAStreamCipher.cpp
+LZOCompressor.cpp
 LZMACompressor.cpp
-LzmaDec.c
-LzmaEnc.c
 MemoryLeaks.cpp
 MapFile.cpp
 ObjectMgr.cpp
@@ -25,6 +24,8 @@ ProgressBar.cpp
 PropParser.cpp
 ResourceMgr.cpp
 SDL_func.cpp
+SHA256Hash.cpp
+sha256.cpp
 SoundCore.cpp
 Tile.cpp
 TileLayer.cpp
@@ -40,6 +41,16 @@ SDL_gfx/SDL_framerate.c
 SDL_gfx/SDL_gfxPrimitives.c
 SDL_gfx/SDL_imageFilter.c
 SDL_gfx/SDL_rotozoom.c
+
+# LZMA compression lib
+lzma/LzFind.c
+lzma/Lzma2Dec.c
+lzma/Lzma2Enc.c
+lzma/LzmaDec.c
+lzma/LzmaEnc.c
+
+# LZO compression lib
+${lzo_SRC}
 )
 
 include_directories (${TOP_INCLUDE_DIR}) 

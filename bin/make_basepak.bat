@@ -11,7 +11,7 @@ echo.
 pause > nul
 
 echo == Building basepak.lvpa ==
-lvpak.exe -c9 -f basepak.listfile a basepak.lvpa
+lvpak.exe c basepak.lvpa -Hlzo9 -f basepak.listfile
 echo == Checking for correctness ==
 lvpak.exe t basepak.lvpa
 echo == Finished ==

@@ -1,9 +1,9 @@
 
-..\lvpak.exe -c9 -f screen_test.listfile a screen_test.lvpa
-..\lvpak.exe -c9 -f forbidden_test.listfile a forbidden_test.lvpa
-..\lvpak.exe -c9 -f missing_test.listfile a missing_test.lvpa
-..\lvpak.exe -c9 -f error_test.listfile a error_test.lvpa
-..\lvpak.exe -c9 -f savedata_test.listfile a savedata_test.lvpa
-..\lvpak.exe -c9 -f gfx_test.listfile a gfx_test.lvpa
+..\lvpak.exe c screen_test.lvpa -Hlzo9 -f screen_test.listfile
+..\lvpak.exe c forbidden_test.lvpa -Hlzo9 -f forbidden_test.listfile
+..\lvpak.exe c missing_test.lvpa -Hlzo9 -f missing_test.listfile
+..\lvpak.exe c error_test.lvpa -Hlzo9 -f error_test.listfile
+..\lvpak.exe c savedata_test.lvpa -Hlzo9 -f savedata_test.listfile
+..\lvpak.exe c gfx_test.lvpa -Hlzo9 -f gfx_test.listfile
 
 pause

@@ -100,20 +100,30 @@ uint64 VFSFileLVPA::size(void)
 
 uint64 VFSFileLVPA::size(uint64 newsize)
 {
+    if(newsize == size())
+        return newsize;
+
     memblock data = _lvpa->Get(_headerId);
     const LVPAFileHeader& hdr = _lvpa->GetFileInfo(_headerId);
     uint32 n = uint32(newsize);
+
+    const char *solidBlockName = NULL;
+    if(hdr.flags & LVPAFLAG_SOLID)
+    {
+        const LVPAFileHeader& solidHdr = _lvpa->GetFileInfo(hdr.blockId);
+        solidBlockName = solidHdr.filename.c_str();
+    }
     if(n < data.size)
     {
         data.size = n;
-        _lvpa->Add(hdr.filename.c_str(), data, LVPAFileFlags(hdr.flags), hdr.algo, hdr.level); // overwrite old entry
+        _lvpa->Add(hdr.filename.c_str(), data, solidBlockName, hdr.algo, hdr.level); // overwrite old entry
     }
     else
     {
         memblock mb(new uint8[n + 4], n); // allocate new, with few extra bytes
         memcpy(mb.ptr, data.ptr, data.size); // copy old
         memset(mb.ptr + data.size, 0, n - data.size + 4); // zero out remaining (with extra bytes)
-        _lvpa->Add(hdr.filename.c_str(), mb, LVPAFileFlags(hdr.flags), hdr.algo, hdr.level); // overwrite old entry
+        _lvpa->Add(hdr.filename.c_str(), mb, solidBlockName, hdr.algo, hdr.level); // overwrite old entry
     }
     return n;
 }

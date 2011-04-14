@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="include;libpng;guichan_ext"
+				AdditionalIncludeDirectories="include;libpng;guichan_ext;shared"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -111,11 +111,12 @@
 				InlineFunctionExpansion="2"
 				EnableIntrinsicFunctions="true"
 				FavorSizeOrSpeed="1"
-				AdditionalIncludeDirectories="include;libpng;guichan_ext"
+				OmitFramePointers="true"
+				AdditionalIncludeDirectories="include;libpng;guichan_ext;shared"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
 				StringPooling="true"
 				RuntimeLibrary="2"
-				BufferSecurityCheck="true"
+				BufferSecurityCheck="false"
 				EnableFunctionLevelLinking="false"
 				EnableEnhancedInstructionSet="2"
 				RuntimeTypeInfo="false"
@@ -324,6 +325,14 @@
 					>
 				</File>
 				<File
+					RelativePath=".\shared\LVPAStreamCipher.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\LVPAStreamCipher.h"
+					>
+				</File>
+				<File
 					RelativePath=".\shared\MyCrc32.cpp"
 					>
 				</File>
@@ -333,54 +342,54 @@
 				</File>
 			</Filter>
 			<Filter
-				Name="LZMA"
+				Name="lzma"
 				>
 				<File
-					RelativePath=".\shared\LzFind.c"
+					RelativePath=".\shared\lzma\LzFind.c"
 					>
 				</File>
 				<File
-					RelativePath=".\shared\LzFind.h"
+					RelativePath=".\shared\lzma\LzFind.h"
 					>
 				</File>
 				<File
-					RelativePath=".\shared\LzHash.h"
+					RelativePath=".\shared\lzma\LzHash.h"
 					>
 				</File>
 				<File
-					RelativePath=".\shared\Lzma2Dec.c"
+					RelativePath=".\shared\lzma\Lzma2Dec.c"
 					>
 				</File>
 				<File
-					RelativePath=".\shared\Lzma2Dec.h"
+					RelativePath=".\shared\lzma\Lzma2Dec.h"
 					>
 				</File>
 				<File
-					RelativePath=".\shared\Lzma2Enc.c"
+					RelativePath=".\shared\lzma\Lzma2Enc.c"
 					>
 				</File>
 				<File
-					RelativePath=".\shared\Lzma2Enc.h"
+					RelativePath=".\shared\lzma\Lzma2Enc.h"
 					>
 				</File>
 				<File
-					RelativePath=".\shared\LzmaDec.c"
+					RelativePath=".\shared\lzma\LzmaDec.c"
 					>
 				</File>
 				<File
-					RelativePath=".\shared\LzmaDec.h"
+					RelativePath=".\shared\lzma\LzmaDec.h"
 					>
 				</File>
 				<File
-					RelativePath=".\shared\LzmaEnc.c"
+					RelativePath=".\shared\lzma\LzmaEnc.c"
 					>
 				</File>
 				<File
-					RelativePath=".\shared\LzmaEnc.h"
+					RelativePath=".\shared\lzma\LzmaEnc.h"
 					>
 				</File>
 				<File
-					RelativePath=".\shared\LzTypes.h"
+					RelativePath=".\shared\lzma\LzTypes.h"
 					>
 				</File>
 			</Filter>
@@ -392,11 +401,23 @@
 					>
 				</File>
 				<File
+					RelativePath=".\shared\ICompressor.h"
+					>
+				</File>
+				<File
 					RelativePath=".\shared\LZMACompressor.cpp"
 					>
 				</File>
 				<File
 					RelativePath=".\shared\LZMACompressor.h"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\LZOCompressor.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\LZOCompressor.h"
 					>
 				</File>
 			</Filter>
@@ -588,12 +609,448 @@
 					>
 				</File>
 			</Filter>
+			<Filter
+				Name="lzo"
+				>
+				<File
+					RelativePath=".\shared\lzo\compr1b.h"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\lzo\compr1c.h"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\lzo\config1.h"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\lzo\config1a.h"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\lzo\config1b.h"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\lzo\config1c.h"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\lzo\config1f.h"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\lzo\config1x.h"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\lzo\config1y.h"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\lzo\config1z.h"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\lzo\config2a.h"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\lzo\lzo1.c"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\lzo\lzo1_99.c"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\lzo\lzo1a.c"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\lzo\lzo1a_99.c"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\lzo\lzo1a_de.h"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\lzo\lzo1b_1.c"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\lzo\lzo1b_2.c"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\lzo\lzo1b_3.c"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\lzo\lzo1b_4.c"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\lzo\lzo1b_5.c"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\lzo\lzo1b_6.c"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\lzo\lzo1b_7.c"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\lzo\lzo1b_8.c"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\lzo\lzo1b_9.c"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\lzo\lzo1b_99.c"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\lzo\lzo1b_9x.c"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\lzo\lzo1b_cc.c"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\lzo\lzo1b_cc.h"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\lzo\lzo1b_d1.c"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\lzo\lzo1b_d2.c"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\lzo\lzo1b_de.h"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\lzo\lzo1b_rr.c"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\lzo\lzo1b_xx.c"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\lzo\lzo1c_1.c"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\lzo\lzo1c_2.c"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\lzo\lzo1c_3.c"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\lzo\lzo1c_4.c"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\lzo\lzo1c_5.c"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\lzo\lzo1c_6.c"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\lzo\lzo1c_7.c"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\lzo\lzo1c_8.c"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\lzo\lzo1c_9.c"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\lzo\lzo1c_99.c"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\lzo\lzo1c_9x.c"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\lzo\lzo1c_cc.c"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\lzo\lzo1c_cc.h"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\lzo\lzo1c_d1.c"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\lzo\lzo1c_d2.c"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\lzo\lzo1c_rr.c"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\lzo\lzo1c_xx.c"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\lzo\lzo1f_1.c"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\lzo\lzo1f_9x.c"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\lzo\lzo1f_d1.c"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\lzo\lzo1f_d2.c"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\lzo\lzo1x_1.c"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\lzo\lzo1x_1k.c"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\lzo\lzo1x_1l.c"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\lzo\lzo1x_1o.c"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\lzo\lzo1x_9x.c"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\lzo\lzo1x_d1.c"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\lzo\lzo1x_d2.c"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\lzo\lzo1x_d3.c"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\lzo\lzo1x_o.c"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\lzo\lzo1y_1.c"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\lzo\lzo1y_9x.c"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\lzo\lzo1y_d1.c"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\lzo\lzo1y_d2.c"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\lzo\lzo1y_d3.c"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\lzo\lzo1y_o.c"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\lzo\lzo1z_9x.c"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\lzo\lzo1z_d1.c"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\lzo\lzo1z_d2.c"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\lzo\lzo1z_d3.c"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\lzo\lzo2a_9x.c"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\lzo\lzo2a_d1.c"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\lzo\lzo2a_d2.c"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\lzo\lzo_conf.h"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\lzo\lzo_crc.c"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\lzo\lzo_dict.h"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\lzo\lzo_init.c"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\lzo\lzo_ptr.c"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\lzo\lzo_ptr.h"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\lzo\lzo_str.c"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\lzo\lzo_util.c"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\lzo\miniacc.h"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\lzo\stats1a.h"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\lzo\stats1b.h"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\lzo\stats1c.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="hash"
+				>
+				<File
+					RelativePath=".\shared\sha256.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\sha256.h"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\SHA256Hash.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\SHA256Hash.h"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="Header Files"
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
+			<Filter
+				Name="lzo"
+				>
+				<File
+					RelativePath=".\include\lzo\lzo1.h"
+					>
+				</File>
+				<File
+					RelativePath=".\include\lzo\lzo1a.h"
+					>
+				</File>
+				<File
+					RelativePath=".\include\lzo\lzo1b.h"
+					>
+				</File>
+				<File
+					RelativePath=".\include\lzo\lzo1c.h"
+					>
+				</File>
+				<File
+					RelativePath=".\include\lzo\lzo1f.h"
+					>
+				</File>
+				<File
+					RelativePath=".\include\lzo\lzo1x.h"
+					>
+				</File>
+				<File
+					RelativePath=".\include\lzo\lzo1y.h"
+					>
+				</File>
+				<File
+					RelativePath=".\include\lzo\lzo1z.h"
+					>
+				</File>
+				<File
+					RelativePath=".\include\lzo\lzo2a.h"
+					>
+				</File>
+				<File
+					RelativePath=".\include\lzo\lzo_asm.h"
+					>
+				</File>
+				<File
+					RelativePath=".\include\lzo\lzoconf.h"
+					>
+				</File>
+				<File
+					RelativePath=".\include\lzo\lzodefs.h"
+					>
+				</File>
+				<File
+					RelativePath=".\include\lzo\lzoutil.h"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="Resource Files"
