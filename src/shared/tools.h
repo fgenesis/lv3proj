@@ -9,8 +9,8 @@ uint32 urand(uint32 min, uint32 max);
 int32 rand32(void);
 double rand_norm(void);
 double rand_chance(void);
-void printchex(std::string,bool);
-void printchex(char *in, uint32 len, bool);
+void printchex(const std::string&,bool);
+void printchex(const char *in, uint32 len, bool);
 std::string stringToUpper(std::string);
 std::string stringToLower(std::string);
 uint64 toInt(std::string);
@@ -18,6 +18,7 @@ std::string toHexDump(uint8* array,uint32 size,bool spaces=true,uint32 per_line=
 std::deque<std::string> GetFileList(std::string);
 std::deque<std::string> GetDirList(std::string, bool recursive = false);
 bool FileExists(std::string);
+bool IsDirectory(const char *);
 bool CreateDir(const char*);
 bool CreateDirRec(const char*);
 uint32 getMSTime(void);
@@ -36,6 +37,13 @@ std::string GetTimeString(void);
 std::string GetDateString(void);
 std::string GetProgramDir(void); // file path of the exe/binary; this is NOT the working directory.
 bool SetWorkingDir(std::string);
+void HexStrToByteArray(uint8 *dst, const char *str);
+std::string FixMultiSlashes(const std::string& s);
+void MakeSlashTerminated(std::string& s);
+void GetFileListRecursive(const std::string dir, std::list<std::string>& files, bool withQueriedDir = false);
+bool WildcardMatch(const char *str, const char *pattern);
+uint32 GetConsoleWidth(void);
+
 
 void SplitFilenameToProps(const char *in, std::string *fn = NULL, std::string *s1 = NULL, 
                                  std::string *s2 = NULL,  std::string *s3 = NULL,  std::string *s4 = NULL,
@@ -120,5 +128,21 @@ inline void convert(const in_value &ival, out_value &oval)
     sstream >> oval; // get value from stream
 }
 
+template <typename T> class AutoPtrVector
+{
+public:
+    AutoPtrVector(uint32 prealloc) :v(prealloc)
+    {
+        for(uint32 i = 0; i < prealloc; ++i)
+            v[i] = NULL;
+    }
+    ~AutoPtrVector()
+    {
+        for(uint32 i = 0; i < v.size(); ++i)
+            if(v[i])
+                delete v[i];
+    }
+    std::vector<T*> v;
+};
 
 #endif

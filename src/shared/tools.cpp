@@ -6,6 +6,7 @@
 #include <string>
 #include <fstream>
 #include <cerrno>
+#include <stack>
 #include "tools.h"
 
 #if PLATFORM == PLATFORM_WIN32
@@ -17,6 +18,8 @@
 #   include <sys/dir.h>
 #   include <sys/stat.h>
 #   include <sys/timeb.h>
+#   include <sys/types.h>
+#   include <sys/ioctl.h>
 #   include <unistd.h>
 #endif
 
@@ -53,7 +56,7 @@ double rand_chance (void)
     return mtRand.randExc (100.0);
 }
 
-void printchex(std::string in, bool spaces=true)
+void printchex(const std::string& in, bool spaces=true)
 {
 	unsigned int len=0,i;
     len=in.length();
@@ -65,7 +68,7 @@ void printchex(std::string in, bool spaces=true)
 	printf("]\n");
 }
 
-void printchex(char *in, uint32 len, bool spaces=true)
+void printchex(const char *in, uint32 len, bool spaces=true)
 {
 	unsigned int i;
 	printf("[");
@@ -135,18 +138,19 @@ std::deque<std::string> GetFileList(std::string path)
     DIR * dirp;
     struct dirent * dp;
     dirp = opendir(p);
-
-    while((dp=readdir(dirp)) != NULL)
-    {
-        if (dp->d_type != DT_DIR) // only add if it is not a directory
-        {
-            std::string s(dp->d_name);
-            files.push_back(s);
-        }
-    }
-
     if(dirp)
+    {
+        while((dp=readdir(dirp)) != NULL)
+        {
+            if (dp->d_type != DT_DIR) // only add if it is not a directory
+            {
+                std::string s(dp->d_name);
+                files.push_back(s);
+            }
+        }
         closedir(dirp);
+    }
+        
 # else
 
     if(path[path.length()-1] != '/')
@@ -186,30 +190,30 @@ std::deque<std::string> GetDirList(std::string path, bool recursive /* = false *
     DIR * dirp;
     struct dirent * dp;
     dirp = opendir(p);
-
-    while((dp = readdir(dirp)) != NULL)
+    if(dirp)
     {
-        if (dp->d_type == DT_DIR) // only add if it is a directory
+        while(dp = readdir(dirp)) // assignment is intentional
         {
-            if(strcmp(dp->d_name, ".") != 0 && strcmp(dp->d_name, "..") != 0)
+            if (dp->d_type == DT_DIR) // only add if it is a directory
             {
-                std::string s = dp->d_name;
-				dirs.push_back(s);
-                if (recursive) // needing a better way to do that
+                if(strcmp(dp->d_name, ".") != 0 && strcmp(dp->d_name, "..") != 0)
                 {
-                    std::deque<std::string> newdirs = GetDirList(s);
-                    for(std::deque<std::string>::iterator it = newdirs.begin(); it != newdirs.end(); ++it)
+                    std::string s = dp->d_name;
+				    dirs.push_back(s);
+                    if (recursive) // needing a better way to do that
                     {
-                        std::string d = s + *it;
-                        dirs.push_back(d);
+                        std::deque<std::string> newdirs = GetDirList(s);
+                        for(std::deque<std::string>::iterator it = newdirs.begin(); it != newdirs.end(); ++it)
+                        {
+                            std::string d = s + *it;
+                            dirs.push_back(d);
+                        }
                     }
                 }
             }
         }
-    }
-
-    if(dirp)
         closedir(dirp);
+    }
 
 #else
 
@@ -266,6 +270,8 @@ bool FileExists(std::string fn)
 // must return true if creating the directory was successful
 bool CreateDir(const char *dir)
 {
+    if(IsDirectory(dir))
+        return true;
 	bool result;
 # ifdef _WIN32
 	result = ::CreateDirectory(dir,NULL);
@@ -277,18 +283,22 @@ bool CreateDir(const char *dir)
 
 bool CreateDirRec(const char *dir)
 {
+    if(IsDirectory(dir))
+        return true;
     bool result = true;
     std::list<std::string> li;
     StrSplit(dir, "/\\", li, false);
     std::string d;
     d.reserve(strlen(dir));
+    bool last;
     for(std::list<std::string>::iterator it = li.begin(); it != li.end(); it++)
     {
         d += *it;
-        result = CreateDir(d.c_str()) && result;
+        last = CreateDir(d.c_str());
+        result = last && result;
         d += '/';
     }
-    return result;
+    return result || last;
 }
 
 // current system time in ms
@@ -562,5 +572,176 @@ bool SetWorkingDir(std::string d)
     return !_chdir(d.c_str());
 #elif PLATFORM == PLATFORM_WIN32 || PLATFORM == PLATFORM_APPLE
     return !chdir(d.c_str());
+#endif
+}
+
+void HexStrToByteArray(uint8 *dst, const char *str)
+{
+    int l = strlen(str);
+    char a, b;
+    int hi, lo;
+    // uneven digit count? treat as if there was another '0' char in front
+    if(l & 1)
+    {
+        a = '0';
+        b = *str++;
+    }
+    l /= 2; // if uneven, this rounds down correctly
+    
+    for(int i=0; i < l; i++)
+    {
+        a = *str++;
+        b = *str++;
+
+        if(isdigit(a))            hi = a - '0';
+        else if(a>='A' && a<='F') hi = a - 'A' + 10;
+        else if(a>='a' && a<='f') hi = a - 'a' + 10;
+        else                      hi = 0;
+
+        if(isdigit(b))            lo = b - '0';
+        else if(b>='A' && b<='F') lo = b - 'A' + 10;
+        else if(b>='a' && b<='f') lo = b - 'a' + 10;
+        else                      lo = 0;
+
+        dst[i] = (hi << 4) + lo;
+    }
+}
+
+std::string FixMultiSlashes(const std::string& s)
+{
+    std::string r;
+    r.reserve(s.length() + 1);
+    char last = 0, cur;
+    for(uint32 i = 0; i < s.length(); ++i)
+    {
+        cur = s[i];
+        if(last == '/' && cur == '/')
+            continue;
+        r += cur;
+        last = cur;
+    }
+    return r;
+}
+
+
+bool IsDirectory(const char *s)
+{
+#if PLATFORM == PLATFORM_WIN32
+    DWORD dwFileAttr = GetFileAttributes(s);
+    if(dwFileAttr == INVALID_FILE_ATTRIBUTES)
+        return false;
+    return dwFileAttr & FILE_ATTRIBUTE_DIRECTORY;
+#else
+    if ( access( s, 0 ) == 0 )
+    {
+        struct stat status;
+        stat( s, &status );
+        return status.st_mode & S_IFDIR;
+    }
+    return false;
+#endif
+}
+
+void MakeSlashTerminated(std::string& s)
+{
+    if(s.length() && s[s.length() - 1] != '/')
+        s += '/';
+}
+
+void GetFileListRecursive(std::string dir, std::list<std::string>& files, bool withQueriedDir /* = false */)
+{
+    std::stack<std::string> stk;
+
+    if(withQueriedDir)
+    {
+        stk.push(dir);
+        while(stk.size())
+        {
+            dir = stk.top();
+            stk.pop();
+            MakeSlashTerminated(dir);
+            
+            std::deque<std::string> fl = GetFileList(dir);
+            for(std::deque<std::string>::iterator fit = fl.begin(); fit != fl.end(); ++fit)
+                files.push_back(dir + *fit);
+
+            std::deque<std::string> dirlist = GetDirList(dir, true);
+            for(std::deque<std::string>::iterator it = dirlist.begin(); it != dirlist.end(); ++it)
+                stk.push(dir + *it);
+        }
+    }
+    else
+    {
+        std::string topdir = dir;
+        MakeSlashTerminated(topdir);
+        stk.push("");
+        while(stk.size())
+        {
+            dir = stk.top();
+            stk.pop();
+            MakeSlashTerminated(dir);
+
+            std::deque<std::string> fl = GetFileList(topdir + dir);
+            for(std::deque<std::string>::iterator fit = fl.begin(); fit != fl.end(); ++fit)
+                files.push_back(dir + *fit);
+
+            std::deque<std::string> dirlist = GetDirList(topdir + dir, true);
+            for(std::deque<std::string>::iterator it = dirlist.begin(); it != dirlist.end(); ++it)
+                stk.push(dir + *it);
+        }
+    }
+}
+
+// from http://board.byuu.org/viewtopic.php?f=10&t=1089&start=15
+bool WildcardMatch(const char *str, const char *pattern)
+{
+    const char *cp = 0, *mp = 0;
+    while(*str && *pattern != '*')
+    {
+        if(*pattern != *str && *pattern != '?')
+            return false;
+        pattern++, str++;
+    }
+
+    while(*str)
+    {
+        if(*pattern == '*')
+        {
+            if(!*++pattern)
+                return 1;
+            mp = pattern;
+            cp = str + 1;
+        }
+        else if(*pattern == *str || *pattern == '?')
+        {
+            ++pattern;
+            ++str;
+        }
+        else
+        {
+            pattern = mp;
+            str = cp++;
+        }
+    }
+
+    while(*pattern++ == '*');
+
+    return !*pattern;
+}
+
+uint32 GetConsoleWidth(void)
+{
+#if PLATFORM == PLATFORM_WIN32
+    HANDLE hOut;
+    CONSOLE_SCREEN_BUFFER_INFO SBInfo;
+    hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+    GetConsoleScreenBufferInfo(hOut,
+        &SBInfo);
+    return SBInfo.dwSize.X;
+#else
+    struct winsize ws;
+    if (ioctl(0,TIOCGWINSZ,&ws))
+        return 80; // the standard, because we don't know any better
+    return ws.ws_col;
 #endif
 }
