@@ -70,12 +70,12 @@ class ByteBuffer
 
         template <typename T> void append(T value)
         {
-            EndianConvert(value);
+            ToLittleEndian(value);
             append((uint8 *)&value, sizeof(value));
         }
         template <typename T> void put(size_t pos,T value)
         {
-            EndianConvert(value);
+            ToLittleEndian(value);
             put(pos,(uint8 *)&value,sizeof(value));
         }
 
@@ -213,7 +213,7 @@ class ByteBuffer
             if(pos + sizeof(T) > size())
                 throw ByteBufferException("read", pos, _wpos, sizeof(T), size());
             T val = *((T const*)&_storage[pos]);
-            EndianConvert(val);
+            ToLittleEndian(val);
             return val;
         }
 

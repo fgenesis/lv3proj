@@ -47,19 +47,19 @@ namespace ByteConverter
 }
 
 #if IS_BIG_ENDIAN
-template<typename T> inline void EndianConvert(T& val) { ByteConverter::apply<T>(&val); }
-template<typename T> inline void EndianConvertReverse(T&) { }
+template<typename T> inline void ToLittleEndian(T& val) { ByteConverter::apply<T>(&val); }
+template<typename T> inline void ToBigEndian(T&) { }
 #else
-template<typename T> inline void EndianConvert(T&) { }
-template<typename T> inline void EndianConvertReverse(T& val) { ByteConverter::apply<T>(&val); }
+template<typename T> inline void ToLittleEndian(T&) { }
+template<typename T> inline void ToBigEndian(T& val) { ByteConverter::apply<T>(&val); }
 #endif
 
-template<typename T> void EndianConvert(T*);         // will generate link error
-template<typename T> void EndianConvertReverse(T*);  // will generate link error
+template<typename T> void ToLittleEndian(T*);   // will generate link error
+template<typename T> void ToBigEndian(T*);      // will generate link error
 
-inline void EndianConvert(uint8&) { }
-inline void EndianConvert(int8&)  { }
-inline void EndianConvertReverse(uint8&) { }
-inline void EndianConvertReverse( int8&) { }
+inline void ToLittleEndian(uint8&) { }
+inline void ToLittleEndian(int8&)  { }
+inline void ToBigEndian(uint8&) { }
+inline void ToBigEndian( int8&) { }
 
 #endif
