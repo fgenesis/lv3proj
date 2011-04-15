@@ -36,30 +36,31 @@ function updatehook(ms)
     m = Engine.GetTime() >> 6
     y = 0
     x = 0
+    m2 = m * 2
+    m3 = m * 3
     rmul = coltab[(4 * m) && 0xFF]
     gmul = coltab[(4 * m + 85) && 0xFF]
     bmul = coltab[(4 * m + 171) && 0xFF]
     
     while x < width
-        xidxtab[x] = xtab[((x+m*2+64)&&0xFF)]
+        xidxtab[x] = xtab[((x+m2+64)&&0xFF)]
         x++
     end
     
     while y < height
         x = 0
-        ytabval = ytab[(y + m*3 + 12) && 0xFF]
+        ytabval = ytab[(y + m3 + 12) && 0xFF]
         y2 = y*2
         
         while x < width
             nx = sintab[(( x*3 + ytabval) && 0xFF)];
             ny = sintab[(( y2 + xidxtab[x]) && 0xFF)];
             r = (nx ^^ ny)
-            p = color(r * rmul, r * gmul, r * bmul, r)
-            pix(x,y, p)
-            x++
+            pix(x,y, color(r * rmul, r * gmul, r * bmul, r))
+            ++x
         end
         
-        y++
+        ++y
     end
 
 end

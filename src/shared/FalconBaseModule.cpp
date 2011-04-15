@@ -627,14 +627,14 @@ FALCON_FUNC fal_Surface_BlitTo( Falcon::VMachine *vm )
             .extra("Object is not a surface") );
     }
     fal_Surface *srcCarrier = Falcon::dyncast<fal_Surface*>(vm->self().asObject());
-    fal_Surface *dstCarrier = Falcon::dyncast<fal_Surface*>(vm->self().asObject());
+    fal_Surface *dstCarrier = Falcon::dyncast<fal_Surface*>(vm->param(0)->asObject());
     SDL_Surface *src = srcCarrier->surface;
     SDL_Surface *dst = dstCarrier->surface;
 
     Falcon::Item *i_srcrect = vm->param(1);
     Falcon::Item *i_dstrect = vm->param(2);
     Falcon::Item *i_rawblit = vm->param(3);
-    bool rawblit = i_rawblit && i_rawblit->asBoolean();
+    bool rawblit = i_rawblit && i_rawblit->isTrue();
 
     Falcon::CoreArray *a_srcrect = NULL;
     Falcon::CoreArray *a_dstrect = NULL;
