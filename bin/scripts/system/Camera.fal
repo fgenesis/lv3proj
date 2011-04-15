@@ -165,7 +165,9 @@ class CameraObject from Object
     function _Activate()
         global _activeCam, _focus
         _activeCam = self
-        _focus.update = true
+        if not IsEditor()
+            _focus.update = true
+        end
     end
     
     function Focus() // TODO: add params for pan speed and etc

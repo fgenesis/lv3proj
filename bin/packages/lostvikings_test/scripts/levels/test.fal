@@ -42,18 +42,15 @@ olaf.canDebugJump = true
 cam = CameraObject()
 cam.Focus()
 
-if not IsEditor()
-    f = function()
-        p = PlayerController.GetActivePlayer(1)
-        if p
-            cam.x = p.x
-            cam.y = p.y
-        end
+f = function()
+    p = PlayerController.GetActivePlayer(1)
+    if p
+        cam.x = p.x
+        cam.y = p.y
     end
-    f()
-    
-    RegisterUpdateHook(f) // lock camera to olaf
 end
+f()
+RegisterUpdateHook(f) // lock camera to olaf
         
 img = ImageObject("sprites/lv3logo.png")
 CallScheduler.Schedule(img.remove, 4000)

@@ -212,17 +212,15 @@ class Demolevel
         cam.Focus()
         Camera.SetFocusPoint(olaf.x, olaf.y)
         
-        if not IsEditor()
-            f = function()
-                p = PlayerController.GetActivePlayer(1)
-                if p
-                    cam.x = p.x
-                    cam.y = p.y
-                end
+        f = function()
+            p = PlayerController.GetActivePlayer(1)
+            if p
+                cam.x = p.x
+                cam.y = p.y
             end
-            f()
-            RegisterUpdateHook(f) // lock camera to olaf
         end
+        f()
+        RegisterUpdateHook(f) // lock camera to olaf
     end
     
     function CreateObjects()
