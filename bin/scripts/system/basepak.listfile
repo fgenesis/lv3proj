@@ -1,4 +1,5 @@
 -p scripts/system -s CallScheduler.fal
+-p scripts/system -s Camera.fal
 -p scripts/system -s DebugFunctions.fal
 -p scripts/system -s DefaultJoystickBindings.fal
 -p scripts/system -s DefaultKeyBindings.fal

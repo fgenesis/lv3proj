@@ -31,12 +31,29 @@ olaf.SetLayerId(4)
 olaf.SetPos(72,48)
 olaf.canDebugJump = true
 
-/*if not IsEditor()
-    cv = { => CenterView(olaf) }
-    // should olaf get killed, stop centering view
-    HookClassMethod(olaf, "remove", { => UnregisterUpdateHook(cv) } )
-    RegisterUpdateHook(cv) // defined in package.fal
-end*/
+Camera.SetFocusPoint(olaf.x, olaf.y)
+
+// another one for more testing
+olaf = Olaf()
+olaf.SetLayerId(4)
+olaf.SetPos(180,305)
+olaf.canDebugJump = true
+
+cam = CameraObject()
+cam.Focus()
+
+if not IsEditor()
+    f = function()
+        p = PlayerController.GetActivePlayer(1)
+        if p
+            cam.x = p.x
+            cam.y = p.y
+        end
+    end
+    f()
+    
+    RegisterUpdateHook(f) // lock camera to olaf
+end
         
 img = ImageObject("sprites/lv3logo.png")
 CallScheduler.Schedule(img.remove, 4000)

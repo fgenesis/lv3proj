@@ -25,6 +25,8 @@ class EngineSettingsMenu from SinusMenu
 
     _music = []
     _musicPos = 0
+    _cameraFocusTypes = ["InstantFocus", "EightWayFocus", "SmoothFocus"]
+    _cameraPos = 0
     
     function Setup()
         self.Add( { => }, "Music volume" )
@@ -32,8 +34,11 @@ class EngineSettingsMenu from SinusMenu
         self.Add( [self.UpdateMusic, 1], "Menu music" )
         self.Add( OpenJoystickTest, "Joystick Test" )
         self.Add( ToggleDebugOverlay, "Toggle debug overlay" )
+        self.Add( [self.CycleCameraFocus, 1], "Camera focus type" )
         self.Add( self.OnGoBack, "Back" )
         self.LoadMusic()
+        
+        self._cameraPos = self._cameraFocusTypes.find(EngineConfig.CameraFocusType)
     end
     
     function LoadMusic()
@@ -55,6 +60,7 @@ class EngineSettingsMenu from SinusMenu
         self.Text(0, "Music Volume [" + EngineConfig.musicVolume + "]")
         self.Text(1, "Sound Volume [" + EngineConfig.soundVolume + "]")
         self.Text(2, "Menu Music [" + EngineConfig.menuMusic + "]")
+        self.Text(5, "Camera focus type [" + EngineConfig["CameraFocusType"] + "]")
     end
     
     function UpdateMusic(dir, forceStart)
@@ -68,6 +74,16 @@ class EngineSettingsMenu from SinusMenu
         if (m != oldm) or forceStart
             Music.Play(m)
         end
+    end
+    
+    function CycleCameraFocus(dir)
+        count = len(self._cameraFocusTypes)
+        if not count: return
+        self._cameraPos = climit(self._cameraPos + dir, 0, count - 1)
+        c = self._cameraFocusTypes[self._cameraPos]
+        
+        EngineConfig["CameraFocusType"] = c
+        Camera.SetType(c)
     end
     
     function OnKeyLeft(): self.HandleLR(true)
@@ -85,6 +101,9 @@ class EngineSettingsMenu from SinusMenu
                 
             case 2
                 self.UpdateMusic(L ? -1 : 1)
+                
+            case 5
+                self.CycleCameraFocus(L ? -1 : 1)
                 
             default
                 done = false

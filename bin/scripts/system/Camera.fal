@@ -1,0 +1,197 @@
+
+_focus = nil
+_activeCam = nil // _focus is following this
+
+function _CenterScreen(x, y)
+    Screen.SetCamera(x - (Screen.GetWidth() >> 1), y - (Screen.GetHeight() >> 1))
+end
+
+
+// wrapper singleton
+class Camera
+
+    init
+        raise "Camera: This class is a singleton and should not be instanced"
+    end
+    
+    function SetType(fo)
+        global _focus
+        select fo
+            case FocusObjectBase
+                _focus.remove()
+                _focus = fo
+                return
+                
+            case ClassType
+                self.SetType(fo())
+                return
+                
+            case StringType
+                try
+                    self.SetType(#fo)
+                    return
+                end
+        end
+        raise "Camera::SetType(): Invalid/unknown focus type: " + fo
+    end
+    
+    function StopFocus()
+        global _activeCam
+        _focus.update = false
+        _activeCam = nil
+    end
+    
+    function GetActiveCamera()
+        global _activeCam
+        return _activeCam
+    end
+    
+    function SetFocusPoint(x, y)
+        global _focus
+        _focus.x = x
+        _focus.y = y
+    end
+
+end
+
+class FocusObjectBase from Object
+
+    speed = nil
+    maxspeed = nil
+    
+    init
+        self.update = false
+        self.collision = false
+        self.SetAffectedByPhysics(false) // we do physics manually for now
+    end
+end
+
+class InstantFocus from FocusObjectBase
+    function OnUpdate()
+        global _activeCam
+        if _activeCam: _CenterScreen(_activeCam.x, _activeCam.y)
+    end
+end
+
+class EightWayFocus from FocusObjectBase
+    maxspeed = 300.0
+    
+    function OnUpdate()
+        global _activeCam
+        if not _activeCam: return
+        
+        s = self.maxspeed * Engine.GetFloatTimeDiff()
+        
+        if self.x < _activeCam.x
+            self.x += s
+            if self.x > _activeCam.x
+                self.x = _activeCam.x
+            end
+        else
+            self.x -= s
+            if self.x < _activeCam.x
+                self.x = _activeCam.x
+            end
+        end
+        
+        if self.y < _activeCam.y
+            self.y += s
+            if self.y > _activeCam.y
+                self.y = _activeCam.y
+            end
+        else
+            self.y -= s
+            if self.y < _activeCam.y
+                self.y = _activeCam.y
+            end
+        end
+        
+        _CenterScreen(self.x, self.y)
+    end
+end
+
+class SmoothFocus from FocusObjectBase
+    
+    _xs = nil
+    _ys = nil
+    
+    speed = 3.0
+    maxspeed = 250.0
+    
+    function OnUpdate()
+        global _activeCam
+        if not _activeCam: return
+        
+        dt = Engine.GetFloatTimeDiff()
+        xd = self.GetDistanceX(_activeCam)
+        yd = self.GetDistanceY(_activeCam)
+        mx = self.maxspeed
+        
+        if xd > mx
+            xd = mx
+        end
+            
+        if yd > mx
+            yd = mx
+        end
+        
+        if self.x < _activeCam.x
+            self._xs = xd
+        else
+            self._xs = -xd
+        end
+        
+        if self.y < _activeCam.y
+            self._ys = yd
+        else
+            self._ys = -yd
+        end
+        
+        self.x += dt * self._xs * self.speed
+        self.y += dt * self._ys * self.speed
+        
+        _CenterScreen(self.x, self.y)
+    end
+end
+
+
+class CameraObject from Object
+    
+    init
+        self.update = false
+        self.collision = false
+    end
+    
+    function _Activate()
+        global _activeCam, _focus
+        _activeCam = self
+        _focus.update = true
+    end
+    
+    function Focus() // TODO: add params for pan speed and etc
+        self._Activate()
+    end
+end
+
+
+// initial code -- camera setup
+// TODO: remove related code from settings menu later
+cft = EngineConfig.get("CameraFocusType")
+if not cft
+    cft = "InstantFocus"
+    EngineConfig["CameraFocusType"] = cft
+end
+
+try
+    _focus = (#cft)()
+catch in err
+    > "ERROR inititalizing camera focus type: ", cft
+    > err
+    cft = "InstantFocus"
+    Camera.SetFocusType(cft)
+    EngineConfig["CameraFocusType"] = cft
+end
+
+
+export CameraObject, Camera
+export FocusObjectBase, InstantFocus, EightWayFocus, SmoothFocus

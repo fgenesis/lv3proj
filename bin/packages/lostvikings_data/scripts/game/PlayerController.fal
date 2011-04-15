@@ -10,7 +10,7 @@ class PlayerController
     static _activeChar = nil // index: human player number, value: currently controlled player or nil
     
     init
-        raise "This class is a singleton and should not be instanced"
+        raise "PlayerController: This class is a singleton and should not be instanced"
     end
     
     function Init()
@@ -124,7 +124,10 @@ class PlayerController
                 if(who): who.OnInput(inp)
         end
     end
-        
+    
+    function GetActivePlayer(pl)
+        return self._activeChar.get(pl)
+    end
 end
 
 function HookPlayerEx(p)
