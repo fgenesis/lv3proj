@@ -18,6 +18,7 @@ public:
 
 protected:
     virtual void _LoadModules(void);
+    void _LinkModule(Falcon::Module *m);
 
     std::string _modulePath;
     Falcon::ModuleLoader mloader;

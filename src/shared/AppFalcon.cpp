@@ -47,14 +47,20 @@ void AppFalcon::DeleteVM(void)
     }
 }
 
+void AppFalcon::_LinkModule(Falcon::Module *m)
+{
+    vm->link(m);
+    m->decref();
+}
+
 void AppFalcon::_LoadModules(void)
 {
-    vm->link( Falcon::core_module_init() );  // add the core module
-    vm->link( falcon_compiler_module_init() );
-    vm->link( falcon_confparser_module_init() );
-    vm->link( bufext_module_init() );
-    vm->link( FalconBaseModule_create() );
-    vm->link( FalconObjectModule_create() );
+    _LinkModule( Falcon::core_module_init() );  // add the core module
+    _LinkModule( falcon_compiler_module_init() );
+    _LinkModule( falcon_confparser_module_init() );
+    _LinkModule( bufext_module_init() );
+    _LinkModule( FalconBaseModule_create() );
+    _LinkModule( FalconObjectModule_create() );
 }
 
 bool AppFalcon::EmbedStringAsModule(char *str, char *modName, bool throw_ /* = false */,
@@ -70,11 +76,14 @@ bool AppFalcon::EmbedStringAsModule(char *str, char *modName, bool throw_ /* = f
 
     Falcon::Module *m = NULL;
 
+    bool success = true;
+
     try
     {
         m = mloader.loadSource( &trans, modName, modName );
 
         rt.addModule(m);
+        m->decref(); // we can abandon our reference to the script module
         Falcon::LiveModule *livemod = vm->link(&rt);
         if(launch)
         {
@@ -101,8 +110,10 @@ bool AppFalcon::EmbedStringAsModule(char *str, char *modName, bool throw_ /* = f
         Falcon::AutoCString edesc( err->toString() );
         logerror("AppFalcon::EmbedStringAsModule(%s): %s", modName, edesc.c_str());
         err->decref();
-        return false;
+        success = false;
     }
 
-    return true;
+    mloader.compiler().reset();
+
+    return success;
 }

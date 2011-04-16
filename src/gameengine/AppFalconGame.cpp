@@ -11,5 +11,5 @@ AppFalconGame::AppFalconGame() : AppFalcon()
 void AppFalconGame::_LoadModules(void)
 {
     AppFalcon::_LoadModules();
-    vm->link(FalconGameModule_create());
+    _LinkModule(FalconGameModule_create());
 }

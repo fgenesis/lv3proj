@@ -11,5 +11,5 @@ AppFalconEditor::AppFalconEditor() : AppFalconGame()
 void AppFalconEditor::_LoadModules(void)
 {
     AppFalconGame::_LoadModules();
-    vm->link(FalconEditorModule_create());
+    _LinkModule(FalconEditorModule_create());
 }
