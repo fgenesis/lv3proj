@@ -60,10 +60,13 @@ _fpsMin(60), _fpsMax(70), falcon(NULL), _mouseX(0), _mouseY(0)
 
 Engine::~Engine()
 {
-    for(uint32 i = 0; i < s_joysticks.size(); ++i)
-        if(s_joysticks[i] && SDL_JoystickOpened(SDL_JoystickIndex(s_joysticks[i]))) // this is maybe a bit overcomplicated, but safe at least
-            SDL_JoystickClose(s_joysticks[i]);
+}
 
+void Engine::Shutdown(void)
+{
+    // this should not be called from inside Engine::Run()
+
+    sndCore.StopMusic();
     delete objmgr;
     delete physmgr;
     delete _layermgr;
@@ -72,11 +75,13 @@ Engine::~Engine()
     sndCore.Destroy(); // must be deleted after all sounds were dropped by the ResourceMgr
     if(_screen)
         SDL_FreeSurface(_screen);
-}
+    
+    for(uint32 i = 0; i < s_joysticks.size(); ++i)
+        if(s_joysticks[i] && SDL_JoystickOpened(SDL_JoystickIndex(s_joysticks[i]))) // this is maybe a bit overcomplicated, but safe at least
+            SDL_JoystickClose(s_joysticks[i]);
 
-void Engine::Shutdown(void)
-{
-    // this should not be called from inside Engine::Run()
+    // be sure we did a clean shutdown
+    resMgr.DbgCheckEmpty();
 }
 
 void Engine::_OnSignal(int s)

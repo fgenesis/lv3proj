@@ -14,12 +14,18 @@
 // internally referenced files get this postfix to make the file ref map happy
 #define FILENAME_TMP_INDIC "|tmp"
 
+static uint8 g_emptyData[] = {0, 0, 0, 0}; // this is never freed. must be >= 4 bytes.
+
 ResourceMgr::ResourceMgr()
 : _usedMem(0)
 {
 }
 
 ResourceMgr::~ResourceMgr()
+{
+}
+
+void ResourceMgr::DbgCheckEmpty(void)
 {
     for(FileRefMap::iterator it = _frmap.begin(); it != _frmap.end(); ++it)
     {
@@ -28,6 +34,11 @@ ResourceMgr::~ResourceMgr()
     for(PtrCountMap::iterator it = _ptrmap.begin(); it != _ptrmap.end(); ++it)
     {
         DEBUG(logerror("ResourceMgr: Ptr not unloaded: "PTRFMT" count %u", it->first, it->second.count));
+    }
+
+    if(*((uint32*)&g_emptyData[0])) // its exactly 4 bytes wide
+    {
+        logerror("ResourceMgr: MEMORY CORRUPTION DETECTED! [%X]", *((uint32*)&g_emptyData[0])); // can this happen? i think not.
     }
 }
 
@@ -80,13 +91,13 @@ void ResourceMgr::_unaccountMem(uint32 bytes)
     //_memMutex.unlock();
 }
 
-void ResourceMgr::_InitRef(void *ptr, ResourceType rt, void *depdata /* = NULL */)
+void ResourceMgr::_InitRef(void *ptr, ResourceType rt, void *depdata /* = NULL */, SDL_RWops *rwop /* = NULL */)
 {
     DEBUG(ASSERT(ptr != NULL));
     if(!ptr)
         return;
 
-    _ptrmap[ptr] = ResStruct(rt, depdata);
+    _ptrmap[ptr] = ResStruct(rt, depdata, rwop);
 }
 
 void ResourceMgr::_IncRef(void *ptr)
@@ -156,7 +167,8 @@ void ResourceMgr::_Delete(void *ptr, ResStruct& res)
             DEBUG(logdebug("ResourceMgr:: Deleting memblock "PTRFMT" with ptr "PTRFMT", size %u",
                 ptr, mblock->ptr, mblock->size));
             _unaccountMem(mblock->size);
-            delete [] mblock->ptr; // the memblock ptr stores an array!
+            if(mblock->ptr != &g_emptyData[0])
+                delete [] mblock->ptr; // the memblock ptr stores an array! (special exception if it held an empty string or other empty data)
             delete mblock;
             break;
         }
@@ -190,6 +202,10 @@ void ResourceMgr::_Delete(void *ptr, ResStruct& res)
     // if there is another resource the now deleted resource depends on, decref that
     if(res.depdata)
         Drop(res.depdata);
+
+    // same for SDL RWops still used to access the data (Mix_LoadMUS_RW() does that)
+    if(res.rwop)
+        SDL_RWclose(res.rwop);
 }
 
 SDL_Surface *ResourceMgr::LoadImg(const char *name)
@@ -212,6 +228,7 @@ SDL_Surface *ResourceMgr::LoadImg(const char *name)
     else
     {
         VFSFile *vf = NULL;
+        SDL_RWops *rwop = NULL;
 
         // we got additional properties
         if(fn != origfn)
@@ -269,9 +286,10 @@ SDL_Surface *ResourceMgr::LoadImg(const char *name)
             vf = vfs.GetFile(fn.c_str());
             if(vf && vf->size())
             {
-                SDL_RWops *rwop = SDL_RWFromMem((void*)vf->getBuf(), vf->size());
-                img = IMG_Load_RW(rwop, 1); // auto-free RWops
-                vf->dropBuf(false); // orphan original buf, SDL will take care of the deletion
+                rwop = SDL_RWFromMem((void*)vf->getBuf(), vf->size());
+                img = IMG_Load_RW(rwop, 0);
+                SDL_RWclose(rwop);
+                vf->dropBuf(true); // delete original buf -- even if it could not load an image from it - its useless to keep this memory
             }
         }
         if(!img)
@@ -321,7 +339,7 @@ Anim *ResourceMgr::LoadAnim(const char *name)
         }
 
         ani = ParseAnimData((char*)mb->ptr, (char*)fn.c_str());
-        Drop(mb);
+        Drop(mb); // text data are no longer needed
 
         if(!ani)
         {
@@ -367,22 +385,27 @@ Mix_Music *ResourceMgr::LoadMusic(const char *name)
     else
     {
         memblock *mb = _LoadFileInternal(fn.c_str(), true);
+        SDL_RWops *rwop = NULL;
         if(mb && mb->size)
         {
-            SDL_RWops *rwop = SDL_RWFromConstMem((const void*)mb->ptr, mb->size);
+            rwop = SDL_RWFromConstMem((const void*)mb->ptr, mb->size);
             music = Mix_LoadMUS_RW(rwop);
+            // We can NOT free the RWop here, it is still used by SDL_Mixer to access the music data.
+            // Instead, is is saved with the other pointers and freed along with the music later.
         }
 
         if(!music)
         {
             logerror("LoadMusic failed: '%s'", fn.c_str());
+            SDL_RWclose(rwop);
+            Drop(mb); // unable to create music, but data are still in memory
             return NULL;
         }
         
         logdebug("LoadMusic: '%s' [%s]" , name, vfs.GetFile(fn.c_str())->getSource());
 
         _SetPtr(fn, (void*)music);
-        _InitRef((void*)music, RESTYPE_MIX_MUSIC, mb); // note that this music depends on mb
+        _InitRef((void*)music, RESTYPE_MIX_MUSIC, mb, rwop); // note that this music depends on mb and the rwop, save for later deletion
     }
 
     return music;
@@ -401,11 +424,13 @@ Mix_Chunk *ResourceMgr::LoadSound(const char *name)
     else
     {
         VFSFile *vf = vfs.GetFile(fn.c_str());
+        SDL_RWops *rwop = NULL;
         if(vf)
         {
-            SDL_RWops *rwop = SDL_RWFromMem((void*)vf->getBuf(), vf->size());
-            sound = Mix_LoadWAV_RW(rwop, 1);
-            vf->dropBuf(false); // orphan original buf, SDL will take care of the deletion
+            rwop = SDL_RWFromMem((void*)vf->getBuf(), vf->size());
+            sound = Mix_LoadWAV_RW(rwop, 0);
+            vf->dropBuf(true);
+            SDL_RWclose(rwop);
         }
 
         if(!sound)
@@ -468,6 +493,10 @@ memblock *ResourceMgr::_LoadFileInternal(const char *name, bool isTmp)
                     vf->read((char*)mb->ptr, size);
                     vf->seek(pos);
                 }
+                else
+                {
+                    mb = new memblock(&g_emptyData[0], 0);
+                }
             }
         }
 
@@ -511,8 +540,12 @@ memblock *ResourceMgr::_LoadTextFileInternal(const char *name, bool isTmp)
             if(vf->isopen())
                 vf->close();
             uint32 size = vf->size();
-
-            if(size && vf->open(NULL, "r"))
+            
+            if(!size)
+            {
+                mb = new memblock(&g_emptyData[0], 0);
+            }
+            else if(vf->open(NULL, "r"))
             {
                 mb = new memblock(new uint8[size + 4], size); // extra padding
                 uint8 *writeptr = mb->ptr;

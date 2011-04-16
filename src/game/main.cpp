@@ -13,7 +13,7 @@ int main(int argc, char **argv)
     
     GameEngine::PrintSystemSpecs();
 
-    SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO | SDL_INIT_JOYSTICK | SDL_INIT_TIMER);
+    SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO | SDL_INIT_JOYSTICK);
     SDL_EnableUNICODE(1);
 
     atexit(log_close);
@@ -27,7 +27,12 @@ int main(int argc, char **argv)
     engine.HookSignals();
     engine.InitScreen(320,240,0,SDL_RESIZABLE);
     engine.SetTitle("LV3p Engine");
-    engine.Setup();
+    if(!engine.Setup())
+    {
+        logerror("Failed to setup game engine. Exiting.");
+        engine.UnhookSignals();
+        return 1;
+    }
     engine.Run();
     engine.UnhookSignals();
     engine.Shutdown();

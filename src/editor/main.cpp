@@ -39,7 +39,7 @@ int main(int argc, char *argv[])
             return 1;
         }
         editor.Run();
-        editor.UnhookSignals();
+        
     }
     catch(gcn::Exception ex)
     {
@@ -48,12 +48,10 @@ int main(int argc, char *argv[])
         logerror("File: %s:%u", ex.getFilename().c_str(), ex.getLine());
         logerror("Function: %s", ex.getFunction().c_str());
         logerror("Message: %s", ex.getMessage().c_str());
-        getchar();
     }
-    /*catch(...)
-    {
-        logerror("Unhandled unknown Exception");
-        getchar();
-    }*/
+
+    editor.UnhookSignals();
+    editor.Shutdown();
+
     return 0;
 }

@@ -49,6 +49,7 @@ protected:
 public:
     EditorEngine();
     virtual ~EditorEngine();
+    virtual void Shutdown(void);
 
     inline static EditorEngine *GetInstance(void) { return (EditorEngine*)Engine::GetInstance(); }
 

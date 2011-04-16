@@ -64,8 +64,12 @@ EditorEngine::EditorEngine()
 
 EditorEngine::~EditorEngine()
 {
+}
+
+void EditorEngine::Shutdown(void)
+{
     SaveData();
-    
+
     // delete all widgets from the top widget
     while(_topWidget->mWidgets.size())
     {
@@ -82,6 +86,8 @@ EditorEngine::~EditorEngine()
     delete _gcnGfx;
     delete _gcnInput;
     delete _gcnGui;
+
+    GameEngine::Shutdown();
 }
 
 void EditorEngine::_Reset(void)

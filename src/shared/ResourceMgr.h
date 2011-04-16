@@ -29,10 +29,11 @@ class ResourceMgr
     struct ResStruct
     {
         ResStruct() : rt(RESTYPE_MEMBLOCK), count(1), depdata(NULL) {}
-        ResStruct(ResourceType r, void *dep = NULL) : rt(r), count(1), depdata(dep) {}
+        ResStruct(ResourceType r, void *dep = NULL, SDL_RWops *rw = NULL) : rt(r), count(1), depdata(dep), rwop(rw) {}
         volatile Falcon::int32 count;
         ResourceType rt;
         void *depdata;
+        SDL_RWops *rwop;
     };
 
     typedef std::map<void*, ResStruct> PtrCountMap;
@@ -41,6 +42,7 @@ class ResourceMgr
 public:
     ResourceMgr();
     ~ResourceMgr();
+    void DbgCheckEmpty(void);
 
     template <class T> inline void Drop(T *ptr, bool del = false) { _DecRef((void*)ptr, del); }
     void DropUnused(void);
@@ -73,7 +75,7 @@ private:
     {
         _frmap[fn] = ptr;
     }
-    void _InitRef(void *ptr, ResourceType rt, void *depdata = NULL);
+    void _InitRef(void *ptr, ResourceType rt, void *depdata = NULL, SDL_RWops *rwop = NULL);
     void _IncRef(void *ptr);
     void _DecRef(void *ptr, bool del = false);
     void _Delete(void *ptr, ResStruct& rt);
