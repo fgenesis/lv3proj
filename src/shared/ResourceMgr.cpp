@@ -287,8 +287,11 @@ SDL_Surface *ResourceMgr::LoadImg(const char *name)
             if(vf && vf->size())
             {
                 rwop = SDL_RWFromMem((void*)vf->getBuf(), vf->size());
-                img = IMG_Load_RW(rwop, 0);
-                SDL_RWclose(rwop);
+                if(rwop)
+                {
+                    img = IMG_Load_RW(rwop, 0);
+                    SDL_RWclose(rwop);
+                }
                 vf->dropBuf(true); // delete original buf -- even if it could not load an image from it - its useless to keep this memory
             }
         }
@@ -397,7 +400,8 @@ Mix_Music *ResourceMgr::LoadMusic(const char *name)
         if(!music)
         {
             logerror("LoadMusic failed: '%s'", fn.c_str());
-            SDL_RWclose(rwop);
+            if(rwop)
+                SDL_RWclose(rwop);
             Drop(mb); // unable to create music, but data are still in memory
             return NULL;
         }
@@ -428,9 +432,12 @@ Mix_Chunk *ResourceMgr::LoadSound(const char *name)
         if(vf)
         {
             rwop = SDL_RWFromMem((void*)vf->getBuf(), vf->size());
-            sound = Mix_LoadWAV_RW(rwop, 0);
+            if(rwop)
+            {
+                sound = Mix_LoadWAV_RW(rwop, 0);
+                SDL_RWclose(rwop);
+            }
             vf->dropBuf(true);
-            SDL_RWclose(rwop);
         }
 
         if(!sound)
