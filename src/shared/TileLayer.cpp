@@ -7,7 +7,7 @@
 
 TileLayer::TileLayer()
 : used(false), collision(false), visible(false), xoffs(0), yoffs(0), camera(NULL), target(NULL),
-visible_area(NULL), mgr(NULL)
+visible_area(NULL), mgr(NULL), parallaxMulti(1.0f)
 {
 }
 
@@ -112,6 +112,13 @@ void TileLayer::Render(void)
 
     if(camera)
     {
+        int32 xp = 0;
+        int32 yp = 0;
+        camera->TranslatePoints(xp, yp);
+        xp = int32(parallaxMulti * xp);
+        yp = int32(parallaxMulti * yp);
+        xp += xoffs;
+        yp += yoffs;
         for(uint32 y = blockrect.y; y < blockrect.h; ++y)
             for(uint32 x = blockrect.x; x < blockrect.w; ++x)
             {
@@ -119,8 +126,8 @@ void TileLayer::Render(void)
                 if(!tile)
                     continue;
 
-                rect.x = (x << 4) + xoffs - camera->x; // x * 16
-                rect.y = (y << 4) + yoffs - camera->y; // y * 16
+                rect.x = (x << 4) + xp; // x * 16
+                rect.y = (y << 4) + yp; // y * 16
 
                 SDL_BlitSurface(tile->GetSurface(), NULL, target, &rect);
             }

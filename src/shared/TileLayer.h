@@ -33,14 +33,15 @@ public:
     void Resize(uint32 dim); // do not use this for layers stored in the LayerMgr!
     void CopyTo(uint32 startx, uint32 starty, TileLayer *dest, uint32 destx, uint32 desty, uint32 w, uint32 h);
 
-    bool visible;
-    bool collision; // do collision checking against this layer for non-transparent areas
+    std::string name;
     SDL_Rect *visible_area; // what to render - Engine::GetVisibleBlockRect()
     const Camera *camera;
     SDL_Surface *target; // where to render to - should be set to Engine::GetSurface(). set visible=false if this is NULL!
     int32 xoffs;
     int32 yoffs;
-    std::string name;
+    float parallaxMulti;
+    bool visible;
+    bool collision; // do collision checking against this layer for non-transparent areas
 
 protected:
     array2d<BasicTile*> tilearray;

@@ -847,6 +847,19 @@ FALCON_FUNC fal_TileLayer_IsCollisionEnabled(Falcon::VMachine *vm)
     vm->retval(self->GetLayer()->collision);
 }
 
+FALCON_FUNC fal_TileLayer_SetParallaxMulti(Falcon::VMachine *vm)
+{
+    FALCON_REQUIRE_PARAMS_EXTRA(1, "N");
+    fal_TileLayer *self = Falcon::dyncast<fal_TileLayer*>( vm->self().asObject() );
+    self->GetLayer()->parallaxMulti = vm->param(0)->forceNumeric();
+}
+
+FALCON_FUNC fal_TileLayer_GetParallaxMulti(Falcon::VMachine *vm)
+{
+    fal_TileLayer *self = Falcon::dyncast<fal_TileLayer*>( vm->self().asObject() );
+    vm->retval(Falcon::numeric(self->GetLayer()->parallaxMulti));
+}
+
 FALCON_FUNC fal_Objects_GetLastId(Falcon::VMachine *vm)
 {
     vm->retval((Falcon::int64)Engine::GetInstance()->objmgr->GetLastId());
@@ -955,6 +968,8 @@ Falcon::Module *FalconObjectModule_create(void)
     m->addClassMethod(clsTileLayer, "GetArraySize", &fal_TileLayer_GetArraySize); // TODO: deprecate?
     m->addClassMethod(clsTileLayer, "SetCollisionEnabled", &fal_TileLayer_SetCollisionEnabled);
     m->addClassMethod(clsTileLayer, "IstCollisionEnabled", &fal_TileLayer_IsCollisionEnabled);
+    m->addClassMethod(clsTileLayer, "GetParallaxMulti", &fal_TileLayer_GetParallaxMulti);
+    m->addClassMethod(clsTileLayer, "SetParallaxMulti", &fal_TileLayer_SetParallaxMulti);
     m->addConstant("TILEFLAG_SOLID", (Falcon::int64)TILEFLAG_SOLID, true);
 
     Falcon::Symbol *clsTile = m->addClass("Tile", &fal_Tile::init);

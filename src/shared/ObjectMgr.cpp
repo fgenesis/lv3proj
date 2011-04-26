@@ -202,7 +202,9 @@ void ObjectMgr::HandleObjectCollision(ActiveRect *base, ActiveRect *other, uint8
 void ObjectMgr::RenderLayer(uint32 id)
 {
     SDL_Surface *esf = _engine->GetSurface();
-    Point cam = _engine->GetCamera();
+    Camera cam = _engine->GetCamera();
+    TileLayer *layer = _engine->_GetLayerMgr()->GetLayer(id);
+    float parallaxMulti = layer ? layer->parallaxMulti : 1.0f; // layer may be NULL and still have objects
     for(ObjectSet::iterator it = _renderLayers[id].begin(); it != _renderLayers[id].end(); it++)
     {
         Object *obj = *it;
@@ -211,8 +213,13 @@ void ObjectMgr::RenderLayer(uint32 id)
             if(BasicTile *sprite = obj->GetSprite())
             {
                 SDL_Rect dst;
-                dst.x = int(obj->x) + obj->gfxoffsx - cam.x;
-                dst.y = int(obj->y) + obj->gfxoffsy - cam.y;
+                dst.x = 0;
+                dst.y = 0;
+                cam.TranslatePoints(dst.x, dst.y);
+                dst.x = int(dst.x * parallaxMulti);
+                dst.y = int(dst.y * parallaxMulti);
+                dst.x += obj->x + obj->gfxoffsx;
+                dst.y += obj->y + obj->gfxoffsy;
                 dst.w = obj->w;
                 dst.h = obj->h;
                 SDL_BlitSurface(sprite->GetSurface(), NULL, esf, &dst);
