@@ -159,11 +159,13 @@
       defined (_M_AMD64) || defined (__amd64)
          // We know these are little endian.
 #        undef  LITTLE_ENDIAN
+#        undef  BIG_ENDIAN
 #        define LITTLE_ENDIAN 1
 #        define IS_LITTLE_ENDIAN 1
 #        define IS_BIG_ENDIAN 0
 #  else
          // Otherwise, we assume big endian.
+#        undef  LITTLE_ENDIAN
 #        undef  BIG_ENDIAN
 #        define BIG_ENDIAN 1
 #        define IS_LITTLE_ENDIAN 0

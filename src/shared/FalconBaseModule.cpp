@@ -832,7 +832,7 @@ FALCON_FUNC fal_Engine_LoadPropFile(Falcon::VMachine *vm)
 
 FALCON_FUNC fal_Engine_SetFileProperty(Falcon::VMachine *vm)
 {
-    FALCON_REQUIRE_PARAMS_EXTRA(1, "S filename, S propname, S value");
+    FALCON_REQUIRE_PARAMS_EXTRA(3, "S filename, S propname, S value");
     Falcon::Item *i_fn, *i_prop, *i_val;
     i_fn = vm->param(0);
     i_prop = vm->param(1);

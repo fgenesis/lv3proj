@@ -9,6 +9,7 @@ class ImageObject(sprite) from Object
         self.SetBBox(0,0,1,1)
         self.SetAffectedByPhysics(false)
         self.SetCollisionEnabled(false)
+        self.update = false
     end
     
 end
