@@ -7,8 +7,8 @@ pkg.LoadDependency("lostvikings_data")
 class LVTestLevelSelectMenu from SinusMenu
 
     function Setup()
-        self.Add( [Package.Start, [MyLoadMapScript, "test.fal"]], "Test Level" )
-        self.Add( [Package.Start, [MyLoadMapScript, "demo.fal"]], "Demo Level" )
+        self.Add( [Package.Start, [LVTestLoadMapScript, "test.fal"]], "Test Level" )
+        self.Add( [Package.Start, [LVTestLoadMapScript, "demo.fal"]], "Demo Level" )
         self.Add( self.OnGoBack, "--- Back ---" )
     end
     
@@ -24,7 +24,7 @@ class LVTestLevelSelectMenu from SinusMenu
 
 end
 
-function MyLoadMapScript(file)
+function LVTestLoadMapScript(file)
     pkg.InitScript("levels/" + file)
     pkg.LoadScripts("benchmark")
     CloseCurrentMenu()
@@ -49,3 +49,5 @@ end
 
 pkg.Start(LoadFinal)
 RegisterRawInputHook(RawKeyHandler)
+
+export LVTestLoadMapScript

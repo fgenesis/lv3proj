@@ -1,0 +1,61 @@
+
+LVTestLoadMapScript("test.fal")
+
+> "--- MAP OVERRIDE DONE ---"
+
+bg_back = ImageObject("fractal_back.anim")
+bg_front = ImageObject("fractal_front.png")
+overlay = ImageObject("clouds.png")
+
+//Screen.SetBGColor()
+
+bg_back.SetPos(-160, -120)
+bg_front.SetPos(-280, -170)
+overlay.SetPos(-800, -420)
+
+bg_back.SetLayerId(0)
+bg_front.SetLayerId(1)
+overlay.SetLayerId(31)
+
+layer0 = EngineMap.GetLayer(0)
+layer1 = EngineMap.GetLayer(1)
+layer30 = EngineMap.GetLayer(30)
+layer31 = EngineMap.GetLayer(31)
+
+layer0.SetParallaxMulti(0.3)
+layer1.SetParallaxMulti(0.6)
+layer30.SetParallaxMulti(1.2)
+layer31.SetParallaxMulti(1.6)
+
+LVMusic.Play("wacky")
+
+class Cloud from ImageObject("cloud.png")
+
+    xs = nil
+    init
+        self.x = (EngineMap.GetLayerSize() * 16) + 300 // tile size = 16
+        self.y = random(-50, Screen.GetHeight())
+        self.SetLayerId(30)
+        self.SetAffectedByPhysics(false)
+        self.xs = numeric(-random(50, 200))
+        self.update = true
+        self.collision = false
+    end
+    
+    function OnUpdate()
+        dt = Engine.GetFloatTimeDiff()
+        self.x += (self.xs * dt)
+        
+        // FIXME: need some method like IsOffscreen() that takes the camera into account
+        if(self.x < -1000)
+            self.remove()
+        end
+    end
+end
+
+function SpawnCloud()
+    Cloud()
+    CallScheduler.Schedule(fself, random(500, 2500))
+end
+
+SpawnCloud()

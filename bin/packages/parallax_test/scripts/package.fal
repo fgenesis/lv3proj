@@ -1,0 +1,12 @@
+
+pkg = Package()
+pkg.InitGame()
+pkg.LoadDependency("lostvikings_test")
+
+
+function LoadFinal()
+    pkg.LoadScript("parallax.fal")
+end
+
+
+pkg.Start(LoadFinal)

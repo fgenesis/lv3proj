@@ -1,0 +1,1 @@
+-p gfx -spng cloud.png clouds.png-p gfx -spng fractal_back.anim fractal_back1.png fractal_back2.png fractal_back3.png fractal_back4.png fractal_back5.png-p gfx -spng fractal_front.png-p gfx -s package.listfile

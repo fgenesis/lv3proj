@@ -1,0 +1,5 @@
+#include scripts/package.listfile
+#include gfx/package.listfile
+
+-s package.listfile
+package.ini
