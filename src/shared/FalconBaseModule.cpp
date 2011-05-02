@@ -512,15 +512,8 @@ FALCON_FUNC fal_VFS_AddBufAsFile( Falcon::VMachine *vm )
     Falcon::AutoCString fn(i_fn->asString());
     Falcon::MemBuf *mbuf = i_mbuf->asMemBuf();
 
-    // figure out directory from full file name
-    std::string dirname(fn.c_str());
-    uint32 pathend = dirname.find_last_of("/\\");
-    if(pathend != std::string::npos)
-        dirname = dirname.substr(0, pathend);
-
-    VFSDir *vdir = resMgr.vfs.GetDir(dirname.c_str(), true);
     VFSFileMem *vf = new VFSFileMem(fn.c_str(), mbuf->data(), mbuf->size(), true); // copy
-    vm->retval(vdir->add(vf, true));
+    vm->retval(resMgr.vfs.GetDirRoot()->addRecursive(vf, true));
     --(vf->ref);
 }
 

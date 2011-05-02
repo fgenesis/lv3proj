@@ -51,6 +51,9 @@ uint32 VFSDirLVPA::load(const char *dir /* = NULL */) // unused arg
             logerror("VFSFileLVPA::load(): Corrupt file '%s'", hdr.filename.c_str());
             continue;
         }
+        // solid blocks are no real files, and scrambled files without filename can't be read anyways, at this point
+        if(hdr.flags & LVPAFLAG_SOLIDBLOCK || (hdr.flags & LVPAFLAG_SCRAMBLED && hdr.filename.empty()))
+            continue;
 
         VFSDirLVPA *subdir = _getSubdir(hdr.filename.c_str());
         VFSFileLVPA *file = new VFSFileLVPA(_lvpa, i);

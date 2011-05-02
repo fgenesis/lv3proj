@@ -299,7 +299,7 @@ void LVPAFile::Add(const char *fn, memblock mb, const char *solidBlockName /* = 
 
     h.filename = fn;
     h.data = mb;
-    h.flags = LVPAFLAG_NONE;
+    h.flags = scramble ? LVPAFLAG_SCRAMBLED : LVPAFLAG_NONE;
     h.encryption = encrypt;
     h.algo = algo;
     h.level = level;
@@ -351,36 +351,45 @@ memblock LVPAFile::Get(uint32 index, bool checkCRC /* = true */)
     return _PrepareFile(_headers[index], checkCRC);
 }
 
-void LVPAFile::Free(const char *fn)
+bool LVPAFile::Free(const char *fn)
 {
     uint32 id;
     if(_FindHeaderByName(fn, &id))
-        Free(id);
+        return Free(id);
+    return false;
 }
 
-void LVPAFile::Free(uint32 id)
+bool LVPAFile::Free(uint32 id)
 {
     LVPAFileHeader& hdrRef = _headers[id];
     if(hdrRef.data.ptr && !hdrRef.otherMem)
     {
         delete [] hdrRef.data.ptr;
         hdrRef.data.ptr = NULL;
+        hdrRef.data.size = 0;
+        return true;
     }
-    hdrRef.data.size = 0;
+    return false;
 }
 
-void LVPAFile::Drop(const char *fn)
+bool LVPAFile::Drop(const char *fn)
 {
     uint32 id;
     if(_FindHeaderByName(fn, &id))
-        Drop(id);
+        return Drop(id);
+    return false;
 }
 
-void LVPAFile::Drop(uint32 id)
+bool LVPAFile::Drop(uint32 id)
 {
     LVPAFileHeader& hdrRef = _headers[id];
-    hdrRef.data.ptr = NULL;
-    hdrRef.data.size = 0;
+    if(hdrRef.data.ptr && !hdrRef.otherMem)
+    {
+        hdrRef.data.ptr = NULL;
+        hdrRef.data.size = 0;
+        return true;
+    }
+    return false;
 }
 
 bool LVPAFile::LoadFrom(const char *fn, LVPALoadFlags loadFlags /* = LVPALOAD_NONE */)
@@ -666,6 +675,10 @@ bool LVPAFile::SaveAs(const char *fn, uint8 compression /* = LVPA_DEFAULT_LEVEL 
                 else
                     h.flags &= ~LVPAFLAG_ENCRYPTED;
             }
+            else if(h.encryption == LVPAENCR_NONE)
+                h.flags &= ~LVPAFLAG_ENCRYPTED;
+            else
+                h.flags |= LVPAFLAG_ENCRYPTED;
         }   
     }
 
@@ -688,23 +701,28 @@ bool LVPAFile::SaveAs(const char *fn, uint8 compression /* = LVPA_DEFAULT_LEVEL 
             h.realSize = h.packedSize = h.data.size;
             _realSize += h.data.size; // for stats
             h.flags &= ~LVPAFLAG_PACKED;
-            headersCopy[h.blockId].realSize += h.realSize;
+            headersCopy[h.blockId].realSize += h.realSize + LVPA_EXTRA_BUFSIZE;
 
             // overwrite settings if not specified otherwise
             // solid blocks were done in last iteration, now adjust the remaining files
             // files in a solid block will inherit its settings
-            const LVPAFileHeader& sh = headersCopy[h.blockId];
+            LVPAFileHeader& sh = headersCopy[h.blockId];
             if(h.level == LVPACOMP_INHERIT)
                 h.level = sh.level;
             if(h.algo == LVPAPACK_INHERIT)
                 h.algo = sh.algo;
 
-            if(h.encryption == LVPAENCR_INHERIT)
+            // inherit from global settings, or just encrypt right away if set to do so
+            // in case a file inside a solid block should be encrypted, the whole solid block needs to be encrypted,
+            // so adjust its settings if necessary.
+            if(h.encryption == LVPAENCR_ENABLED || (encrypt && h.encryption == LVPAENCR_INHERIT))
             {
-                if(sh.encryption == LVPAENCR_ENABLED)
-                    h.flags |= LVPAFLAG_ENCRYPTED;
-                else
-                    h.flags &= ~LVPAFLAG_ENCRYPTED;
+                h.flags &= ~LVPAFLAG_ENCRYPTED; // remove it from this file, because the solid block gets encrypted, not this file
+                sh.flags |= LVPAFLAG_ENCRYPTED;
+            }
+            else // not encrypting this file, but do not change the solid block's settings, as there may be other encrypted files in it.
+            {
+                h.flags &= ~LVPAFLAG_ENCRYPTED;
             }
         }
     }
@@ -716,22 +734,25 @@ bool LVPAFile::SaveAs(const char *fn, uint8 compression /* = LVPA_DEFAULT_LEVEL 
     {
         const LVPAFileHeader& h = headersCopy[i];
         // that indicates we need to write the file to a buffer
-        if(h.good && h.realSize && !(h.flags & LVPAFLAG_SOLID) && ((h.flags & LVPAFLAG_SOLIDBLOCK) || h.level != LVPACOMP_NONE))
+        if(h.good && !(h.flags & LVPAFLAG_SOLID) && ((h.flags & LVPAFLAG_SOLIDBLOCK) || h.level != LVPACOMP_NONE))
         {
             // each file (or solid block) can have its own compression algo, and level
             fileBufs.v[i] = allocCompressor(h.algo);
             fileBufs.v[i]->reserve(h.realSize);
         }
     }
+    uint8 solidPadding[LVPA_EXTRA_BUFSIZE];
+    memset(&solidPadding[0], 0, LVPA_EXTRA_BUFSIZE);
     // third iteration - append solid files to their blocks
     for(uint32 i = 0; i < headersCopy.size(); ++i)
     {
         LVPAFileHeader& h = headersCopy[i];
-        if(h.good && (h.flags & LVPAFLAG_SOLID) && h.realSize)
+        if(h.good && (h.flags & LVPAFLAG_SOLID))
         {
             ICompressor *solidblock = fileBufs.v[h.blockId];
             DEBUG(ASSERT(solidblock));
             solidblock->append(h.data.ptr, h.data.size);
+            solidblock->append(&solidPadding[0], LVPA_EXTRA_BUFSIZE);
         }
     }
 
@@ -1118,6 +1139,11 @@ void LVPAFile::_CreateIndexes(void)
     {
         LVPAFileHeader& h = _headers[i];
         h.id = i; // this is probably not necessary...
+
+        // do not index if the file name is not known
+        if(h.flags & LVPAFLAG_SCRAMBLED && h.filename.empty())
+            continue;
+
         _indexes[h.filename] = i;
     }
 }
@@ -1135,7 +1161,7 @@ void LVPAFile::_CalcOffsets(uint32 startOffset)
         {
             uint32& o = solidOffsets[h.blockId];
             h.offset = o;
-            o += h.realSize;
+            o += h.realSize + LVPA_EXTRA_BUFSIZE;
             DEBUG(logdebug("Rel offset %u for '%s'", h.offset, h.filename.c_str()));
         }
         else // non-solid files or solid blocks themselves use absolute file position addressing

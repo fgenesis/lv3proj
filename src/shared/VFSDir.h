@@ -21,7 +21,9 @@ public:
 
     bool insert(VFSDir *subdir, bool overwrite = true);
     bool merge(VFSDir *dir, bool overwrite = true);
-    bool add(VFSFile *f, bool overwrite = true);
+    bool add(VFSFile *f, bool overwrite = true); // add file directly in this dir
+    bool addRecursive(VFSFile *f, bool overwrite = true); // traverse subdir tree to find correct subdir; create if not existing
+
 
     const char *name() { return _name.c_str(); }
 

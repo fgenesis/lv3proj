@@ -380,7 +380,7 @@ std::string _PathStripLast(std::string str)
     {
         return str.substr(0, pathend + 1);
     }
-    return str;
+    return ""; // no / or \, strip all
 }
 
 std::string NormalizeFilename(std::string s)
@@ -744,4 +744,41 @@ uint32 GetConsoleWidth(void)
         return 80; // the standard, because we don't know any better
     return ws.ws_col;
 #endif
+}
+
+// copy strings, mangling newlines to system standard
+// windows has 13+10
+// *nix has 10
+size_t strnNLcpy(char *dst, const char *src, uint32 n /* = -1 */)
+{
+    char *olddst = dst;
+    bool had10 = false, had13 = false;
+
+    --n; // reserve 1 for \0 at end
+
+    while(*src && n)
+    {
+        if((had13 && *src == 10) || (had10 && *src == 13))
+        {
+            ++src; // last was already mangled
+            had13 = had10 = false; // processed one CRLF pair
+            continue;
+        }
+        had10 = *src == 10;
+        had13 = *src == 13;
+
+        if(had10 || had13)
+        {
+            *dst++ = '\n';
+            ++src;
+        }
+        else
+            *dst++ = *src++;
+
+        --n;
+    }
+
+    *dst++ = 0;
+
+    return dst - olddst;
 }

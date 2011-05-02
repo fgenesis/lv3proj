@@ -15,5 +15,7 @@ int TestLVPAUncompressedScrambled();
 int TestLVPAUncompressedEncrScram();
 int TestLVPA_LZMA_EncrScram();
 int TestLVPA_Everything();
+int TestLVPA_VFS_ScrambledLoader();
+int TestLVPA_VFS_ScrambledLoaderEncrypted();
 
 #endif

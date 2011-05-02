@@ -32,6 +32,8 @@ int main(int argc, char *argv[])
     DO_TESTRUN(TestLVPAUncompressedEncrScram());
     DO_TESTRUN(TestLVPA_LZMA_EncrScram());
     DO_TESTRUN(TestLVPA_Everything());
+    DO_TESTRUN(TestLVPA_VFS_ScrambledLoader());
+    DO_TESTRUN(TestLVPA_VFS_ScrambledLoaderEncrypted());
 
     printf("All tests successful!\n");
     return 0;

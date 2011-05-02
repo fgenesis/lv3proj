@@ -476,6 +476,22 @@
 					RelativePath=".\shared\VFSHelper.h"
 					>
 				</File>
+				<File
+					RelativePath=".\shared\VFSLoader.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\VFSLoader.h"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\VFSLoaderLVPA.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\VFSLoaderLVPA.h"
+					>
+				</File>
 			</Filter>
 			<Filter
 				Name="SDL"

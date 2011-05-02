@@ -37,6 +37,7 @@ protected:
     std::string _fullname;
     std::string _mode;
     LVPAFile *_lvpa;
+    char *_fixedStr; // for \n fixed string in text mode
 };
 
 #endif

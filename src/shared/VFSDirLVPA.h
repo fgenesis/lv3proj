@@ -12,6 +12,8 @@ public:
     virtual ~VFSDirLVPA() {};
     virtual uint32 load(const char *dir = NULL);
 
+    inline LVPAFile *getLVPA(void) { return _lvpa; }
+
 protected:
     LVPAFile *_lvpa;
     virtual VFSDirLVPA *_getSubdir(const char *);

@@ -4,10 +4,20 @@
 #include "VFSDirLVPA.h"
 #include "VFSFile.h"
 #include "VFSHelper.h"
+#include "VFSLoader.h"
+#include "VFSLoaderLVPA.h"
+
+#define OMNIPRESENT_LOADERS 2
+#define LDR_DISK 0
+#define LDR_LVPABASE 1
 
 VFSHelper::VFSHelper()
 : vRoot(NULL), filesysRoot(NULL), merged(NULL), lvpabase(NULL)
 {
+    loaders.resize(OMNIPRESENT_LOADERS);
+    loaders[LDR_DISK    ] = NULL; // reserved for VFSLoaderReal
+    loaders[LDR_LVPABASE] = NULL; // reserved for for VFSLoaderLVPA(lvpabase)
+    // other loaders may follow
 }
 
 VFSHelper::~VFSHelper()
@@ -34,9 +44,12 @@ void VFSHelper::_delete(void)
         delete *it;
     vlist.clear();
     lvpalist.clear();
+    for(uint32 i = OMNIPRESENT_LOADERS; i < loaders.size(); ++i)
+        delete loaders[i];
+    loaders.resize(OMNIPRESENT_LOADERS); // drop all except first 2
 }
 
-bool VFSHelper::LoadBase(LVPAFile *f, bool deleteLater)
+void VFSHelper::LoadBase(LVPAFile *f, bool deleteLater)
 {
     if(vRoot)
         vRoot->ref--;
@@ -47,21 +60,29 @@ bool VFSHelper::LoadBase(LVPAFile *f, bool deleteLater)
     }
 
     vRoot = new VFSDirLVPA(f);
-    if(!vRoot->load())
-    {
-        vRoot->ref--;
-        vRoot = NULL;
-        return false;
-    }
+    vRoot->load();
+
     if(deleteLater)
         lvpabase = f;
 
-    return true;
+    if(loaders[LDR_LVPABASE])
+        delete loaders[LDR_LVPABASE];
+
+    // if the container has scrambled files, register a loader.
+    // we can't add scrambled files to the tree, because their names are probably unknown at this point
+    for(uint32 i = 0; i < f->HeaderCount(); ++i)
+    {
+        if(f->GetFileInfo(i).flags & LVPAFLAG_SCRAMBLED)
+        {
+            loaders[LDR_LVPABASE] = new VFSLoaderLVPA(f);
+            break;
+        }
+    }
 }
 
 bool VFSHelper::LoadFileSysRoot(void)
 {
-    VFSDir *oldroot = filesysRoot;
+    VFSDirReal *oldroot = filesysRoot;
 
     filesysRoot = new VFSDirReal;
     if(!filesysRoot->load("."))
@@ -73,6 +94,9 @@ bool VFSHelper::LoadFileSysRoot(void)
 
     if(oldroot)
         oldroot->ref--;
+
+    if(!loaders[LDR_DISK])
+        loaders[LDR_DISK] = new VFSLoaderDisk;
 
     return true;
 }
@@ -117,6 +141,17 @@ bool VFSHelper::AddContainer(LVPAFile *f, const char *path, bool deleteLater, bo
         AddVFSDir(vfs, path, overwrite);
         if(deleteLater)
             lvpalist.insert(f);
+
+        // if the container has scrambled files, register a loader.
+        // we can't add scrambled files to the tree, because their names are probably unknown at this point
+        for(uint32 i = 0; i < f->HeaderCount(); ++i)
+        {
+            if(f->GetFileInfo(i).flags & LVPAFLAG_SCRAMBLED)
+            {
+                loaders.push_back(new VFSLoaderLVPA(f));
+                break;
+            }
+        }
     }
     else if(deleteLater)
         delete f; // loading unsucessful, delete now
@@ -134,7 +169,28 @@ bool VFSHelper::AddPath(const char *path)
 
 VFSFile *VFSHelper::GetFile(const char *fn)
 {
-    return merged->getFile(fn);
+    VFSFile *vf = merged->getFile(fn);
+
+    // nothing found? maybe a loader has something.
+    // if so, add the newly created VFSFile to the tree
+    if(!vf)
+    {
+        for(uint32 i = 0; i < loaders.size(); ++i)
+        {
+            if(loaders[i])
+            {
+                vf = loaders[i]->Load(fn);
+                if(vf)
+                {
+                    GetDirRoot()->addRecursive(vf, true);
+                    --(vf->ref);
+                    break;
+                }
+            }
+        }
+    }
+
+    return vf;
 }
 
 VFSDir *VFSHelper::GetDir(const char* dn, bool create /* = false */)

@@ -149,10 +149,16 @@ public:
     void Clear(bool del = true); // free all
     virtual bool Delete(const char *fn); // removes a file from the container and frees up memory. returns false if the file was not found.
 
-    void Free(const char *fn); // frees the memory associated with a file, leaving it in the container. if requested again, it will be loaded from disk.
-    void Free(uint32 id);
-    void Drop(const char *fn); // drops our reference to the file, so it will be loaded again from disk if required.
-    void Drop(uint32 id);
+    // Frees the memory associated with a file, leaving it in the container. if requested again, it will be loaded from disk.
+    // Returns true if the memory was freed, false if it was not possible.
+    bool Free(const char *fn);
+    bool Free(uint32 id);
+
+    // drops our reference to the file, so it will be loaded again from disk if required. The original memory will not be touched,
+    // so that it can be processed elsewhere.
+    // Returns true if the memory could be dropped. If it failed, the memory can still be copied by hand, and processed further.
+    bool Drop(const char *fn); 
+    bool Drop(uint32 id);
 
     uint32 SetSolidBlock(const char *name, uint8 compression = LVPACOMP_INHERIT, uint8 algo = LVPAPACK_INHERIT); // return file id of block
 

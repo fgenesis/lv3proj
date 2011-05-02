@@ -35,6 +35,8 @@ VFSDirLVPA.cpp
 VFSFile.cpp
 VFSFileLVPA.cpp
 VFSHelper.cpp
+VFSLoader.cpp
+VFSLoaderLVPA.cpp
 
 # SDL_gfx files
 SDL_gfx/SDL_framerate.c

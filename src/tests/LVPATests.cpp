@@ -67,14 +67,15 @@ const uint32 i2[] =
     DO_PACK_UNPACK(i2, compr); \
 }
 
-static bool g_encrypt = false;
+static LVPAEncrpytions g_encrypt = LVPAENCR_NONE;
 static bool g_scramble = false;
 static const char *g_blockName = "";
 static uint8 g_masterKey[LVPAHash_Size];
 
 #define INIT_TEST() \
 { \
-    g_encrypt = g_scramble = false; \
+    g_scramble = false; \
+    g_encrypt = LVPAENCR_NONE; \
     g_blockName = NULL; \
 }
 
@@ -231,14 +232,14 @@ int TestLVPA_MixedSolid()
         lvpa.SaveAs("~test.lvpa.tmp", 0); // leave headers uncompressed
         lvpa.Clear(false); // otherwise we would attempt to delete const memory
     }
-    DO_LOAD_AND_CHECK_ALL()
+    DO_LOAD_AND_CHECK_ALL();
     return 0;
 }
 
 int TestLVPAUncompressedEncrypted()
 {
     INIT_TEST();
-    g_encrypt = true;
+    g_encrypt = LVPAENCR_ENABLED;
     {
         LVPAFile lvpa;
         DO_ADD_CHECK_ALL();
@@ -268,7 +269,7 @@ int TestLVPAUncompressedScrambled()
 int TestLVPAUncompressedEncrScram()
 {
     INIT_TEST();
-    g_encrypt = true;
+    g_encrypt = LVPAENCR_ENABLED;
     g_scramble = true;
     {
         LVPAFile lvpa;
@@ -284,7 +285,7 @@ int TestLVPAUncompressedEncrScram()
 int TestLVPA_LZMA_EncrScram()
 {
     INIT_TEST();
-    g_encrypt = true;
+    g_encrypt = LVPAENCR_ENABLED;
     g_scramble = true;
     {
         LVPAFile lvpa;
@@ -304,18 +305,20 @@ int TestLVPA_Everything()
         LVPAFile lvpa;
         lvpa.SetMasterKey(&g_masterKey[0], LVPAHash_Size);
         g_blockName = NULL;
-        g_encrypt = g_scramble = true;
+        g_scramble = true;
+        g_encrypt = LVPAENCR_ENABLED;
         ADD_MEMBLOCK(v0);
         ADD_MEMBLOCK(v1);
         ADD_MEMBLOCK(v2);
         g_blockName = "txt";
-        g_encrypt = g_scramble = false;
+        g_scramble = false;
+        g_encrypt = LVPAENCR_NONE;
         ADD_MEMBLOCK(v3);
         ADD_MEMBLOCK(v4);
         ADD_MEMBLOCK(v5);
         ADD_MEMBLOCK(v6);
         g_blockName = "bin";
-        g_encrypt = true;
+        g_encrypt = LVPAENCR_ENABLED;
         ADD_MEMBLOCK(b1);
         ADD_MEMBLOCK(i1);
         ADD_MEMBLOCK(i2);
@@ -327,4 +330,74 @@ int TestLVPA_Everything()
     }
     DO_LOAD_AND_CHECK_ALL()
         return 0;
+}
+
+#include "VFSHelper.h"
+#include "VFSFile.h"
+
+#define DO_CHECK_VFS(mem) \
+{ \
+    VFSFile *vf = vfs.GetFile("FILE_" #mem); \
+    if(!vf) return 1; \
+    if(memcmp((const char*)&mem[0], (const char*)vf->getBuf(), vf->size())) return 3; \
+}
+
+int TestLVPA_VFS_ScrambledLoader()
+{
+    INIT_TEST()
+    {
+        LVPAFile lvpa;
+        g_scramble = true;
+        ADD_MEMBLOCK(v5);
+        ADD_MEMBLOCK(v6);
+        ADD_MEMBLOCK(b1);
+        ADD_MEMBLOCK(i1);
+        ADD_MEMBLOCK(i2);
+        lvpa.SaveAs("~test.lvpa.tmp", LVPACOMP_NONE, LVPAPACK_NONE, false);
+        lvpa.Clear(false); // otherwise we would attempt to delete const memory
+    }
+    VFSHelper vfs;
+    LVPAFile lvpa;
+    lvpa.LoadFrom("~test.lvpa.tmp");
+    vfs.LoadBase(&lvpa, false);
+    vfs.Prepare();
+    DO_CHECK_VFS(v5);
+    DO_CHECK_VFS(v6);
+    DO_CHECK_VFS(b1);
+    DO_CHECK_VFS(i1);
+    DO_CHECK_VFS(i2);
+    return 0;
+}
+
+int TestLVPA_VFS_ScrambledLoaderEncrypted()
+{
+    INIT_TEST()
+    {
+        LVPAFile lvpa;
+        lvpa.SetMasterKey(&g_masterKey[0], LVPAHash_Size);
+        g_scramble = true;
+        g_encrypt = LVPAENCR_ENABLED;
+        ADD_MEMBLOCK(v5);
+        ADD_MEMBLOCK(v6);
+        ADD_MEMBLOCK(b1);
+        ADD_MEMBLOCK(i1);
+        ADD_MEMBLOCK(i2);
+        lvpa.SaveAs("~test.lvpa.tmp", LVPACOMP_ULTRA, LVPAPACK_LZO1X, true);
+        lvpa.Clear(false); // otherwise we would attempt to delete const memory
+    }
+
+    VFSHelper vfs;
+    LVPAFile lvpa;
+    lvpa.SetMasterKey(&g_masterKey[0], LVPAHash_Size);
+
+    lvpa.LoadFrom("~test.lvpa.tmp");
+    vfs.LoadBase(&lvpa, false);
+    vfs.Prepare();
+
+    DO_CHECK_VFS(v5);
+    DO_CHECK_VFS(v6);
+    DO_CHECK_VFS(b1);
+    DO_CHECK_VFS(i1);
+    DO_CHECK_VFS(i2);
+    return 0;
 }

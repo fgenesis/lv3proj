@@ -2,8 +2,10 @@
 #include "LVPAFile.h"
 #include "VFSFileLVPA.h"
 
-VFSFileLVPA::VFSFileLVPA(LVPAFile *src, uint32 headerId) : VFSFile()
+VFSFileLVPA::VFSFileLVPA(LVPAFile *src, uint32 headerId) : VFSFile(),
+_fixedStr(NULL)
 {
+    _mode = "b"; // binary mode by default
     _lvpa = src;
     _pos = 0;
     const LVPAFileHeader& hdr = src->GetFileInfo(headerId);
@@ -17,13 +19,23 @@ VFSFileLVPA::VFSFileLVPA(LVPAFile *src, uint32 headerId) : VFSFile()
 
 VFSFileLVPA::~VFSFileLVPA()
 {
+    if(_fixedStr)
+        delete [] _fixedStr;
 }
 
 bool VFSFileLVPA::open(const char *fn /* = NULL */, char *mode /* = NULL */)
 {
     _pos = 0;
     if(mode)
+    {
+        if(_fixedStr && mode != _mode)
+        {
+            delete [] _fixedStr;
+            _fixedStr = NULL;
+        }
+
         _mode = mode;
+    }
     return true; // does not have to be opened
 }
 
@@ -77,7 +89,10 @@ uint32 VFSFileLVPA::read(char *dst, uint32 bytes)
     uint8 *startptr = data.ptr + _pos;
     uint8 *endptr = data.ptr + data.size;
     bytes = std::min(uint32(endptr - startptr), bytes); // limit in case reading over buffer size
-    memcpy(dst, startptr, bytes);
+    if(_mode.find('b') == std::string::npos)
+        strnNLcpy(dst, (const char*)startptr, bytes); // non-binary == text mode
+    else
+        memcpy(dst, startptr, bytes); //  binary copy
     _pos += bytes;
     return bytes;
 }
@@ -130,13 +145,35 @@ uint64 VFSFileLVPA::size(uint64 newsize)
 
 const uint8 *VFSFileLVPA::getBuf(void)
 {
-    return (const uint8 *)_lvpa->Get(_headerId).ptr;
+    // _fixedStr gets deleted on mode change, so doing this check here is fine
+    if(_fixedStr)
+        return (const uint8*)_fixedStr;
+
+    memblock mb = _lvpa->Get(_headerId);
+    const uint8 *buf = mb.ptr;
+    if(buf && _mode.find("b") == std::string::npos) // text mode?
+    {
+        _fixedStr = new char[mb.size + 4];
+        strnNLcpy(_fixedStr, (const char*)buf);
+        buf = (const uint8*)_fixedStr;
+    }
+    return buf;
 }
 
 void VFSFileLVPA::dropBuf(bool del)
 {
     if(del)
+    {
+        if(_fixedStr)
+        {
+            delete [] _fixedStr;
+            _fixedStr = NULL;
+        }
         _lvpa->Free(_headerId);
+    }
     else
+    {
+        _fixedStr = NULL;
         _lvpa->Drop(_headerId);
+    }
 }

@@ -141,7 +141,8 @@ static void _AddFileToArchive(LVPAFile *lvpa, PackDef *glob, const std::string& 
     fread(buf, s, 1, fh);
     fclose(fh);
 
-    lvpa->Add(archiveFileName.c_str(), memblock(buf, s), glob->solid ? glob->solidBlockName.c_str() : NULL, glob->algo, glob->level, glob->encrypt);
+    lvpa->Add(archiveFileName.c_str(), memblock(buf, s), glob->solid ? glob->solidBlockName.c_str() : NULL,
+        glob->algo, glob->level, glob->encrypt, glob->scramble);
 }
 
 static std::set<std::string> g_createdDirs;
@@ -722,7 +723,8 @@ void parseArgv(std::list<PackDef>& cmds, uint32 argc, char **argv, bool isCmdLin
         {
             PackDef pd(PC_ADD_FILE);
             pd.fromCmdLine = isCmdLine;
-            pd.name = g_currentDir + p;
+            pd.name = p; // is automatically truncated to file name later
+            pd.relPath = _PathStripLast(p);
             cmds.push_back(pd);
         }
     }
@@ -931,7 +933,17 @@ int main(int argc, char *argv[])
                 printf("Add mode: Nothing to do\n");
                 break;
             }
-            processPackDefList(lvpa, cmds, glob);
+            {
+                uint32 filesGiven = 0;
+                for(std::list<PackDef>::iterator it = cmds.begin(); it != cmds.end(); ++it)
+                    if(it->cmd == PC_ADD_FILE)
+                        ++filesGiven;
+                ProgressBar bar(filesGiven);
+                bar.msg = "Preparing ... ";
+                bar.Reset();
+                bar.Update(true);
+                processPackDefList(lvpa, cmds, glob, &bar, &g_filesDone);
+            }
 
             // if nothing else specified, use for the header the same compression used for other files
             if(g_hdrAlgo == LVPAPACK_INHERIT)
@@ -952,10 +964,32 @@ int main(int argc, char *argv[])
         }
 
         case 't':
+        {
             processPackDefList(lvpa, cmds, glob);
-            result = lvpa.AllGood();
+            result = true;
+            {
+                ProgressBar bar(lvpa.HeaderCount());
+                bar.msg = "Testing ...";
+                bar.Reset();
+                bar.Update(true);
+                for(uint32 i = 0; i < lvpa.HeaderCount(); ++i)
+                {
+                    const LVPAFileHeader &h = lvpa.GetFileInfo(i);
+                    if(h.flags & (LVPAFLAG_SOLIDBLOCK | LVPAFLAG_SCRAMBLED))
+                        continue;
+
+                    memblock mb = lvpa.Get(i);
+                    result = mb.ptr && result;
+                    lvpa.Free(i);
+                    bar.Step();
+                }
+                bar.Finalize();
+            }
+
+            result = result && lvpa.AllGood();
             printf("%s", result ? "File is OK\n" : "File is damaged, use 'lvpak l' to list\n");
             break;
+        }
 
         case 'x':
         case 'e':
@@ -976,7 +1010,7 @@ int main(int argc, char *argv[])
                         continue;
                     if(!h.filename.length())
                     {
-                        printf("Can't extract file #%u, unknown or scrambled file name", i);
+                        printf("Can't extract file #%u, unknown or scrambled file name\n", i);
                         continue;
                     }
 

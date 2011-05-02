@@ -35,6 +35,23 @@ bool VFSDir::add(VFSFile *f, bool overwrite /* = true */)
     return true;
 }
 
+bool VFSDir::addRecursive(VFSFile *f, bool overwrite /* = true */)
+{
+    // figure out directory from full file name
+    std::string dirname(f->fullname());
+    uint32 pathend = dirname.find_last_of("/\\");
+    VFSDir *vdir;
+    if(pathend != std::string::npos)
+    {
+        dirname = dirname.substr(0, pathend);
+        vdir = getDir(dirname.c_str(), true);
+    }
+    else
+        vdir = this;
+
+    return vdir->add(f, true);
+}
+
 bool VFSDir::merge(VFSDir *dir, bool overwrite /* = true */)
 {
     bool result = false;
@@ -69,11 +86,12 @@ VFSFile *VFSDir::getFile(const char *fn)
     // if there is a '/' in the string, descend into subdir and continue there
     if(slashpos)
     {
-        *slashpos = 0; // temp change to avoid excess string mangling
+        //*slashpos = 0; // temp change to avoid excess string mangling
         const char *sub = slashpos + 1;
+        std::string t(fn, slashpos - fn);
 
-        VFSDir *subdir = getDir(fn); // fn is null-terminated early here
-        *slashpos = '/'; // restore original string
+        VFSDir *subdir = getDir(t.c_str()); // fn is null-terminated early here
+        //*slashpos = '/'; // restore original string
 
         return subdir ? subdir->getFile(sub) : NULL;
     }
@@ -99,7 +117,7 @@ VFSDir *VFSDir::getDir(const char *subdir, bool forceCreate /* = false */)
         if(it != _subdirs.end())
         {
             *slashpos = '/'; // restore original string
-            ret = it->second->getDir(sub, forceCreate); // descend into subdirs
+            ret = *sub ? it->second->getDir(sub, forceCreate) : it->second; // descend into subdirs
         }
         else if(forceCreate)
         {
