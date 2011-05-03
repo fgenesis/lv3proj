@@ -28,6 +28,7 @@ add_subdirectory (libpng)
 # dependencies
 add_subdirectory (falcon)
 add_subdirectory (guichan)
+add_subdirectory (gme)
 
 # custom extensions
 add_subdirectory (falcon_ext)
