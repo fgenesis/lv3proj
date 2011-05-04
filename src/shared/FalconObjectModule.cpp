@@ -250,8 +250,6 @@ bool fal_ObjectCarrier::setProperty( const Falcon::String &prop, const Falcon::I
     else if(prop == "h") { ((ActiveRect*)_obj)->h = value.forceInteger(); rectChanged = true; }
     if(rectChanged)
     {
-        if(_obj->GetType() >= OBJTYPE_OBJECT)
-            ((Object*)_obj)->UpdateAnchor();
         ((ActiveRect*)_obj)->HasMoved();
         return true;
     }
@@ -457,9 +455,6 @@ FALCON_FUNC fal_ActiveRect_SetBBox(Falcon::VMachine *vm)
     fal_ObjectCarrier *self = Falcon::dyncast<fal_ObjectCarrier*>( vm->self().asObject() );
     ActiveRect *obj = (ActiveRect*)self->GetObj();
     obj->SetBBox(x,y,w,h);
-    if(obj->GetType() >= OBJTYPE_OBJECT)
-        ((Object*)obj)->UpdateAnchor();
-    obj->HasMoved();
 }
 
 FALCON_FUNC fal_ActiveRect_SetPos(Falcon::VMachine *vm)
@@ -470,9 +465,6 @@ FALCON_FUNC fal_ActiveRect_SetPos(Falcon::VMachine *vm)
     fal_ObjectCarrier *self = Falcon::dyncast<fal_ObjectCarrier*>( vm->self().asObject() );
     ActiveRect *obj = (ActiveRect*)self->GetObj();
     obj->SetPos(x,y);
-    if(obj->GetType() >= OBJTYPE_OBJECT)
-        ((Object*)obj)->UpdateAnchor();
-    obj->HasMoved();
 }
 
 FALCON_FUNC fal_ActiveRect_CanMoveToDir(Falcon::VMachine *vm)

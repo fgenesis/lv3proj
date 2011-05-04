@@ -296,7 +296,6 @@ void PhysicsMgr::UpdatePhysics(Object *obj, float tf)
 
     if(begin_ix != int32(obj->x) || begin_iy != int32(obj->y))
     {
-        obj->UpdateAnchor();
         obj->SetMoved(true);
     }
 
