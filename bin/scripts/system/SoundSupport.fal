@@ -6,7 +6,7 @@ _audioFileExt = ["wav", "ogg", // common formats (mp3 currently not supported)
                  "mod", "xm", "it", "669", "s3m", // tracker formats, handled by MikMod
                  "stm", "med", "amf", "apun", "dsm", "far", "gdm", "imf", "mtm", "okt", "stx", "ult", "uni", // also MikMod
                  "aiff", "voc", // SDL_mixer says it supports those too
-                 "ay", "gbs", "gym", "hes", "kss", "nsf", "nsfe", "sap", "sgc", "spc", "vgm" // Game_Music_Emu
+                 "ay", "gbs", "gym", "hes", "kss", "nsf", "nsfe", "sap", "sgc", "spc", "vgm", "vgz" // Game_Music_Emu
                 ]
 
 function IsSupportedAudioFile(fn)
