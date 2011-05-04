@@ -82,6 +82,16 @@ public:
 	#include GME_FILE_READER_INCLUDE
 #endif
 
+#ifndef GME_MEM_READER
+#ifdef HAVE_ZLIB_H
+#define GME_MEM_READER Gzip_Mem_File_Reader
+#else
+#define GME_MEM_READER Mem_File_Reader
+#endif
+#elif defined (GME_MEM_READER_INCLUDE)
+#include GME_MEM_READER_INCLUDE
+#endif
+
 inline const char* Gme_Loader::warning()
 {
 	const char* s = warning_;

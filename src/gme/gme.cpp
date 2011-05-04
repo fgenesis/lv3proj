@@ -119,17 +119,22 @@ gme_err_t gme_open_data( void const* data, long size, Music_Emu** out, int sampl
 {
 	require( (data || !size) && out );
 	*out = NULL;
+
+    char hdr[4];
+    GME_MEM_READER in(data, size);
+    in.read((void*)&hdr[0], 4);
+    in.seek(0);
 	
 	gme_type_t file_type = 0;
 	if ( size >= 4 )
-		file_type = gme_identify_extension( gme_identify_header( data ) );
+		file_type = gme_identify_extension( gme_identify_header( (void const*)&hdr[0] ) );
 	if ( !file_type )
 		return blargg_err_file_type;
 	
 	Music_Emu* emu = gme_new_emu( file_type, sample_rate );
 	CHECK_ALLOC( emu );
 	
-	gme_err_t err = gme_load_data( emu, data, size );
+	gme_err_t err = gme_load_data( emu, in.ptr(), in.size() );
 	
 	if ( err )
 		delete emu;

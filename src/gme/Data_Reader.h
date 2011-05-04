@@ -140,14 +140,15 @@ class Mem_File_Reader : public File_Reader {
 public:
 
 	Mem_File_Reader( const void* begin, long size );
+    virtual ~Mem_File_Reader() {}
+    const unsigned char *ptr() { return begin; }
 
 // Implementation
 protected:
 	virtual blargg_err_t read_v( void*, int );
 	virtual blargg_err_t seek_v( int );
 
-private:
-	const char* const begin;
+	const unsigned char* begin;
 };
 
 
@@ -257,6 +258,19 @@ protected:
 private:
 	// void* so "zlib.h" doesn't have to be included here
 	void* file_;
+};
+
+class GzipCompressor;
+
+// Reads mem compressed with gzip (or uncompressed)
+class Gzip_Mem_File_Reader : public Mem_File_Reader {
+public:
+
+    Gzip_Mem_File_Reader( const void* begin, long size );
+    virtual ~Gzip_Mem_File_Reader();
+
+private:
+    GzipCompressor *gz;
 };
 #endif
 

@@ -214,7 +214,6 @@ bool SoundCore::_LoadWithGME(memblock *mb)
     {
         const char *ty = gme_type_system(gme_type(emu));
         logdebug("_LoadWithGME("PTRFMT") ptr = "PTRFMT"  Type: %s" , mb, mb->ptr, ty);
-        gme_identify_header(mb->ptr);
         StopMusic();
         _gme = emu;
         gme_start_track(emu, 0); // TODO FIXME

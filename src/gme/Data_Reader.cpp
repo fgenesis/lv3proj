@@ -179,7 +179,7 @@ blargg_err_t Remaining_Reader::read_v( void* out, int count )
 // Mem_File_Reader
 
 Mem_File_Reader::Mem_File_Reader( const void* p, long s ) :
-	begin( STATIC_CAST(const char*, p) )
+	begin( STATIC_CAST(const unsigned char*, p) )
 {
 	set_size( s );
 }
@@ -550,6 +550,35 @@ void Gzip_File_Reader::close()
 			check( false );
 		file_ = NULL;
 	}
+}
+
+
+// Gzip_Mem_File_Reader
+#include "DeflateCompressor.h"
+
+Gzip_Mem_File_Reader::Gzip_Mem_File_Reader( const void* p, long s )
+: Mem_File_Reader(p, s), gz(NULL)
+{
+    // gzip magic + compression method deflate
+    if(begin[0] == 0x1f && begin[1] == 0x8b && begin[2] == 8)
+    {
+        gz = new GzipCompressor;
+        gz->append(begin, s);
+        gz->Compressed(true);
+        gz->Decompress();
+        if(!gz->Compressed())
+        {
+            begin = (const unsigned char*)gz->contents();
+            set_size((int)gz->size());
+        }
+    }
+}
+
+
+Gzip_Mem_File_Reader::~Gzip_Mem_File_Reader()
+{
+    if(gz)
+        delete gz;
 }
 
 #endif
