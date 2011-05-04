@@ -2,6 +2,7 @@
 #include "SHA256Hash.h"
 #include "LZMACompressor.h"
 #include "LZOCompressor.h"
+#include "DeflateCompressor.h"
 #include "LVPAFile.h"
 
 
@@ -155,6 +156,18 @@ int TestLZO()
     return 0;
 }
 
+int TestDeflate()
+{
+    DO_COMPRESS_RUN(DeflateCompressor);
+    return 0;
+}
+
+int TestGzip()
+{
+    DO_COMPRESS_RUN(GzipCompressor);
+    return 0;
+}
+
 int TestLVPAUncompressed()
 {
     INIT_TEST();
@@ -188,6 +201,19 @@ int TestLVPA_LZO()
         LVPAFile lvpa;
         DO_ADD_CHECK_ALL();
         lvpa.SaveAs("~test.lvpa.tmp", LVPACOMP_FAST, LVPAPACK_LZO1X);
+        lvpa.Clear(false); // otherwise we would attempt to delete const memory
+    }
+    DO_LOAD_AND_CHECK_ALL();
+    return 0;
+}
+
+int TestLVPA_Deflate()
+{
+    INIT_TEST();
+    {
+        LVPAFile lvpa;
+        DO_ADD_CHECK_ALL();
+        lvpa.SaveAs("~test.lvpa.tmp", LVPACOMP_GOOD, LVPAPACK_DEFLATE);
         lvpa.Clear(false); // otherwise we would attempt to delete const memory
     }
     DO_LOAD_AND_CHECK_ALL();

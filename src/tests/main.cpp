@@ -4,7 +4,6 @@
 
 #define DO_TESTRUN(f) { printf("Running: %s\n", #f); int _r = (f); if(_r) { logerror("TEST FAILED: Func %s returned %d", #f, _r); return 1; } }
 
-
 int main(int argc, char *argv[])
 {
     log_setloglevel(3);
@@ -13,6 +12,8 @@ int main(int argc, char *argv[])
 
     DO_TESTRUN(TestLZO());
     DO_TESTRUN(TestLZMA());
+    DO_TESTRUN(TestDeflate());
+    DO_TESTRUN(TestGzip());
 
     DO_TESTRUN(TestRC4());
     DO_TESTRUN(TestHPRC4Like());
@@ -25,6 +26,7 @@ int main(int argc, char *argv[])
     DO_TESTRUN(TestLVPAUncompressed());
     DO_TESTRUN(TestLVPA_LZO());
     DO_TESTRUN(TestLVPA_LZMA());
+    DO_TESTRUN(TestLVPA_Deflate());
     DO_TESTRUN(TestLVPAUncompressedSolid());
     DO_TESTRUN(TestLVPA_MixedSolid());
     DO_TESTRUN(TestLVPAUncompressedEncrypted());
@@ -36,5 +38,6 @@ int main(int argc, char *argv[])
     DO_TESTRUN(TestLVPA_VFS_ScrambledLoaderEncrypted());
 
     printf("All tests successful!\n");
+
     return 0;
 }

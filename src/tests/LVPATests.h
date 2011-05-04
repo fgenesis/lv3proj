@@ -5,10 +5,14 @@ int LVPATestsInit();
 
 int TestLZMA();
 int TestLZO();
+int TestDeflate();
+int TestGzip();
 int TestLVPAUncompressed();
 int TestLVPAUncompressedSolid();
 int TestLVPA_LZMA();
 int TestLVPA_LZO();
+int TestLVPA_Deflate();
+int TestLVPA_Gzip();
 int TestLVPA_MixedSolid();
 int TestLVPAUncompressedEncrypted();
 int TestLVPAUncompressedScrambled();

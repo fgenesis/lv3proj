@@ -403,6 +403,14 @@
 					>
 				</File>
 				<File
+					RelativePath=".\shared\DeflateCompressor.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\DeflateCompressor.h"
+					>
+				</File>
+				<File
 					RelativePath=".\shared\ICompressor.h"
 					>
 				</File>

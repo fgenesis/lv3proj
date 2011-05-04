@@ -53,6 +53,7 @@ enum LVPAAlgorithms
     LVPAPACK_NONE,
     LVPAPACK_LZMA,
     LVPAPACK_LZO1X,
+    LVPAPACK_DEFLATE,
 
     LVPAPACK_INHERIT = 0xFF // select the one used by parent
 };

@@ -3,6 +3,7 @@
 #include "MyCrc32.h"
 #include "LZMACompressor.h"
 #include "LZOCompressor.h"
+#include "DeflateCompressor.h"
 #include "LVPAFile.h"
 #include "LVPAStreamCipher.h"
 #include "SHA256Hash.h"
@@ -37,6 +38,9 @@ static ICompressor *allocCompressor(uint8 algo)
 
         case LVPAPACK_LZO1X:
             return new LZOCompressor;
+
+        case LVPAPACK_DEFLATE:
+            return new DeflateCompressor;
 
         case LVPAPACK_NONE:
             return new ICompressor; // does nothing
