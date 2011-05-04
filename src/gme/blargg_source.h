@@ -44,20 +44,10 @@ static inline void blargg_dprintf_( const char [], ... ) { }
 #undef  dprintf
 #define dprintf (1) ? (void) 0 : blargg_dprintf_
 #else
-#include <windows.h>
 #include <stdarg.h>
 #include <stdio.h>
-static inline void blargg_dprintf_( const char * fmt, ... )
-{
-	char error[512];
-	va_list vl;
-	va_start(vl, fmt);
-	vsnprintf_s( error, 511, 511, fmt, vl );
-	va_end(vl);
-	OutputDebugStringA( error );
-}
 #undef  dprintf
-#define dprintf blargg_dprintf_
+#define dprintf printf
 #endif
 
 /* If expr is false, prints file and line number to debug console/log, then
