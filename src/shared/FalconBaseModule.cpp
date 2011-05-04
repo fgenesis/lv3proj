@@ -157,7 +157,7 @@ FALCON_FUNC fal_Sound_init( Falcon::VMachine *vm )
 {
     FALCON_REQUIRE_PARAMS_EXTRA(1, "S filename");
     Falcon::AutoCString cstr(vm->param(0)->asString());
-    SoundFile *snd = sndCore.GetSound((char*)cstr.c_str());
+    SoundFile *snd = sndCore.GetSound(cstr.c_str());
     if(!snd)
     {
         vm->self().setNil();
@@ -735,15 +735,17 @@ FALCON_FUNC fal_Music_SetVolume(Falcon::VMachine *vm)
 FALCON_FUNC fal_Music_Play(Falcon::VMachine *vm)
 {
     Falcon::Item *itm = vm->param(0);
+    bool playing = false;
     if(itm && !itm->isNil())
     {
         Falcon::AutoCString cstr(vm->param(0)->asString());
-        sndCore.PlayMusic((char*)cstr.c_str());
+        playing = sndCore.PlayMusic(cstr.c_str());
     }
     else
     {
-        sndCore.PlayMusic(NULL); // just unpause
+        playing = sndCore.PlayMusic(NULL); // just unpause
     }
+    vm->retval(playing);
 }
 
 FALCON_FUNC fal_Music_Pause(Falcon::VMachine *vm)

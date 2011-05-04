@@ -63,8 +63,8 @@ public:
     DeletablePool pool;
 
 private:
-    memblock *_LoadFileInternal(const char *name, bool isTmp);
-    memblock *_LoadTextFileInternal(const char *name, bool isTmp);
+    memblock *_LoadFileInternal(const char *name, const char *indic);
+    memblock *_LoadTextFileInternal(const char *name, const char *indic);
 
     inline void *_GetPtr(const std::string& fn)
     {
@@ -86,7 +86,6 @@ private:
     void _accountMem(uint32 bytes);
     void _unaccountMem(uint32 bytes);
     uint32 _usedMem;
-    //Mutex _memMutex; // this is not (yet) needed; unlike ref-counting, memory allocation/deallocation is done in a single thread
 };
 
 

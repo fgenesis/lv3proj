@@ -40,6 +40,8 @@ _fpsMin(60), _fpsMax(70), falcon(NULL), _mouseX(0), _mouseY(0)
     s_speed = 1.0;
     s_accuTime = 0;
 
+    sndCore.Init();
+
     _gcnImgLoader = new gcn::SDLImageLoaderManaged();
     _gcnGfx = new gcn::SDLGraphics();
     gcn::Image::setImageLoader(_gcnImgLoader);

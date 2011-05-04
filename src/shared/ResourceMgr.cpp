@@ -13,6 +13,7 @@
 
 // internally referenced files get this postfix to make the file ref map happy
 #define FILENAME_TMP_INDIC "|tmp"
+#define FILENAME_MUSIC_INDIC "|music"
 
 static uint8 g_emptyData[] = {0, 0, 0, 0}; // this is never freed. must be >= 4 bytes.
 
@@ -114,6 +115,7 @@ void ResourceMgr::_IncRef(void *ptr)
 void ResourceMgr::_DecRef(void *ptr, bool del /* = false */)
 {
     DEBUG(ASSERT(ptr != NULL));
+
     PtrCountMap::iterator it = _ptrmap.find(ptr);
     if(it != _ptrmap.end())
     {
@@ -309,7 +311,7 @@ SDL_Surface *ResourceMgr::LoadImg(const char *name)
             img = newimg;
         }
 
-        logdebug("LoadImg: '%s' [%s]" , origfn.c_str(), vf ? vf->getSource() : "*");
+        logdebug("LoadImg: '%s' [%s] -> "PTRFMT , origfn.c_str(), vf ? vf->getSource() : "*", img);
 
         _accountMem(SDLfunc_GetSurfaceBytes(img));
         _SetPtr(origfn, (void*)img);
@@ -334,7 +336,7 @@ Anim *ResourceMgr::LoadAnim(const char *name)
     else
     {
         // a .anim file is just a text file, so we use the internal text file loader
-        memblock *mb = _LoadTextFileInternal((char*)fn.c_str(), true);
+        memblock *mb = _LoadTextFileInternal((char*)fn.c_str(), FILENAME_TMP_INDIC);
         if(!mb)
         {
             logerror("LoadAnim: Failed to open '%s'", fn.c_str());
@@ -366,7 +368,7 @@ Anim *ResourceMgr::LoadAnim(const char *name)
                 }
             }
 
-         logdebug("LoadAnim: '%s' [%s]" , fn.c_str(), vfs.GetFile(fn.c_str())->getSource()); // the file must exist
+         logdebug("LoadAnim: '%s' [%s] -> "PTRFMT , fn.c_str(), vfs.GetFile(fn.c_str())->getSource(), ani); // the file must exist
 
          _SetPtr(fn, (void*)ani);
          _InitRef((void*)ani, RESTYPE_ANIM);
@@ -380,14 +382,18 @@ Mix_Music *ResourceMgr::LoadMusic(const char *name)
     std::string fn("music/");
     fn += name;
 
-    Mix_Music *music = (Mix_Music*)_GetPtr(fn);
+    // HACK: In this method, we use FILENAME_MUSIC_INDIC to give the music file a different name then its raw data.
+    // This is necessary because SoundCore may read a file as raw binary in case SDL can't handle it internally,
+    // but we still need to differentiate pointers by type. This fixes some crash problems on music unload.
+
+    Mix_Music *music = (Mix_Music*)_GetPtr(fn + FILENAME_MUSIC_INDIC);
     if(music)
     {
         _IncRef((void*)music);
     }
     else
     {
-        memblock *mb = _LoadFileInternal(fn.c_str(), true);
+        memblock *mb = _LoadFileInternal(fn.c_str(), NULL);
         SDL_RWops *rwop = NULL;
         if(mb && mb->size)
         {
@@ -399,16 +405,15 @@ Mix_Music *ResourceMgr::LoadMusic(const char *name)
 
         if(!music)
         {
-            logerror("LoadMusic failed: '%s'", fn.c_str());
+            Drop(mb);
             if(rwop)
                 SDL_RWclose(rwop);
-            Drop(mb); // unable to create music, but data are still in memory
             return NULL;
         }
         
-        logdebug("LoadMusic: '%s' [%s]" , name, vfs.GetFile(fn.c_str())->getSource());
+        logdebug("LoadMusic: '%s' [%s] -> "PTRFMT , name, vfs.GetFile(fn.c_str())->getSource(), music);
 
-        _SetPtr(fn, (void*)music);
+        _SetPtr(fn + FILENAME_MUSIC_INDIC, (void*)music);
         _InitRef((void*)music, RESTYPE_MIX_MUSIC, mb, rwop); // note that this music depends on mb and the rwop, save for later deletion
     }
 
@@ -446,7 +451,7 @@ Mix_Chunk *ResourceMgr::LoadSound(const char *name)
             return NULL;
         }
 
-        logdebug("LoadSound: '%s' [%s]" , name, vf->getSource());
+        logdebug("LoadSound: '%s' [%s] -> "PTRFMT , name, vf->getSource(), sound);
 
         _accountMem(sound->alen);
         _SetPtr(fn, (void*)sound);
@@ -462,11 +467,11 @@ memblock *ResourceMgr::LoadFile(const char *name)
     return _LoadFileInternal(t.c_str(), false);
 }
 
-memblock *ResourceMgr::_LoadFileInternal(const char *name, bool isTmp)
+memblock *ResourceMgr::_LoadFileInternal(const char *name, const char *indic)
 {
     std::string fn(name);
-    if(isTmp)
-        fn += FILENAME_TMP_INDIC;
+    if(indic)
+        fn += indic;
     memblock *mb = (memblock*)_GetPtr(fn);
     if(mb)
     {
@@ -513,7 +518,7 @@ memblock *ResourceMgr::_LoadFileInternal(const char *name, bool isTmp)
             return NULL;
         }
 
-        logdebug("LoadFile: '%s' [%s], %u bytes" , name, vf->getSource(), size);
+        logdebug("LoadFile: '%s' [%s], %u bytes -> "PTRFMT" ["PTRFMT"]" , name, vf->getSource(), mb->size, mb, mb->ptr);
 
         _accountMem(size);
         _SetPtr(fn, (void*)mb);
@@ -529,11 +534,11 @@ memblock *ResourceMgr::LoadTextFile(const char *name)
     return _LoadTextFileInternal(t.c_str(), false);
 }
 
-memblock *ResourceMgr::_LoadTextFileInternal(const char *name, bool isTmp)
+memblock *ResourceMgr::_LoadTextFileInternal(const char *name, const char *indic)
 {
     std::string fn(name);
-    if(isTmp)
-        fn += FILENAME_TMP_INDIC;
+    if(indic)
+        fn += indic;
     memblock *mb = (memblock*)_GetPtr(fn);
     if(mb)
     {
@@ -575,7 +580,7 @@ memblock *ResourceMgr::_LoadTextFileInternal(const char *name, bool isTmp)
             return NULL;
         }
 
-        logdebug("LoadTextFile: '%s' [%s]" , name, vf->getSource());
+        logdebug("LoadTextFile: '%s' [%s] -> "PTRFMT" ["PTRFMT"]" , name, vf->getSource(), mb, mb->ptr);
 
         _accountMem(mb->size);
         _SetPtr(fn, (void*)mb);

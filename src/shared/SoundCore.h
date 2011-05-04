@@ -6,6 +6,7 @@
 #include "SelfRefCounter.h"
 #include "DelayedDeletable.h"
 
+struct gme_t;
 
 class SoundFile : public DelayedDeletable
 {
@@ -37,10 +38,10 @@ private:
 class SoundCore
 {
 public:
-    SoundCore();
-    void Destroy();
-    SoundFile *GetSound(char *fn); // do NOT forget to decRef the returned ptr !!
-    void PlayMusic(char *fn);
+    void Init(void);
+    void Destroy(void);
+    SoundFile *GetSound(const char *fn); // do NOT forget to decRef the returned ptr !!
+    bool PlayMusic(const char *fn);
     void PauseMusic(void);
     void StopMusic(void);
     bool IsPlayingMusic(void);
@@ -52,7 +53,9 @@ public:
     inline double GetLoopPoint(void) { return _looppoint; }
 
 private:
+    bool _LoadWithGME(memblock *mb);
     Mix_Music *_music;
+    gme_t *_gme;
     double _looppoint;
 
 };

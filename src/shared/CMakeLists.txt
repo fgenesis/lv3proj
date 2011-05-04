@@ -55,6 +55,7 @@ lzma/LzmaEnc.c
 ${lzo_SRC}
 )
 
-include_directories (${TOP_INCLUDE_DIR}) 
+include_directories (${TOP_INCLUDE_DIR})
+include_directories ("${SRC_ROOT_DIR}/gme") # only shared needs this
 add_library(shared ${shared_SRC})
-target_link_libraries(shared ${SDL_ALL_LIBS} libpng)
+target_link_libraries(shared ${SDL_ALL_LIBS} libpng gme)
