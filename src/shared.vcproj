@@ -523,6 +523,14 @@
 					>
 				</File>
 				<File
+					RelativePath=".\shared\AtomicOp.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\AtomicOp.h"
+					>
+				</File>
+				<File
 					RelativePath=".\shared\BitSet2d.h"
 					>
 				</File>
