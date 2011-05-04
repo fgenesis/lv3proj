@@ -111,23 +111,20 @@ for prividing the definitions. If I'm defining them, they must be scoped or
 else they could conflict with the standard ones at global scope. Even if
 HAVE_STDINT_H isn't defined, I can't assume the typedefs won't exist at
 global scope already. */
-#if defined (HAVE_STDINT_H) || \
-		UCHAR_MAX != 0xFF || USHRT_MAX != 0xFFFF || UINT_MAX != 0xFFFFFFFF
-	#include <stdint.h>
-	#define BOOST
-#else
-	struct BOOST
-	{
-		typedef signed char        int8_t;
-		typedef unsigned char     uint8_t;
-		typedef short             int16_t;
-		typedef unsigned short   uint16_t;
-		typedef int               int32_t;
-		typedef unsigned int     uint32_t;
-		typedef __int64           int64_t;
-		typedef unsigned __int64 uint64_t;
-	};
-#endif
+
+// FG: HACK -- use my own defs for platform's sake
+#include "SysDefs.h"
+struct BOOST
+{
+	typedef int8        int8_t;
+	typedef uint8       uint8_t;
+	typedef int16       int16_t;
+	typedef uint16      uint16_t;
+	typedef int32       int32_t;
+	typedef uint32      uint32_t;
+	typedef int64       int64_t;
+	typedef uint64      uint64_t;
+};
 
 /* My code is not written with exceptions in mind, so either uses new (nothrow)
 OR overrides operator new in my classes. The former is best since clients
