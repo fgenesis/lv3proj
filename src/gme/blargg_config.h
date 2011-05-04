@@ -11,7 +11,7 @@
 //#define BLARGG_NAMESPACE blargg_gme
 
 // Use zlib for transparent decompression of gzipped files.
-#define HAVE_ZLIB_H
+//#define HAVE_ZLIB_H
 
 // Support only listed music types. Remove a line to disable that type.
 /* #define GME_TYPE_LIST \

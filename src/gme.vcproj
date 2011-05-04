@@ -50,7 +50,7 @@
 				ProgramDataBaseFileName="$(IntDir)\gme.pdb"
 				WarningLevel="3"
 				DebugInformationFormat="4"
-				DisableSpecificWarnings="4996;4146;4244;4800;4805;4291;4554;4018;4101;4355;4804"
+				DisableSpecificWarnings="4996;4146;4244;4800;4805;4291;4554;4018;4101;4355;4804;4530"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -126,7 +126,7 @@
 				ProgramDataBaseFileName="$(IntDir)\gme.pdb"
 				WarningLevel="3"
 				DebugInformationFormat="3"
-				DisableSpecificWarnings="4996;4146;4244;4800;4805;4291;4554;4018;4101;4355;4804"
+				DisableSpecificWarnings="4996;4146;4244;4800;4805;4291;4554;4018;4101;4355;4804;4530"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"

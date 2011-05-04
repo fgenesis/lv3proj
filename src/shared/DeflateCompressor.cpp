@@ -142,14 +142,15 @@ void DeflateCompressor::Decompress(void)
     if( (!_iscompressed) || (!_real_size) || (!size()))
         return;
 
-    uLongf origsize = _real_size;
-    uint8 *target = new uint8[_real_size];
+    uint32 rs = (uint32)_real_size;
+    uint32 origsize = rs;
+    uint8 *target = new uint8[rs];
     wpos(0);
     rpos(0);
     decompress((void*)target, &origsize, (const void*)contents(), size(), _windowBits);
-    if(origsize != _real_size)
+    if(origsize != rs)
     {
-        logerror("DeflateCompressor: Inflate error! result=%d cursize=%u origsize=%u realsize=%u\n",size(),origsize,_real_size);
+        logerror("DeflateCompressor: Inflate error! result=%d cursize=%u origsize=%u realsize=%u\n",size(),origsize,rs);
         delete [] target;
         return;
     }
@@ -163,9 +164,16 @@ void DeflateCompressor::Decompress(void)
 
 void GzipCompressor::Decompress(void)
 {
-    uint32 s;
+    uint32 t = 0;
     rpos(size() - sizeof(uint32)); // according to RFC 1952, input size are the last 4 bytes at the end of the file, in little endian
-    *this >> s;
-    _real_size = s;
+    *this >> t;
+    _real_size = t;
+    
+    // !! NOTE: this fixes a gcc/mingw bug where _real_size would be set incorrectly
+#if COMPILER == COMPILER_GNU
+    char xx[20];
+    sprintf(xx, "%u", t);
+#endif
+
     DeflateCompressor::Decompress(); // will set rpos back anyway
 }

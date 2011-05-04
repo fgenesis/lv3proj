@@ -5,6 +5,7 @@ AnimParser.cpp
 AppFalcon.cpp
 AsciiLevelParser.cpp
 AtomicOp.cpp
+DeflateCompressor.cpp
 MyCrc32.cpp
 Engine.cpp
 FalconBaseModule.cpp

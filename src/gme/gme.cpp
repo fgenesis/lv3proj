@@ -121,7 +121,7 @@ gme_err_t gme_open_data( void const* data, long size, Music_Emu** out, int sampl
 	*out = NULL;
 
     char hdr[4];
-    GME_MEM_READER in(data, size);
+    Gzip_Mem_File_Reader in(data, size); // <-- HACK - force gzip reader
     in.read((void*)&hdr[0], 4);
     in.seek(0);
 	

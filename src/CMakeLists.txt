@@ -21,14 +21,14 @@ set(Falcon_MODULES
 set(Falcon_ALL ${Falcon_MODULES} falcon_engine)
 
 
-# framework
-add_subdirectory (shared)
-add_subdirectory (libpng)
-
 # dependencies
+add_subdirectory (libpng)
 add_subdirectory (falcon)
 add_subdirectory (guichan)
 add_subdirectory (gme)
+
+# framework
+add_subdirectory (shared)
 
 # custom extensions
 add_subdirectory (falcon_ext)
