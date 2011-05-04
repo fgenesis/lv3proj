@@ -30,6 +30,7 @@ class GzipCompressor : public DeflateCompressor
 {
 public:
     GzipCompressor();
+    virtual void Decompress(void);
 };
 
 #endif

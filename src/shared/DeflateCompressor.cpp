@@ -160,3 +160,12 @@ void DeflateCompressor::Decompress(void)
     _iscompressed = false;
 
 }
+
+void GzipCompressor::Decompress(void)
+{
+    uint32 s;
+    rpos(size() - sizeof(uint32)); // according to RFC 1952, input size are the last 4 bytes at the end of the file, in little endian
+    *this >> s;
+    _real_size = s;
+    DeflateCompressor::Decompress(); // will set rpos back anyway
+}
