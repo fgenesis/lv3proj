@@ -148,6 +148,9 @@ bool SoundCore::PlayMusic(const char *fn)
         {
             return true; // all fine now
         }
+
+        // unable to load, mb no longer used here
+        resMgr.Drop(mb);
     }
 
     // still no success, give up
