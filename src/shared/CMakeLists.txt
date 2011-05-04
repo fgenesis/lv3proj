@@ -4,6 +4,7 @@ set(shared_SRC
 AnimParser.cpp
 AppFalcon.cpp
 AsciiLevelParser.cpp
+AtomicOp.cpp
 MyCrc32.cpp
 Engine.cpp
 FalconBaseModule.cpp
