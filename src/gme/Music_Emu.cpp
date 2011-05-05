@@ -215,6 +215,11 @@ void Music_Emu::set_fade( int start_msec, int length_msec )
 			length_msec * sample_rate() / (1000 / stereo) );
 }
 
+void Music_Emu::set_volume( float v )
+{
+    track_filter.set_volume( v );
+}
+
 blargg_err_t Music_Emu::play( int out_count, sample_t out [] )
 {
 	require( current_track() >= 0 );

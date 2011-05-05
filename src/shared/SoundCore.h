@@ -57,6 +57,7 @@ private:
     Mix_Music *_music;
     gme_t *_gme;
     double _looppoint;
+    uint8 _volume;
 
 };
 

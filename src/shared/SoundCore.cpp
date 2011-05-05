@@ -35,6 +35,11 @@ static void stop_music_gme(void *userdata)
     resMgr.Drop(mb);
 }
 
+static inline float getFloatVolume(uint8 vol)
+{
+    return vol / float(MIX_MAX_VOLUME);
+}
+
 
 SoundFile::SoundFile(Mix_Chunk *p)
 : sound(p), channel(-1), resCallback(p), ref(this)
@@ -189,12 +194,17 @@ bool SoundCore::IsPlayingMusic(void)
 
 void SoundCore::SetMusicVolume(uint8 vol)
 {
+    if(vol > MIX_MAX_VOLUME)
+        vol = MIX_MAX_VOLUME;
     Mix_VolumeMusic(vol);
+    if(_gme)
+        gme_set_volume(_gme, getFloatVolume(vol)); // <-- lol.
+    _volume = vol;
 }
 
 uint32 SoundCore::GetMusicVolume(void)
 {
-    return Mix_VolumeMusic(-1);
+    return _volume;
 }
 
 SoundFile *SoundCore::GetSound(const char *fn)
@@ -223,6 +233,7 @@ bool SoundCore::_LoadWithGME(memblock *mb)
         gme_set_user_cleanup(emu, stop_music_gme);
         gme_set_user_data(emu, (void*)mb);
         Mix_HookMusic(play_music_gme, (void*)emu);
+        gme_set_volume(emu, getFloatVolume(_volume));
         return true;
     }
 

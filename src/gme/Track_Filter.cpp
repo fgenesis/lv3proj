@@ -19,6 +19,8 @@ int const fade_block_size = 512;
 int const fade_shift = 8; // fade ends with gain at 1.0 / (1 << fade_shift)
 int const silence_threshold = 8;
 
+int const max_volume_gain = 0x4000;
+
 blargg_err_t Track_Filter::init( callbacks_t* c )
 {
 	callbacks = c;
@@ -49,6 +51,7 @@ Track_Filter::Track_Filter() : setup_()
 	callbacks          = NULL;
 	setup_.max_silence = indefinite_count;
 	silence_ignored_   = false;
+    volume_gain        = max_volume_gain;
 	stop();
 }
 
@@ -138,6 +141,11 @@ void Track_Filter::set_fade( int start, int length )
 		fade_step = 1;
 }
 
+void Track_Filter::set_volume( float v )
+{
+    volume_gain = uint32(v * max_volume_gain);
+}
+
 bool Track_Filter::is_fading() const
 {
 	return out_time >= fade_start && fade_start != indefinite_count;
@@ -153,10 +161,10 @@ static int int_log( int x, int step, int unit )
 
 void Track_Filter::handle_fade( sample_t out [], int out_count )
 {
+    int const shift = 14;
+    int const unit = 1 << shift;
 	for ( int i = 0; i < out_count; i += fade_block_size )
 	{
-		int const shift = 14;
-		int const unit = 1 << shift;
 		int gain = int_log( (out_time + i - fade_start) / fade_block_size,
 				fade_step, unit );
 		if ( gain < (unit >> fade_shift) )
@@ -169,6 +177,19 @@ void Track_Filter::handle_fade( sample_t out [], int out_count )
 			++io;
 		}
 	}
+}
+
+void Track_Filter::handle_volume( sample_t out [], int out_count )
+{
+    int const shift = 14;
+    int const unit = 1 << shift;
+    int gain = volume_gain;
+    sample_t* io = &out[0];
+    for ( int i = 0; i < out_count; ++i)
+    {
+        *io = sample_t ((*io * gain) >> shift);
+        ++io;
+    }
 }
 
 // Silence detection
@@ -284,6 +305,9 @@ blargg_err_t Track_Filter::play( int out_count, sample_t out [] )
 					fill_buf(); // cause silence detection on next play()
 			}
 		}
+
+        if(volume_gain != max_volume_gain)
+            handle_volume( out, out_count );
 		
 		if ( is_fading() )
 			handle_fade( out, out_count );

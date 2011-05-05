@@ -59,6 +59,8 @@ public:
 	// true. Fade time must be set after track has been started, and can be changed
 	// at any time.
 	void set_fade( int start_msec, int length_msec = 8000 );
+
+    void set_volume( float v );
 	
 	// Disables automatic end-of-track detection and skipping of silence at beginning
 	void ignore_silence( bool disable = true );

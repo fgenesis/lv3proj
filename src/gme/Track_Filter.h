@@ -42,6 +42,9 @@ public:
 	
 	// Sets time that fade starts, and how long until track ends.
 	void set_fade( sample_count_t start, sample_count_t length );
+
+    // Sets volume, 1.0 is default
+    void set_volume( float v );
 	
 	// Generates n samples into buf
 	blargg_err_t play( int n, sample_t buf [] );
@@ -100,6 +103,10 @@ private:
 	blargg_vector<sample_t> buf;
 	void fill_buf();
 	void emu_play( sample_t out [], int count );
+
+    // Volume
+    int volume_gain;
+    void handle_volume( sample_t out [], int out_count );
 };
 
 #endif

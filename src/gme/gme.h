@@ -145,6 +145,9 @@ void gme_equalizer( const gme_t*, gme_equalizer_t* out );
 /* Changes frequency equalizer parameters */
 void gme_set_equalizer( gme_t*, gme_equalizer_t const* eq );
 
+/* Set volume */
+void gme_set_volume( gme_t*, float v );
+
 
 
 /******** Effects processor ********/
