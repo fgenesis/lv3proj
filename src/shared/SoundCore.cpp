@@ -96,6 +96,28 @@ void SoundCore::Init(void)
     _gme = NULL;
     Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 1024);
     Mix_AllocateChannels(16);
+
+    Uint16 format;
+    Mix_QuerySpec(&_sampleRate, &format, &_channels);
+
+    char *fmt = "Unknown";
+    _sampleSize = 1;
+    switch(format)
+    {
+        case AUDIO_U8:     fmt = "U8"; break;
+        case AUDIO_S8:     fmt = "S8"; break;
+        case AUDIO_U16LSB: fmt = "U16LSB"; _sampleSize = 2; break;
+        case AUDIO_S16LSB: fmt = "S16LSB"; _sampleSize = 2; break;
+        case AUDIO_U16MSB: fmt = "U16MSB"; _sampleSize = 2; break;
+        case AUDIO_S16MSB: fmt = "S16MSB"; _sampleSize = 2; break;
+    }
+    if(!(_sampleRate == 44100 && _sampleSize == 2 && _channels == 2))
+    {
+        logerror("SoundCore: %d Hz, %d channels [%s]", _sampleRate, _channels, fmt);
+        logerror("--> WARNING: Unexpected Mixer settings, audio playback may be weird!");
+    }
+    else
+        logdetail("SoundCore: %d Hz, %d channels [%s]", _sampleRate, _channels, fmt);
 }
 
 void SoundCore::Destroy(void)
@@ -198,7 +220,7 @@ void SoundCore::SetMusicVolume(uint8 vol)
         vol = MIX_MAX_VOLUME;
     Mix_VolumeMusic(vol);
     if(_gme)
-        gme_set_volume(_gme, getFloatVolume(vol)); // <-- lol.
+        gme_set_volume(_gme, getFloatVolume(vol));
     _volume = vol;
 }
 
@@ -220,8 +242,14 @@ SoundFile *SoundCore::GetSound(const char *fn)
 
 bool SoundCore::_LoadWithGME(memblock *mb)
 {
+    if(!(_sampleSize == 2 && _channels == 2))
+    {
+        logerror("SoundCore: Game_Music_Emu needs 16 bit samples and stereo output");
+        return false;
+    }
+
     gme_t *emu =  NULL;
-    gme_err_t err = gme_open_data((void const*)mb->ptr, mb->size, &emu, 44100);
+    gme_err_t err = gme_open_data((void const*)mb->ptr, mb->size, &emu, _sampleRate);
     
     if(!err)
     {

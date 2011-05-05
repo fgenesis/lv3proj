@@ -51,6 +51,7 @@ public:
     inline Mix_Music *_GetMusicPtr(void) { return _music; }
     inline void SetLoopPoint(double msec) { _looppoint = msec; }
     inline double GetLoopPoint(void) { return _looppoint; }
+    inline uint32 GetSampleSize(void) { return _sampleSize; }
 
 private:
     bool _LoadWithGME(memblock *mb);
@@ -58,6 +59,11 @@ private:
     gme_t *_gme;
     double _looppoint;
     uint8 _volume;
+
+    // queried from SDL
+    int _sampleRate;
+    int _channels;
+    uint32 _sampleSize;
 
 };
 
