@@ -193,9 +193,17 @@ void ResourceMgr::_Delete(void *ptr, ResStruct& res)
             break;
 
         case RESTYPE_MIX_MUSIC:
-            DEBUG(logdebug("ResourceMgr:: Deleting Mix_Music "PTRFMT, ptr));
+        {
+            Mix_MusicType musType = Mix_GetMusicType((Mix_Music*)ptr);
+            DEBUG(logdebug("ResourceMgr:: Deleting Mix_Music "PTRFMT" (music type %u)", ptr, musType));
             Mix_FreeMusic((Mix_Music*)ptr);
+            // For unknown reason, OGG frees the RWop, but MikMod and WAV do not (not sure about the rest).
+            // We have to check for that to prevent double-free,
+            // Setting it to NULL here will prevent a second deletion & crash further down.
+            if(musType == MUS_OGG)
+                res.rwop = NULL;
             break;
+        }
 
         default:
             ASSERT(false);
@@ -203,11 +211,17 @@ void ResourceMgr::_Delete(void *ptr, ResStruct& res)
 
     // if there is another resource the now deleted resource depends on, decref that
     if(res.depdata)
+    {
+        logdebug("ResMgr: Dropping depdata "PTRFMT" for resource "PTRFMT, res.depdata, ptr);
         Drop(res.depdata);
+    }
 
     // same for SDL RWops still used to access the data (Mix_LoadMUS_RW() does that)
     if(res.rwop)
+    {
+        logdebug("ResMgr: Dropping RWop "PTRFMT" for resource "PTRFMT, res.rwop, ptr);
         SDL_RWclose(res.rwop);
+    }
 }
 
 SDL_Surface *ResourceMgr::LoadImg(const char *name)
