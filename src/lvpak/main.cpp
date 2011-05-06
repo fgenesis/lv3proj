@@ -723,7 +723,7 @@ void parseArgv(std::list<PackDef>& cmds, uint32 argc, char **argv, bool isCmdLin
         {
             PackDef pd(PC_ADD_FILE);
             pd.fromCmdLine = isCmdLine;
-            pd.name = p; // is automatically truncated to file name later
+            pd.name = g_currentDir + p; // is automatically truncated to file name later
             pd.relPath = _PathStripLast(p);
             cmds.push_back(pd);
         }
