@@ -49,6 +49,7 @@ public:
     inline static float GetTimeDiffReal(void) { return s_diffTimeReal; } // 1000 = 1 second (real)
     inline static uint32 GetTicks(void) { return SDL_GetTicks() - s_ignoredTicks; }
     static void ResetTime(void);
+    static bool IsKeyPressed(SDLKey k);
 
     virtual void InitScreen(uint32 sizex, uint32 sizey, uint8 bpp = 0, uint32 extraflags = 0);
     virtual bool Setup(void);

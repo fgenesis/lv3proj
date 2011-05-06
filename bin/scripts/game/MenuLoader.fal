@@ -10,6 +10,7 @@ class EngineMainMenu from SinusMenu
     end
     
     function OnGoBack()
+        EngineConfig.Save()
         Engine.Exit()
     end
     

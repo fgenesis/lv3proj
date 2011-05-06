@@ -357,7 +357,7 @@ void Engine::OnKeyDown(SDLKey key, SDLMod mod)
             ToggleFullscreen();
     }
 
-    if(mod & KMOD_CTRL)
+    //if(mod & KMOD_CTRL)
     {
         if(key == SDLK_F1)
             ToggleDebugFlag(EDBG_COLLISION_MAP_OVERLAY);
@@ -387,6 +387,14 @@ void Engine::OnWindowResize(uint32 newx, uint32 newy)
 void Engine::OnObjectCreated(BaseObject *obj)
 {
 }
+
+bool Engine::IsKeyPressed(SDLKey k)
+{
+    int numkeys = 0;
+    uint8 *state = SDL_GetKeyState(&numkeys);
+    return k < numkeys && state[k];
+}
+    
 
 void Engine::_Render(void)
 {

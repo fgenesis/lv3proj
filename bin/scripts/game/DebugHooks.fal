@@ -9,26 +9,25 @@ function dbg_ApplyHooks()
     end
 end
 
-dbg_ApplyHooks()
-
-// debug keys
-
-function DebugKeyHandler(e)
-    ty, src, which, value = e
-    if ty == EVENT_TYPE_KEYBOARD and value
-    
-        if which == SDLK.F5 // <-- slowmotion
-            s = Engine.GetSpeed() - 0.1
-            if s < 0: s = 0
-            Engine.SetSpeed(s)
-        elif which == SDLK.F6 // <-- speed up
-            Engine.SetSpeed(Engine.GetSpeed() + 0.1)
-        end
-        
-    end
+function dbg_IncrSpeed()
+    Engine.SetSpeed(Engine.GetSpeed() + 0.1)
 end
 
-RegisterRawInputHook(DebugKeyHandler)
+function dbg_DecrSpeed()
+    s = Engine.GetSpeed() - 0.1
+    if s < 0: s = 0
+    Engine.SetSpeed(s)
+end
 
+function dbg_ToggleOverlay()
+    EngineConfig["enableDebugHooks"] = not EngineConfig.get("enableDebugHooks")
+    dbg_ApplyHooks()
+end
+
+Keyboard.RegisterCallback( { p => if p: dbg_DecrSpeed() }, SDLK.F5)
+Keyboard.RegisterCallback( { p => if p: dbg_IncrSpeed() }, SDLK.F6)
+Keyboard.RegisterCallback( { p => if p: dbg_ToggleOverlay() }, SDLK.F7)
+
+dbg_ApplyHooks()
 
 export dbg_ApplyHooks

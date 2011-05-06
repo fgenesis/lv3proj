@@ -909,6 +909,12 @@ FALCON_FUNC fal_Engine_SetSpeed(Falcon::VMachine *vm)
         .extra("N >= 0") );
 }
 
+FALCON_FUNC fal_Engine_IsKeyPressed(Falcon::VMachine *vm)
+{
+    FALCON_REQUIRE_PARAMS_EXTRA(1, "I")
+    vm->retval(Engine::IsKeyPressed(SDLKey(vm->param(0)->forceInteger())));
+}
+
 FALCON_FUNC fal_EngineMap_GetLayer(Falcon::VMachine *vm)
 {
     FALCON_REQUIRE_PARAMS(1);
@@ -1239,6 +1245,7 @@ Falcon::Module *FalconBaseModule_create(void)
     m->addClassMethod(clsEngine, "SetSpeed", fal_Engine_SetSpeed);
     m->addClassMethod(clsEngine, "GetSpeed", fal_Engine_GetSpeed);
     m->addClassMethod(clsEngine, "ResetTime", fal_Engine_ResetTime);
+    m->addClassMethod(clsEngine, "IsKeyPressed", fal_Engine_IsKeyPressed);
 
     Falcon::Symbol *symScreen = m->addSingleton("Screen");
     Falcon::Symbol *clsScreen = symScreen->getInstance();

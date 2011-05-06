@@ -1,0 +1,115 @@
+/** Keyboard singleton
+    Convenience access to Engine.IsKeyPressed and simple wrappers to check for multiple keys at once
+*/
+
+_cbList = [ => ] // TODO: use array instead of dict
+
+
+class _CallbackChecker(ck, cb)
+    c = ck // save checker
+    s = ck() // save current state
+    f = cb // the callback
+    
+    function __call()
+        newstate = self.c()
+        if self.s != newstate
+            self.s = newstate
+            self.f(newstate)
+        end
+        return newstate
+    end
+end
+
+class Keyboard
+    
+    init
+        raise "Keyboard: This class is a singleton and should not be instanced!"
+    end
+    
+    function Init()
+        UnregisterRawInputHook(self._InputHandler) // just in case
+        RegisterRawInputHook(self._InputHandler)
+    end
+    
+    function All()
+        v = argv()
+        return v and all(map(Engine.IsKeyPressed, v))
+    end
+    
+    function __call() // equal to All()
+        v = argv()
+        return v and all(map(Engine.IsKeyPressed, v))
+    end
+    
+    function Any()
+        v = argv()
+        return v and any(map(Engine.IsKeyPressed, v))
+    end
+    
+    function Ctrl()
+        return Engine.IsKeyPressed(SDLK.LCTRL) or Engine.IsKeyPressed(SDLK.RCTRL)
+    end
+    
+    function Alt()
+        return Engine.IsKeyPressed(SDLK.LALT) or Engine.IsKeyPressed(SDLK.RALT)
+    end
+    
+    function Shift()
+        return Engine.IsKeyPressed(SDLK.LSHIFT) or Engine.IsKeyPressed(SDLK.RSHIFT)
+    end
+    
+    // returns a callable item that, upon called, returns true if all keys are pressed that were passed to this method
+    function MakeAllChecker()
+        v = argv()
+        if not v: return { => false }
+        return [self.All] + v
+    end
+    
+    // returns a callable item that, upon called, returns true if any key is pressed that was passed to this method
+    function MakeAnyChecker()
+        v = argv()
+        if not v: return { => false }
+        return [self.Any] + v
+    end
+    
+    function _InputHandler(e)
+        global _cbList
+        // ty, src, which, value = e
+        if e[0] != EVENT_TYPE_KEYBOARD: return
+        
+        L = _cbList.get(e[2]) // get all callbacks that have something to do with the key that has just been pressed or released
+        for cb in L: cb() // do the callback. it will save its new state internally and avoid beeing called twice.
+    end
+    
+    // callback that is called as soon as all keys passed as params are pressed.
+    // true is passed when the key was pressed, and false if it was released again
+    function RegisterCallback(func /* ... */)
+        global _cbList
+        v = passvp()
+        if not v: return
+        
+        checker = passvp(self.MakeAllChecker) // pass any additional params (= the keys) to checker factory
+        cb = _CallbackChecker(checker, func)
+        
+        for p in v
+            L = _cbList.get(p)
+            if not L
+                _cbList[p] = [cb] // initilize array if not present
+            else
+                L += cb // just append
+            end
+        end
+    end
+    
+    function UnregisterCallback(func)
+        global _cbList
+        for L in _cbList
+            L = filter( { cb => cb.f != func }, L )
+        end
+    end
+    
+end
+
+Keyboard.Init()
+
+export Keyboard

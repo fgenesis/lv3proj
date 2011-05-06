@@ -9,6 +9,7 @@
 -p scripts/system -s FontStore.fal
 -p scripts/system -s GarbageCollect.fal
 -p scripts/system -s GraphScriptBuilder.fal
+-p scripts/system -s Keyboard.fal
 -p scripts/system -s MenuSystem.fal
 -p scripts/system -s ObjectLoader.fal
 -p scripts/system -s ObjectLoaderShared.fal
