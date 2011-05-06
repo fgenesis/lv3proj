@@ -795,7 +795,8 @@ bool LVPAFile::SaveAs(const char *fn, uint8 compression /* = LVPA_DEFAULT_LEVEL 
             }
 
             // encrypt? these blocks will be thrown away, so we can just directly apply encryption
-            _CryptBlock((uint8*)block->contents(), h, true);
+            if(block->size())
+                _CryptBlock((uint8*)block->contents(), h, true);
 
             bar.PartialFix();
 

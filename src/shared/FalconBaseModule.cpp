@@ -585,7 +585,7 @@ FALCON_FUNC fal_Surface_Pixel( Falcon::VMachine *vm )
     fal_Surface *self = Falcon::dyncast<fal_Surface*>( vm->self().asObject() );
     SDL_Surface *s = self->surface;
     self->camera->TranslatePoints(x,y);
-    if(x < s->w && y < s->h)
+    if(x > 0 && x < s->w && y > 0 && y < s->h)
         SDLfunc_putpixel(s, x, y, c);
 }
 
