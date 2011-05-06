@@ -17,6 +17,7 @@ public:
     bool EmbedStringAsModule(char *str, char *modName, bool throw_ = false, bool launch = false);
 
 protected:
+    void _RedirectOutput(void);
     virtual void _LoadModules(void);
     void _LinkModule(Falcon::Module *m);
 

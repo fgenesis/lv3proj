@@ -24,9 +24,50 @@ function dbg_ToggleOverlay()
     dbg_ApplyHooks()
 end
 
+function dbg_ToggleDebugText2(on)
+    if on
+        TextOutput.Enable()
+    else
+        TextOutput.Disable()
+    end
+end
+
+function dbg_ToggleDebugText(on)
+    x = not EngineConfig.get("enableDebugText")
+    EngineConfig["enableDebugText"] = x
+    dbg_ToggleDebugText2(x)
+end
+
+function dbg_EnlageDebugText()
+    TextOutput.SetLines(TextOutput.GetLines() + 1)
+    EngineConfig["debugTextLines"] = TextOutput.GetLines()
+end
+
+function dbg_ShrinkDebugText()
+    TextOutput.SetLines(TextOutput.GetLines() - 1)
+    EngineConfig["debugTextLines"] = TextOutput.GetLines()
+end
+
+function dbg_LoadSettings()
+    dlines = EngineConfig.get("debugTextLines")
+    if dlines: TextOutput.SetLines(dlines)
+    
+    dtxt = EngineConfig.get("enableDebugText")
+    if dtxt != nil : dbg_ToggleDebugText2(dtxt)
+    
+end
+
+
 Keyboard.RegisterCallback( { p => if p: dbg_DecrSpeed() }, SDLK.F5)
 Keyboard.RegisterCallback( { p => if p: dbg_IncrSpeed() }, SDLK.F6)
 Keyboard.RegisterCallback( { p => if p: dbg_ToggleOverlay() }, SDLK.F7)
+Keyboard.RegisterCallback( { p => if p: dbg_ToggleDebugText() }, SDLK.F8)
+Keyboard.RegisterCallback( { p => if p: dbg_ShrinkDebugText() }, SDLK.F9)
+Keyboard.RegisterCallback( { p => if p: dbg_EnlageDebugText() }, SDLK.F10)
+
+Keyboard.RegisterCallback( { p => if p: EngineConfig.Save() }, SDLK.F12)
+
+dbg_LoadSettings()
 
 dbg_ApplyHooks()
 

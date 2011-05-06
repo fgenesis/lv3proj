@@ -1218,6 +1218,46 @@ FALCON_FUNC fal_GetMouseY( Falcon::VMachine *vm )
     vm->retval(Falcon::int32(Engine::GetInstance()->GetMouseY()));
 }
 
+static void _buildOutputStr(Falcon::VMachine *vm, Falcon::String& out)
+{
+    Falcon::String temp;
+    for (int i = 0; i < vm->paramCount(); i ++ )
+    {
+        Falcon::Item *elem = vm->param(i);
+        Falcon::String temp;
+
+        switch( elem->type() )
+        {
+            case FLC_ITEM_STRING:
+                out += *elem->asString();
+                break;
+
+            default:
+            {
+                Falcon::String temp;
+                elem->toString( temp );
+                out += temp;
+            }
+        }
+    }
+}
+
+FALCON_FUNC fal_dprintl( Falcon::VMachine *vm )
+{
+    Falcon::String out;
+    _buildOutputStr(vm, out);
+    Falcon::AutoCString cs(out);
+    logdebug("%s", cs.c_str()); // %s to prevent format string injection
+}
+
+FALCON_FUNC fal_eprintl( Falcon::VMachine *vm )
+{
+    Falcon::String out;
+    _buildOutputStr(vm, out);
+    Falcon::AutoCString cs(out);
+    logerror("%s", cs.c_str()); // %s to prevent format string injection
+}
+
 Falcon::Module *FalconBaseModule_create(void)
 {
     Falcon::Module *m = new Falcon::Module;
@@ -1323,6 +1363,8 @@ Falcon::Module *FalconBaseModule_create(void)
     m->addExtFunc("color", fal_Color);
     m->addExtFunc("GetMouseX", fal_GetMouseX);
     m->addExtFunc("GetMouseY", fal_GetMouseY);
+    m->addExtFunc("dprintl", fal_dprintl);
+    m->addExtFunc("eprintl", fal_eprintl);
 
     m->addConstant("MAX_VOLUME", Falcon::int64(MIX_MAX_VOLUME));
 

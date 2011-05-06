@@ -1,0 +1,58 @@
+
+// WARNING: this function MUST NOT print any text itself to the standard output!
+
+t = ["", 0]
+_last = List(t,t,t,t,t,t,t,t)
+_fonts = [ GetFont("consolefont", "consolefont"),
+           GetFont("consolefont_red", "consolefont"), 
+           GetFont("consolefont_blue", "consolefont")  ]
+_fh = _fonts[0].GetHeight()
+
+// convenience accessor for text printing settings
+class TextOutput
+    init
+        raise "TextOutput: This class is a singleton and should not be instanced!"
+    end
+    
+    function SetLines(n)
+        global _last
+        if n <= 1: return
+        while _last.len() < n: _last.pushFront(["", 0])
+        while _last.len() > n: _last.popFront()
+    end
+    
+    function GetLines()
+        global _last
+        return _last.len()
+    end
+    
+    function Render()
+        global _last, _fonts, _fh
+        write = Screen.GetSurfaceRaw().Write
+        y = 0
+        for s, c in _last
+            write(0, y, _fonts[c], s)
+            y += _fh
+        end
+    end
+    
+    function Enable()
+        RegisterRenderHook(self.Render)
+    end
+    
+    function Disable()
+        UnregisterRenderHook(self.Render)
+    end
+    
+end
+
+// called by the engine on text output
+function PrintCallback(s, c)
+    global _last
+    if c > 2: c = 0
+    _last.append([s, c])
+    _last.popFront()
+end
+
+
+export PrintCallback, TextOutput

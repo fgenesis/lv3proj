@@ -1,4 +1,8 @@
 
+_OutputStream = OutputStream
+_InputStream = InputStream
+_dirMake = dirMake
+
 EngineConfig = [ => ]
 
 // default entries
@@ -26,7 +30,7 @@ EngineConfig["Save"] = function()
     end
     
     makestrm = function()
-        ostr = OutputStream("saved_data/engine/engine.ini")
+        ostr = _OutputStream("saved_data/engine/engine.ini")
         ostr.setEncoding(getSystemEncoding(), CR_TO_CRLF)
         return ostr
     end
@@ -34,7 +38,7 @@ EngineConfig["Save"] = function()
     try
         strm = makestrm()
     catch
-        try: dirMake("saved_data/engine")
+        try: _dirMake("saved_data/engine")
         try
             strm = makestrm()
         catch
@@ -50,7 +54,7 @@ end
 
 EngineConfig["Load"] = function()
     try
-        strm = InputStream("saved_data/engine/engine.ini")
+        strm = _InputStream("saved_data/engine/engine.ini")
         strm.setEncoding(getSystemEncoding(), CR_TO_CRLF)
     catch
         return false

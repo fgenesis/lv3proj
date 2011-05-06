@@ -4,11 +4,30 @@
 
 #if PLATFORM == PLATFORM_WIN32
 #include <windows.h>
+#include "UndefUselessCrap.h"
 #endif
 
-FILE *logfile = NULL;
-uint8 loglevel = 0;
-bool logtime = false;
+
+static FILE *logfile = NULL;
+static uint8 loglevel = 0;
+static bool logtime = false;
+static log_callback_func callback = NULL;
+static bool callback_newline = false;
+static void *callback_userdata = NULL;
+
+static inline void _log_docallback(const char *fmt, int c, va_list ap)
+{
+    if(!callback)
+        return;
+    char b[512];
+    int p = vsnprintf(b, 508, fmt, ap);
+    if(callback_newline)
+    {
+        b[p] = '\n';
+        b[p+1] = 0;
+    }
+    callback(b, c, callback_userdata);
+}
 
 void log_prepare(const char *fn, const char *mode = NULL)
 {
@@ -32,6 +51,14 @@ void log_setlogtime(bool b)
     logtime = b;
 }
 
+void log_setcallback(log_callback_func f, bool newline, void *user)
+{
+    callback = f;
+    callback_newline = newline;
+    callback_userdata = user;
+}
+
+
 void log(const char *str, ...)
 {
     if(!str)
@@ -46,6 +73,10 @@ void log(const char *str, ...)
     _log_resetcolor(true);
 
     printf("\n");
+
+    va_start(ap, str);
+    _log_docallback(str, GREY, ap);
+    va_end(ap);
 
     if(logfile)
     {
@@ -74,6 +105,10 @@ void logdetail(const char *str, ...)
 
     printf("\n");
 
+    va_start(ap, str);
+    _log_docallback(str, LCYAN, ap);
+    va_end(ap);
+
     if(logfile)
     {
         fprintf(logfile, "%s", GetDateString().c_str());
@@ -99,8 +134,11 @@ void logdebug(const char *str, ...)
     va_end(ap);
     _log_resetcolor(true);
 
-
     printf("\n");
+
+    va_start(ap, str);
+    _log_docallback(str, LBLUE, ap);
+    va_end(ap);
 
     if(logfile)
     {
@@ -127,8 +165,11 @@ void logdev(const char *str, ...)
 	va_end(ap);
 	_log_resetcolor(true);
 
-
 	printf("\n");
+
+    va_start(ap, str);
+    _log_docallback(str, LMAGENTA, ap);
+    va_end(ap);
 
 	if(logfile)
 	{
@@ -153,7 +194,11 @@ void logerror(const char *str, ...)
     va_end(ap);
     _log_resetcolor(false);
 
-    fprintf(stderr,"\n");
+    printf("\n");
+
+    va_start(ap, str);
+    _log_docallback(str, LRED, ap);
+    va_end(ap);
 
     if(logfile)
     {
@@ -172,13 +217,17 @@ void logcritical(const char *str, ...)
     va_list ap;
     _log_setcolor(false,RED);
     if(logtime)
-        printf("%s ", GetTimeString().c_str());
+        fprintf(stderr, "%s ", GetTimeString().c_str());
     va_start(ap, str);
     vfprintf( stderr, str, ap );
     va_end(ap);
     _log_resetcolor(false);
 
     fprintf(stderr,"\n");
+
+    va_start(ap, str);
+    _log_docallback(str, RED, ap);
+    va_end(ap);
 
     if(logfile)
     {
@@ -206,6 +255,10 @@ void logcustom(uint8 lvl, Color color, const char *str, ...)
     _log_resetcolor(true);
 
     printf("\n");
+
+    va_start(ap, str);
+    _log_docallback(str, color, ap);
+    va_end(ap);
 
     if(logfile)
     {

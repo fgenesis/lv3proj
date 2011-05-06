@@ -1,9 +1,10 @@
 
 _fonts = [ => ]
 
-function LoadFont(name)
+function LoadFont(name, txt)
     global _fonts
-    font = Font("font/" + name + ".png", "gfx/font/" + name + ".txt")
+    if not txt: txt = name
+    font = Font("font/" + name + ".png", "gfx/font/" + txt + ".txt")
     if font: RegisterFont(name, font)
     return font
 end
@@ -21,10 +22,10 @@ function RegisterFont(name, font)
     end
 end
 
-function GetFont(name)
+function GetFont(name, txt)
     global _fonts
     font = _fonts.get(name)
-    if not font: font = LoadFont(name)
+    if not font: font = LoadFont(name, txt)
     return font
 end
 

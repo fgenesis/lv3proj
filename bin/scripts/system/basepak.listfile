@@ -22,6 +22,7 @@
 -p scripts/system -s ScriptConstants.fal
 -p scripts/system -s SNESControlledPlayer.fal
 -p scripts/system -s SoundSupport.fal
+-p scripts/system -s TextOutput.fal
 -p scripts/system -s basepak.listfile
 -p scripts/system -s gen.sh
 -p scripts/system -s util.fal

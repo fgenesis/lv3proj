@@ -20,7 +20,10 @@ enum Color
     WHITE
 };
 
+typedef void (*log_callback_func)(const char *, int, void *);
+
 void log_prepare(const char *fn, const char *mode);
+void log_setcallback(log_callback_func f, bool newline, void *user);
 void log_setloglevel(uint8 lvl);
 void log_setlogtime(bool b);
 void log(const char *str, ...) ATTR_PRINTF(1,2);
