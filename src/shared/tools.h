@@ -44,6 +44,8 @@ void GetFileListRecursive(const std::string dir, std::list<std::string>& files, 
 bool WildcardMatch(const char *str, const char *pattern);
 uint32 GetConsoleWidth(void);
 size_t strnNLcpy(char *dst, const char *src, uint32 n = -1 );
+int ParseCommandLine(char *cmdline, char **argv);
+void UnEscapeQuotes(char *arg);
 
 
 void SplitFilenameToProps(const char *in, std::string *fn = NULL, std::string *s1 = NULL, 

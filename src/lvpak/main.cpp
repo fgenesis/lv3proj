@@ -207,7 +207,7 @@ static void _DoFileByMode(LVPAFile *lvpa, PackDef *glob, const std::string& disk
 }
 
 // uses name & relPath only, rest is stolen from glob
-void PackCmd_AddFile(LVPAFile *lvpa, PackDef *d, PackDef *glob)
+static void PackCmd_AddFile(LVPAFile *lvpa, PackDef *d, PackDef *glob)
 {
     if(!_IsFileMode())
         return;
@@ -253,7 +253,7 @@ void PackCmd_AddFile(LVPAFile *lvpa, PackDef *d, PackDef *glob)
     }
 }
 
-void PackCmd_MakeSolid(LVPAFile *lvpa, PackDef *d, PackDef *glob)
+static void PackCmd_MakeSolid(LVPAFile *lvpa, PackDef *d, PackDef *glob)
 {
     if(!_IsAddMode())
         return;
@@ -262,7 +262,7 @@ void PackCmd_MakeSolid(LVPAFile *lvpa, PackDef *d, PackDef *glob)
     glob->solidBlockName = d->solidBlockName;
 }
 
-void PackCmd_NotSolid(LVPAFile *lvpa, PackDef *d, PackDef *glob)
+static void PackCmd_NotSolid(LVPAFile *lvpa, PackDef *d, PackDef *glob)
 {
     if(!_IsAddMode())
         return;
@@ -271,7 +271,7 @@ void PackCmd_NotSolid(LVPAFile *lvpa, PackDef *d, PackDef *glob)
     glob->solidBlockName = "<ERROR>"; // if this is put into a file, things are wrong
 }
 
-void PackCmd_SetCompr(LVPAFile *lvpa, PackDef *d, PackDef *glob)
+static void PackCmd_SetCompr(LVPAFile *lvpa, PackDef *d, PackDef *glob)
 {
     if(!_IsAddMode())
         return;
@@ -280,7 +280,7 @@ void PackCmd_SetCompr(LVPAFile *lvpa, PackDef *d, PackDef *glob)
     glob->level = d->level;
 }
 
-void PackCmd_SetPath(LVPAFile *lvpa, PackDef *d, PackDef *glob)
+static void PackCmd_SetPath(LVPAFile *lvpa, PackDef *d, PackDef *glob)
 {
     if(!_IsFileMode())
         return;
@@ -302,7 +302,7 @@ void PackCmd_SetPath(LVPAFile *lvpa, PackDef *d, PackDef *glob)
         glob->relPath = d->relPath;
 }
 
-void PackCmd_SetSolidCompr(LVPAFile *lvpa, PackDef *d, PackDef *glob)
+static void PackCmd_SetSolidCompr(LVPAFile *lvpa, PackDef *d, PackDef *glob)
 {
     if(!_IsAddMode())
         return;
@@ -310,7 +310,7 @@ void PackCmd_SetSolidCompr(LVPAFile *lvpa, PackDef *d, PackDef *glob)
     lvpa->SetSolidBlock(d->solidBlockName.c_str(), d->level, d->algo);
 }
 
-void PackCmd_SetHdrCompr(LVPAFile *lvpa, PackDef *d, PackDef *glob)
+static void PackCmd_SetHdrCompr(LVPAFile *lvpa, PackDef *d, PackDef *glob)
 {
     if(!_IsAddMode())
         return;
@@ -319,7 +319,7 @@ void PackCmd_SetHdrCompr(LVPAFile *lvpa, PackDef *d, PackDef *glob)
     g_hdrLevel = d->level;
 }
 
-void PackCmd_SetHdrEncrypt(LVPAFile *lvpa, PackDef *d, PackDef *glob)
+static void PackCmd_SetHdrEncrypt(LVPAFile *lvpa, PackDef *d, PackDef *glob)
 {
     if(!_IsAddMode())
         return;
@@ -327,7 +327,7 @@ void PackCmd_SetHdrEncrypt(LVPAFile *lvpa, PackDef *d, PackDef *glob)
     g_hdrEncr = true;
 }
 
-void PackCmd_ListfileNewline(LVPAFile *lvpa, PackDef *d, PackDef *glob)
+static void PackCmd_ListfileNewline(LVPAFile *lvpa, PackDef *d, PackDef *glob)
 {
     if(!_IsFileMode())
         return;
@@ -341,7 +341,7 @@ void PackCmd_ListfileNewline(LVPAFile *lvpa, PackDef *d, PackDef *glob)
     glob->scramble = false;
 }
 
-void PackCmd_SetEncrypt(LVPAFile *lvpa, PackDef *d, PackDef *glob)
+static void PackCmd_SetEncrypt(LVPAFile *lvpa, PackDef *d, PackDef *glob)
 {
     if(!_IsAddMode())
         return;
@@ -349,7 +349,7 @@ void PackCmd_SetEncrypt(LVPAFile *lvpa, PackDef *d, PackDef *glob)
     glob->encrypt = d->encrypt;
 }
 
-void PackCmd_SetScramble(LVPAFile *lvpa, PackDef *d, PackDef *glob)
+static void PackCmd_SetScramble(LVPAFile *lvpa, PackDef *d, PackDef *glob)
 {
     if(!_IsAddMode())
         return;
@@ -357,7 +357,7 @@ void PackCmd_SetScramble(LVPAFile *lvpa, PackDef *d, PackDef *glob)
     glob->scramble = d->scramble;
 }
 
-void PackCmd_SetKey(LVPAFile *lvpa, PackDef *d, PackDef *glob)
+static void PackCmd_SetKey(LVPAFile *lvpa, PackDef *d, PackDef *glob)
 {
     // all modes
     logdebug("-> Set key: %s", d->keyStr.c_str());
@@ -388,7 +388,7 @@ void PackCmd_SetKey(LVPAFile *lvpa, PackDef *d, PackDef *glob)
     }
 }
 
-void usage(void)
+static void usage(void)
 {
     printf("lvpak MODE archive [-flags files/dirs ..]\n"
            "\n"
@@ -439,7 +439,7 @@ void usage(void)
            );
 }
 
-void unknown(char *what)
+static void unknown(char *what)
 {
     printf("Unknown parameter: '%s'\n", what);
 }
@@ -447,7 +447,7 @@ void unknown(char *what)
 // parses for example -c0 (no compression), -cnone, -c9 (max. default algo), -clzma (default lzma), -clzma9 (max lzma), -clzo3 (fast lzo), etc
 // also supports -ci9 (use max level of inherited compression), -ci (inherit everything) -clzoi (use lzo, but inherit compression level)
 // this function is used for -H, -S, -c.
-bool parseCompressString(const char *str, uint8 *algo, uint8 *level)
+static bool parseCompressString(const char *str, uint8 *algo, uint8 *level)
 {
     uint32 l = strlen(str);
 
@@ -518,7 +518,7 @@ bool parseCompressString(const char *str, uint8 *algo, uint8 *level)
     return false;
 }
 
-bool parseSingleCmd(char **argv, uint32 available, PackDef &pd, uint32& skip)
+static bool parseSingleCmd(char **argv, uint32 available, PackDef &pd, uint32& skip)
 {
     const char *str = argv[0];
     DEBUG(ASSERT(str[0] == '-')); // because thats the only reason we enter this function
@@ -646,47 +646,9 @@ bool parseSingleCmd(char **argv, uint32 available, PackDef &pd, uint32& skip)
     return false;
 }
 
-// modifies the input string, beware!
-// argc_max is how many args we can max. parse.
-uint32 splitline(char *str, uint32 argc_max, char **argv)
-{
-    char *s = str;
-    uint32 pos = 0;
-    bool inquot = false;
-
-    // strip initial whitespace
-    while(*s == ' ')
-        *s++ = 0;
-
-    char *goodpos = s;
-
-    while(*s && pos < argc_max)
-    {
-        if(*s == '\"')
-        {
-            inquot = !inquot;
-            *s = 0;
-        }
-        else if(!inquot && *s == ' ')
-        {
-            while(*s == ' ')
-                *s = 0;
-            argv[pos++] = goodpos;
-            goodpos = s + 1;
-        }
-        ++s;
-    }
-
-    // last part with possibly no whitespace at end
-    if(goodpos != s + 1)
-        argv[pos++] = goodpos;
-
-    return pos;
-}
-
 void processListfile(const char *listfile, std::list<PackDef>& cmds);
 
-void parseArgv(std::list<PackDef>& cmds, uint32 argc, char **argv, bool isCmdLine)
+static void parseArgv(std::list<PackDef>& cmds, uint32 argc, char **argv, bool isCmdLine)
 {
     for(uint32 i = 0; i < argc; ++i)
     {
@@ -730,18 +692,20 @@ void parseArgv(std::list<PackDef>& cmds, uint32 argc, char **argv, bool isCmdLin
     }
 }
 
-void parseArgString(std::list<PackDef>& cmds, const char *cstr)
+static void parseArgString(std::list<PackDef>& cmds, const char *cstr)
 {
-    char *argv[1025];
     char *str = strdup(cstr);
-    uint32 used = splitline(str, 1024, argv);
+    uint32 used = ParseCommandLine(str, NULL);
+    std::vector<char*> argvv;
+    argvv.resize(used + 1);
+    ParseCommandLine(str, &argvv[0]); // we need only pointers anyways...
 
-    parseArgv(cmds, used, argv, false);
+    parseArgv(cmds, used, &argvv[0], false);
 
     free(str);
 }
 
-void processListfile(const char *listfile, std::list<PackDef>& cmds)
+static void processListfile(const char *listfile, std::list<PackDef>& cmds)
 {
     FILE *fh = fopen(listfile, "r");
     if(!fh)
@@ -752,8 +716,6 @@ void processListfile(const char *listfile, std::list<PackDef>& cmds)
 
     std::string old_g_currentDir = g_currentDir;
     g_currentDir = _PathStripLast(listfile);
-    if(g_currentDir == listfile)
-        g_currentDir = ""; // already at relative root
 
     uint32 size;
 
@@ -806,7 +768,7 @@ void processListfile(const char *listfile, std::list<PackDef>& cmds)
     delete [] buf;
 }
 
-void processPackDefList(LVPAFile& lvpa, std::list<PackDef>& cmds, PackDef& glob, ProgressBar *bar = NULL, uint32 *counter = NULL)
+static void processPackDefList(LVPAFile& lvpa, std::list<PackDef>& cmds, PackDef& glob, ProgressBar *bar = NULL, uint32 *counter = NULL)
 {
     for(std::list<PackDef>::iterator it = cmds.begin(); it != cmds.end(); ++it)
     {
@@ -826,7 +788,7 @@ void processPackDefList(LVPAFile& lvpa, std::list<PackDef>& cmds, PackDef& glob,
     }
 }
 
-bool _LoadLVPA(LVPAFile& lvpa, const std::string& archive)
+static bool _LoadLVPA(LVPAFile& lvpa, const std::string& archive)
 {
     if(g_mode != 'c') // in every other mode an existing file must be opened
     {
