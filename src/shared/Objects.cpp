@@ -1,3 +1,5 @@
+#include <stack>
+
 #include "common.h"
 #include "SharedDefines.h"
 #include "Objects.h"
@@ -15,6 +17,28 @@ BaseObject::BaseObject()
 BaseObject::~BaseObject()
 {
     DEBUG(logdebug("~BaseObject "PTRFMT, this));
+}
+
+// single-directional non-recursive DFS graph search
+void BaseObject::GetAttached(std::set<BaseObject*>& found) const
+{
+    std::stack<const BaseObject*> pending;
+    pending.push(this);
+
+    const BaseObject *obj;
+    do 
+    {
+        obj = pending.top();
+        pending.pop();
+        found.insert(const_cast<BaseObject*>(obj));
+
+        for(std::set<BaseObject*>::const_iterator it = obj->_children.begin(); it != obj->_children.end(); ++it)
+        {
+            if(found.find(*it) == found.end())
+                pending.push(*it);
+        }
+    }
+    while (pending.size());
 }
 
 void ActiveRect::Init(void)
@@ -36,7 +60,7 @@ void ActiveRect::SetPos(float x_, float y_)
     HasMoved();
 }
 
-void ActiveRect::MoveRelative(float xr, float yr)
+void ActiveRect::Move(float xr, float yr)
 {
     SetPos(x + xr, y + yr);
     HasMoved();
@@ -220,18 +244,6 @@ void Object::_GenericInit(void)
     _blocking = false;
     _update = true;
     _visible = true;
-}
-
-void Object::SetBBox(float x_, float y_, uint32 w_, uint32 h_)
-{
-    ActiveRect::SetBBox(x_,y_,w_,h_);
-    UpdateAnchor();
-}
-
-void Object::SetPos(float x_, float y_)
-{
-    ActiveRect::SetPos(x_, y_);
-    UpdateAnchor();
 }
 
 void Object::SetSprite(BasicTile *tile)
