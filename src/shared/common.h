@@ -31,11 +31,6 @@
 
 #include "MemoryLeaks.h"
 
-
-#ifndef M_PI
-#define M_PI       3.14159265358979323846
-#endif
-
 struct memblock
 {
     memblock() : ptr(NULL), size(0) {}

@@ -2,6 +2,7 @@
 #define _TOOLS_H
 
 #include "common.h"
+#include "mathtools.h"
 
 void mtRandSeed(uint32 seed);
 int32 irand(int32 min, int32 max);
@@ -70,56 +71,6 @@ template <class T> void StrSplit(const std::string &src, const std::string &sep,
     }
     if (keepEmpty || s.length())
         container.push_back(s);
-}
-
-inline float fastabs(float f)
-{
-    int i = ((*(int*)&f) & 0x7fffffff);
-    return (*(float*)&i);
-}
-
-inline float fastneg(float f)
-{
-    int i = ((*(int*)&f) ^ 0x80000000);
-    return (*(float*)&i);
-}
-
-inline int fastsgn(float f)
-{
-    return 1 + (((*(int*)&f) >> 31) << 1);
-}
-
-inline bool fastsgncheck(float f)
-{
-    return (*(int*)&f) & 0x80000000;
-}
-
-inline int32 int32r(float f)
-{
-    return int32(f + 0.5f);
-}
-
-// floor to next power of 2
-inline uint32 flp2(uint32 x)
-{
-    x |= (x >> 1);
-    x |= (x >> 2);
-    x |= (x >> 4);
-    x |= (x >> 8);
-    x |= (x >> 16);
-    return x - (x >> 1);
-}
-
-// ceil to next power of 2
-inline uint32 clp2(uint32 x)
-{
-    --x;
-    x |= (x >> 1);
-    x |= (x >> 2);
-    x |= (x >> 4);
-    x |= (x >> 8);
-    x |= (x >> 16);
-    return x + 1;
 }
 
 // helps to convert strings to other types, or from other types to a string

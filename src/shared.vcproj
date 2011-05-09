@@ -232,14 +232,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\shared\PhysicsSystem.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\shared\PhysicsSystem.h"
-				>
-			</File>
-			<File
 				RelativePath=".\shared\PropParser.cpp"
 				>
 			</File>
@@ -556,6 +548,10 @@
 				</File>
 				<File
 					RelativePath=".\shared\Errors.h"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\mathtools.h"
 					>
 				</File>
 				<File
@@ -1020,6 +1016,22 @@
 				</File>
 				<File
 					RelativePath=".\shared\SHA256Hash.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="physics"
+				>
+				<File
+					RelativePath=".\shared\PhysicsSystem.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\PhysicsSystem.h"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\Vector2d.h"
 					>
 				</File>
 			</Filter>

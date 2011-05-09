@@ -43,7 +43,7 @@ public:
     inline static void SetSpeed(float s) { s_speed = s; }
     inline static float GetSpeed(void) { return s_speed; }
     inline static uint32 GetCurFrameTime(void) { return s_curFrameTime; }
-    inline static double GetCurFrameTimeF(void) { return s_curFrameTime + (double)s_accuTime; } // float is not precise enough, as this can get very high
+    inline static double GetCurFrameTimeF(void) { return (s_curFrameTime + (double)s_accuTime) / 1000.0; } // float is not precise enough, as this can get very high
     inline static uint32 GetTimeDiff(void) { return s_diffTime; } // 1000 == 1 second (scaled by speed)
     inline static float GetTimeDiffF(void) { return s_fracTime; } // 1.0f == 1 second (scaled by speed)
     inline static float GetTimeDiffReal(void) { return s_diffTimeReal; } // 1000 = 1 second (real)
