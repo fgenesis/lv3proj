@@ -1,5 +1,5 @@
 -p gfx/font -s fixedfont.png fixedfont.txt
 -p gfx/font -s rpgfont.png rpgfont.txt
--p gfx/font -s consolefont.png consolefont.txt
+-p gfx/font -s consolefont.png consolefont_blue.png consolefont_red.png consolefont.txt
 
 -p gfx/font -s basepak.listfile

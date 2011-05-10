@@ -1247,7 +1247,7 @@ FALCON_FUNC fal_dprintl( Falcon::VMachine *vm )
     Falcon::String out;
     _buildOutputStr(vm, out);
     Falcon::AutoCString cs(out);
-    logdebug("%s", cs.c_str()); // %s to prevent format string injection
+    logdetail("%s", cs.c_str()); // %s to prevent format string injection
 }
 
 FALCON_FUNC fal_eprintl( Falcon::VMachine *vm )

@@ -148,6 +148,9 @@ bool MyStream::get( Falcon::uint32 &chr )
     return false;
 }
 
+// WARNING: Not thread safe!
+// As only debug log with loglevel >= 2 is used from other threads,
+// and this is skipped below, things are safe, for now.
 static void _CallVMWrite(Falcon::VMachine *vm, Falcon::String *str, Falcon::int32 col)
 {
     Falcon::Item *item = vm->findGlobalItem("PrintCallback");
@@ -188,8 +191,13 @@ void MyStream::internalWrite()
     m_buffer = m_buffer.subString( pos1 );
 }
 
-static void log_falcon_bridge(const char *s, int c, void *user)
+static void log_falcon_bridge(const char *s, int c, int loglevel, void *user)
 {
+    // we don't want to see engine debug log (that is, logdebug() and logdev())
+    // also mind the above note about thread safety.
+    if(loglevel >= 2)
+        return;
+
     Falcon::VMachine *vm = (Falcon::VMachine*)user;
 
     // TEMP HACK: fix colors
