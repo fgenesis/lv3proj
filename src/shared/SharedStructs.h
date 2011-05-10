@@ -17,18 +17,6 @@ struct Point
     bool valid(void) { return x != INT_MIN && y != INT_MIN; }
 };
 
-struct FPoint
-{
-    FPoint() : x(0), y(0) {}
-    FPoint(float x_, float y_) : x(x_), y(y_) {}
-    float x, y;
-
-    inline bool operator==(Point& p) { return x == p.x && y == p.y; }
-    inline bool operator!=(Point& p) { return !(x == p.x && y == p.y); }
-    void invalidate(void) { *((int*)&x) = *((int*)&y) = 0xFF800000; } // 0xFF800000 == -1.#INF00
-    bool valid(void) { return *((int*)&x) != 0xFF800000 && *((int*)&y) != 0xFF800000; }
-};
-
 struct Camera : public Point
 {
     Camera() : Point() {}
@@ -48,38 +36,32 @@ struct Camera : public Point
 
 
 // basic rectangle class, provides interfaces, but does not have any object properties
+// methods are inline and non-virtual intentionally.
 class BaseRect
 {
 public:
 
-    float x, y; // we have to use floats for correct movement, so that rounding does not make fuss with movements < 1 pixel per step.
-    uint32 w, h;
+    Vector2df pos;
+    Vector2df size;
 
-    BaseRect() : x(0), y(0), w(0), h(0) {}
-    BaseRect(float ax, float ay, int32 aw, int32 ah) : x(ax), y(ay), w(aw), h(ah) {}
-    BaseRect(const BaseRect& r) : x(r.x), y(r.y), w(r.w), h(r.h) {}
+    float &x, &y, &h, &w; // convenience accessors
+
+    BaseRect() : x(pos.x), y(pos.y), w(size.x), h(size.y) {}
+    BaseRect(float ax, float ay, float aw, float ah) : pos(ax, ay), size(aw, ah), x(pos.x), y(pos.y), w(size.x), h(size.y) {}
+    BaseRect(const BaseRect& r) : pos(r.pos), size(r.size), x(pos.x), y(pos.y), w(size.x), h(size.y) {}
 
     // Method to calculate the second X corner
-    inline int x2(void) const { return int32(x) + w; }
+    inline float x2(void) const { return x + w; }
     // Method to calculate the second Y corner
-    inline int y2(void) const { return int32(y) + h; }
-
-    // Method to calculate the second X corner (float)
-    inline float x2f(void) const { return x + float(w); }
-    // Method to calculate the second Y corner (float)
-    inline float y2f(void) const { return y + float(h); }
+    inline float y2(void) const { return y + h; }
 
     inline BaseRect cloneRect(void) const
     {
-        BaseRect r;
-        r.x = x;
-        r.y = y;
-        r.w = w;
-        r.h = h;
+        BaseRect r(*this);
         return r;
     }
 
-    inline void SetBBox(float x_, float y_, uint32 w_, uint32 h_)
+    inline void SetBBox(float x_, float y_, float w_, float h_)
     {
         this->x = x_;
         this->y = y_;
@@ -93,30 +75,40 @@ public:
         this->y = y_;
     }
 
-    inline void MoveRelative(float xr, float yr)
+    inline void SetPos(const Vector2df& v)
+    {
+        pos = v;
+    }
+
+    inline void Move(float xr, float yr)
     {
         this->x += xr;
         this->y += yr;
     }
 
+    inline void Move(const Vector2df& v)
+    {
+        pos += v;
+    }
+
     inline bool operator==(BaseRect& other)
     {
-        return int32(x) == int32(other.x) && int32(y) == int32(other.y) && w == other.w && h == other.h;
+        return other.pos == pos && other.size == size;
     }
 
     inline bool operator!=(BaseRect& other)
     {
-        return int32(x) != int32(other.x) || int32(y) != int32(other.y) || w != other.w || h != other.h;
+        return !(*this == other);
     }
 
     inline BaseRect overlapRect(const BaseRect& r)
     {
-        int32 nx = int32(x);
-        int32 ny = int32(y);
-        int32 tx2 = x2();
-        int32 ty2 = y2();
-        int32 rx2 = r.x2();
-        int32 ry2 = r.y2();
+        float nx = x;
+        float ny = y;
+        float tx2 = x2();
+        float ty2 = y2();
+        float rx2 = r.x2();
+        float ry2 = r.y2();
         if (x < r.x) nx = r.x;
         if (x < r.y) ny = r.y;
         if (tx2 > rx2) tx2 = rx2;
@@ -126,45 +118,43 @@ public:
         return BaseRect(nx, ny, tx2, ty2);
     }
 
-    // in Objects.cpp
-    uint8 CollisionWith(BaseRect *other); // returns side where the collision occurred
-
-};
-
-struct MovementDirectionInfo
-{
-    int32 xstep;
-    int32 ystep;
-    int32 xoffs;
-    int32 yoffs;
-
-    MovementDirectionInfo(const BaseRect& rect, uint8 d)
+    // original code from SDL
+    inline BaseRect unionRect(const BaseRect& r)
     {
-        xstep = 0;
-        ystep = 0;
-        xoffs = 0;
-        yoffs = 0;
-        if(d & DIRECTION_LEFT)
-        {
-            xstep = -1;
-        }
-        else if(d & DIRECTION_RIGHT)
-        {
-            xstep = 1;
-            xoffs = int32(rect.w) - 1;
-        }
-        if(d & DIRECTION_UP)
-        {
-            ystep = -1;
-        }
-        else if(d & DIRECTION_DOWN)
-        {
-            ystep = 1;
-            yoffs = int32(rect.h) - 1;
-        }
-    }
-};
+        float Amin, Amax, Bmin, Bmax;
+        BaseRect uni;
 
+        Amin = x;
+        Amax = Amin + w;
+        Bmin = r.x;
+        Bmax = Bmin + r.w;
+        if (Bmin < Amin)
+            Amin = Bmin;
+        uni.x = Amin;
+        if (Bmax > Amax)
+            Amax = Bmax;
+        uni.w = Amax - Amin;
+
+        Amin = y;
+        Amax = Amin + h;
+        Bmin = r.y;
+        Bmax = Bmin + r.h;
+        if (Bmin < Amin)
+            Amin = Bmin;
+        uni.y = Amin;
+        if (Bmax > Amax)
+            Amax = Bmax;
+        uni.h = Amax - Amin;
+
+        return uni;
+    }
+
+    inline bool CollisionWith(BaseRect *other)
+    {
+        return !(y2() < other->y || y > other->y2() || x2() < other->x || x > other->x2());
+    }
+
+};
 
 // from MaNGOS
 class IntervalTimer

@@ -366,3 +366,42 @@ void SDLfunc_drawRectangle(SDL_Surface *target, SDL_Rect& rectangle, Uint32 pixe
     SDLfunc_drawVLine(target, x1, y1, y2, pixel);
     SDLfunc_drawVLine(target, x2, y1, y2, pixel);
 }
+
+void SDLfunc_drawLine(SDL_Surface *target, int x1, int y1, int x2, int y2, int r, int g, int b, int a)
+{
+    Uint32 pixel = SDL_MapRGBA(target->format, r, g, b, a);
+    SDLfunc_drawHLine(target, x1, y1, x2, y2, pixel);
+}
+
+void SDLfunc_drawLine (SDL_Surface* target, int x1, int y1, int x2, int y2, Uint32 c)
+{
+    int dx=abs(x2-x1);
+    int dy=abs(y2-y1);
+    int i;
+    int direction=1;
+    float m;
+
+    if(SDL_MUSTLOCK(target))
+        SDL_LockSurface(target);
+
+    if (dx>=dy)
+    {
+        m = float(y2-y1)/(x2-x1);
+        if (x1 > x2)
+            direction = -1;
+        for (i = x1; i != x2; i += direction)
+            SDLfunc_putpixel(target, i, m*(i-x1)+y1, c)
+    }
+    else
+    {
+        m = float(x2-x1)/(y2-y1);
+        if (y1 > y2)
+            direction = -1;
+        for (i = y1; i != y2; i += direction)
+             SDLfunc_putpixel(target, m*(i-y1)+x1, i, c);
+        }
+    }
+
+    if(SDL_MUSTLOCK(target))
+        SDL_UnlockSurface(target);
+}

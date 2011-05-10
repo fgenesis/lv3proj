@@ -1,6 +1,8 @@
 #ifndef PHYSICSSYSTEM_H
 #define PHYSICSSYSTEM_H
 
+#include "Vector2d.h"
+
 class LayerMgr;
 class Object;
 class ObjectMgr;
@@ -12,33 +14,34 @@ class ObjectMgr;
 // TODO: create constructor to initialize it with *useful* values?
 struct PhysProps
 {
-    float weight; // in kg
-    float xspeed; // current speed, x axis. negative means left, positive means right
-    float yspeed; // current speed, y axis. negative means up, positive means down
-    float xmaxspeed; // max speed. must NOT be negative, ever!
-    float ymaxspeed;
-    float xaccel; // current x-axis acceleration. negative means left, positive means right
-    float yaccel; // current y-axis acceleration. negative means up, positive means down
-    float xfriction; // friction gets subtracted from the abs current speed, until speed is 0
-    float yfriction;
-    float ubounce; // bounciness, this multiplier is applied to current speed when an object hits a wall, and the direction inverted
-    float dbounce; // ... must not be negative.
-    float lbounce; // ... directions are separate for up, down, left, right
-    float rbounce;
+    std::vector<Vector2df> speed;
+    std::vector<Vector2df> accel;
+    std::vector<Vector2df> friction;
 
-    // internal
+    PhysProps()
+    {
+        resize(5);
+    }
 
-    // these are only interesting for the physics system (wall collision), so we store them here
-    float _lastx;
-    float _lasty;
-    bool _wallTouched;
+
+    inline void resize(size_t s)
+    {
+        speed.resize(s);
+        accel.resize(s);
+        friction.resize(s);
+    }
+
+    inline size_t size() const
+    {
+        return speed.size();
+    }
+
 };
 
 // and the environment can have certain physical properties too
 struct EnvPhysProps
 {
-    //float airFriction; // not used (yet)
-    float gravity;
+    Vector2d gravity;
 };
 
 class PhysicsMgr
@@ -53,6 +56,11 @@ public:
     inline void SetLayerMgr(LayerMgr *layers) { _layerMgr = layers; }
     inline void SetObjMgr(ObjectMgr *mgr) { _objMgr = mgr; }
 private:
+
+    void _ApplyAccel(Object *obj, float tf);
+    void _ApplyFriction(Object *obj, float tf);
+    void _ApplySpeed(Object *obj, float tf);
+    void _DoCollision(Object *obj, const Vector2df& oldpos);
 
     LayerMgr *_layerMgr;
     ObjectMgr *_objMgr;

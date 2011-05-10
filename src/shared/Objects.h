@@ -161,12 +161,12 @@ public:
     inline BasicTile *GetSprite(void) { return _gfx; }
 
     PhysProps phys;
+
     struct
     {
         int32 x,y;
         uint32 w,h;
     } _oldLayerRect; // this is used to keep track of the previous positions of the object. necessary to update the collision map of the LayerMgr.
-    int32 gfxoffsx, gfxoffsy; // especially NPC objects can have a larger sprite then their bounding box. these are the relative offsets for the sprite.
 
 protected:
     void _GenericInit(void);
