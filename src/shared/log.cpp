@@ -15,7 +15,7 @@ static log_callback_func callback = NULL;
 static bool callback_newline = false;
 static void *callback_userdata = NULL;
 
-static inline void _log_docallback(const char *fmt, int c, va_list ap)
+static inline void _log_docallback(const char *fmt, int c, int level, va_list ap)
 {
     if(!callback)
         return;
@@ -26,7 +26,7 @@ static inline void _log_docallback(const char *fmt, int c, va_list ap)
         b[p] = '\n';
         b[p+1] = 0;
     }
-    callback(b, c, callback_userdata);
+    callback(b, c, level, callback_userdata);
 }
 
 void log_prepare(const char *fn, const char *mode = NULL)
@@ -75,7 +75,7 @@ void log(const char *str, ...)
     printf("\n");
 
     va_start(ap, str);
-    _log_docallback(str, GREY, ap);
+    _log_docallback(str, GREY, 0, ap);
     va_end(ap);
 
     if(logfile)
@@ -106,7 +106,7 @@ void logdetail(const char *str, ...)
     printf("\n");
 
     va_start(ap, str);
-    _log_docallback(str, LCYAN, ap);
+    _log_docallback(str, LCYAN, 1, ap);
     va_end(ap);
 
     if(logfile)
@@ -137,7 +137,7 @@ void logdebug(const char *str, ...)
     printf("\n");
 
     va_start(ap, str);
-    _log_docallback(str, LBLUE, ap);
+    _log_docallback(str, LBLUE, 2, ap);
     va_end(ap);
 
     if(logfile)
@@ -168,7 +168,7 @@ void logdev(const char *str, ...)
 	printf("\n");
 
     va_start(ap, str);
-    _log_docallback(str, LMAGENTA, ap);
+    _log_docallback(str, LMAGENTA, 3, ap);
     va_end(ap);
 
 	if(logfile)
@@ -197,7 +197,7 @@ void logerror(const char *str, ...)
     printf("\n");
 
     va_start(ap, str);
-    _log_docallback(str, LRED, ap);
+    _log_docallback(str, LRED, 0, ap);
     va_end(ap);
 
     if(logfile)
@@ -226,7 +226,7 @@ void logcritical(const char *str, ...)
     fprintf(stderr,"\n");
 
     va_start(ap, str);
-    _log_docallback(str, RED, ap);
+    _log_docallback(str, RED, 0, ap);
     va_end(ap);
 
     if(logfile)
@@ -257,7 +257,7 @@ void logcustom(uint8 lvl, Color color, const char *str, ...)
     printf("\n");
 
     va_start(ap, str);
-    _log_docallback(str, color, ap);
+    _log_docallback(str, color, lvl, ap);
     va_end(ap);
 
     if(logfile)
