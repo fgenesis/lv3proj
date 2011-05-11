@@ -6,6 +6,7 @@
 #include "Tile.h"
 #include "TileLayer.h"
 #include "SharedStructs.h"
+#include "Vector2d.h"
 
 class Engine;
 struct SDL_Surface;
@@ -71,9 +72,7 @@ public:
     void RemoveFromCollisionMap(Object *obj);
     bool CollisionWith(const BaseRect *rect, int32 skip = 4, uint8 flags = LCF_ALL) const; // check if a rectangle overlaps with at least one solid pixel in our collision map.
     // when calling this function, we assume there is NO collision yet (check new position with CollisionWith() before!)
-    Point GetNonCollidingPoint(const BaseRect *rect, uint8 direction, uint32 maxdist = -1) const;
-    uint32 CanMoveToDirection(const BaseRect *rect, uint8 direction, uint32 pixels = 1) const; // returns the amount of pixels until the object hits the wall, up to [pixels]
-    uint32 CanMoveToDirection(const BaseRect *rect, MovementDirectionInfo& mdi, uint32 pixels = 1) const;
+    Vector2df CanMoveToDirection(const ActiveRect *rect, const Vector2df& dir, float scale = 1.0f) const; // return the longest distance until a wall is hit
     void LoadAsciiLevel(AsciiLevel *level); // TODO: obsolete, remove as soon as native map files can be loaded
 
     std::map<std::string, std::string> stringdata; // stores arbitrary content, to be used in scripts or so. // TODO: add documentation

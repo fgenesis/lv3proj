@@ -127,8 +127,8 @@ public:
 
     virtual bool setProperty( const Falcon::String &prop, const Falcon::Item &value )
     {
-        if(prop == "weight")      { _phys->weight      = value.forceNumeric(); return true; }
-        if(prop == "xspeed")      { _phys->xspeed      = value.forceNumeric(); return true; }
+        if(prop == "mass")        { _phys->mass        = value.forceNumeric(); return true; }
+        /*if(prop == "xspeed")      { _phys->xspeed      = value.forceNumeric(); return true; }
         if(prop == "yspeed")      { _phys->yspeed      = value.forceNumeric(); return true; }
         if(prop == "xmaxspeed")   { _phys->xmaxspeed   = value.forceNumeric(); return true; }
         if(prop == "ymaxspeed")   { _phys->ymaxspeed   = value.forceNumeric(); return true; }
@@ -139,7 +139,7 @@ public:
         if(prop == "ubounce")     { _phys->ubounce     = value.forceNumeric(); return true; }
         if(prop == "dbounce")     { _phys->dbounce     = value.forceNumeric(); return true; }
         if(prop == "lbounce")     { _phys->lbounce     = value.forceNumeric(); return true; }
-        if(prop == "rbounce")     { _phys->rbounce     = value.forceNumeric(); return true; }
+        if(prop == "rbounce")     { _phys->rbounce     = value.forceNumeric(); return true; }*/
 
         if(prop == "isRef")
             throw new Falcon::AccessError( Falcon::ErrorParam( Falcon::e_prop_ro ).
@@ -150,8 +150,8 @@ public:
 
     virtual bool getProperty( const Falcon::String &prop, Falcon::Item &ret ) const
     {
-        if(prop == "weight")      { ret.setNumeric(_phys->weight);      return true; }
-        if(prop == "xspeed")      { ret.setNumeric(_phys->xspeed);      return true; }
+        if(prop == "mass")        { ret.setNumeric(_phys->mass);      return true; }
+        /*if(prop == "xspeed")      { ret.setNumeric(_phys->xspeed);      return true; }
         if(prop == "yspeed")      { ret.setNumeric(_phys->yspeed);      return true; }
         if(prop == "xmaxspeed")   { ret.setNumeric(_phys->xmaxspeed);   return true; }
         if(prop == "ymaxspeed")   { ret.setNumeric(_phys->ymaxspeed);   return true; }
@@ -163,7 +163,7 @@ public:
         if(prop == "dbounce")     { ret.setNumeric(_phys->dbounce);     return true; }
         if(prop == "lbounce")     { ret.setNumeric(_phys->lbounce);     return true; }
         if(prop == "rbounce")     { ret.setNumeric(_phys->rbounce);     return true; }
-        if(prop == "isRef")       { ret.setBoolean(_referenced);        return true; }
+        if(prop == "isRef")       { ret.setBoolean(_referenced);        return true; }*/
 
         return defaultProperty( prop, ret); // property not found
     }
@@ -280,13 +280,16 @@ bool fal_ObjectCarrier::setProperty( const Falcon::String &prop, const Falcon::I
     // convenience accessors, bypassing function overloads
     if(prop == "update") { ((Object*)_obj)->SetUpdate(value.isTrue()); return true; }
     if(prop == "blocking")  { ((Object*)_obj)->SetBlocking(value.isTrue()); return true; }
-    if(prop == "collision") { ((Object*)_obj)->SetCollisionEnabled(value.isTrue()); return true; }
+    if(prop == "collision")
+    {
+        if(value.isBoolean())
+            ((Object*)_obj)->SetCollisionMask(value.isTrue() ? -1 : 0);
+        else
+            ((Object*)_obj)->SetCollisionMask((uint32)value.forceInteger());
+    }
 
     if(_obj->GetType() >= OBJTYPE_OBJECT)
     {
-        if(prop == "gfxOffsX") { ((Object*)_obj)->gfxoffsx = int32(value.forceInteger()); return true; }
-        if(prop == "gfxOffsY") { ((Object*)_obj)->gfxoffsy = int32(value.forceInteger()); return true; }
-
         // convenience accessors, bypassing function overloads
         if(prop == "physics") { ((Object*)_obj)->SetAffectedByPhysics(value.isTrue()); return true; }
         if(prop == "layerId") { ((Object*)_obj)->SetLayer(uint32(value.forceInteger())); return true; }
@@ -317,8 +320,6 @@ bool fal_ObjectCarrier::getProperty( const Falcon::String &prop, Falcon::Item &r
     if(prop == "h") { ret = Falcon::int32(((ActiveRect*)_obj)->h); return true; }
     if(prop == "x2") { ret = Falcon::int32(((ActiveRect*)_obj)->x2()); return true; }
     if(prop == "y2") { ret = Falcon::int32(((ActiveRect*)_obj)->y2()); return true; }
-    if(prop == "x2f") { ret = Falcon::numeric(((ActiveRect*)_obj)->x2f()); return true; }
-    if(prop == "y2f") { ret = Falcon::numeric(((ActiveRect*)_obj)->y2f()); return true; }
     if(prop == "phys")
     {
         if(_obj->GetType() < OBJTYPE_OBJECT)
@@ -337,9 +338,6 @@ bool fal_ObjectCarrier::getProperty( const Falcon::String &prop, Falcon::Item &r
 
     if(_obj->GetType() >= OBJTYPE_OBJECT)
     {
-        if(prop == "gfxOffsX") { ret = Falcon::int32(((Object*)_obj)->gfxoffsx); return true; }
-        if(prop == "gfxOffsY") { ret = Falcon::int32(((Object*)_obj)->gfxoffsy); return true; }
-
         if(prop == "physics") { ret = ((Object*)_obj)->IsAffectedByPhysics(); return true; }
         if(prop == "layerId") { ret = Falcon::uint32(((Object*)_obj)->GetLayer()); return true; }
         if(prop == "visible") { ret = ((Object*)_obj)->IsVisible(); return true; }
@@ -469,7 +467,7 @@ FALCON_FUNC fal_ActiveRect_SetPos(Falcon::VMachine *vm)
 
 FALCON_FUNC fal_ActiveRect_CanMoveToDir(Falcon::VMachine *vm)
 {
-    FALCON_REQUIRE_PARAMS_EXTRA(1, "N[,N]");
+    /*FALCON_REQUIRE_PARAMS_EXTRA(1, "N[,N]");
     uint8 d = vm->param(0)->forceIntegerEx();
     fal_ObjectCarrier *self = Falcon::dyncast<fal_ObjectCarrier*>( vm->self().asObject() );
     if(vm->paramCount() >= 2)
@@ -481,6 +479,8 @@ FALCON_FUNC fal_ActiveRect_CanMoveToDir(Falcon::VMachine *vm)
     {
         vm->retval((int64)((ActiveRect*)self->GetObj())->CanMoveToDirection(d)); // use builtin default value
     }
+    */
+    // PHYS FIXME
 }
 
 FALCON_FUNC fal_ActiveRect_SetCollisionEnabled(Falcon::VMachine *vm)
@@ -488,7 +488,11 @@ FALCON_FUNC fal_ActiveRect_SetCollisionEnabled(Falcon::VMachine *vm)
     FALCON_REQUIRE_PARAMS(1);
     fal_ObjectCarrier *self = Falcon::dyncast<fal_ObjectCarrier*>( vm->self().asObject() );
     ActiveRect *obj = (ActiveRect*)self->GetObj();
-    obj->SetCollisionEnabled(vm->param(0)->asBoolean());
+    Falcon::Item *p = vm->param(0);
+    if(p->isBoolean())
+        obj->SetCollisionMask(p->isTrue() ? -1 : 0);
+    else
+       obj->SetCollisionMask((uint32)p->forceInteger());
 }
 
 FALCON_FUNC fal_ActiveRect_IsCollisionEnabled(Falcon::VMachine *vm)
@@ -884,7 +888,7 @@ FALCON_FUNC fal_Objects_GetAllInRect(Falcon::VMachine *vm)
     {
         fal_ObjectCarrier *carrier = Falcon::dyncast<fal_ObjectCarrier*>(p0->asObject());
         ActiveRect *arect = Falcon::dyncast<ActiveRect*>(carrier->GetObj());
-        rect = arect->cloneRect();
+        rect = *arect; // clone
     }
     else
     {

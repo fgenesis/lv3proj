@@ -21,16 +21,21 @@ public:
     {
     }
 
+    static inline Vector2d FromRadAngle(float rad)
+    {
+        return Vector2d(sin(rad), cos(rad));
+    }
+
+    static inline Vector2d FromDegAngle(float deg)
+    {
+        return FromRadAngle(degToRad(deg));
+    }
+
     const Vector2d& operator=(const Vector2d &v)
     {
         x = v.x;
         y = v.y;
         return *this;
-    }
-
-    const Vector2d& operator=(const T& s)
-    {
-        x = y = s;
     }
 
     const bool operator==(const Vector2d &v) const
@@ -114,16 +119,6 @@ public:
         return Vector2d(x*v.x, y*v.y);
     }
 
-    friend inline const Vector2d operator*(const T &s, const Vector2d &v)
-    {
-        return v * s;
-    }
-
-    friend inline const Vector2d operator*(const Vector2d &v, const T &s)
-    {
-        return Vector2d(v.x*s, v.y*s);
-    }
-
     const Vector2d operator/(T s) const
     {
         return Vector2d(x/s, y/s);
@@ -158,8 +153,8 @@ public:
         if(x || y)
         {
             T t = newlen / len();
-            this->x *= t
-            this->y *= t
+            this->x *= t;
+            this->y *= t;
         }
     }
 
@@ -221,11 +216,7 @@ public:
         return radToDeg(rotation());
     }
 
-
-protected:
     T x, y;
-
-
 };
 
 typedef Vector2d<float> Vector2df;

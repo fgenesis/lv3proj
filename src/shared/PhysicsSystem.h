@@ -14,13 +14,15 @@ class ObjectMgr;
 // TODO: create constructor to initialize it with *useful* values?
 struct PhysProps
 {
+    float mass;
+
     std::vector<Vector2df> speed;
     std::vector<Vector2df> accel;
     std::vector<Vector2df> friction;
 
     PhysProps()
     {
-        resize(5);
+        resize(5); // something to get started
     }
 
 
@@ -41,7 +43,7 @@ struct PhysProps
 // and the environment can have certain physical properties too
 struct EnvPhysProps
 {
-    Vector2d gravity;
+    Vector2df gravity;
 };
 
 class PhysicsMgr

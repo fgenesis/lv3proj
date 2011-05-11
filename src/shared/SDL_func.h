@@ -26,7 +26,7 @@ void SDLfunc_drawVLine(SDL_Surface *target, int x, int y1, int y2, int r, int g,
 void SDLfunc_drawVLine(SDL_Surface *target, int x, int y1, int y2, Uint32 pixel);
 void SDLfunc_drawHLine(SDL_Surface *target, int x1, int y, int x2, int r, int g, int b, int a);
 void SDLfunc_drawHLine(SDL_Surface *target, int x1, int y, int x2, Uint32 pixel);
-void SDLfunc_drawLine(SDL_Surface *target, int x1, int y1, int x2, int y2, int r, int g, int b, int a)
+void SDLfunc_drawLine(SDL_Surface *target, int x1, int y1, int x2, int y2, int r, int g, int b, int a);
 void SDLfunc_drawLine (SDL_Surface* target, int x1, int y1, int x2, int y2, Uint32 c);
 
 

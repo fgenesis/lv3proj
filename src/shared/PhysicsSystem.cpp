@@ -15,7 +15,7 @@ PhysicsMgr::PhysicsMgr()
 
 void PhysicsMgr::SetDefaults(void)
 {
-    envPhys.gravity = 0.0f;
+    envPhys.gravity = Vector2df(0, 0);
 }
 
 void PhysicsMgr::UpdatePhysics(Object *obj, float tf)
@@ -31,8 +31,7 @@ void PhysicsMgr::UpdatePhysics(Object *obj, float tf)
     _ApplyAccel(obj, tf);
     _ApplyFriction(obj, tf);
 
-    _DoWallCollision(obj);
-    _DoObjectCollision(obj);
+    _DoCollision(obj, oldpos);
     
 
     if(oldpos != obj->pos)
@@ -50,16 +49,21 @@ void PhysicsMgr::_ApplySpeed(Object *obj, float tf)
 void PhysicsMgr::_ApplyAccel(Object *obj, float tf)
 {
     for(uint32 i = 0; i < obj->phys.size(); ++i)
-        obj->phys.speed += (obj->phys.accel[i] * tf);
+        obj->phys.speed[i] += (obj->phys.accel[i] * tf);
 }
 
 void PhysicsMgr::_ApplyFriction(Object *obj, float tf)
 {
     for(uint32 i = 0; i < obj->phys.size(); ++i)
-        obj->phys.speed *= (obj->phys.friction[i] * tf);
+        obj->phys.speed[i] *= (obj->phys.friction[i] * tf);
 }
 
 void PhysicsMgr::_DoCollision(Object *obj, const Vector2df& oldpos)
 {
-    BaseRect combined
+    BaseRect combined;
+
+    // first obj vs wall collision
+
+    // then obj vs obj collision
+
 }

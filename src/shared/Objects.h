@@ -110,13 +110,11 @@ public:
     inline void SetW(uint32 w_) { w = w_; }
     inline void SetH(uint32 h_) { h = h_; }
 
-
-    void AlignToSideOf(ActiveRect *other, uint8 side); // TODO: deprecate
-
     inline bool HasMoved(void) const { return _moved; }
     inline void SetMoved(bool moved = true) { _moved = moved; }
-    inline bool IsCollisionEnabled(void) const { return _collisionEnabled; }
-    inline void SetCollisionEnabled(bool b) { _collisionEnabled = b; }
+    inline bool IsCollisionEnabled(void) const { return _collisionMask; }
+    inline void SetCollisionMask(uint32 mask) { _collisionMask = mask; }
+    inline uint32 GetCollisionMask(void) const { return _collisionMask; }
     inline void SetUpdate(bool b) { _update = b; }
     inline bool IsUpdate(void) const { return _update; }
 
@@ -125,11 +123,11 @@ public:
     virtual float GetDistance(ActiveRect *other) const;
 
 
-    uint32 CanMoveToDirection(uint8 d, uint32 pixels = 1); // TODO: deprecate
+    Vector2df CanMoveToDirection(uint8 d, const Vector2df& dir); // TODO: deprecate
 
 protected:
 
-    bool _collisionEnabled; // do collision detection at all?
+    uint32 _collisionMask; // two objects can collide if maskA & maskB != 0. Collision disabled if 0.
     bool _moved; // do collision detection if one of the involved objects moved
     bool _update; // if true, call OnUpdate() in every cycle
 };

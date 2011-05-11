@@ -44,7 +44,7 @@ void BaseObject::GetAttached(std::set<BaseObject*>& found) const
 void ActiveRect::Init(void)
 {
     type = OBJTYPE_RECT;
-    _collisionEnabled = true;
+    _collisionMask = -1; // all flags set
     _update = false;
 }
 
@@ -66,127 +66,9 @@ void ActiveRect::Move(float xr, float yr)
     HasMoved();
 }
 
-// returns our side on which 'other' collided with us
-// (side of 'other')
-// TODO: optimize this function! it should be possible to do this a lot simpler...
-uint8 BaseRect::CollisionWith(BaseRect *other)
+Vector2df ActiveRect::CanMoveToDirection(uint8 d, const Vector2df& dir)
 {
-    int32 ix = int32(x);
-    int32 iy = int32(y);
-    int32 oix = int32(other->x);
-    int32 oiy = int32(other->y);
-
-    // self lower right corner
-    int32 ax1 = ix + w - 1;
-    int32 ay1 = iy + h - 1;
-
-    // other lower right corner
-    int32 bx1 = oix + other->w - 1;
-    int32 by1 = oiy + other->h - 1;
-
-    //check if bounding boxes intersect
-    if((bx1 < ix) || (ax1 < oix))
-        return SIDE_NONE;
-    if((by1 < iy) || (ay1 < oiy))
-        return SIDE_NONE;
-
-    int32 xstart = std::max(ix,oix);
-    int32 xend = std::min(ax1,bx1);
-
-    int32 ystart = std::max(iy,oiy);
-    int32 yend = std::min(ay1,by1);
-
-    int32 width = xend - xstart;
-    int32 height = yend - ystart;
-
-    // TODO: if 'other' is completely contained in 'this', this test is always returns SIDE_RIGHT
-    //       just noting this here in case this has to be corrected someday, but for now it seems that its not necessary
-
-    // check if 'this' is completely contained in 'other'
-    if(ix >= oix && ax1 <= bx1 && iy >= oiy && ay1 <= by1)
-    {
-        // calculate both centers and guess which side we came from
-        int32 xc = ix + (width / 2);
-        int32 yc = iy + (height / 2);
-        int32 other_xc = oix + (other->w / 2);
-        int32 other_yc = oiy + (other->h / 2);
-        int32 xcd = abs(xc - other_xc);
-        int32 ycd = abs(yc - other_yc);
-        if(ycd >= xcd) // height diff is greater than width diff, so we came from top or bottom
-        {
-            if(yc < other_yc)
-                return SIDE_BOTTOM;
-            else
-                return SIDE_TOP;
-        }
-        else // width diff is greater, so we came from left or right
-        {
-            if(xc < other_xc)
-                return SIDE_RIGHT;
-            else
-                return SIDE_LEFT;
-        }
-    }
-
-    if(height >= width) // must be left or right
-    {
-        if(xstart == oix)
-            return SIDE_RIGHT;
-        else
-            return SIDE_LEFT;
-    }
-    else // must be top or bottom
-    {
-        if(ystart == oiy)
-            return SIDE_BOTTOM;
-        else
-            return SIDE_TOP;
-    }
-
-    NOT_REACHED_LINE;
-}
-
-void ActiveRect::AlignToSideOf(ActiveRect *other, uint8 side)
-{
-    DEBUG(ASSERT(side != SIDE_NONE));
-
-    int32 oldix = uint32(this->x);
-    int32 oldiy = uint32(this->y);
-
-    if(GetId() >= OBJTYPE_OBJECT)
-    {
-        Object *self = (Object*)this;
-        // stop movement if required
-        if(side & (SIDE_TOP | SIDE_BOTTOM))
-            self->phys.yspeed = 0.0f;
-        if(side & (SIDE_LEFT | SIDE_RIGHT))
-            self->phys.xspeed = 0.0f;
-    }
-
-    switch(side)
-    {
-        case SIDE_TOP:
-            this->y = other->y - this->h;
-            break;
-
-        case SIDE_BOTTOM:
-            this->y = other->y + other->h;
-            break;
-
-        case SIDE_LEFT:
-            this->x = other->x - this->w;
-
-        case SIDE_RIGHT:
-            this->x = other->x + other->w;
-    }
-
-    if(oldix != int32(this->x) || oldiy != int32(this->y))
-        SetMoved(true);
-}
-
-uint32 ActiveRect::CanMoveToDirection(uint8 d, uint32 pixels /* = 1 */)
-{
-    return _layermgr->CanMoveToDirection((BaseRect*)this, d, pixels);
+    return _layermgr->CanMoveToDirection(this, dir, dir.len()); // FIXME: HACK: better use scale param
 }
 
 float ActiveRect::GetDistanceX(ActiveRect *other) const
@@ -235,8 +117,7 @@ void Object::_GenericInit(void)
     _oldLayerId = _layerId = LAYER_MAX / 2; // place on middle layer by default
     _gfx = NULL;
     _moved = true; // do collision detection on spawn
-    _collisionEnabled = true; // do really do collision detetion
-    gfxoffsx = gfxoffsy = 0;
+    _collisionMask = -1; // enable all flags
     _oldLayerRect.x = 0;
     _oldLayerRect.y = 0;
     _oldLayerRect.w = 0;

@@ -2,7 +2,7 @@
 #define SHAREDSTRUCTS_H
 #include <limits.h>
 #include "SharedDefines.h"
-
+#include "Vector2d.h"
 
 struct Point
 {
@@ -49,6 +49,13 @@ public:
     BaseRect() : x(pos.x), y(pos.y), w(size.x), h(size.y) {}
     BaseRect(float ax, float ay, float aw, float ah) : pos(ax, ay), size(aw, ah), x(pos.x), y(pos.y), w(size.x), h(size.y) {}
     BaseRect(const BaseRect& r) : pos(r.pos), size(r.size), x(pos.x), y(pos.y), w(size.x), h(size.y) {}
+
+    const BaseRect& operator= (const BaseRect& r)
+    {
+        pos = r.pos;
+        size = r.size;
+        return *this;
+    }
 
     // Method to calculate the second X corner
     inline float x2(void) const { return x + w; }
@@ -154,6 +161,10 @@ public:
         return !(y2() < other->y || y > other->y2() || x2() < other->x || x > other->x2());
     }
 
+    inline float area(void)
+    {
+        return w * h;
+    }
 };
 
 // from MaNGOS

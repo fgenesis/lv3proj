@@ -196,14 +196,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\shared\LayerMgr.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\shared\LayerMgr.h"
-				>
-			</File>
-			<File
 				RelativePath=".\shared\log.cpp"
 				>
 			</File>
@@ -213,22 +205,6 @@
 			</File>
 			<File
 				RelativePath=".\shared\MersenneTwister.h"
-				>
-			</File>
-			<File
-				RelativePath=".\shared\ObjectMgr.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\shared\ObjectMgr.h"
-				>
-			</File>
-			<File
-				RelativePath=".\shared\Objects.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\shared\Objects.h"
 				>
 			</File>
 			<File
@@ -261,22 +237,6 @@
 			</File>
 			<File
 				RelativePath=".\shared\SoundCore.h"
-				>
-			</File>
-			<File
-				RelativePath=".\shared\Tile.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\shared\Tile.h"
-				>
-			</File>
-			<File
-				RelativePath=".\shared\TileLayer.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\shared\TileLayer.h"
 				>
 			</File>
 			<Filter
@@ -1032,6 +992,54 @@
 				</File>
 				<File
 					RelativePath=".\shared\Vector2d.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="tiling"
+				>
+				<File
+					RelativePath=".\shared\LayerMgr.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\LayerMgr.h"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\Tile.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\Tile.h"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\TileLayer.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\TileLayer.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="object"
+				>
+				<File
+					RelativePath=".\shared\ObjectMgr.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\ObjectMgr.h"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\Objects.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\Objects.h"
 					>
 				</File>
 			</Filter>

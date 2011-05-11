@@ -175,7 +175,8 @@ void ObjectMgr::HandleObjectCollision(ActiveRect *base, ActiveRect *other, uint8
         {
             float xold = base->x, yold = base->y; // TODO: need width and height too?
             uint8 oside = InvertSide(side);
-            base->AlignToSideOf(other, oside);
+            //base->AlignToSideOf(other, oside);
+            // PHYS FIXME
             if(_layerMgr->CollisionWith(base, 4, ((Object*)base)->IsBlocking() ? ~LCF_BLOCKING_OBJECT : LCF_ALL)) // if object is blocking skip this flag
             {
                 // ouch, new position collided with wall... reset position to old
@@ -218,8 +219,6 @@ void ObjectMgr::RenderLayer(uint32 id)
                 cam.TranslatePoints(dst.x, dst.y);
                 dst.x = int(dst.x * parallaxMulti);
                 dst.y = int(dst.y * parallaxMulti);
-                dst.x += obj->x + obj->gfxoffsx;
-                dst.y += obj->y + obj->gfxoffsy;
                 dst.w = obj->w;
                 dst.h = obj->h;
                 SDL_BlitSurface(sprite->GetSurface(), NULL, esf, &dst);

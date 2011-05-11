@@ -329,29 +329,29 @@ bool LayerMgr::CollisionWith(const BaseRect *rect, int32 skip /* = 4 */, uint8 f
     return false;
 }
 
-uint32 LayerMgr::CanMoveToDirection(const BaseRect *rect, uint8 direction, uint32 pixels /* = 1 */ ) const
-{
-    MovementDirectionInfo mdi(*rect, direction);
-    return CanMoveToDirection(rect, mdi, pixels);
-}
-
-uint32 LayerMgr::CanMoveToDirection(const BaseRect *rect, MovementDirectionInfo& mdi, uint32 pixels /* = 1 */ ) const
+Vector2df LayerMgr::CanMoveToDirection(const ActiveRect *rect, const Vector2df& dir, float scale /* = 1.0f */) const
 {
     if(!HasCollisionMap())
-        return pixels;
+        return dir;
 
-    uint32 moveable = 0;
+    Vector2df norm = dir;
+    norm.setLen(scale);
+    Vector2df travelled;
+    Vector2df newpos;
     BaseRect r = rect->cloneRect();
+    
     bool stop = false;
-    int32 xi, yi;
-    int32 xa, ya;
-    while(pixels--)
+    //int32 xi, yi;
+    //int32 xa, ya;
+    //int32 iw = int32(rect->w);
+    //int32 ih = int32(rect->h);
+    while(travelled.lensq() < dir.lensq()) // TODO: just use precalculated ratio instead of repeated length calculation
     {
-        xa = int32(r.x) + mdi.xstep;
-        ya = int32(r.y) + mdi.ystep;
-        if(mdi.ystep != 0)
+        /*
+        newpos = rect->pos + norm;
+        if(dir.x != 0) // float comparison!
         {
-            for(xi = 0; xi < int32(r.w); ++xi)
+            for(xi = 0; xi < iw; ++xi)
             {
                 if(_collisionMap(xa + xi, ya + mdi.yoffs))
                 {
@@ -360,9 +360,9 @@ uint32 LayerMgr::CanMoveToDirection(const BaseRect *rect, MovementDirectionInfo&
                 }
             }
         }
-        if(mdi.xstep != 0)
+        if(dir.y != 0) // float comparison!
         {
-            for(yi = 0; yi < int32(r.h); ++yi)
+            for(yi = 0; yi < ih; ++yi)
             {
                 if(_collisionMap(xa + mdi.xoffs, ya + yi))
                 {
@@ -371,28 +371,21 @@ uint32 LayerMgr::CanMoveToDirection(const BaseRect *rect, MovementDirectionInfo&
                 }
             }
         }
+        */
+
+        // TODO: SLOOOOOOOW. Fix faster code above.
+
+        if(CollisionWith(&r, 1))
+            stop = true;
+
+
         if(stop)
             break;
 
-        moveable++;
-        r.MoveRelative(mdi.xstep, mdi.ystep);
+        travelled = newpos;
+        r.Move(norm);
     }
-    return moveable;
-}
-
-Point LayerMgr::GetNonCollidingPoint(const BaseRect *rect, uint8 direction, uint32 maxdist /* = -1 */) const
-{
-    DEBUG(ASSERT(direction));
-    MovementDirectionInfo mdi(*rect, direction);
-    BaseRect r = rect->cloneRect();
-    int32 moveable;
-    if(maxdist == uint32(-1)) // by default, dont try to go further then the total layer size
-        maxdist = GetMaxPixelDim();
-    if(moveable = (int32)CanMoveToDirection(&r, mdi, maxdist)) // try to move as far as possible
-    {
-        r.MoveRelative(mdi.xstep * moveable, mdi.ystep * moveable);
-    }
-    return Point(int32(r.x), int32(r.y));
+    return travelled;
 }
 
 void LayerMgr::LoadAsciiLevel(AsciiLevel *level)

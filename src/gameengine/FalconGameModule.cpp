@@ -8,12 +8,14 @@
 FALCON_FUNC fal_Physics_SetGravity(Falcon::VMachine *vm)
 {
     FALCON_REQUIRE_PARAMS_EXTRA(1, "N");
-    GameEngine::GetInstance()->physmgr->envPhys.gravity = float(vm->param(0)->forceNumeric());
+    GameEngine::GetInstance()->physmgr->envPhys.gravity = Vector2df(0, float(vm->param(0)->forceNumeric()));
+    // PHYS FIXME -- this gravity only goes down, but we need all directions.
 }
 
 FALCON_FUNC fal_Physics_GetGravity(Falcon::VMachine *vm)
 {
-    vm->retval(GameEngine::GetInstance()->physmgr->envPhys.gravity);
+    vm->retval(GameEngine::GetInstance()->physmgr->envPhys.gravity.y);
+    // PHYS FIXME -- return vector.
 }
 
 
