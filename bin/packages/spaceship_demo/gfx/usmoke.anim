@@ -1,0 +1,11 @@
+[default]
+/usmoke0.png 60
+/usmoke1.png 60
+/usmoke2.png 60
+/usmoke3.png 60
+/usmoke4.png 60
+j invis
+
+[invis]
+/empty16.png 9999
+r

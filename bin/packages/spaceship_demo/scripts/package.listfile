@@ -1,0 +1,3 @@
+#include sprites/package.listfile
+
+-p scripts -s package.listfile package.fal game.fal

@@ -1,0 +1,96 @@
+GLOBARRAY = [1,2,3]
+USE_GLOBARRAY = false
+GLOBPHYS = false
+
+class DecayObject(xa,ya) from Object
+    
+    timer = random(100, 700)
+    
+    init
+        self.SetBBox(xa, ya, 8, 8)
+        self.SetCollisionEnabled(false)
+        // init physics
+        p = self.phys // note that p is a reference automatically, and all fields initialized with 0
+        p.mass = random() // [0...1)
+        self.SetAffectedByPhysics(GLOBPHYS)
+    end
+    
+    function OnUpdate(ms)
+        if self.timer < ms
+            self.remove()
+        else
+            self.timer -= ms
+        end
+        
+        /*for i = 0 to 3
+        end
+        
+        a = [[],[],[],[]]
+        a = [[[a,a,a]]]
+        for e in a
+            for e2 in a
+            end
+        end
+        */
+        
+        if USE_GLOBARRAY
+            for e in GLOBARRAY
+            end
+        end
+
+    end
+    
+end
+
+class SpawnObject from Object
+    
+    function OnUpdate(ms)
+        global spawn
+        spawn(ms)
+    end
+end
+
+class MemLimiter from Object
+    function OnUpdate()
+        if GC.items > 100000
+            GC.perform()
+        end
+    end
+end
+
+
+function spawn(count)
+    w = Screen.GetWidth()
+    h = Screen.GetHeight()
+    while count--
+        DecayObject(random(0,w), random(0,h))
+    end
+end
+
+
+function LoadFinal()
+    Physics.SetGravity(200)
+    MemLimiter()
+    //GC.adjust(GC.ADJ_STRICT)
+    times(8, SpawnObject)
+end
+
+function moreglob()
+    global USE_GLOBARRAY
+    USE_GLOBARRAY = not USE_GLOBARRAY
+    > "USE_GLOBARRAY = ", USE_GLOBARRAY
+end
+
+function togglephys()
+    global GLOBPHYS
+    for o in Objects.GetAll(): o.physics = not o.physics
+    GLOBPHYS = not GLOBPHYS
+end
+
+
+pkg = Package()
+pkg.InitGame()
+Keyboard.RegisterCallback(pkg.Shutdown, SDLK.ESCAPE)
+Keyboard.RegisterCallback(moreglob, SDLK.SPACE)
+Keyboard.RegisterCallback( { p => p and togglephys() } , SDLK.RETURN)
+pkg.Start(LoadFinal)

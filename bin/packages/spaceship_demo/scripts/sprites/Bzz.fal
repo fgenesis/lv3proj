@@ -1,0 +1,25 @@
+class Bzz(xs, ys) from Object
+
+    gfx = "bzz.anim"
+    
+    init
+        if self.gfx
+            tile = self.SetSprite(self.gfx)
+        end
+        
+        self.SetBBox(xs, ys, 40, 20)
+        self.SetAffectedByPhysics(false)
+        CallScheduler.Schedule(self.remove, 200) // TODO: finetune time
+    end
+    
+    function OnUpdate(ms)
+        width, height = Screen.GetSize()
+        if(self.x + 100 >= width)
+            self.remove()
+        end
+    end
+    
+
+end
+
+export

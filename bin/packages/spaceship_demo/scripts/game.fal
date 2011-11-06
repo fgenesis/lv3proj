@@ -1,0 +1,58 @@
+
+> "--- Loading spaceship demo game ---"
+
+Keyboard.RegisterCallback( { p => if p: Package.Shutdown() }, SDLK.ESCAPE)
+
+Engine.LoadPropFile("music/spaceship_demo.prop")
+
+Physics.SetGravity(0)
+
+ship = Playership()
+ship.SetPos(150, 150)
+SNESKeyMap.AddControlledPlayer(ship)
+
+
+Music.Play("aryx.s3m")
+Screen.FrameLimit(0,0)
+
+
+class MissileSpawner
+    x = 0
+    y = 0
+end
+
+spw = MissileSpawner()
+
+function spawner(timer)
+    w, h = Screen.GetSize()
+    i = 5
+    spw.x = w
+    while i
+        spw.y = random(h)
+        m = Missile(spw, random(100) <= 20, "l")
+        s = m.GetSpeed(1)
+        m.SetSpeed(1, s.x * 0.7 + random(-80, 80), random(-50, 50))
+        if m.super: m.SetAccel(1, m.GetAccel(1).x * 0.66, nil)
+        --i
+    end
+    
+    if timer > 200: timer -= 50
+    CallScheduler.Schedule([spawner, timer], timer)
+    
+    //b = IronBlock()
+    //b.y = 0
+    //b.x = random(0, w)
+    
+end
+
+CallScheduler.Schedule([spawner, 1500], 1500)
+
+
+//RegisterRenderHook(fonttest)
+/*
+// setup GC to better behavior for this package
+GC.adjust(GC.ADJ_NONE)
+GC.th_normal = GC.usedMem + (2024 * 1024) // current + 2 MB
+GC.th_active = GC.usedMem + (8024 * 1024) // current + 8 MB
+
+*/

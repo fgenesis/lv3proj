@@ -1,0 +1,10 @@
+
+pkg = Package()
+
+function LoadFinal()
+    pkg.LoadScripts("sprites")
+    pkg.InitScript("game.fal")
+end
+
+pkg.InitGame()
+pkg.Start(LoadFinal)

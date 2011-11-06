@@ -1,0 +1,130 @@
+class Playership from SNESControlledPlayer
+    
+    gfx = "ship.png"
+    
+    ownSpeedX = 0
+    ownSpeedY = 0
+    arrowKeysP = 0
+    exhaustT = 0
+    supermT = 0
+    exploding = false
+    
+    init
+        self.SetBBox(0,0,40,25)
+        self.SetLayerId(15)
+        if self.gfx
+            tile = self.SetSprite(self.gfx)
+        end
+        
+        // init physics
+        self.SetFrict(1, 5, 5)
+        self.SetAffectedByPhysics(true)
+    end
+  
+    function OnKeyLeft(val)
+        self.arrowKeysP += val ? 1 : -1
+        self.ownSpeedX = val ? -250 : 0
+    end
+    
+    function OnKeyRight(val)
+        self.arrowKeysP += val ? 1 : -1
+        self.ownSpeedX = val ? 250 : 0
+    end
+                
+    function OnKeyUp(val)
+        self.arrowKeysP += val ? 1 : -1
+        self.ownSpeedY = val ? -250 : 0
+    end
+                
+    function OnKeyDown(val)
+        self.arrowKeysP += val ? 1 : -1
+        self.ownSpeedY = val ? 250 : 0
+    end
+                
+    function OnKeyA(val)
+        if val: self.Fire(false)
+    end
+                
+    function OnKeyB(val)
+        if val and self.supermT <= 0
+            self.Fire(true)
+            self.supermT = 300
+        end
+    end
+                
+    function OnKeyX(val)
+        if val: self.LayBomb()
+    end
+                
+    function OnKeyY(val)
+         if val: self.FireBzz()
+    end
+    
+    function OnUpdate(ms)
+        self.supermT -= ms
+        
+        if self.arrowKeysP
+            self.SetSpeed(1, self.ownSpeedX, self.ownSpeedY)
+            ms *= 4 // for exhaust timer
+        end
+        
+        if self.exhaustT < ms
+            self.exhaustT = 100
+            Exhaust(self, 0, 4 + random(-2, 2))
+        else
+            self.exhaustT -= ms
+        end
+        
+        
+    end
+        
+   
+    function Kill(how)
+        if self.exploding: return
+        self.exploding = true
+        
+        Engine.SetSpeed(0.15) // slowmo if deadly hit, for the effect
+        CallScheduler.Schedule( { => Engine.SetSpeed(1) }, 300)
+        
+        f = function(src, times)
+            if not times
+                src.remove()
+                return
+            end
+            SfxExpl()
+            Explosion(src, random(-10, 10), random(-10, 10))
+            Explosion(src, random(-20, 20), random(-20, 20))
+            if times && 1: Explosion(src, random(-25, 25), random(-25, 25))
+            
+            if(times < 4)
+                for i = 0 to 25: Explosion(src, random(-100, 100), random(-100, 100))
+                CallScheduler.Schedule([fself, src, times-1], 100)
+            else
+                CallScheduler.Schedule([fself, src, times-1], random(100, 300))
+            end
+        end
+        
+        self.exploding = true
+        SfxAlarm()
+        Music.Stop()
+        CallScheduler.Schedule(Package.Shutdown, 5000)
+        f(self, 15)
+    end
+
+    function Fire(super)
+        Missile(self, super, "r")
+        SfxMissile(super)
+    end
+    
+    function FireBzz()
+        for i = 0 to 20: Bzz(self.x2 + (i * 40), self.y)
+    end
+    
+    function LayBomb()
+        PBomb(self, 0, 4)
+    end
+    
+end
+
+
+export

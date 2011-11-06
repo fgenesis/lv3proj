@@ -1,0 +1,13 @@
+
+_expl = Sound("expl.ogg", 0.7)
+_miss1 = Sound("miss1.ogg", 0.7)
+_miss2 = Sound("miss2.ogg", 0.7)
+_alarm = Sound("alarm.ogg")
+
+
+function SfxExpl(): _expl.Play()
+function SfxMissile(s): (s ? _miss2 : _miss1).Play()
+function SfxAlarm(): _alarm.Play()
+
+
+export SfxExpl, SfxMissile, SfxAlarm

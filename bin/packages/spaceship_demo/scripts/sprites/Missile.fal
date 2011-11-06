@@ -1,0 +1,91 @@
+class Missile(src, ty, d) from Object
+
+    gfx = "miss"
+    super = ty
+    dir = d
+    tsmoke = 0
+    tsmokemax = 0
+    owner = src
+    dead = false
+    
+    init
+        self.gfx += (self.super ? "2" : "1")
+        self.gfx += self.dir
+        self.gfx += ".png"
+        tile = self.SetSprite(self.gfx)
+        
+        xm = 0
+        ym = 0
+        
+        if "d" in self.dir
+            ym = 1
+        elif "u" in self.dir
+            ym = -1
+        end
+        
+        if "r" in self.dir
+            xm = 1
+        elif "l" in self.dir
+            xm = -1
+        end
+        
+        self.SetBBox(src.x, src.y, 16, 16)
+        //p.xmaxspeed = 3000
+        //p.ymaxspeed = 3000
+        if self.super
+            self.SetSpeed(1, 600 * xm, nil)
+            self.SetAccel(1, 800 * xm, nil)
+            self.tsmokemax = 30
+        else
+            self.SetSpeed(1, 300 * xm, nil)
+            self.SetAccel(1, 400 * xm, nil)
+            self.tsmokemax = 50
+        end
+        self.SetAffectedByPhysics(true)
+    end
+    
+    function OnUpdate(ms)
+        width, height = Screen.GetSize()
+        if(self.x > width + 20 or self.x < -20)
+            self.remove()
+        end
+        if self.tsmoke <= ms
+            self.spawnSmoke()
+            self.tsmoke = self.tsmokemax
+        else
+            self.tsmoke -= ms
+        end
+    end
+    
+    function spawnSmoke()
+        USmoke(self, random(-2, 2), 4 + random(-2, 1))
+    end
+    
+    function Kill()
+        if self.dead: return
+        self.dead = true
+        Explosion(self, 8, 8)
+        SfxExpl()
+        if self.super
+            for i = 0 to 6
+                ex = Explosion(self, 8 + random(-10, 10), 8 + random(-10, 10))
+                xm = random(0, 1) ? 1 : -1
+                ym = random(0, 1) ? 1 : -1
+                ex.SetSpeed(1, (100 + random(0, 100)) * xm, (100 + random(0, 100)) * ym)
+                Explosion(self, 8 + random(-25, 25), 8 + random(-25, 25))
+            end
+        end
+        self.remove()
+    end
+    
+    function OnTouchedBy(side, who)
+        if who == self.owner: return false
+        if who provides owner and who.owner == self.owner: return false
+        if who provides Kill: who.Kill()
+        self.Kill()
+    end
+    
+
+end
+
+export

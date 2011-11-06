@@ -1,0 +1,26 @@
+class Exhaust(src, xr, yr) from Object
+
+    gfx = "exh.anim"
+    timer = 700
+    
+    init
+        if self.gfx
+            tile = self.SetSprite(self.gfx)
+        end
+        
+        self.SetBBox(src.x + xr, src.y + yr, 16, 16)
+        self.SetLayerId(4)
+        self.SetAffectedByPhysics(true)
+        self.SetCollisionEnabled(false)
+        self.SetSpeed(1, -50, 0)
+    end
+    
+    function OnUpdate(ms)
+        if self.timer < ms: self.remove()
+        self.timer -= ms
+    end
+    
+
+end
+
+export

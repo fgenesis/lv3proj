@@ -1,0 +1,36 @@
+class PBomb(src, xr, yr) from Object
+
+    gfx = "pbomb.anim"
+    owner = src
+    dead = false
+    
+    init
+        tile = self.SetSprite(self.gfx)
+        self.SetBBox(src.x + xr, src.y + yr, 8, 8)
+        self.SetAffectedByPhysics(false)
+        self.SetCollisionEnabled(true)
+    end
+    
+    function Kill()
+        if self.dead: return
+        self.dead = true
+        SfxExpl()
+        Explosion(self, 8, 8)
+        for i = 0 to 2
+            Explosion(self, 8 + random(-25, 25), 8 + random(-25, 25))
+            Explosion(self, 8 + random(-40, 40), 8 + random(-40, 40))
+        end
+        self.remove()
+    end
+    
+    function OnTouchedBy(side, who)
+        if who == self.owner: return false
+        if who provides owner and who.owner == self.owner: return false
+        if who provides Kill: who.Kill()
+        self.Kill()
+    end
+    
+
+end
+
+export

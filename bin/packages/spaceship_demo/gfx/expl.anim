@@ -1,0 +1,12 @@
+[default]
+/expl0.png 60
+/expl1.png 60
+/expl2.png 60
+/expl3.png 60
+/expl4.png 60
+/expl5.png 60
+j invis
+
+[invis]
+/empty16.png 9999
+r

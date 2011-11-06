@@ -1,0 +1,35 @@
+class Explosion(src, xr, yr) from Object
+
+    gfx = "expl.anim"
+    timer = 360
+    
+    init
+        if self.gfx
+            tile = self.SetSprite(self.gfx)
+        end
+        
+        self.SetBBox(src.x - 16 + xr, src.y - 16 + yr, 32, 32)
+        
+        // HACK: slow movement to trigger OnEnteredBy detection
+        self.SetAffectedByPhysics(true)
+        //self.phys.xmaxspeed = 9999
+        //self.phys.ymaxspeed = 9999
+        self.SetSpeed(1, -100, nil)
+    end
+    
+    function OnUpdate(ms)
+        if self.timer < ms: self.remove()
+        self.timer -= ms
+    end
+    
+    function OnEnteredBy(side, who)
+        if who provides Kill: who.Kill()
+    end
+    
+    function OnEnter(side, who)
+        if who provides Kill: who.Kill()
+    end
+
+end
+
+export

@@ -1,0 +1,13 @@
+[default]
+/exh3.png 100
+/exh4.png 100
+/exh5.png 100
+/exh6.png 100
+/exh7.png 100
+/exh8.png 100
+/exh9.png 100
+j invis
+
+[invis]
+/empty16.png 9999
+r

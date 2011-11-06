@@ -1,0 +1,52 @@
+[default]
+/bzz1.png 15
+#/bzz1.png:::::h 15
+#/bzz1.png:::::v 15
+#/bzz1.png:::::hv 15
+/bzz2.png 15
+#/bzz2.png:::::h 15
+#/bzz2.png:::::v 15
+#/bzz2.png:::::hv 15
+/bzz3.png 15
+#/bzz3.png:::::h 15
+#/bzz3.png:::::v 15
+#/bzz3.png:::::hv 15
+/bzz4.png 15
+#/bzz4.png:::::h 15
+#/bzz4.png:::::v 15
+#/bzz4.png:::::hv 15
+/bzz5.png 15
+#/bzz5.png:::::h 15
+#/bzz5.png:::::v 15
+#/bzz5.png:::::hv 15
+/bzz6.png 15
+#/bzz6.png:::::h 15
+#/bzz6.png:::::v 15
+#/bzz6.png:::::hv 15
+/bzz7.png 15
+#/bzz7.png:::::h 15
+#/bzz7.png:::::v 15
+#/bzz7.png:::::hv 15
+/bzz8.png 15
+#/bzz8.png:::::h 15
+#/bzz8.png:::::v 15
+#/bzz8.png:::::hv 15
+/bzz9.png 15
+#/bzz9.png:::::h 15
+#/bzz9.png:::::v 15
+#/bzz9.png:::::hv 15
+/bzz10.png 15
+#/bzz10.png:::::h 15
+#/bzz10.png:::::v 15
+#/bzz10.png:::::hv 15
+/bzz11.png 15
+#/bzz11.png:::::h 15
+#/bzz11.png:::::v 15
+#/bzz11.png:::::hv 15
+
+j off
+
+[off]
+/bzz_empty.png
+r
+

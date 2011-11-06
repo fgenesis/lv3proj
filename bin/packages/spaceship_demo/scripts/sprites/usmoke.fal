@@ -1,0 +1,24 @@
+class USmoke(src, xr, yr) from Object
+
+    gfx = "usmoke.anim"
+    timer = 300
+    
+    init
+        if self.gfx
+            tile = self.SetSprite(self.gfx)
+        end
+        
+        self.SetBBox(src.x + xr, src.y + yr, 8, 8)
+        self.SetAffectedByPhysics(false)
+        self.SetCollisionEnabled(false)
+    end
+    
+    function OnUpdate(ms)
+        if self.timer < ms: self.remove()
+        self.timer -= ms
+    end
+    
+
+end
+
+export
