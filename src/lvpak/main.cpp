@@ -646,7 +646,7 @@ static bool parseSingleCmd(char **argv, uint32 available, PackDef &pd, uint32& s
     return false;
 }
 
-void processListfile(const char *listfile, std::list<PackDef>& cmds);
+static void processListfile(const char *listfile, std::list<PackDef>& cmds);
 
 static void parseArgv(std::list<PackDef>& cmds, uint32 argc, char **argv, bool isCmdLine)
 {
