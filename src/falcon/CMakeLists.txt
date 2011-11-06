@@ -26,6 +26,7 @@ if(UNIX OR APPLE)
     vm_sys_posix.cpp
     vfs_file_unix.cpp
     signals_posix.cpp
+    dll_dl.cpp
   )
 
   #for solaris system flavor, add sys_solaris.cpp

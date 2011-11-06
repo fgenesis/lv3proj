@@ -19,30 +19,31 @@ class Block from Object
         self.SetCollisionEnabled(true)
         
         // init physics
-        p = self.phys // note that p is a reference automatically, and all fields initialized with 0
-        p.ymaxspeed = self.fallSpeed
-        p.xmaxspeed = self.pushSpeed
-        p.xfriction = self.pushFriction
+        //self.SetFrict(1, 20, 20) // TODO FIXME (for now we use this hack)
+        self.mass = 200
+        //p.ymaxspeed = self.fallSpeed
+        //p.xmaxspeed = self.pushSpeed
+        //p.xfriction = self.pushFriction
         self.SetAffectedByPhysics(true)
     end
     
     function OnTouchedBy(side, who)
         //> "Block: OnTouchedBy(", side, ", ", who, ")"
-        if not (side && SIDE_FLAG_SOLID): DbgBreak()
+        //if not (side && SIDE_FLAG_SOLID): DbgBreak()
         
         if who.type >= OBJTYPE_PLAYER
             if side && SIDE_LEFT // pushing from left, move to right
                 if self.CanMoveToDir(DIRECTION_RIGHT)
                     //self.x += 1
                     //who.x += 1
-                    self.phys.xspeed = self.pushSpeed;
+                    self.SetSpeed(1, self.pushSpeed, self.GetSpeed(1).y)
                     return true
                 end
             elif side && SIDE_RIGHT // pushing from right, move to left
                 if self.CanMoveToDir(DIRECTION_LEFT)
                     //self.x -= 1
                     //who.x -= 1
-                    self.phys.xspeed = -self.pushSpeed;
+                    self.SetSpeed(1, -self.pushSpeed, self.GetSpeed(1).y)
                     return true
                 end
             end
@@ -68,9 +69,10 @@ class Block from Object
         end
     end
     
-    function OnTouchWall(side, xs, ys)
+    function OnTouchWall()
         //> "Block::OnTouchWall(", side, ", ", xs, ", ", ys, ")"
-        if side && (SIDE_BOTTOM || SIDE_TOP) and abs(ys) > 60.0
+        s = self.GetSpeed() // total speed
+        if s.y >= 5
             if self._sound
                 self._sound.Play()
             end

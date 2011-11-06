@@ -71,8 +71,15 @@ public:
     void UpdateCollisionMap(Object *obj); // uses LCF_BLOCKING_OBJECT to mark the collision map
     void RemoveFromCollisionMap(Object *obj);
     bool CollisionWith(const BaseRect *rect, int32 skip = 4, uint8 flags = LCF_ALL) const; // check if a rectangle overlaps with at least one solid pixel in our collision map.
+    
+    bool CastRayAbs(const Vector2df src, const Vector2df& targ, Vector2df& lastpos, Vector2df& collpos, LayerCollisionFlag lcf = LCF_ALL);
+    bool CastRayDir(const Vector2df src, const Vector2df& dir, Vector2df& lastpos, Vector2df& collpos, LayerCollisionFlag lcf = LCF_ALL);
+    bool CastRaysFromRect(const BaseRect& src, const Vector2df& dir, Vector2df& lastpos, Vector2df& collpos,
+        LayerCollisionFlag lcf = LCF_ALL, float granularity = 1.0f);
+
+    
+    
     // when calling this function, we assume there is NO collision yet (check new position with CollisionWith() before!)
-    Vector2df CanMoveToDirection(const ActiveRect *rect, const Vector2df& dir, float scale = 1.0f) const; // return the longest distance until a wall is hit
     void LoadAsciiLevel(AsciiLevel *level); // TODO: obsolete, remove as soon as native map files can be loaded
 
     std::map<std::string, std::string> stringdata; // stores arbitrary content, to be used in scripts or so. // TODO: add documentation
@@ -80,7 +87,7 @@ public:
 private:
     Engine *_engine;
     TileLayer *_layers[LAYER_MAX];
-    TileInfoLayer _infoLayer;
+    TileInfoLayer _infoLayer; // TODO: deprecate, or make something useful with this
     CollisionMap _collisionMap;
     uint32 _maxdim; // max dimension for all created layers
 

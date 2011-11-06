@@ -25,14 +25,16 @@ end
 _Sound = Sound // save old ctor
 function _SoundCtorOverride(fn, vol) // volume multiplicator
     global _Sound
-    s = _Sound(fn)
-    select vol
-        case NilType
-            s.SetVolume(EngineConfig.soundVolume)
-        case NumericType
-            s.SetVolume(EngineConfig.soundVolume * vol)
-        default
-            raise "Passed volume is not a number"
+    s = _Sound(fn) // may be nil if file failed to load
+    if s
+        select vol
+            case NilType
+                s.SetVolume(EngineConfig.soundVolume)
+            case NumericType
+                s.SetVolume(EngineConfig.soundVolume * vol)
+            default
+                raise "Passed volume is not a number"
+        end
     end
     return s
 end

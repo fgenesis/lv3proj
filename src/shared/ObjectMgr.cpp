@@ -89,7 +89,9 @@ void ObjectMgr::Update(uint32 diff, float frac, uint32 frametime)
         if(base->GetType() >= OBJTYPE_OBJECT)
         {
             Object *obj = (Object*)base;
-            _layerMgr->RemoveFromCollisionMap(obj);
+
+            //if(obj->HasMoved())
+                _layerMgr->RemoveFromCollisionMap(obj);
 
             // do not touch objects flagged for deletion
             if(base->CanBeDeleted())
@@ -112,7 +114,8 @@ void ObjectMgr::Update(uint32 diff, float frac, uint32 frametime)
             if(obj->IsUpdate())
                 obj->OnUpdate(diff);
 
-            _layerMgr->UpdateCollisionMap(obj);
+            //if(obj->HasMoved()) // TODO: is this really correct?
+                _layerMgr->UpdateCollisionMap(obj);
         }
     }
 
@@ -177,6 +180,7 @@ void ObjectMgr::HandleObjectCollision(ActiveRect *base, ActiveRect *other, uint8
             uint8 oside = InvertSide(side);
             //base->AlignToSideOf(other, oside);
             // PHYS FIXME
+            // RIGHT NOW THIS IS FAIL
             if(_layerMgr->CollisionWith(base, 4, ((Object*)base)->IsBlocking() ? ~LCF_BLOCKING_OBJECT : LCF_ALL)) // if object is blocking skip this flag
             {
                 // ouch, new position collided with wall... reset position to old
@@ -206,7 +210,7 @@ void ObjectMgr::RenderLayer(uint32 id)
     Camera cam = _engine->GetCamera();
     TileLayer *layer = _engine->_GetLayerMgr()->GetLayer(id);
     float parallaxMulti = layer ? layer->parallaxMulti : 1.0f; // layer may be NULL and still have objects
-    for(ObjectSet::iterator it = _renderLayers[id].begin(); it != _renderLayers[id].end(); it++)
+    for(ObjectSet::iterator it = _renderLayers[id].begin(); it != _renderLayers[id].end(); ++it)
     {
         Object *obj = *it;
         if(obj->IsVisible())
@@ -214,8 +218,8 @@ void ObjectMgr::RenderLayer(uint32 id)
             if(BasicTile *sprite = obj->GetSprite())
             {
                 SDL_Rect dst;
-                dst.x = 0;
-                dst.y = 0;
+                dst.x = obj->pos.x;
+                dst.y = obj->pos.y;
                 cam.TranslatePoints(dst.x, dst.y);
                 dst.x = int(dst.x * parallaxMulti);
                 dst.y = int(dst.y * parallaxMulti);
@@ -237,15 +241,46 @@ void ObjectMgr::GetAllObjectsIn(BaseRect& rect, ObjectWithSideSet& result, uint8
 void ObjectMgr::RenderBBoxes(void)
 {
     SDL_Rect r;
-    Point cam = _engine->GetCamera();
+    Camera cam = _engine->GetCamera();
+    static const uint32 vCol[6] = // FIXME: fix this for big endian
+    {
+        0xFF9FFF9F,
+        0xFFFF0000,
+        0xFF00FF00,
+        0xFFFFFFFF,
+    };
     for(ObjectMap::iterator it = _store.begin(); it != _store.end(); it++)
     {
         BaseRect br = ((ActiveRect*)it->second)->cloneRect();
-        r.x = int32(br.x) - cam.x;
+        r.x = int32(br.x) - cam.x; // FIXME: this is weird
         r.y = int32(br.y) - cam.y;
         r.h = br.h;
         r.w = br.w;
         SDLfunc_drawRectangle(_engine->GetSurface(), r, 0xDF, 0xDF, 0xDF, 0);
+
+        if(it->second->GetType() >= OBJTYPE_OBJECT)
+        {
+            Object *obj = (Object*)it->second;
+            Vector2df origin = obj->pos + (Vector2df(obj->w, obj->h) / 2);
+            Vector2df dest;
+            origin.x -= cam.x; // FIXME: this is weird
+            origin.y -= cam.y;
+            int32 ox = int32(origin.x);
+            int32 oy = int32(origin.y);
+            // render vectors
+            Vector2df cSpeed(origin);
+            for(uint32 i = 0; i < obj->phys.size(); ++i)
+            {
+                dest = origin + obj->phys[i].speed;
+                cSpeed += obj->phys[i].speed;
+                SDLfunc_drawLine(_engine->GetSurface(), ox, oy, dest.x, dest.y, vCol[0]);
+                dest = origin + obj->phys[i].accel;
+                SDLfunc_drawLine(_engine->GetSurface(), ox, oy, dest.x, dest.y, vCol[1]);
+                dest = origin + obj->phys[i].friction;
+                SDLfunc_drawLine(_engine->GetSurface(), ox, oy, dest.x, dest.y, vCol[2]);
+            }
+            SDLfunc_drawLine(_engine->GetSurface(), ox, oy, cSpeed.x, cSpeed.y, vCol[3]);
+        }
     }
 }
 

@@ -10,6 +10,17 @@ class Olaf from PlayerEx
         self.SetGfxOffs(0)
         self.SetBBox(6,4,20,28) // this is not fully correct but should be sufficient for now
     end
+    
+    function OnUpdate(ms)
+        if self.shieldUp
+            s = self.GetSpeed(0)
+            if s.y > self.glideSpeed
+                self.SetSpeed(0, nil, self.glideSpeed)
+            end
+        end
+        self.PlayerEx.OnUpdate(ms)
+    end
+        
 
     function OnKeyB(pressed)
         if pressed: self.ToggleShield()
@@ -23,11 +34,11 @@ class Olaf from PlayerEx
         self.shieldUp = not self.shieldUp
         self.idle = false
         if self.shieldUp
-            self.phys.ymaxspeed = self.glideSpeed
+            //self.phys.ymaxspeed = self.glideSpeed
             self.h = 32
             self.y -= 4
         else
-            self.phys.ymaxspeed = self.fallSpeed
+            //self.phys.ymaxspeed = self.fallSpeed
             self.h = 28 // as above
             self.y += 4
         end
@@ -41,7 +52,7 @@ class Olaf from PlayerEx
         self.gfxOffsY = yo
     end
     
-    function IsFallingDeep(): return (not self.shieldUp) and (self.phys.yspeed >= self.fallSpeed)
+    function IsFallingDeep(): return (not self.shieldUp) and (self.GetSpeed().y >= self.fallSpeed)
     
     function AnimWalkL(): self.GetSprite().name = (self.shieldUp ? "walksuL" : "walkL")
     function AnimWalkR(): self.GetSprite().name = (self.shieldUp ? "walksuR" : "walkR")
@@ -50,11 +61,10 @@ class Olaf from PlayerEx
     function AnimFallL(): self.AnimFallLR("L")
     function AnimFallR(): self.AnimFallLR("R")
     function AnimFallLR(d)
-        p = self.phys
         sp = self.GetSprite()
         if not sp: return // ???!!?!
         if self.shieldUp
-            if p.xspeed
+            if self.GetSpeed(1).x
                 sp.name = "glidemove" + d
             else
                 sp.name = "glide" + d

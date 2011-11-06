@@ -30,8 +30,6 @@ enum Side
     SIDE_BOTTOMRIGHT = SIDE_BOTTOM | SIDE_RIGHT,
 
     SIDE_ALL = SIDE_TOPLEFT | SIDE_BOTTOMRIGHT,
-
-    SIDE_FLAG_SOLID = 0x80 // special, set by the physics mgr for a simulated OnTouch() call
 };
 
 // TODO: this can be solved faster with some evil shifting like ((s << 1) | (s >> 1)) & ...

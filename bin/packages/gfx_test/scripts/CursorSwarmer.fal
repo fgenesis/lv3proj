@@ -1,0 +1,103 @@
+
+fdiff = 0.0
+
+PI2 = 3.1415926 * 2
+cursor = nil
+
+class CursorSwarmer from Object
+
+    speed = nil
+    multi = random(700, 1200) / 3000
+
+    init
+        self.SetAffectedByPhysics(true)
+        self.SetCollisionEnabled(false) // TODO FIXME
+        
+        self.SetSprite("misc/noimage.png")
+        
+        self.w = self.h = 16
+        
+        self.SetFrict(1, 0.5 + random(), 0.5 + random())
+        self.SetSpeed(1, 0, 0)
+    end
+    
+    function OnUpdate(ms)
+        global fdiff
+        mx = GetMouseX()
+        my = GetMouseY()
+        
+        mv = Vector(mx, my)
+        pos = Vector(self.x, self.y) // HACK
+        dv = mv - pos
+        
+        self.AddSpeed(1, dv / (self.multi / fdiff))
+        
+    end
+    
+    function OnTouchedBy(blarg, who)
+        if who.baseClass() == self.baseClass(): return
+        v = Vector(1000, 0)
+        v.rotate(random() * PI2)
+        self.AddSpeed(1, v)
+    end
+
+end
+
+
+
+class Dummy from Object
+    init
+        self.w = self.h = 8
+        self.SetCollisionEnabled(true)
+    end
+    function OnUpdate(ms)
+        global cursor, fdiff
+        fdiff = Engine.GetFloatTimeDiff() + 0.0001
+        if not cursor: return
+        
+        self.SetPos(cursor.x, cursor.y)
+        
+        objs = Objects.GetAllInRect(self)
+        v = Vector(1000, 0)
+        if objs
+            for o in objs
+                v.rotate(random() * PI2)
+                o.AddSpeed(1, v)
+            end
+        end
+    end
+    
+    /*function OnEnter(who)
+        global cursor
+        > "bam"
+        if not cursor: return
+        v = Vector(1000, 0)
+        v.rotate(random() * PI2)
+        who.phys.speed[1] += v
+    end*/
+end
+
+d = Dummy()
+
+function MouseInputHook(e)
+    global cursor
+    ty, btn, state, x, y, rx, ry = e
+    
+    if state
+        cursor = Vector(GetMouseX(), GetMouseY())
+    else
+        cursor = nil
+    end
+end
+
+
+RegisterMouseInputHook(MouseInputHook)
+
+
+for i = 0 to 0
+    cs = CursorSwarmer()
+    cs.SetPos(random(0, 1000), random(0, 600)) // HACK
+end
+
+
+export CursorSwarmer

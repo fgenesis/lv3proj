@@ -5,6 +5,7 @@
 #include "SharedStructs.h"
 #include "PhysicsSystem.h"
 #include "DelayedDeletable.h"
+#include "LayerMgr.h"
 
 /*
  * NOTE: The OnEnter(), OnLeave(), OnWhatever() functions are defined in FalconObjectModule.cpp !!
@@ -38,7 +39,7 @@ public:
     inline uint8 GetType(void) { return type; }
     inline void SetLayerMgr(LayerMgr *mgr) { _layermgr = mgr; }
 
-    void unbind(void); // clears bindings from falcon, should be called before deletion
+    void unbind(void); // clears bindings from falcon, should be called before deletion. Implemented in FalconObjectModule.cpp
 
 
     // return all objects that are attached to 'this'
@@ -117,13 +118,11 @@ public:
     inline uint32 GetCollisionMask(void) const { return _collisionMask; }
     inline void SetUpdate(bool b) { _update = b; }
     inline bool IsUpdate(void) const { return _update; }
+    bool CastRay(const Vector2df& dir, Vector2df& lastpos, Vector2df& collpos, LayerCollisionFlag lcf = LCF_ALL);
 
     virtual float GetDistanceX(ActiveRect *other) const;
     virtual float GetDistanceY(ActiveRect *other) const;
     virtual float GetDistance(ActiveRect *other) const;
-
-
-    Vector2df CanMoveToDirection(uint8 d, const Vector2df& dir); // TODO: deprecate
 
 protected:
 
@@ -141,7 +140,7 @@ public:
     virtual void Init(void);
 
     virtual void OnUpdate(uint32 ms);
-    virtual void OnTouchWall(uint8 side, float xspeed, float yspeed);
+    virtual void OnTouchWall();
 
     inline void SetAffectedByPhysics(bool b) { _physicsAffected = b; }
     inline bool IsAffectedByPhysics(void) const { return _physicsAffected; }
@@ -150,13 +149,20 @@ public:
     inline void SetLayer(uint32 newLayer) { _layerId = newLayer; } // will be updated in next cycle, before rendering
     inline uint32 GetLayer(void) const { return _layerId; }
     inline uint32 GetOldLayer(void) const { return _oldLayerId; }
-    inline void SetBlocking(bool b) { _blocking = true; }
-    inline bool IsBlocking(void) const { return _blocking; }
     inline void SetVisible(bool b) { _visible = b; }
     inline bool IsVisible(void) const { return _visible; }
 
+    // TODO: deprecate
+    inline void SetBlocking(bool b) { _ownLCF = b ? LCF_BLOCKING_OBJECT : LCF_NONE; }
+    inline bool IsBlocking(void) const { return GetOwnLCF() != LCF_NONE; }
+
+    Vector2df GetTotalSpeed(void) const;
+
     void SetSprite(BasicTile *tile);
     inline BasicTile *GetSprite(void) { return _gfx; }
+
+    inline LayerCollisionFlag GetOwnLCF(void) const { return _ownLCF; }
+    inline LayerCollisionFlag GetBlockedByLCF() const { return _blockedByLCF; }
 
     PhysProps phys;
 
@@ -173,8 +179,11 @@ protected:
     uint32 _layerId; // layer ID where this sprite is drawn on
     uint32 _oldLayerId; // prev. layer id, if theres a difference between both, ObjectMgr::Update() has to correct the layer set assignment
     bool _physicsAffected;
-    bool _blocking; // true if this object affects the LayerMgr's CollisionMap
     bool _visible;
+
+    // for physics system
+    LayerCollisionFlag _ownLCF;
+    LayerCollisionFlag _blockedByLCF;
 };
 
 // unit, most likely some NPC, enemy, or player

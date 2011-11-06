@@ -9,34 +9,74 @@ class ObjectMgr;
 
 
 // an object can have certain physical properties.
-// we put them into an extra struct for the sake of clearer code
+// we put them into extra structs for the sake of clearer code
 // and to make integration with falcon easier.
-// TODO: create constructor to initialize it with *useful* values?
-struct PhysProps
+struct PhysEntry
 {
-    float mass;
+    Vector2df speed;
+    Vector2df accel;
+    Vector2df friction;
+};
 
-    std::vector<Vector2df> speed;
-    std::vector<Vector2df> accel;
-    std::vector<Vector2df> friction;
+class PhysProps
+{
+public:
 
     PhysProps()
+        : mass(0)
     {
-        resize(5); // something to get started
+        resize(1); // something to get started
     }
 
+    inline PhysEntry& operator[] (size_t i)
+    {
+        return _p[i];
+    }
+
+    inline const PhysEntry& operator[] (size_t i) const
+    {
+        return _p[i];
+    }
+
+    // safe variant
+    /*inline PhysEntry getSafe(size_t i) const
+    {
+        return (i < size() ? _p[i] : PhysEntry());
+    }*/ // probably unnecessary and confusing
+
+    inline PhysEntry& get(size_t i)
+    {
+        enlarge(i + 1);
+        return _p[i];
+    }
+
+    // auto-increase size
+    inline void set(size_t i, const PhysEntry &p)
+    {
+        enlarge(i + 1);
+        _p[i] = p;
+    }
+
+    inline void enlarge(size_t s)
+    {
+        if(size() < s)
+            resize(s);
+    }
 
     inline void resize(size_t s)
     {
-        speed.resize(s);
-        accel.resize(s);
-        friction.resize(s);
+        _p.resize(s);
     }
 
     inline size_t size() const
     {
-        return speed.size();
+        return _p.size();
     }
+
+    float mass;
+
+private:
+    std::vector<PhysEntry> _p;
 
 };
 
@@ -61,8 +101,7 @@ private:
 
     void _ApplyAccel(Object *obj, float tf);
     void _ApplyFriction(Object *obj, float tf);
-    void _ApplySpeed(Object *obj, float tf);
-    void _DoCollision(Object *obj, const Vector2df& oldpos);
+    void _ApplySpeedAndCollision(Object *obj, float tf);
 
     LayerMgr *_layerMgr;
     ObjectMgr *_objMgr;

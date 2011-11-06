@@ -3,6 +3,7 @@ pkg.InitGame()
 
 pkg.LoadScript("ribbon.fal")
 pkg.LoadScript("wavy.fal")
+pkg.LoadScript("CursorSwarmer.fal")
 
 class EffectSelectionMenu from SinusMenu
 

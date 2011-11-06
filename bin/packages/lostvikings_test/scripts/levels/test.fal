@@ -34,10 +34,10 @@ olaf.canDebugJump = true
 Camera.SetFocusPoint(olaf.x, olaf.y)
 
 // another one for more testing
-olaf = Olaf()
+/*olaf = Olaf()
 olaf.SetLayerId(4)
 olaf.SetPos(180,305)
-olaf.canDebugJump = true
+olaf.canDebugJump = true*/
 
 cam = CameraObject()
 cam.Focus()

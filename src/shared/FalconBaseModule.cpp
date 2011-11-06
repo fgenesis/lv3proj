@@ -585,8 +585,7 @@ FALCON_FUNC fal_Surface_Pixel( Falcon::VMachine *vm )
     fal_Surface *self = Falcon::dyncast<fal_Surface*>( vm->self().asObject() );
     SDL_Surface *s = self->surface;
     self->camera->TranslatePoints(x,y);
-    if(x > 0 && x < s->w && y > 0 && y < s->h)
-        SDLfunc_putpixel(s, x, y, c);
+    SDLfunc_putpixel_safe(s, x, y, c);
 }
 
 FALCON_FUNC fal_Surface_Rect( Falcon::VMachine *vm )
@@ -1153,6 +1152,60 @@ FALCON_FUNC fal_EngineMap_GetStringDict(Falcon::VMachine *vm)
     vm->retval(dict);
 }
 
+template <bool DIRECTIONAL> FALCON_FUNC fal_EngineMap_CastRay(Falcon::VMachine *vm)
+{
+    Falcon::Item *i_start = vm->param(0); // start pos
+    Falcon::Item *i_to    = vm->param(1); // target pos or direction
+    Falcon::Item *i_which = vm->param(2); // return last (default) or collision vector
+    Falcon::Item *i_lcf   = vm->param(3); // LCF
+    if(!(i_start && i_to && i_start->isOfClass("Vector") && i_which->isOfClass("Vector")))
+        throw new Falcon::ParamError(Falcon::ErrorParam( Falcon::e_inv_params, __LINE__ ));
+    
+    LayerMgr *lm = Engine::GetInstance()->_GetLayerMgr();
+    Vector2df lastpos, collpos;
+    const Vector2df src = Falcon::dyncast<fal_Vector2d*>(i_start->asObjectSafe())->vec();
+    const Vector2df to = Falcon::dyncast<fal_Vector2d*>(i_to->asObjectSafe())->vec();
+    const bool collv = i_which && i_which->isTrue();
+    const LayerCollisionFlag lcf = i_lcf ? LayerCollisionFlag(i_lcf->forceIntegerEx()) : LCF_ALL;
+
+    bool collision = DIRECTIONAL ? lm->CastRayDir(src, to, lastpos, collpos, lcf)
+                                 : lm->CastRayAbs(src, to, lastpos, collpos, lcf);
+    if(collision)
+    {
+        fal_Vector2d *v = new fal_Vector2d(VECTOR_CLASS_SYMBOL);
+        v->vec() = collv ? collpos : lastpos;
+        vm->retval(v);
+    }
+}
+
+FALCON_FUNC fal_EngineMap_CastRaysFromRect(Falcon::VMachine *vm)
+{
+    //FALCON_REQUIRE_PARAMS(2);
+    Falcon::Item *i_start = vm->param(0); // start pos
+    Falcon::Item *i_size  = vm->param(1); // rect size vector
+    Falcon::Item *i_to    = vm->param(2); // target pos or direction
+    Falcon::Item *i_which = vm->param(3); // return last (default) or collision vector
+    Falcon::Item *i_lcf   = vm->param(4); // LCF
+    if(!(i_start && i_size && i_to && i_start->isOfClass("Vector") && i_size->isOfClass("Vector") && i_to->isOfClass("Vector")))
+        throw new Falcon::ParamError(Falcon::ErrorParam( Falcon::e_inv_params, __LINE__ ));
+
+    LayerMgr *lm = Engine::GetInstance()->_GetLayerMgr();
+    Vector2df lastpos, collpos;
+    const Vector2df src = Falcon::dyncast<fal_Vector2d*>(i_start->asObjectSafe())->vec();
+    const Vector2df sz = Falcon::dyncast<fal_Vector2d*>(i_size->asObjectSafe())->vec();
+    const Vector2df dst = Falcon::dyncast<fal_Vector2d*>(i_to->asObjectSafe())->vec();
+    const bool collv = i_which && i_which->isTrue();
+    const LayerCollisionFlag lcf = i_lcf ? LayerCollisionFlag(i_lcf->forceIntegerEx()) : LCF_ALL;
+
+    BaseRect r(src, sz);
+    if(lm->CastRaysFromRect(r, dst, lastpos, collpos, lcf))
+    {
+        fal_Vector2d *v = new fal_Vector2d(VECTOR_CLASS_SYMBOL);
+        v->vec() = collv ? collpos : lastpos;
+        vm->retval(v);
+    }
+}
+
 fal_Font::~fal_Font()
 {
     delete _font;
@@ -1258,6 +1311,147 @@ FALCON_FUNC fal_eprintl( Falcon::VMachine *vm )
     logerror("%s", cs.c_str()); // %s to prevent format string injection
 }
 
+Falcon::CoreObject *fal_Vector2d::factory(const Falcon::CoreClass *cls, void *user_data, bool)
+{
+    return new fal_Vector2d(cls);
+}
+
+void fal_Vector2d::init(Falcon::VMachine *vm)
+{
+    switch(vm->paramCount())
+    {
+        case 0: return;
+        case 1:
+            throw new Falcon::ParamError(Falcon::ErrorParam( Falcon::e_inv_params, __LINE__ )
+                .extra("[N, N]") );
+            break;
+
+        default:
+        {
+            fal_Vector2d *v = Falcon::dyncast<fal_Vector2d*>(vm->self().asObject());
+            v->vec() = Vector2df((float)vm->param(0)->forceNumeric(), (float)vm->param(1)->forceNumeric());
+        }
+    }
+}
+
+Falcon::CoreObject *fal_Vector2d::clone() const
+{
+    fal_Vector2d *v = new fal_Vector2d(generator());
+    v->vec() = vec();
+    return v;
+}
+
+bool fal_Vector2d::setProperty( const Falcon::String &prop, const Falcon::Item &value )
+{
+    if(prop == "x") { vec().x = float(value.forceNumeric()); return true; }
+    if(prop == "y") { vec().y = float(value.forceNumeric()); return true; }
+    return false;
+}
+
+bool fal_Vector2d::getProperty( const Falcon::String &prop, Falcon::Item &ret ) const
+{
+    if(prop == "x") { ret = vec().x; return true; }
+    if(prop == "y") { ret = vec().y; return true; }
+    return defaultProperty( prop, ret); // property not found
+}
+
+#define MAKE_VECTOR_FUNC_RET(fname) \
+FALCON_FUNC fal_Vector2d_##fname( Falcon::VMachine *vm ) \
+{ \
+    vm->retval((Falcon::dyncast<fal_Vector2d*>(vm->self().asObject()))->vec().fname()); \
+}
+MAKE_VECTOR_FUNC_RET(len);
+MAKE_VECTOR_FUNC_RET(isZero);
+MAKE_VECTOR_FUNC_RET(lensq);
+MAKE_VECTOR_FUNC_RET(rotation);
+MAKE_VECTOR_FUNC_RET(rotationDeg);
+#undef MAKE_VECTOR_FUNC_RET
+
+
+FALCON_FUNC fal_Vector2d_normalize( Falcon::VMachine *vm )
+{
+    (Falcon::dyncast<fal_Vector2d*>(vm->self().asObject()))->vec().normalize();
+}
+
+#define MAKE_VECTOR_OP(OPRNAME, OPR) \
+FALCON_FUNC fal_Vector2d_op_##OPRNAME( Falcon::VMachine *vm ) \
+{ \
+    Falcon::Item *p0 = vm->param(0); \
+    fal_Vector2d *nv = Falcon::dyncast<fal_Vector2d*>(vm->self().asObjectSafe()->clone()); \
+    if(p0->isScalar()) \
+    { \
+        nv->vec() OPR (float)p0->forceNumeric(); \
+        vm->retval(nv); \
+        return; \
+    } \
+    Falcon::CoreObject *obj = p0->asObjectSafe(); \
+    if(obj && obj->generator() == nv->generator()) \
+    { \
+        nv->vec() OPR Falcon::dyncast<fal_Vector2d*>(obj)->vec(); \
+        vm->retval(nv); \
+        return; \
+    } \
+    throw new Falcon::ParamError( Falcon::ErrorParam( Falcon::e_inv_params, __LINE__ ) \
+        .extra( "N | Vector2d" ) ); \
+}
+
+MAKE_VECTOR_OP(add, +=);
+MAKE_VECTOR_OP(sub, -=);
+MAKE_VECTOR_OP(mul, *=);
+MAKE_VECTOR_OP(div, /=);
+#undef MAKE_VECTOR_OP
+
+FALCON_FUNC fal_Vector2d_toString( Falcon::VMachine *vm )
+{
+    fal_Vector2d *v = Falcon::dyncast<fal_Vector2d*>(vm->self().asObjectSafe());
+    char buf[40];
+    sprintf(buf, "(%.4f, %.4f)", v->vec().x, v->vec().y);
+    Falcon::String s(&buf[0]);
+    vm->retval(s);
+}
+
+FALCON_FUNC fal_Vector2d_op_neg( Falcon::VMachine *vm )
+{
+    fal_Vector2d *v = Falcon::dyncast<fal_Vector2d*>(vm->self().asObjectSafe()->clone());
+    v->vec().flip();
+    vm->retval(v);
+}
+
+#define MAKE_VECTOR_VECTOR_FUNC(FN) \
+FALCON_FUNC fal_Vector2d_##FN( Falcon::VMachine *vm ) \
+{ \
+    FALCON_REQUIRE_PARAMS_EXTRA(1, "Vector"); \
+    fal_Vector2d *self = Falcon::dyncast<fal_Vector2d*>(vm->self().asObject()); \
+    Falcon::CoreObject *obj = vm->param(0)->asObjectSafe(); \
+    if(obj && obj->generator() == self->generator()) \
+    { \
+        fal_Vector2d *v = Falcon::dyncast<fal_Vector2d*>(obj); \
+        vm->retval(self->vec().FN(v->vec())); \
+        return; \
+    } \
+    throw new Falcon::ParamError( Falcon::ErrorParam( Falcon::e_inv_params, __LINE__ ) \
+        .extra( "Vector" ) ); \
+}
+MAKE_VECTOR_VECTOR_FUNC(dot);
+MAKE_VECTOR_VECTOR_FUNC(angle);
+MAKE_VECTOR_VECTOR_FUNC(angleDeg);
+#undef MAKE_VECTOR_VECTOR_FUNC
+
+
+#define MAKE_VECTOR_FLOAT_FUNC(FN) \
+    FALCON_FUNC fal_Vector2d_##FN( Falcon::VMachine *vm ) \
+{ \
+    FALCON_REQUIRE_PARAMS_EXTRA(1, "N"); \
+    fal_Vector2d *self = Falcon::dyncast<fal_Vector2d*>(vm->self().asObject()); \
+    float f = (float)vm->param(0)->forceNumeric(); \
+    self->vec().FN(f); \
+}
+MAKE_VECTOR_FLOAT_FUNC(rotate);
+MAKE_VECTOR_FLOAT_FUNC(rotateDeg);
+MAKE_VECTOR_FLOAT_FUNC(setLen);
+#undef MAKE_VECTOR_FLOAT_FUNC
+
+
 Falcon::Module *FalconBaseModule_create(void)
 {
     Falcon::Module *m = new Falcon::Module;
@@ -1314,6 +1508,9 @@ Falcon::Module *FalconBaseModule_create(void)
     m->addClassMethod(clsEngineMap, "SetString", fal_EngineMap_SetString);
     m->addClassMethod(clsEngineMap, "GetString", fal_EngineMap_SetString);
     m->addClassMethod(clsEngineMap, "GetStringDict", fal_EngineMap_GetStringDict);
+    m->addClassMethod(clsEngineMap, "CastRayAbs", fal_EngineMap_CastRay<false>);
+    m->addClassMethod(clsEngineMap, "CastRayDir", fal_EngineMap_CastRay<true>);
+    m->addClassMethod(clsEngineMap, "CastRaysFromRect", fal_EngineMap_CastRaysFromRect);
 
     Falcon::Symbol *symMusic = m->addSingleton("Music");
     Falcon::Symbol *clsMusic = symMusic->getInstance();
@@ -1357,6 +1554,31 @@ Falcon::Module *FalconBaseModule_create(void)
     m->addClassMethod(clsSurface, "BlitTo", fal_Surface_BlitTo);
     m->addClassMethod(clsSurface, "Write", fal_Surface_Write);
 
+    Falcon::Symbol *clsVector2d = m->addClass("Vector", fal_Vector2d::init);
+    clsVector2d->setWKS(true);
+    clsVector2d->getClassDef()->factory(&fal_Vector2d::factory);
+    m->addClassProperty(clsVector2d, "x");
+    m->addClassProperty(clsVector2d, "y");
+    m->addClassMethod(clsVector2d, "toString", fal_Vector2d_toString);
+    m->addClassMethod(clsVector2d, OVERRIDE_OP_ADD, fal_Vector2d_op_add);
+    m->addClassMethod(clsVector2d, OVERRIDE_OP_SUB, fal_Vector2d_op_sub);
+    m->addClassMethod(clsVector2d, OVERRIDE_OP_MUL, fal_Vector2d_op_mul);
+    m->addClassMethod(clsVector2d, OVERRIDE_OP_DIV, fal_Vector2d_op_div);
+    m->addClassMethod(clsVector2d, OVERRIDE_OP_NEG, fal_Vector2d_op_neg);
+    m->addClassMethod(clsVector2d, "len", fal_Vector2d_len);
+    m->addClassMethod(clsVector2d, "lensq", fal_Vector2d_lensq);
+    m->addClassMethod(clsVector2d, "isZero", fal_Vector2d_isZero);
+    m->addClassMethod(clsVector2d, "rotation", fal_Vector2d_rotation);
+    m->addClassMethod(clsVector2d, "rotationDeg", fal_Vector2d_rotationDeg);
+    m->addClassMethod(clsVector2d, "normalize", fal_Vector2d_normalize);
+    m->addClassMethod(clsVector2d, "setLen", fal_Vector2d_setLen);
+    m->addClassMethod(clsVector2d, "dot", fal_Vector2d_dot);
+    m->addClassMethod(clsVector2d, "angle", fal_Vector2d_angle);
+    m->addClassMethod(clsVector2d, "angleDeg", fal_Vector2d_angleDeg);
+    m->addClassMethod(clsVector2d, "rotate", fal_Vector2d_rotate);
+    m->addClassMethod(clsVector2d, "rotateDeg", fal_Vector2d_rotateDeg);
+
+
     m->addExtFunc("include_ex", fal_include_ex);
     m->addExtFunc("DbgBreak", fal_debug_break);
     m->addExtFunc("InvertSide", fal_InvertSide);
@@ -1397,7 +1619,6 @@ Falcon::Module *FalconBaseModule_create(void)
     m->addConstant("SIDE_RIGHT",       Falcon::int64(SIDE_RIGHT));
     m->addConstant("SIDE_TOPRIGHT",    Falcon::int64(SIDE_TOPRIGHT));
     m->addConstant("SIDE_ALL",         Falcon::int64(SIDE_ALL));
-    m->addConstant("SIDE_FLAG_SOLID",  Falcon::int64(SIDE_FLAG_SOLID));
 
     // the SDL key bindings
     Falcon::Symbol *c_sdlk = m->addClass( "SDLK", &forbidden_init);

@@ -64,6 +64,7 @@ Keyboard.RegisterCallback( { p => if p: dbg_ToggleOverlay() }, SDLK.F7)
 Keyboard.RegisterCallback( { p => if p: dbg_ToggleDebugText() }, SDLK.F8)
 Keyboard.RegisterCallback( { p => if p: dbg_ShrinkDebugText() }, SDLK.F9)
 Keyboard.RegisterCallback( { p => if p: dbg_EnlageDebugText() }, SDLK.F10)
+Keyboard.RegisterCallback( { p => if p: Engine.Reset() }, SDLK.r, SDLK.LALT)
 
 Keyboard.RegisterCallback( { p => if p: EngineConfig.Save() }, SDLK.F12)
 

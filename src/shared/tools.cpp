@@ -352,7 +352,7 @@ void _FixFileName(std::string& str)
 // extracts the file name from a given path
 std::string _PathToFileName(std::string str)
 {
-    uint32 pathend = str.find_last_of("/\\");
+    size_t pathend = str.find_last_of("/\\");
     if(pathend != std::string::npos)
     {
         return str.substr(pathend+1);
@@ -363,7 +363,7 @@ std::string _PathToFileName(std::string str)
 // extracts the file name from a given path
 std::string FileGetExtension(std::string str, bool withDot /* = true */)
 {
-    uint32 dot = str.rfind('.');
+    size_t dot = str.rfind('.');
     if(dot != std::string::npos)
     {
         return str.substr(dot + (withDot ? 0 : 1));
@@ -375,7 +375,7 @@ std::string FileGetExtension(std::string str, bool withDot /* = true */)
 // strips a file name from a given path, or the last folder if the path doesnt end with '/' or '\'
 std::string _PathStripLast(std::string str)
 {
-    uint32 pathend = str.find_last_of("/\\");
+    size_t pathend = str.find_last_of("/\\");
     if(pathend != std::string::npos)
     {
         return str.substr(0, pathend + 1);
@@ -385,7 +385,7 @@ std::string _PathStripLast(std::string str)
 
 std::string NormalizeFilename(std::string s)
 {
-    uint32 p;
+    size_t p;
     while( (p = s.find('\\')) != std::string::npos)//Replace \ by /
     {
         s.replace(p,1,"/");

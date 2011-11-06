@@ -39,7 +39,7 @@ bool VFSDir::addRecursive(VFSFile *f, bool overwrite /* = true */)
 {
     // figure out directory from full file name
     std::string dirname(f->fullname());
-    uint32 pathend = dirname.find_last_of("/\\");
+    size_t pathend = dirname.find_last_of("/\\");
     VFSDir *vdir;
     if(pathend != std::string::npos)
     {

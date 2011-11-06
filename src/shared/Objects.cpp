@@ -3,7 +3,7 @@
 #include "common.h"
 #include "SharedDefines.h"
 #include "Objects.h"
-#include "LayerMgr.h"
+#include "Engine.h"
 
 #include "UndefUselessCrap.h"
 
@@ -66,11 +66,6 @@ void ActiveRect::Move(float xr, float yr)
     HasMoved();
 }
 
-Vector2df ActiveRect::CanMoveToDirection(uint8 d, const Vector2df& dir)
-{
-    return _layermgr->CanMoveToDirection(this, dir, dir.len()); // FIXME: HACK: better use scale param
-}
-
 float ActiveRect::GetDistanceX(ActiveRect *other) const
 {
     float result;
@@ -98,6 +93,11 @@ float ActiveRect::GetDistance(ActiveRect *other) const
     return sqrt(x*x + y*y);
 }
 
+bool ActiveRect::CastRay(const Vector2df& dir, Vector2df& lastpos, Vector2df& collpos, LayerCollisionFlag lcf /* = LCF_ALL*/)
+{
+    return Engine::GetInstance()->_GetLayerMgr()->CastRaysFromRect(*this, dir, lastpos, collpos, lcf);
+}
+
 
 void Object::Init(void)
 {
@@ -112,7 +112,6 @@ Object::~Object(void)
 
 void Object::_GenericInit(void)
 {
-    memset(&phys, 0, sizeof(PhysProps)); // TODO: apply some useful default values
     _physicsAffected = false;
     _oldLayerId = _layerId = LAYER_MAX / 2; // place on middle layer by default
     _gfx = NULL;
@@ -122,9 +121,10 @@ void Object::_GenericInit(void)
     _oldLayerRect.y = 0;
     _oldLayerRect.w = 0;
     _oldLayerRect.h = 0;
-    _blocking = false;
     _update = true;
     _visible = true;
+    _ownLCF = LCF_NONE;
+    _blockedByLCF = LCF_ALL; // FIXME: which default is sane?
 }
 
 void Object::SetSprite(BasicTile *tile)
@@ -136,6 +136,14 @@ void Object::SetSprite(BasicTile *tile)
     if(_gfx)
         _gfx->ref--;
     _gfx = tile;
+}
+
+Vector2df Object::GetTotalSpeed(void) const
+{
+    Vector2df v;
+    for(size_t i = 0; i < phys.size(); ++i)
+        v += phys[i].speed;
+    return v;
 }
 
 void Unit::Init(void)

@@ -373,13 +373,27 @@ void SDLfunc_drawLine(SDL_Surface *target, int x1, int y1, int x2, int y2, int r
     SDLfunc_drawLine(target, x1, y1, x2, y2, pixel);
 }
 
+#include <algorithm> // for min/max
+#include "SDL_gfx/SDL_gfxPrimitives.h"
+
 void SDLfunc_drawLine (SDL_Surface* target, int x1, int y1, int x2, int y2, Uint32 c)
 {
-    int dx=abs(x2-x1);
+    lineColor(target, x1, y1, x2, y2, c);
+
+    /*int dx=abs(x2-x1);
     int dy=abs(y2-y1);
     int i;
     int direction=1;
     float m;
+
+    if(x1 > x2)
+        std::swap(x1, x2);
+    if(y1 > y2)
+        std::swap(y1, y2);
+    int maxx = std::min<int>(target->w, x2);
+    int maxy = std::min<int>(target->h, y2);
+    int minx = x1 < 0 ? 0 : x1;
+    int miny = y1 < 0 ? 0 : y1;
 
     if(SDL_MUSTLOCK(target))
         SDL_LockSurface(target);
@@ -387,20 +401,17 @@ void SDLfunc_drawLine (SDL_Surface* target, int x1, int y1, int x2, int y2, Uint
     if (dx>=dy)
     {
         m = float(y2-y1)/(x2-x1);
-        if (x1 > x2)
-            direction = -1;
-        for (i = x1; i != x2; i += direction)
+        for (i = minx; i != maxx; ++i)
             SDLfunc_putpixel(target, i, int(m*(i-x1)+y1), c);
     }
     else
     {
         m = float(x2-x1)/(y2-y1);
-        if (y1 > y2)
-            direction = -1;
-        for (i = y1; i != y2; i += direction)
+        for (i = miny; i != maxy; ++i)
              SDLfunc_putpixel(target, int(m*(i-y1)+x1), i, c);
     }
 
     if(SDL_MUSTLOCK(target))
         SDL_UnlockSurface(target);
+        */
 }

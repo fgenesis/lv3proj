@@ -259,6 +259,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\shared\FalconHelpers.h"
+					>
+				</File>
+				<File
 					RelativePath=".\shared\FalconObjectModule.cpp"
 					>
 				</File>
@@ -982,6 +986,14 @@
 			<Filter
 				Name="physics"
 				>
+				<File
+					RelativePath=".\shared\CollisionUtil.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\CollisionUtil.h"
+					>
+				</File>
 				<File
 					RelativePath=".\shared\PhysicsSystem.cpp"
 					>

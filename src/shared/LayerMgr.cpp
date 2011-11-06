@@ -9,6 +9,7 @@
 #include "Objects.h"
 #include "ObjectMgr.h"
 #include "SharedDefines.h"
+#include "CollisionUtil.h"
 #include "UndefUselessCrap.h"
 
 
@@ -102,21 +103,25 @@ void LayerMgr::Render(void)
     // DEBUG: render collision map
     if(_engine->HasDebugFlag(EDBG_COLLISION_MAP_OVERLAY))
     {
+        // WARNING SLOW
+        const Camera& cam = _engine->GetCamera();
+        uint32 cx = cam.x; // do float->uint32 conversion early and only once
+        uint32 cy = cam.y;
         uint32 xmax = std::min(_collisionMap.size1d(), _engine->GetResX());
         uint32 ymax = std::min(_collisionMap.size1d(), _engine->GetResY());
         for(uint32 y = 0; y < ymax; y++)
         {
             for(uint32 x = 0; x < xmax; x++)
             {
-                uint8 f = _collisionMap(x,y);
-                uint32 c = 0;
-                if(f & 1)
-                    c |= 0xFF0000FF;
-                if(f & 2)
-                    c |= 0xFFFF0000;
-
-                if(c)
-                    SDLfunc_putpixel(_engine->GetSurface(), x, y, c);
+                if(uint32 f = _collisionMap(x,y))
+                {
+                    uint32 c = 0;
+                    if(f & 1)
+                        c |= 0xFF0000FF;
+                    if(f & 2)
+                        c |= 0xFFFF0000;
+                    SDLfunc_putpixel_safe(_engine->GetSurface(), x - cx, y - cy, c);
+                }
             }
         }
     }
@@ -173,7 +178,7 @@ void LayerMgr::UpdateCollisionMap(uint32 x, uint32 y) // this x and y are tile p
             return;
         }
 
-    // pre-select layers to be used, and check if a tile exists at that position
+    // start-select layers to be used, and check if a tile exists at that position
     bool uselayer[LAYER_MAX];
     bool counter = 0;
     for(uint32 i = 0; i < LAYER_MAX; ++i)
@@ -240,48 +245,90 @@ void LayerMgr::UpdateCollisionMap(uint32 x, uint32 y) // this x and y are tile p
 }
 
 // TODO: this will ASSERT fail if an object moves out of the screen, fix this
+// -- wait, what? wasn't this fixed already?
 void LayerMgr::RemoveFromCollisionMap(Object *obj)
 {
     if(!obj->IsBlocking() || obj->_oldLayerRect.w == 0 || obj->_oldLayerRect.h == 0)
         return;
     int32 xoffs = obj->_oldLayerRect.x;
     int32 yoffs = obj->_oldLayerRect.y;
+    int32 xlim = obj->_oldLayerRect.w;
+    int32 ylim = obj->_oldLayerRect.h;
     int32 x,y;
+
+    if(xoffs < 0)
+    {
+        xlim += xoffs;
+        if(xlim < 0)
+            return;
+        xoffs = 0;
+    }
+
+    if(yoffs < 0)
+    {
+        ylim += yoffs;
+        if(ylim < 0)
+            return;
+        yoffs = 0;
+    }
 
     // remove LCF_BLOCKING_OBJECT from the prev. rect of this object
     DEBUG(ASSERT(xoffs >= 0 && yoffs >= 0));
-    for(y = 0; y < int32(obj->_oldLayerRect.h); ++y)
+    const LayerCollisionFlag lcf = obj->GetOwnLCF();
+    for(y = 0; y < ylim; ++y)
     {
-        for(x = 0; x < int32(obj->_oldLayerRect.w); ++x)
+        for(x = 0; x < xlim; ++x)
         {
-            _collisionMap(x + xoffs, y + yoffs) &= ~LCF_BLOCKING_OBJECT;
+            _collisionMap(x + xoffs, y + yoffs) &= ~lcf;
         }
     }
 }
 
 // TODO: this will ASSERT fail if an object moves out of the screen, fix this
+// -- here too?
+// TODO: add support for per-pixel collision map
 void LayerMgr::UpdateCollisionMap(Object *obj)
 {
     // set LCF_BLOCKING_OBJECT in the current rect of the object
     if(obj->IsBlocking())
     {
-        int32 ix = int32(obj->x);
-        int32 iy = int32(obj->y);
+        int32 xoffs = int32(obj->x);
+        int32 yoffs = int32(obj->y);
+        int32 xlim = int32(obj->w);
+        int32 ylim = int32(obj->h);
+
+        obj->_oldLayerRect.x = xoffs;
+        obj->_oldLayerRect.y = yoffs;
+        obj->_oldLayerRect.w = xlim;
+        obj->_oldLayerRect.h = ylim;
+
         int32 x,y;
 
-        DEBUG(ASSERT(ix >= 0 && iy >= 0));
-        for(y = 0; y < int32(obj->h); ++y)
+        if(xoffs < 0)
         {
-            for(x = 0; x < int32(obj->w); ++x)
-            {
-                _collisionMap(x + ix, y + iy) |= LCF_BLOCKING_OBJECT;
-            }
+            xlim += xoffs;
+            if(xlim < 0)
+                return;
+            xoffs = 0;
         }
 
-        obj->_oldLayerRect.x = ix;
-        obj->_oldLayerRect.y = iy;
-        obj->_oldLayerRect.w = obj->w;
-        obj->_oldLayerRect.h = obj->h;
+        if(yoffs < 0)
+        {
+            ylim += yoffs;
+            if(ylim < 0)
+                return;
+            yoffs = 0;
+        }
+
+        DEBUG(ASSERT(xoffs >= 0 && yoffs >= 0));
+        const LayerCollisionFlag lcf = obj->GetOwnLCF();
+        for(y = 0; y < ylim; ++y)
+        {
+            for(x = 0; x < xlim; ++x)
+            {
+                _collisionMap(x + xoffs, y + yoffs) |= lcf;
+            }
+        }
     }
     else
     {
@@ -292,10 +339,6 @@ void LayerMgr::UpdateCollisionMap(Object *obj)
 
     }
 }
-
-
-
-
 
 bool LayerMgr::CollisionWith(const BaseRect *rect, int32 skip /* = 4 */, uint8 flags /* = LCF_ALL */) const
 {
@@ -329,65 +372,124 @@ bool LayerMgr::CollisionWith(const BaseRect *rect, int32 skip /* = 4 */, uint8 f
     return false;
 }
 
-Vector2df LayerMgr::CanMoveToDirection(const ActiveRect *rect, const Vector2df& dir, float scale /* = 1.0f */) const
+class RayCastCheckDo
 {
-    if(!HasCollisionMap())
-        return dir;
+public:
+    RayCastCheckDo(CollisionMap& cm, LayerCollisionFlag lcf ) : _cm(cm), _lcf(lcf) {}
 
-    Vector2df norm = dir;
-    norm.setLen(scale);
-    Vector2df travelled;
-    Vector2df newpos;
-    BaseRect r = rect->cloneRect();
-    
-    bool stop = false;
-    //int32 xi, yi;
-    //int32 xa, ya;
-    //int32 iw = int32(rect->w);
-    //int32 ih = int32(rect->h);
-    while(travelled.lensq() < dir.lensq()) // TODO: just use precalculated ratio instead of repeated length calculation
+    inline bool operator() (int32 x, int32 y)
     {
-        /*
-        newpos = rect->pos + norm;
-        if(dir.x != 0) // float comparison!
+        return _cm(x, y) & _lcf;
+
+        /*bool b = _cm(x, y) & _lcf;
+        if(!b)
         {
-            for(xi = 0; xi < iw; ++xi)
-            {
-                if(_collisionMap(xa + xi, ya + mdi.yoffs))
-                {
-                    stop = true;
-                    break;
-                }
-            }
+            Engine::GetInstance()->GetCamera().TranslatePoints(x, y);
+            SDLfunc_putpixel_safe(Engine::GetInstance()->GetSurface(), x, y, 0x20FFFFFF);
         }
-        if(dir.y != 0) // float comparison!
-        {
-            for(yi = 0; yi < ih; ++yi)
-            {
-                if(_collisionMap(xa + mdi.xoffs, ya + yi))
-                {
-                    stop = true;
-                    break;
-                }
-            }
-        }
-        */
-
-        // TODO: SLOOOOOOOW. Fix faster code above.
-
-        if(CollisionWith(&r, 1))
-            stop = true;
-
-
-        if(stop)
-            break;
-
-        travelled = newpos;
-        r.Move(norm);
+        return b;*/
     }
-    return travelled;
+
+private:
+    CollisionMap& _cm;
+    LayerCollisionFlag _lcf;
+};
+
+bool LayerMgr::CastRayAbs(const Vector2df src, const Vector2df& targ, Vector2df& lastpos, Vector2df& collpos, LayerCollisionFlag lcf /* = LCF_ALL */)
+{
+    RayCastCheckDo check(_collisionMap, lcf);
+    return CastBresenhamLine(src.x, src.y, targ.x, targ.y, lastpos, collpos, check);
 }
 
+bool LayerMgr::CastRayDir(const Vector2df src, const Vector2df& dir, Vector2df& lastpos, Vector2df& collpos, LayerCollisionFlag lcf /* = LCF_ALL */)
+{
+    if(CastRayAbs(src, src + dir, lastpos, collpos, lcf))
+    {
+        lastpos -= src;
+        collpos -= src;
+        return true;
+    }
+    return false;
+}
+
+// increase granularity for faster speed (if you know what you're doing!)
+// WARNING: the code is weird, but it works (somehow)
+// FIXME: the corner pixel is currently MISSING! Will do this later.
+bool LayerMgr::CastRaysFromRect(const BaseRect& src, const Vector2df& dir, Vector2df& lastpos, Vector2df& collpos,
+                                LayerCollisionFlag lcf /* = LCF_ALL */, float granularity /* = 1.0f */)
+{
+    bool collided = false;
+
+    float maxnear = dir.lensq();
+    Vector2df lastp, collp;
+
+    Vector2df offs;
+    Vector2df border;
+    Vector2df start;
+
+    // follow outer border on X axis
+    if(dir.y)
+    {
+        Vector2df border(0, dir.y < 0 ? -1 : 0); // Y axis correction
+        start = src.pos + border;
+        offs.x = 0;
+        offs.y = dir.y > 0 ? src.h: 0;
+        for( ; offs.x < src.w; offs.x += granularity)
+        {
+            Vector2df cast = start + offs;
+
+            if(CastRayDir(cast, dir, lastp, collp, lcf))
+            {
+                Vector2df yfix = Vector2df(0, dir.y > 0 ? 1 : -1); // HACK: no idea why, but this is necessary.
+                lastp += yfix;
+                collp += yfix;
+                collided = true;
+                float l = lastp.lensq();
+                if(l < maxnear)
+                {
+                    maxnear = l;
+                    lastpos = lastp;
+                    collpos = collp;
+                }
+                //SDLfunc_putpixel_safe(_engine->GetSurface(), cast.x, cast.y, 0xFF00FF00);
+            }
+            //else SDLfunc_putpixel_safe(_engine->GetSurface(), cast.x, cast.y, 0xFFFF00FF);
+        }
+    }
+
+    // follow outer border on Y axis
+    if(dir.x)
+    {
+        Vector2df border(dir.x < 0 ? -1 : 0, 0); // X axis correction
+        start = src.pos + border;
+        offs.y = 0;
+        offs.x = dir.x > 0 ? src.w : 0;
+        for( ; offs.y < src.h; offs.y += granularity)
+        {
+            Vector2df cast = start + offs;
+            if(CastRayDir(cast, dir, lastp, collp, lcf))
+            {
+                Vector2df xfix = Vector2df(dir.x > 0 ? 1 : -1, 0); // HACK: no idea why, but this is necessary.
+                lastp += xfix;
+                collp += xfix;
+                collided = true;
+                float l = lastp.lensq();
+                if(l < maxnear)
+                {
+                    maxnear = l;
+                    lastpos = lastp;
+                    collpos = collp;
+                }
+                //SDLfunc_putpixel_safe(_engine->GetSurface(), cast.x, cast.y, 0xFF00FF00);
+            }
+            //else SDLfunc_putpixel_safe(_engine->GetSurface(), cast.x, cast.y, 0xFFFF00FF);
+        }
+    }
+
+    return collided;
+}
+
+// TODO: deprecate
 void LayerMgr::LoadAsciiLevel(AsciiLevel *level)
 {
     // reserve space
@@ -428,4 +530,4 @@ void LayerMgr::LoadAsciiLevel(AsciiLevel *level)
 
     logdetail("ASCII Level loaded.");
 }
-            
+

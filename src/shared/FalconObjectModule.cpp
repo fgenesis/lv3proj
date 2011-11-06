@@ -84,101 +84,6 @@ Falcon::Item *FalconProxyObject::_CallReadyMethod(const char *mthname, const Fal
     return NULL;
 }
 
-class fal_PhysProps : public Falcon::CoreObject
-{
-public:
-
-    fal_PhysProps( const Falcon::CoreClass* generator, PhysProps& prop, bool asRef)
-        : Falcon::CoreObject( generator ), _referenced(asRef)
-    {
-        if(asRef)
-            _phys = &prop; // just pass ptr
-        else
-        {
-            _phys = new PhysProps;
-            *_phys = prop; // clone
-        }
-    }
-
-    fal_PhysProps(const fal_PhysProps& other, bool asRef)
-        : Falcon::CoreObject(other), _referenced(asRef)
-    {
-        if(asRef)
-            _phys = other._phys; // just pass ptr
-        else
-        {
-            _phys = new PhysProps;
-            *_phys = *(other._phys); // clone
-        }
-    }
-
-    Falcon::CoreObject *clone(void) const
-    {
-        fal_PhysProps *p = new fal_PhysProps(*this, false);
-        return p;
-    }
-
-    bool finalize(void)
-    {
-        if(!_referenced)
-            delete _phys;
-        return false;
-    }
-
-    virtual bool setProperty( const Falcon::String &prop, const Falcon::Item &value )
-    {
-        if(prop == "mass")        { _phys->mass        = value.forceNumeric(); return true; }
-        /*if(prop == "xspeed")      { _phys->xspeed      = value.forceNumeric(); return true; }
-        if(prop == "yspeed")      { _phys->yspeed      = value.forceNumeric(); return true; }
-        if(prop == "xmaxspeed")   { _phys->xmaxspeed   = value.forceNumeric(); return true; }
-        if(prop == "ymaxspeed")   { _phys->ymaxspeed   = value.forceNumeric(); return true; }
-        if(prop == "xaccel")      { _phys->xaccel      = value.forceNumeric(); return true; }
-        if(prop == "yaccel")      { _phys->yaccel      = value.forceNumeric(); return true; }
-        if(prop == "xfriction")   { _phys->xfriction   = value.forceNumeric(); return true; }
-        if(prop == "yfriction")   { _phys->yfriction   = value.forceNumeric(); return true; }
-        if(prop == "ubounce")     { _phys->ubounce     = value.forceNumeric(); return true; }
-        if(prop == "dbounce")     { _phys->dbounce     = value.forceNumeric(); return true; }
-        if(prop == "lbounce")     { _phys->lbounce     = value.forceNumeric(); return true; }
-        if(prop == "rbounce")     { _phys->rbounce     = value.forceNumeric(); return true; }*/
-
-        if(prop == "isRef")
-            throw new Falcon::AccessError( Falcon::ErrorParam( Falcon::e_prop_ro ).
-            extra( prop ) );
-
-        return false;
-    }
-
-    virtual bool getProperty( const Falcon::String &prop, Falcon::Item &ret ) const
-    {
-        if(prop == "mass")        { ret.setNumeric(_phys->mass);      return true; }
-        /*if(prop == "xspeed")      { ret.setNumeric(_phys->xspeed);      return true; }
-        if(prop == "yspeed")      { ret.setNumeric(_phys->yspeed);      return true; }
-        if(prop == "xmaxspeed")   { ret.setNumeric(_phys->xmaxspeed);   return true; }
-        if(prop == "ymaxspeed")   { ret.setNumeric(_phys->ymaxspeed);   return true; }
-        if(prop == "xaccel")      { ret.setNumeric(_phys->xaccel);      return true; }
-        if(prop == "yaccel")      { ret.setNumeric(_phys->yaccel);      return true; }
-        if(prop == "xfriction")   { ret.setNumeric(_phys->xfriction);   return true; }
-        if(prop == "yfriction")   { ret.setNumeric(_phys->yfriction);   return true; }
-        if(prop == "ubounce")     { ret.setNumeric(_phys->ubounce);     return true; }
-        if(prop == "dbounce")     { ret.setNumeric(_phys->dbounce);     return true; }
-        if(prop == "lbounce")     { ret.setNumeric(_phys->lbounce);     return true; }
-        if(prop == "rbounce")     { ret.setNumeric(_phys->rbounce);     return true; }
-        if(prop == "isRef")       { ret.setBoolean(_referenced);        return true; }*/
-
-        return defaultProperty( prop, ret); // property not found
-    }
-
-    inline PhysProps *GetPhysProps(void) { return _phys; }
-
-
-    bool _referenced;
-
-private:
-    PhysProps *_phys;
-
-
-};
-
 void fal_ObjectCarrier::init(Falcon::VMachine *vm)
 {
     fal_ObjectCarrier *self = Falcon::dyncast<fal_ObjectCarrier*>( vm->self().asObject() );
@@ -189,6 +94,7 @@ void fal_ObjectCarrier::init(Falcon::VMachine *vm)
     obj->SetLayerMgr(Engine::GetInstance()->_GetLayerMgr());
     obj->Init(); // correctly set type of object
     obj->_falObj = fobj;
+
     Engine::GetInstance()->objmgr->Add(obj);
 
     Engine::GetInstance()->OnObjectCreated(obj);
@@ -232,7 +138,10 @@ Falcon::CoreObject* fal_ObjectCarrier::factory( const Falcon::CoreClass *cls, vo
     return new fal_ObjectCarrier(cls, fobj);
 }
 
-
+void fal_ObjectCarrier::gcMark(Falcon::uint32 g)
+{
+    FalconObject::gcMark(g);
+}
 
 bool fal_ObjectCarrier::setProperty( const Falcon::String &prop, const Falcon::Item &value )
 {
@@ -261,22 +170,6 @@ bool fal_ObjectCarrier::setProperty( const Falcon::String &prop, const Falcon::I
             extra( prop ) );
     }
 
-    if(prop == "phys")
-    {
-        if(!value.isOfClass("PhysProps"))
-        {
-            throw new Falcon::AccessError( Falcon::ErrorParam( Falcon::e_param_type ).
-                extra( "Object.phys can only be of type 'PhysProps'" ) );
-        }
-
-        if(_obj->GetType() >= OBJTYPE_OBJECT)
-        {
-            ((Object*)_obj)->phys = *((fal_PhysProps*)value.asObject())->GetPhysProps(); // clone phys
-        }
-
-        return true; // if trying to assign phys to an ActiveRect, simply nothing will happen
-    }
-
     // convenience accessors, bypassing function overloads
     if(prop == "update") { ((Object*)_obj)->SetUpdate(value.isTrue()); return true; }
     if(prop == "blocking")  { ((Object*)_obj)->SetBlocking(value.isTrue()); return true; }
@@ -286,6 +179,7 @@ bool fal_ObjectCarrier::setProperty( const Falcon::String &prop, const Falcon::I
             ((Object*)_obj)->SetCollisionMask(value.isTrue() ? -1 : 0);
         else
             ((Object*)_obj)->SetCollisionMask((uint32)value.forceInteger());
+        return true;
     }
 
     if(_obj->GetType() >= OBJTYPE_OBJECT)
@@ -294,6 +188,7 @@ bool fal_ObjectCarrier::setProperty( const Falcon::String &prop, const Falcon::I
         if(prop == "physics") { ((Object*)_obj)->SetAffectedByPhysics(value.isTrue()); return true; }
         if(prop == "layerId") { ((Object*)_obj)->SetLayer(uint32(value.forceInteger())); return true; }
         if(prop == "visible") { ((Object*)_obj)->SetVisible(value.isTrue()); return true; }
+        if(prop == "mass") { ((Object*)_obj)->phys.mass = (float)value.forceNumeric(); return true; }
     }
 
     return FalconObject::setProperty(prop, value);
@@ -320,18 +215,24 @@ bool fal_ObjectCarrier::getProperty( const Falcon::String &prop, Falcon::Item &r
     if(prop == "h") { ret = Falcon::int32(((ActiveRect*)_obj)->h); return true; }
     if(prop == "x2") { ret = Falcon::int32(((ActiveRect*)_obj)->x2()); return true; }
     if(prop == "y2") { ret = Falcon::int32(((ActiveRect*)_obj)->y2()); return true; }
-    if(prop == "phys")
+    if(prop == "y2") { ret = Falcon::int32(((ActiveRect*)_obj)->y2()); return true; }
+
+    if(prop == "pos")
     {
-        if(_obj->GetType() < OBJTYPE_OBJECT)
-            ret.setNil();
-        else
-        {
-            Falcon::CoreClass *cls = _falObj->vm->findWKI("PhysProps")->asClass();
-            fal_PhysProps *p = new fal_PhysProps(cls, ((Object*)_obj)->phys, true); // as reference
-            ret.setObject(p);
-        }
+        fal_Vector2d *v = new fal_Vector2d(VECTOR_CLASS_SYMBOL2(_obj->_falObj->vm));
+        v->vec() = ((ActiveRect*)_obj)->pos;
+        ret = v;
         return true;
     }
+
+    if(prop == "size")
+    {
+        fal_Vector2d *v = new fal_Vector2d(VECTOR_CLASS_SYMBOL2(_obj->_falObj->vm));
+        v->vec() = ((ActiveRect*)_obj)->size;
+        ret = v;
+        return true;
+    }
+
     if(prop == "update") { ret = ((Object*)_obj)->IsUpdate(); return true; }
     if(prop == "blocking")  { ret = ((Object*)_obj)->IsBlocking(); return true; }
     if(prop == "collision") { ret = ((Object*)_obj)->IsCollisionEnabled(); return true; }
@@ -341,7 +242,9 @@ bool fal_ObjectCarrier::getProperty( const Falcon::String &prop, Falcon::Item &r
         if(prop == "physics") { ret = ((Object*)_obj)->IsAffectedByPhysics(); return true; }
         if(prop == "layerId") { ret = Falcon::uint32(((Object*)_obj)->GetLayer()); return true; }
         if(prop == "visible") { ret = ((Object*)_obj)->IsVisible(); return true; }
+        if(prop == "mass") { ret = Falcon::numeric(((Object*)_obj)->phys.mass); return true; }
 
+        // TODO: quick accessors for speed, accel, friction?
     }
 
     return FalconObject::getProperty( prop, ret) || defaultProperty( prop, ret); // property not found
@@ -405,10 +308,10 @@ void Object::OnUpdate(uint32 ms)
     _falObj->CallMethod("OnUpdate", Falcon::int32(ms));
 }
 
-void Object::OnTouchWall(uint8 side, float xspeed, float yspeed)
+void Object::OnTouchWall()
 {
     DEBUG_ASSERT_RETURN_VOID(_falObj);
-    _falObj->CallMethod("OnTouchWall", Falcon::int32(side), Falcon::numeric(xspeed), Falcon::numeric(yspeed));
+    _falObj->CallMethod("OnTouchWall");
 }
 
 // -- end object proxy calls --
@@ -465,24 +368,6 @@ FALCON_FUNC fal_ActiveRect_SetPos(Falcon::VMachine *vm)
     obj->SetPos(x,y);
 }
 
-FALCON_FUNC fal_ActiveRect_CanMoveToDir(Falcon::VMachine *vm)
-{
-    /*FALCON_REQUIRE_PARAMS_EXTRA(1, "N[,N]");
-    uint8 d = vm->param(0)->forceIntegerEx();
-    fal_ObjectCarrier *self = Falcon::dyncast<fal_ObjectCarrier*>( vm->self().asObject() );
-    if(vm->paramCount() >= 2)
-    {
-        uint32 pixels = vm->param(1)->forceIntegerEx();
-        vm->retval((int64)((ActiveRect*)self->GetObj())->CanMoveToDirection(d, pixels));
-    }
-    else
-    {
-        vm->retval((int64)((ActiveRect*)self->GetObj())->CanMoveToDirection(d)); // use builtin default value
-    }
-    */
-    // PHYS FIXME
-}
-
 FALCON_FUNC fal_ActiveRect_SetCollisionEnabled(Falcon::VMachine *vm)
 {
     FALCON_REQUIRE_PARAMS(1);
@@ -533,6 +418,28 @@ FALCON_FUNC fal_ActiveRect_GetDistance(Falcon::VMachine *vm)
     vm->retval(obj->GetDistance(otherobj));
 }
 
+FALCON_FUNC fal_ActiveRect_CastRay(Falcon::VMachine *vm)
+{
+    fal_ObjectCarrier *self = Falcon::dyncast<fal_ObjectCarrier*>( vm->self().asObject() );
+    Falcon::Item *i_to    = vm->param(0); // target pos or direction
+    Falcon::Item *i_which = vm->param(1); // return last (default) or collision vector
+    Falcon::Item *i_lcf   = vm->param(2); // LCF
+    if(!(i_to && i_to->isOfClass("Vector")))
+        throw new Falcon::ParamError(Falcon::ErrorParam( Falcon::e_inv_params, __LINE__ ));
+
+    LayerMgr *lm = Engine::GetInstance()->_GetLayerMgr();
+    const bool collv = i_which && i_which->isTrue();
+    const LayerCollisionFlag lcf = i_lcf ? LayerCollisionFlag(i_lcf->forceIntegerEx()) : LCF_ALL; // TODO: use object's own LCF
+    const Vector2df dst = Falcon::dyncast<fal_Vector2d*>(i_to->asObjectSafe())->vec();
+    Vector2df lastpos, collpos;
+
+    if(lm->CastRaysFromRect(*Falcon::dyncast<ActiveRect*>(self->GetObj()), dst, lastpos, collpos, lcf))
+    {
+        fal_Vector2d *v = new fal_Vector2d(VECTOR_CLASS_SYMBOL);
+        v->vec() = collv ? collpos : lastpos;
+        vm->retval(v);
+    }
+}
 
 FALCON_FUNC fal_Object_SetAffectedByPhysics(Falcon::VMachine *vm)
 {
@@ -555,6 +462,128 @@ FALCON_FUNC fal_Object_IsAffectedByPhysics(Falcon::VMachine *vm)
     }
     vm->retval(false);
 }
+
+FALCON_FUNC fal_Object_GetSpeed(Falcon::VMachine *vm)
+{
+    fal_ObjectCarrier *self = Falcon::dyncast<fal_ObjectCarrier*>( vm->self().asObject() );
+    Object *obj = (Object*)self->GetObj();
+    fal_Vector2d *v = new fal_Vector2d(VECTOR_CLASS_SYMBOL);
+    Falcon::Item *p0 = vm->param(0);
+    if(!p0)
+        v->vec() = obj->GetTotalSpeed();
+    else
+    {
+        size_t idx = p0->forceIntegerEx();
+        if(idx < obj->phys.size())
+            v->vec() = obj->phys[idx].speed;
+    }
+    vm->retval(v);
+}
+
+FALCON_FUNC fal_Object_SetSpeed(Falcon::VMachine *vm)
+{
+    FALCON_REQUIRE_PARAMS(2);
+    fal_ObjectCarrier *self = Falcon::dyncast<fal_ObjectCarrier*>( vm->self().asObject() );
+    Object *obj = (Object*)self->GetObj();
+    size_t idx = vm->param(0)->forceIntegerEx();
+    Falcon::Item *p1 = vm->param(1);
+    if(p1->isOfClass("Vector"))
+        obj->phys.get(idx).speed = Falcon::dyncast<fal_Vector2d*>(p1->asObject())->vec(); // auto-extend
+    else
+    {
+        Falcon::Item *p2 = vm->param(2);
+        Vector2df& spd = obj->phys.get(idx).speed; // auto-extend
+        if(!p1->isNil())
+            spd.x = (float)p1->forceNumeric();
+        if(!p2->isNil())
+            spd.y = (float)p2->forceNumeric();
+    }
+}
+
+FALCON_FUNC fal_Object_AddSpeed(Falcon::VMachine *vm)
+{
+    FALCON_REQUIRE_PARAMS(2);
+    fal_ObjectCarrier *self = Falcon::dyncast<fal_ObjectCarrier*>( vm->self().asObject() );
+    Object *obj = (Object*)self->GetObj();
+    size_t idx = vm->param(0)->forceIntegerEx();
+    Falcon::Item *p1 = vm->param(1);
+    if(p1->isOfClass("Vector"))
+        obj->phys.get(idx).speed += Falcon::dyncast<fal_Vector2d*>(p1->asObject())->vec(); // auto-extend
+    else
+    {
+        Falcon::Item *p2 = vm->param(2);
+        Vector2df& spd = obj->phys.get(idx).speed; // auto-extend
+        if(!p1->isNil())
+            spd.x += (float)p1->forceNumeric();
+        if(!p2->isNil())
+            spd.y += (float)p2->forceNumeric();
+    }
+}
+
+FALCON_FUNC fal_Object_GetAccel(Falcon::VMachine *vm)
+{
+    FALCON_REQUIRE_PARAMS(1);
+    fal_ObjectCarrier *self = Falcon::dyncast<fal_ObjectCarrier*>( vm->self().asObject() );
+    Object *obj = (Object*)self->GetObj();
+    fal_Vector2d *v = new fal_Vector2d(VECTOR_CLASS_SYMBOL);
+    size_t idx = vm->param(0)->forceIntegerEx();
+    if(idx < obj->phys.size())
+        v->vec() = obj->phys[idx].accel;
+    vm->retval(v);
+}
+
+FALCON_FUNC fal_Object_SetAccel(Falcon::VMachine *vm)
+{
+    FALCON_REQUIRE_PARAMS(2);
+    fal_ObjectCarrier *self = Falcon::dyncast<fal_ObjectCarrier*>( vm->self().asObject() );
+    Object *obj = (Object*)self->GetObj();
+    size_t idx = vm->param(0)->forceIntegerEx();
+    Falcon::Item *p1 = vm->param(1);
+    if(p1->isOfClass("Vector"))
+        obj->phys.get(idx).accel = Falcon::dyncast<fal_Vector2d*>(p1->asObject())->vec(); // auto-extend
+    else
+    {
+        Falcon::Item *p2 = vm->param(2);
+        Vector2df& acl = obj->phys.get(idx).accel; // auto-extend
+        if(!p1->isNil())
+            acl.x = (float)p1->forceNumeric();
+        if(!p2->isNil())
+            acl.y = (float)p2->forceNumeric();
+    }
+}
+
+FALCON_FUNC fal_Object_GetFrict(Falcon::VMachine *vm)
+{
+    FALCON_REQUIRE_PARAMS(1);
+    fal_ObjectCarrier *self = Falcon::dyncast<fal_ObjectCarrier*>( vm->self().asObject() );
+    Object *obj = (Object*)self->GetObj();
+    fal_Vector2d *v = new fal_Vector2d(VECTOR_CLASS_SYMBOL);
+    size_t idx = vm->param(0)->forceIntegerEx();
+    if(idx < obj->phys.size())
+        v->vec() = obj->phys[idx].friction;
+    vm->retval(v);
+}
+
+FALCON_FUNC fal_Object_SetFrict(Falcon::VMachine *vm)
+{
+    FALCON_REQUIRE_PARAMS(2);
+    fal_ObjectCarrier *self = Falcon::dyncast<fal_ObjectCarrier*>( vm->self().asObject() );
+    Object *obj = (Object*)self->GetObj();
+    size_t idx = vm->param(0)->forceIntegerEx();
+    Falcon::Item *p1 = vm->param(1);
+    if(p1->isOfClass("Vector"))
+        obj->phys.get(idx).friction = Falcon::dyncast<fal_Vector2d*>(p1->asObject())->vec(); // auto-extend
+    else
+    {
+        Falcon::Item *p2 = vm->param(2);
+        Vector2df& fr = obj->phys.get(idx).friction; // auto-extend
+        if(!p1->isNil())
+            fr.x = (float)p1->forceNumeric();
+        if(!p2->isNil())
+            fr.y = (float)p2->forceNumeric();
+    }
+}
+
 
 fal_Tile::fal_Tile( const Falcon::CoreClass* generator, BasicTile *obj )
 : Falcon::CoreObject( generator ), _tile(obj)
@@ -992,36 +1021,39 @@ Falcon::Module *FalconObjectModule_create(void)
     m->addConstant("OBJTYPE_UNIT", (Falcon::int64)OBJTYPE_UNIT, true);
     m->addConstant("OBJTYPE_PLAYER", (Falcon::int64)OBJTYPE_PLAYER, true);
 
-    Falcon::Symbol *clsRect = m->addClass("ActiveRect", &fal_ObjectCarrier::init);
-    clsRect->getClassDef()->addInheritance(inhBaseObject);
-    Falcon::InheritDef *inhRect = new Falcon::InheritDef(clsRect); // there are other classes that inherit from ActiveRect
-    clsRect->setWKS(true);
+    Falcon::Symbol *clsActiveRect = m->addClass("ActiveRect", &fal_ObjectCarrier::init);
+    clsActiveRect->getClassDef()->addInheritance(inhBaseObject);
+    Falcon::InheritDef *inhRect = new Falcon::InheritDef(clsActiveRect); // there are other classes that inherit from ActiveRect
+    clsActiveRect->setWKS(true);
 
-    m->addClassMethod(clsRect, "OnUpdate", fal_NullFunc);
-    m->addClassMethod(clsRect, "OnEnter", fal_NullFunc);
-    m->addClassMethod(clsRect, "OnLeave", fal_NullFunc);
-    m->addClassMethod(clsRect, "OnTouch", fal_NullFunc);
-    m->addClassMethod(clsRect, "OnEnteredBy", fal_NullFunc);
-    m->addClassMethod(clsRect, "OnLeftBy", fal_NullFunc); // TODO: NYI
-    m->addClassMethod(clsRect, "OnTouchedBy", fal_NullFunc);
-    m->addClassMethod(clsRect, "SetBBox", fal_ActiveRect_SetBBox);
-    m->addClassMethod(clsRect, "SetPos", fal_ActiveRect_SetPos);
-    m->addClassMethod(clsRect, "CanMoveToDir", fal_ActiveRect_CanMoveToDir);
-    m->addClassMethod(clsRect, "IsCollisionEnabled", fal_ActiveRect_IsCollisionEnabled); // also see .collision property
-    m->addClassMethod(clsRect, "SetCollisionEnabled", fal_ActiveRect_SetCollisionEnabled);
-    m->addClassMethod(clsRect, "GetDistance", fal_ActiveRect_GetDistance);
-    m->addClassMethod(clsRect, "GetDistanceX", fal_ActiveRect_GetDistanceX);
-    m->addClassMethod(clsRect, "GetDistanceY", fal_ActiveRect_GetDistanceY);
-    m->addClassMethod(clsRect, "SetBlocking", fal_NullFunc); // ActiveRect is never blocking // also see .blocking property
-    m->addClassMethod(clsRect, "IsBlocking", fal_FalseFunc);
-    m->addClassProperty(clsRect, "x");
-    m->addClassProperty(clsRect, "y");
-    m->addClassProperty(clsRect, "w");
-    m->addClassProperty(clsRect, "h");
-    m->addClassProperty(clsRect, "x2");
-    m->addClassProperty(clsRect, "y2");
-    m->addClassProperty(clsRect, "x2f");
-    m->addClassProperty(clsRect, "y2f");
+    m->addClassMethod(clsActiveRect, "OnUpdate", fal_NullFunc);
+    m->addClassMethod(clsActiveRect, "OnEnter", fal_NullFunc);
+    m->addClassMethod(clsActiveRect, "OnLeave", fal_NullFunc);
+    m->addClassMethod(clsActiveRect, "OnTouch", fal_NullFunc);
+    m->addClassMethod(clsActiveRect, "OnEnteredBy", fal_NullFunc);
+    m->addClassMethod(clsActiveRect, "OnLeftBy", fal_NullFunc); // TODO: NYI
+    m->addClassMethod(clsActiveRect, "OnTouchedBy", fal_NullFunc);
+    m->addClassMethod(clsActiveRect, "SetBBox", fal_ActiveRect_SetBBox);
+    m->addClassMethod(clsActiveRect, "SetPos", fal_ActiveRect_SetPos);
+    m->addClassMethod(clsActiveRect, "IsCollisionEnabled", fal_ActiveRect_IsCollisionEnabled); // also see .collision property
+    m->addClassMethod(clsActiveRect, "SetCollisionEnabled", fal_ActiveRect_SetCollisionEnabled);
+    m->addClassMethod(clsActiveRect, "GetDistance", fal_ActiveRect_GetDistance);
+    m->addClassMethod(clsActiveRect, "GetDistanceX", fal_ActiveRect_GetDistanceX);
+    m->addClassMethod(clsActiveRect, "GetDistanceY", fal_ActiveRect_GetDistanceY);
+    m->addClassMethod(clsActiveRect, "SetBlocking", fal_NullFunc); // ActiveRect is never blocking // also see .blocking property
+    m->addClassMethod(clsActiveRect, "IsBlocking", fal_FalseFunc);
+    m->addClassMethod(clsActiveRect, "CastRay", fal_ActiveRect_CastRay);
+    m->addClassProperty(clsActiveRect, "x");
+    m->addClassProperty(clsActiveRect, "y");
+    m->addClassProperty(clsActiveRect, "w");
+    m->addClassProperty(clsActiveRect, "h");
+    m->addClassProperty(clsActiveRect, "x2");
+    m->addClassProperty(clsActiveRect, "y2");
+    m->addClassProperty(clsActiveRect, "x2f");
+    m->addClassProperty(clsActiveRect, "y2f");
+    m->addClassProperty(clsActiveRect, "pos");
+    m->addClassProperty(clsActiveRect, "size");
+    // TODO: pos/size properties - return vector
 
     Falcon::Symbol *clsObject = m->addClass("Object", &fal_ObjectCarrier::init);
     clsObject->getClassDef()->addInheritance(inhRect);
@@ -1034,11 +1066,19 @@ Falcon::Module *FalconObjectModule_create(void)
     m->addClassMethod(clsObject, "GetLayerId", fal_Object_GetLayerId);
     m->addClassMethod(clsObject, "SetAffectedByPhysics", &fal_Object_SetAffectedByPhysics); // also see .physics property
     m->addClassMethod(clsObject, "IsAffectedByPhysics", &fal_Object_IsAffectedByPhysics);
-    m->addClassMethod(clsRect, "SetBlocking", fal_Object_SetBlocking); // also see .blocking property
-    m->addClassMethod(clsRect, "IsBlocking", fal_Object_IsBlocking);
-    m->addClassProperty(clsObject, "phys");
-    m->addClassProperty(clsObject, "gfxOffsX");
+    m->addClassMethod(clsActiveRect, "SetBlocking", fal_Object_SetBlocking); // also see .blocking property
+    m->addClassMethod(clsActiveRect, "IsBlocking", fal_Object_IsBlocking);
+    m->addClassMethod(clsActiveRect, "SetSpeed", fal_Object_SetSpeed);
+    m->addClassMethod(clsActiveRect, "GetSpeed", fal_Object_GetSpeed);
+    m->addClassMethod(clsActiveRect, "AddSpeed", fal_Object_AddSpeed);
+    m->addClassMethod(clsActiveRect, "SetAccel", fal_Object_SetAccel);
+    m->addClassMethod(clsActiveRect, "GetAccel", fal_Object_GetAccel);
+    m->addClassMethod(clsActiveRect, "SetFrict", fal_Object_SetFrict);
+    m->addClassMethod(clsActiveRect, "GetFrict", fal_Object_GetFrict);
+    m->addClassProperty(clsObject, "mass");
+    m->addClassProperty(clsObject, "gfxOffsX"); // TODO: deprecate
     m->addClassProperty(clsObject, "gfxOffsY");
+
 
     Falcon::Symbol *clsUnit = m->addClass("Unit", &fal_ObjectCarrier::init);
     Falcon::InheritDef *inhUnit = new Falcon::InheritDef(clsUnit);
@@ -1049,22 +1089,11 @@ Falcon::Module *FalconObjectModule_create(void)
     clsPlayer->getClassDef()->addInheritance(inhUnit);
     clsPlayer->setWKS(true);
 
-    Falcon::Symbol *clsPhysProps = m->addClass("PhysProps");
-    clsPhysProps->setWKS(true);
-    m->addClassProperty(clsPhysProps, "isRef");
-    m->addClassProperty(clsPhysProps, "weight");
-    m->addClassProperty(clsPhysProps, "xspeed");
-    m->addClassProperty(clsPhysProps, "yspeed");
-    m->addClassProperty(clsPhysProps, "xmaxspeed");
-    m->addClassProperty(clsPhysProps, "ymaxspeed");
-    m->addClassProperty(clsPhysProps, "xaccel");
-    m->addClassProperty(clsPhysProps, "yaccel");
-    m->addClassProperty(clsPhysProps, "xfriction");
-    m->addClassProperty(clsPhysProps, "yfriction");
-    m->addClassProperty(clsPhysProps, "ubounce");
-    m->addClassProperty(clsPhysProps, "dbounce");
-    m->addClassProperty(clsPhysProps, "lbounce");
-    m->addClassProperty(clsPhysProps, "rbounce");
+    /*Falcon::Symbol *clsVectorAdapter = m->addClass("VectorAdapter");
+    clsVectorAdapter->setWKS(true);
+    m->addClassMethod(clsVectorAdapter, OVERRIDE_OP_GETINDEX, &fal_VectorAdapter_GetIndex);
+    m->addClassMethod(clsVectorAdapter, OVERRIDE_OP_SETINDEX, &fal_VectorAdapter_SetIndex);
+    m->addClassMethod(clsVectorAdapter, "len", &fal_VectorAdapter_len);*/
 
 
     return m;

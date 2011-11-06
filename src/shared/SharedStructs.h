@@ -4,24 +4,12 @@
 #include "SharedDefines.h"
 #include "Vector2d.h"
 
-struct Point
+struct Camera : public Vector2df
 {
-    Point() : x(0), y(0) {}
-    Point(int32 x_, int32 y_) : x(x_), y(y_) {}
-    Point(const Point& p): x(p.x), y(p.y) {}
-    int32 x, y;
-
-    inline bool operator==(Point& p) { return x == p.x && y == p.y; }
-    inline bool operator!=(Point& p) { return !(x == p.x && y == p.y); }
-    void invalidate(void) { x = y = INT_MIN; }
-    bool valid(void) { return x != INT_MIN && y != INT_MIN; }
-};
-
-struct Camera : public Point
-{
-    Camera() : Point() {}
-    Camera(int32 x_, int32 y_) : Point(x_, y_) {}
-    Camera(const Point& p): Point(p) {}
+    Camera() : Vector2df() {}
+    Camera(int32 x_, int32 y_) : Vector2df((float)x_, (float)y_) {}
+    Camera(float x_, float y_) : Vector2df(x_, y_) {}
+    Camera(const Vector2df& p): Vector2df(p) {}
     inline void TranslatePoints(int32& ax, int32& ay) const
     {
         ax -= x;
@@ -31,6 +19,16 @@ struct Camera : public Point
     {
         ax -= (int16)x;
         ay -= (int16)y;
+    }
+    inline void TranslatePoints(float& ax, float& ay) const
+    {
+        ax -= x;
+        ay -= y;
+    }
+    inline void TranslateVector(Vector2df& v) const
+    {
+        v.x -= x;
+        v.y -= y;
     }
 };
 
@@ -49,6 +47,7 @@ public:
     BaseRect() : x(pos.x), y(pos.y), w(size.x), h(size.y) {}
     BaseRect(float ax, float ay, float aw, float ah) : pos(ax, ay), size(aw, ah), x(pos.x), y(pos.y), w(size.x), h(size.y) {}
     BaseRect(const BaseRect& r) : pos(r.pos), size(r.size), x(pos.x), y(pos.y), w(size.x), h(size.y) {}
+    BaseRect(const Vector2df& p, const Vector2df& sz) : pos(p), size(sz), x(pos.x), y(pos.y), w(size.x), h(size.y) {}
 
     const BaseRect& operator= (const BaseRect& r)
     {

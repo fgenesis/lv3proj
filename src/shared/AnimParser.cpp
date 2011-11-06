@@ -7,7 +7,7 @@ Anim *ParseAnimData(char *strbuf, char *filename)
     Anim *ani = new Anim;
     ani->first = NULL;
     std::vector<std::string> lines, fields;
-    uint32 cpos; // comment?
+    size_t cpos; // comment?
     uint32 linenum = 0; // line number
     std::string anim_name;
     bool finished_block = true;

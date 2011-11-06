@@ -227,6 +227,7 @@ end
 ScriptLoader.LoadDir("system")
 ScriptLoader.LoadDir(Engine.GetName()) // can be "game" or "editor"
 ScriptLoader.LoadDir("functors")
+ScriptLoader.LoadDir("debug")
 
 // after we are loaded, drop the init.fal loader script from the VFS,
 // just to be on the safe side if someone reloads the scripts root dir, which would attempt to load this script again,

@@ -61,7 +61,7 @@ class FocusObjectBase from Object
     
     init
         self.update = false
-        self.collision = false
+        self.SetCollisionEnabled(false)
         self.SetAffectedByPhysics(false) // we do physics manually for now
     end
 end

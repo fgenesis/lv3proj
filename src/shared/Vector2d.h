@@ -3,9 +3,13 @@
 
 #include "mathtools.h"
 
+#include "FalconHelpers.h"
+
 template <typename T> class Vector2d
 {
 public:
+    typedef T type;
+
     Vector2d()
         : x(0), y(0)
     {
@@ -53,6 +57,11 @@ public:
         return Vector2d(x + v.x, y + v.y);
     }
 
+    const Vector2d operator+(const T &s) const
+    {
+        return Vector2d(x + s, y + s);
+    }
+
     const Vector2d& operator+=(const Vector2d& v)
     {
         x += v.x;
@@ -65,13 +74,20 @@ public:
         return Vector2d(x - v.x, y - v.y);
     }
 
+    const Vector2d operator-(const T& s) const
+    {    
+        return Vector2d(x - s, y - s);
+    }
+
     const Vector2d operator-() const
     {    
         return Vector2d(-x, -y);
     }
-    bool isZero()
-    {
-        return !x && !y;
+
+    inline void flip()
+    {    
+        x = -x;
+        y = -y;
     }
 
     const Vector2d &operator-=(const Vector2d& vec)
@@ -81,10 +97,31 @@ public:
         return *this;
     }
 
+    const Vector2d &operator-=(const T& s)
+    {
+        x -= s;
+        y -= s;
+        return *this;
+    }
+
+    const Vector2d &operator+=(const T& s)
+    {
+        x += s;
+        y += s;
+        return *this;
+    }
+
     const Vector2d &operator*=(const T &s)
     {
         x *= s;
         y *= s;
+        return *this;
+    }
+
+    const Vector2d &operator/(const Vector2d &v)
+    {
+        x /= v.x;
+        y /= v.y;
         return *this;
     }
 
@@ -119,7 +156,7 @@ public:
         return Vector2d(x*v.x, y*v.y);
     }
 
-    const Vector2d operator/(T s) const
+    const Vector2d operator/(const T& s) const
     {
         return Vector2d(x/s, y/s);
     }
@@ -164,12 +201,17 @@ public:
     }
 
     // return angle between two vectors -- not passed by reference intentionally
-    const float inline angle(const Vector2d v) const
+    const float inline angle(Vector2d v) const
     {
-        v = v.normalize();
-        Vector2d m = *this;
+        Vector2d m = *const_cast<Vector2d*>(this);
+        v.normalize();
         m.normalize();
-        return angleNorm(v);
+        return m.angleNorm(v);
+    }
+
+    const float inline angleDeg(const Vector2d& v) const
+    {
+        return radToDeg(angle(v));
     }
 
     // return angle between two vectors -- both vectors must already be normalized!
@@ -189,15 +231,12 @@ public:
     }
 
     // rotate in degrees
-    void rotateDeg(float angle)
+    inline void rotateDeg(float angle)
     {
-        float a = degToRad(angle);
-        float oldx = x;
-        x = cos(a)*x - sin(a)*y;
-        y = -(sin(a)*oldx + cos(a)*y);
+        rotate(degToRad(angle));
     }
 
-    void rotateRad(float rad)
+    inline void rotate(float rad)
     {
         T oldx = x;
         x = cos(rad)*x - sin(rad)*y;

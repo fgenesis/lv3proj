@@ -5,6 +5,11 @@ Uint32 SDLfunc_GetSurfaceBytes(SDL_Surface *surface);
 
 Uint32 SDLfunc_getpixel(SDL_Surface *surface, int x, int y);
 void SDLfunc_putpixel(SDL_Surface *surface, int x, int y, Uint32 pixel);
+inline void SDLfunc_putpixel_safe(SDL_Surface *surface, int x, int y, Uint32 pixel)
+{
+    if(x > 0 && x < surface->w && y > 0 && y < surface->h)
+        SDLfunc_putpixel(surface, x, y, pixel);
+}
 
 SDL_Surface *CreateEmptySurfaceFrom(SDL_Surface *src);
 SDL_Surface *SurfaceFlipH(SDL_Surface *src);

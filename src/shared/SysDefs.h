@@ -34,7 +34,7 @@
 #elif defined( __GNUC__ )
 #  define COMPILER COMPILER_GNU
 #else
-#  pragma error "FATAL ERROR: Unknown compiler."
+#  pragma warning "WARNING: Unknown compiler."
 #endif
 
 #if COMPILER == COMPILER_MICROSOFT

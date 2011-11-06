@@ -30,5 +30,12 @@ protected:
 #define FALCON_REQUIRE_PARAMS_EXTRA(__p,__desc) { if(vm->paramCount() < (__p)) { throw new Falcon::ParamError(Falcon::ErrorParam( Falcon::e_inv_params, __LINE__ ).extra(__desc));  } }
 
 
+inline Falcon::CoreClass *LookupFalconClass(Falcon::VMachine *vm, const char *name)
+{
+    Falcon::Item *itm = vm->findWKI(name);
+    ASSERT(itm != NULL);
+    return itm->asClass();
+}
+
 
 #endif

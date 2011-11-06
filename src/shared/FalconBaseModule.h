@@ -88,6 +88,9 @@ public:
     {
     }
 
+    static void init(Falcon::VMachine *vm);
+    static Falcon::CoreObject *factory(const Falcon::CoreClass *cls, void *user_data, bool);
+
     virtual bool setProperty( const Falcon::String &prop, const Falcon::Item &value )
     {
         return false;
@@ -98,7 +101,7 @@ public:
         return defaultProperty( prop, ret); // property not found
     }
 
-    Falcon::CoreObject *clone() const
+    virtual Falcon::CoreObject *clone() const
     {
         return NULL; // not cloneable
     }
@@ -107,5 +110,37 @@ public:
 private:
     TileLayer *_layer;
 };
+
+class fal_Vector2d : public Falcon::CoreObject
+{
+public:
+
+    fal_Vector2d( const Falcon::CoreClass *generator, Vector2df *v = NULL )
+        : Falcon::CoreObject( generator ), pVec(v ? v : &_vec)
+    {
+    }
+
+    static void init(Falcon::VMachine *vm);
+    static Falcon::CoreObject *factory(const Falcon::CoreClass *cls, void *user_data, bool);
+
+    virtual bool setProperty( const Falcon::String &prop, const Falcon::Item &value );
+    virtual bool getProperty( const Falcon::String &prop, Falcon::Item &ret ) const;
+
+    virtual Falcon::CoreObject *clone(void) const;
+
+    inline       Vector2df& vec()       { return *pVec; }
+    inline const Vector2df& vec() const { return *pVec; }
+
+private:
+
+    Vector2df *pVec;
+    Vector2df _vec; // internal vector, pVec points either to this, or another external one that is just referenced
+};
+
+// HACK: this is ugly, but works.
+// maybe going to replace this with custom VM class member accessors later
+// these are passed to FalconCarriedObject::get*Carrier(...) as-is.
+#define VECTOR_CLASS_SYMBOL LookupFalconClass(vm, "Vector")
+#define VECTOR_CLASS_SYMBOL2(VM) LookupFalconClass(VM, "Vector")
 
 #endif
