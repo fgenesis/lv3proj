@@ -118,7 +118,7 @@ public:
     inline uint32 GetCollisionMask(void) const { return _collisionMask; }
     inline void SetUpdate(bool b) { _update = b; }
     inline bool IsUpdate(void) const { return _update; }
-    bool CastRay(const Vector2df& dir, Vector2df& lastpos, Vector2df& collpos, LayerCollisionFlag lcf = LCF_ALL);
+    bool CastRay(const Vector2df& dir, Vector2df& lastpos, Vector2df& collpos, LayerCollisionFlag lcf = LCF_ALL) const;
 
     virtual float GetDistanceX(ActiveRect *other) const;
     virtual float GetDistanceY(ActiveRect *other) const;

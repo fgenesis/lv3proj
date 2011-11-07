@@ -77,9 +77,14 @@ template<class T> inline T lerp(const T& a, const T& b, const T& t)
 }
 
 // clamps a value between low and high
-template <class T> inline const T clamp (const T& value, const T& low, const T& high)
+template <class T> inline const T& clamp (const T& value, const T& low, const T& high)
 {
     return std::min<T>(std::max<T>(value,low), high);
+}
+
+template <class T> inline bool exceeds(const T& v, const T& mx)
+{
+    return mx < 0 ? v < mx : v > mx;
 }
 
 

@@ -377,9 +377,9 @@ bool LayerMgr::CollisionWith(const BaseRect *rect, int32 skip /* = 4 */, uint8 f
 class RayCastCheckDo
 {
 public:
-    RayCastCheckDo(CollisionMap& cm, LayerCollisionFlag lcf ) : _cm(cm), _lcf(lcf) {}
+    RayCastCheckDo(const CollisionMap& cm, LayerCollisionFlag lcf ) : _cm(cm), _lcf(lcf) {}
 
-    inline bool operator() (int32 x, int32 y)
+    inline bool operator() (int32 x, int32 y) const
     {
     #ifdef DEBUG_RAYCAST_VIS
         bool b = _cm(x, y) & _lcf;
@@ -395,17 +395,17 @@ public:
     }
 
 private:
-    CollisionMap& _cm;
-    LayerCollisionFlag _lcf;
+    const CollisionMap& _cm;
+    const LayerCollisionFlag _lcf;
 };
 
-bool LayerMgr::CastRayAbs(const Vector2df src, const Vector2df& targ, Vector2df& lastpos, Vector2df& collpos, LayerCollisionFlag lcf /* = LCF_ALL */)
+bool LayerMgr::CastRayAbs(const Vector2df src, const Vector2df& targ, Vector2df& lastpos, Vector2df& collpos, LayerCollisionFlag lcf /* = LCF_ALL */) const
 {
     RayCastCheckDo check(_collisionMap, lcf);
     return CastBresenhamLine(src.x, src.y, targ.x, targ.y, lastpos, collpos, check);
 }
 
-bool LayerMgr::CastRayDir(const Vector2df src, const Vector2df& dir, Vector2df& lastpos, Vector2df& collpos, LayerCollisionFlag lcf /* = LCF_ALL */)
+bool LayerMgr::CastRayDir(const Vector2df src, const Vector2df& dir, Vector2df& lastpos, Vector2df& collpos, LayerCollisionFlag lcf /* = LCF_ALL */) const
 {
     if(CastRayAbs(src, src + dir, lastpos, collpos, lcf))
     {
@@ -420,7 +420,7 @@ bool LayerMgr::CastRayDir(const Vector2df src, const Vector2df& dir, Vector2df& 
 // WARNING: the code is weird, but it works (somehow)
 // FIXME: the corner pixel is currently MISSING! Will do this later.
 bool LayerMgr::CastRaysFromRect(const BaseRect& src, const Vector2df& dir, Vector2df& lastpos, Vector2df& collpos,
-                                LayerCollisionFlag lcf /* = LCF_ALL */, float granularity /* = 1.0f */)
+                                LayerCollisionFlag lcf /* = LCF_ALL */, float granularity /* = 1.0f */) const
 {
     bool collided = false;
 

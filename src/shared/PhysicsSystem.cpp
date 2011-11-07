@@ -63,6 +63,8 @@ void PhysicsMgr::_ApplyFriction(Object *obj, float tf)
 void PhysicsMgr::_ApplySpeedAndCollision(Object *obj, float tf)
 {
     // -- obj vs. wall collision --
+
+cast_ray:
     
     Vector2df spd = obj->GetTotalSpeed() * tf;
 
@@ -73,9 +75,13 @@ void PhysicsMgr::_ApplySpeedAndCollision(Object *obj, float tf)
         return;
     }*/
 
-    Vector2df lastposWall, collposWall;
+
+    Vector2df lastposWall, collposWall; // will store relative pixel amount of last accessible point
+                                        // and first point that collides with wall.
+
+    bool recast = false;
     bool hitwall = obj->CastRay(spd, lastposWall, collposWall, obj->GetBlockedByLCF());
-    DEBUG(ASSERT(!hitwall || spd.lensq() >= lastposWall.lensq()));
+    //DEBUG(ASSERT(!hitwall || spd.lensq() >= lastposWall.lensq()));
 
 
 
@@ -87,23 +93,42 @@ void PhysicsMgr::_ApplySpeedAndCollision(Object *obj, float tf)
     // combine everything and update position
     if(hitwall)
     {
-        if(spd.x > lastposWall.x) // can move at least one pixel?
+
+
+        if(collposWall.x == lastposWall.x) // stuck? can't move then.
         {
-            spd.x = lastposWall.x;
-            obj->phys[0].speed.x = 0;
+            obj->phys[0].speed.x = /*spd.x =*/ 0;
+            recast = true;
         }
-        if(spd.y > lastposWall.y) // can move at least one pixel?
+        else if(exceeds(spd.x, lastposWall.x)) // limit speed to max. movement dir
         {
-            spd.y = lastposWall.y;
+            //spd.x = lastposWall.x;
+            obj->phys[0].speed.x = 0; // clear speed affected by gravity
+            recast = true;
+        }
+
+        if(collposWall.y == lastposWall.y)
+        {
+            obj->phys[0].speed.y = /*spd.y =*/ 0;
+            recast = true;
+        }
+        else if(exceeds(spd.y, lastposWall.y))
+        {
+            //spd.y = lastposWall.y;
             obj->phys[0].speed.y = 0;
+            recast = true;
         }
-        float l = lastposWall.lensq();
+
+        if(recast)
+            goto cast_ray;
+
+        //float l = spd.lensq();
         //spd.setLen(l);  //// <-------- FIXME: THIS IS WRONG !!!!!1 ##############
 
         obj->pos += spd;
         //obj->SetMoved(!spd.isZero());
 
-        if(l != 0)
+        if(!spd.isZero())
             obj->OnTouchWall();
 
         // clear speed managed by gravity
