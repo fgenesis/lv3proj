@@ -161,6 +161,11 @@ public:
         return Vector2d(x/s, y/s);
     }
 
+    inline bool operator!() const
+    {
+        return isZero();
+    }
+
     const inline T lensq(void) const
     {
         return x*x + y*y;

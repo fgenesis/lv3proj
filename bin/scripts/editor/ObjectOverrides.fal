@@ -9,10 +9,12 @@ end
 function Object_remove(obj, rm, really)
     // TEST: for now, just print when an object is removed; we will take appropriate measures later
     > "REMOVE: ", obj, " really: ", really
-    obj.physics = false
-    obj.visible = false
-    obj.update = false
-    obj.collision = false
+    if obj.type >= OBJTYPE_OBJECT
+        obj.physics = false
+        obj.visible = false
+        obj.update = false
+        obj.collision = false
+    end
     if really: passvp(rm) // pass all undeclared parameters to old obj.remove and call it
 end
 

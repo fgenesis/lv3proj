@@ -13,7 +13,7 @@ template <typename T> bool CastBresenhamLine(int32 x0, int32 y0, int32 x1, int32
     int32 sy = y0 < y1 ? 1 : -1;
     int32 err = dx - dy;
     int32 e2;
-    int32 lastx = x0, lasty = x0;
+    int32 lastx = x0, lasty = y0;
 
     while(true)
     {

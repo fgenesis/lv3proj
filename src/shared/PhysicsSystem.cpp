@@ -85,24 +85,34 @@ void PhysicsMgr::_ApplySpeedAndCollision(Object *obj, float tf)
 
 
     // combine everything and update position
-    float l;
-    
     if(hitwall)
     {
-        l = lastposWall.len();
-        spd.setLen(l);  //// <-------- FIXME: THIS IS WRONG !!!!!1 ##############
-    }
-    obj->pos += spd;
-    //obj->SetMoved(!spd.isZero());
+        if(spd.x > lastposWall.x) // can move at least one pixel?
+        {
+            spd.x = lastposWall.x;
+            obj->phys[0].speed.x = 0;
+        }
+        if(spd.y > lastposWall.y) // can move at least one pixel?
+        {
+            spd.y = lastposWall.y;
+            obj->phys[0].speed.y = 0;
+        }
+        float l = lastposWall.lensq();
+        //spd.setLen(l);  //// <-------- FIXME: THIS IS WRONG !!!!!1 ##############
 
-    if(hitwall)
-    {
+        obj->pos += spd;
+        //obj->SetMoved(!spd.isZero());
+
         if(l != 0)
             obj->OnTouchWall();
 
         // clear speed managed by gravity
         // TODO: what about other speeds pointing into the same direction as spd?
-        obj->phys[0].speed = Vector2df(0, 0);
+        //obj->phys[0].speed = Vector2df(0, 0);
+    }
+    else
+    {
+        obj->pos += spd;
     }
     
 

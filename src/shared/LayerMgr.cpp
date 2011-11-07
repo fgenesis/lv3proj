@@ -12,6 +12,8 @@
 #include "CollisionUtil.h"
 #include "UndefUselessCrap.h"
 
+// raycasting related debug stuff
+#define DEBUG_RAYCAST_VIS
 
 LayerMgr::LayerMgr(Engine *e)
 : _engine(e), _maxdim(0), _collisionMap(LCF_WALL)
@@ -286,7 +288,7 @@ void LayerMgr::RemoveFromCollisionMap(Object *obj)
 
 // TODO: this will ASSERT fail if an object moves out of the screen, fix this
 // -- here too?
-// TODO: add support for per-pixel collision map
+// TODO: add support for per-pixel collision map (also when objects are animated)
 void LayerMgr::UpdateCollisionMap(Object *obj)
 {
     // set LCF_BLOCKING_OBJECT in the current rect of the object
@@ -379,15 +381,17 @@ public:
 
     inline bool operator() (int32 x, int32 y)
     {
-        return _cm(x, y) & _lcf;
-
-        /*bool b = _cm(x, y) & _lcf;
+    #ifdef DEBUG_RAYCAST_VIS
+        bool b = _cm(x, y) & _lcf;
         if(!b)
         {
             Engine::GetInstance()->GetCamera().TranslatePoints(x, y);
             SDLfunc_putpixel_safe(Engine::GetInstance()->GetSurface(), x, y, 0x20FFFFFF);
         }
-        return b;*/
+        return b;
+    #else
+        return _cm(x, y) & _lcf;
+    #endif
     }
 
 private:
@@ -451,9 +455,13 @@ bool LayerMgr::CastRaysFromRect(const BaseRect& src, const Vector2df& dir, Vecto
                     lastpos = lastp;
                     collpos = collp;
                 }
-                //SDLfunc_putpixel_safe(_engine->GetSurface(), cast.x, cast.y, 0xFF00FF00);
+                #ifdef DEBUG_RAYCAST_VIS
+                 SDLfunc_putpixel_safe(_engine->GetSurface(), cast.x, cast.y, 0xFF00FF00);
+                #endif
             }
-            //else SDLfunc_putpixel_safe(_engine->GetSurface(), cast.x, cast.y, 0xFFFF00FF);
+            #ifdef DEBUG_RAYCAST_VIS
+             else SDLfunc_putpixel_safe(_engine->GetSurface(), cast.x, cast.y, 0xFFFF00FF);
+            #endif
         }
     }
 
@@ -480,9 +488,13 @@ bool LayerMgr::CastRaysFromRect(const BaseRect& src, const Vector2df& dir, Vecto
                     lastpos = lastp;
                     collpos = collp;
                 }
-                //SDLfunc_putpixel_safe(_engine->GetSurface(), cast.x, cast.y, 0xFF00FF00);
+                #ifdef DEBUG_RAYCAST_VIS
+                 SDLfunc_putpixel_safe(_engine->GetSurface(), cast.x, cast.y, 0xFF00FF00);
+                #endif
             }
-            //else SDLfunc_putpixel_safe(_engine->GetSurface(), cast.x, cast.y, 0xFFFF00FF);
+            #ifdef DEBUG_RAYCAST_VIS
+             else SDLfunc_putpixel_safe(_engine->GetSurface(), cast.x, cast.y, 0xFFFF00FF);
+            #endif
         }
     }
 
