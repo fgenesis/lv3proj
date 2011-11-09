@@ -30,18 +30,18 @@ struct PackDef;
 
 typedef void (*PackCmdExecutor)(LVPAFile *, PackDef *, PackDef *);
 
-void PackCmd_ListfileNewline(LVPAFile *lvpa, PackDef *d, PackDef *glob);
-void PackCmd_AddFile(LVPAFile *lvpa, PackDef *d, PackDef *glob);
-void PackCmd_MakeSolid(LVPAFile *lvpa, PackDef *d, PackDef *glob);
-void PackCmd_NotSolid(LVPAFile *lvpa, PackDef *d, PackDef *glob);
-void PackCmd_SetCompr(LVPAFile *lvpa, PackDef *d, PackDef *glob);
-void PackCmd_SetPath(LVPAFile *lvpa, PackDef *d, PackDef *glob);
-void PackCmd_SetSolidCompr(LVPAFile *lvpa, PackDef *d, PackDef *glob);
-void PackCmd_SetHdrCompr(LVPAFile *lvpa, PackDef *d, PackDef *glob);
-void PackCmd_SetHdrEncrypt(LVPAFile *lvpa, PackDef *d, PackDef *glob);
-void PackCmd_SetEncrypt(LVPAFile *lvpa, PackDef *d, PackDef *glob);
-void PackCmd_SetScramble(LVPAFile *lvpa, PackDef *d, PackDef *glob);
-void PackCmd_SetKey(LVPAFile *lvpa, PackDef *d, PackDef *glob);
+static void PackCmd_ListfileNewline(LVPAFile *lvpa, PackDef *d, PackDef *glob);
+static void PackCmd_AddFile(LVPAFile *lvpa, PackDef *d, PackDef *glob);
+static void PackCmd_MakeSolid(LVPAFile *lvpa, PackDef *d, PackDef *glob);
+static void PackCmd_NotSolid(LVPAFile *lvpa, PackDef *d, PackDef *glob);
+static void PackCmd_SetCompr(LVPAFile *lvpa, PackDef *d, PackDef *glob);
+static void PackCmd_SetPath(LVPAFile *lvpa, PackDef *d, PackDef *glob);
+static void PackCmd_SetSolidCompr(LVPAFile *lvpa, PackDef *d, PackDef *glob);
+static void PackCmd_SetHdrCompr(LVPAFile *lvpa, PackDef *d, PackDef *glob);
+static void PackCmd_SetHdrEncrypt(LVPAFile *lvpa, PackDef *d, PackDef *glob);
+static void PackCmd_SetEncrypt(LVPAFile *lvpa, PackDef *d, PackDef *glob);
+static void PackCmd_SetScramble(LVPAFile *lvpa, PackDef *d, PackDef *glob);
+static void PackCmd_SetKey(LVPAFile *lvpa, PackDef *d, PackDef *glob);
 
 
 struct PackDef
@@ -88,7 +88,7 @@ struct PackDef
     uint8 algo;     // LVPAPACK_INHERIT by default
     uint8 encrypt;  // LVPAENCR_INHERIT by default
     bool solid;     // this is needed because "" is also a valid solid block name
-    
+
     bool scramble;
     bool useHash; // for SetKey
     bool useBinary; // for SetKey
@@ -147,7 +147,7 @@ static void _AddFileToArchive(LVPAFile *lvpa, PackDef *glob, const std::string& 
 
 static std::set<std::string> g_createdDirs;
 
-static void _UnpackFileFromArchive(LVPAFile *lvpa, const std::string& diskFileName, const std::string& archiveFileName) 
+static void _UnpackFileFromArchive(LVPAFile *lvpa, const std::string& diskFileName, const std::string& archiveFileName)
 {
     logdebug("-> Extract file '%s' [%s]", archiveFileName.c_str(), diskFileName.c_str());
 
@@ -185,7 +185,7 @@ static void _UnpackFileFromArchive(LVPAFile *lvpa, const std::string& diskFileNa
     fclose(fh);
 }
 
-static void _DoFileByMode(LVPAFile *lvpa, PackDef *glob, const std::string& diskFileName, const std::string& archiveFileName) 
+static void _DoFileByMode(LVPAFile *lvpa, PackDef *glob, const std::string& diskFileName, const std::string& archiveFileName)
 {
     std::string afile = FixMultiSlashes(archiveFileName);
     switch(g_mode)
@@ -246,7 +246,7 @@ static void PackCmd_AddFile(LVPAFile *lvpa, PackDef *d, PackDef *glob)
             archivedFileName += glob->relPath + '/';
         if(d->relPath.size())
             archivedFileName += d->relPath + '/';
-        
+
         archivedFileName += _PathToFileName(d->name);
 
         _DoFileByMode(lvpa, glob, diskFileName, archivedFileName);
@@ -629,7 +629,7 @@ static bool parseSingleCmd(char **argv, uint32 available, PackDef &pd, uint32& s
 
             if(pd.fromCmdLine) // execute directly if seen on cmdline, required so that encrypted archives can be opened
                 PackCmd_SetKey(g_lvpa, &pd, NULL);
-            
+
             return true;
         }
 
@@ -646,7 +646,7 @@ static bool parseSingleCmd(char **argv, uint32 available, PackDef &pd, uint32& s
     return false;
 }
 
-void processListfile(const char *listfile, std::list<PackDef>& cmds);
+static void processListfile(const char *listfile, std::list<PackDef>& cmds);
 
 static void parseArgv(std::list<PackDef>& cmds, uint32 argc, char **argv, bool isCmdLine)
 {
@@ -758,7 +758,7 @@ static void processListfile(const char *listfile, std::list<PackDef>& cmds)
                 }
                 continue;
             }
-            
+
             parseArgString(cmds, ptr);
         }
     }
@@ -774,7 +774,7 @@ static void processPackDefList(LVPAFile& lvpa, std::list<PackDef>& cmds, PackDef
     {
         PackDef& d = *it;
         d.exec(&lvpa, &d, &glob);
-        
+
         if(bar)
         {
             bar->done = *counter;
