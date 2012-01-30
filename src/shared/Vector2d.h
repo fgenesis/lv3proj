@@ -23,6 +23,13 @@ public:
     Vector2d(const T& xa, const T& ya)
         : x(xa), y(ya)
     {
+#ifdef _DEBUG
+        if(&xa == &ya)
+        {
+            int a = 0;
+            a += a; // breakpoint here
+        }
+#endif
     }
 
     static inline Vector2d FromRadAngle(float rad)
@@ -206,7 +213,7 @@ public:
     }
 
     // return angle between two vectors -- not passed by reference intentionally
-    const float inline angle(Vector2d v) const
+    const T inline angle(Vector2d v) const
     {
         Vector2d m = *const_cast<Vector2d*>(this);
         v.normalize();
@@ -214,18 +221,18 @@ public:
         return m.angleNorm(v);
     }
 
-    const float inline angleDeg(const Vector2d& v) const
+    const T inline angleDeg(const Vector2d& v) const
     {
         return radToDeg(angle(v));
     }
 
     // return angle between two vectors -- both vectors must already be normalized!
-    const float inline angleNorm(const Vector2d& normal) const
+    const T inline angleNorm(const Vector2d& normal) const
     {
         return acos(dot(normal));
     }
 
-    const inline bool isLenIn(float radius) const
+    const inline bool isLenIn(T radius) const
     {
         return (x*x + y*y) <= (radius*radius);
     }
@@ -264,5 +271,6 @@ public:
 };
 
 typedef Vector2d<float> Vector2df;
+typedef Vector2d<int32> Vector2di;
 
 #endif

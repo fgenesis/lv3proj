@@ -1,0 +1,115 @@
+
+spos = Vector(442, 245)
+cpos = Vector(0,0)
+cpos2 = Vector(0,0)
+coll = false
+coll2 = false
+coll3 = false
+
+chain = nil
+inited = false
+oa = nil
+scr = nil
+
+function Init()
+    global chain, oa, scr
+    
+    sx, sy = Screen.GetSize()
+    scr = ActiveRect()
+    scr.SetBBox(1, 1, sx - 1, sy - 1)
+    sel = SelObjInRect(scr)
+    tyfilt = TransFilterObjByType(sel)
+    tyfilt.addParam("IronBlock")
+    sel.setup()
+    tyfilt.setup()
+
+    chain = tyfilt
+end
+    
+function DoRaycast2()
+    global chain, inited, oa
+    
+    if not inited
+        CallScheduler.Schedule(Init, 500)
+        inited = true
+    end
+    
+    if not chain: return
+    
+    if not oa
+        oa = chain()
+        scr.remove(true)
+    end
+        
+        
+    
+    mx = GetMouseX()
+    my = GetMouseY()
+    mv = Vector(mx, my)
+    
+    v = Vector()
+    for o in oa
+        v.x = o.x
+        v.y = o.y
+        o.CastRay(mv - o.pos)
+    end
+end
+
+function DoRaycast()
+    global cpos, coll, spos, cpos2, coll2, cpos3, coll3
+    
+
+    
+    mx = GetMouseX()
+    my = GetMouseY()
+    
+    mv = Vector(mx, my)
+    cpos = EngineMap.CastRayAbs(spos + Vector(16, 16), mv, 1)
+    if cpos
+        coll = true
+    else
+        cpos = mv
+        coll = false
+    end
+    
+    /*dir = Vector(-100, -30)
+    cpos2 = EngineMap.CastRayDir(mv, dir)
+    if cpos2
+        cpos2 += mv
+        coll2 = true
+    else
+        cpos2 = mv + dir
+        coll2 = false
+    end*/
+    
+    sz = Vector(32, 32)
+    dir = mv - spos
+    cpos3 = EngineMap.CastRaysFromRect(spos, sz, dir)
+    if cpos3
+        cpos3 += spos
+        coll3 = true
+    else
+        cpos3 = spos + dir
+        coll3 = false
+    end
+    
+    
+    //> mx, ", ", my, " ->  ", cpos3
+//end
+
+//function DrawColl()
+    //global cpos, coll, spos, cpos2, coll2, cpos3, coll3
+    s = Screen.GetSurface()
+    //s.Rect(spos.x - 5, spos.y - 5, 10, 10, 0xFFFFFF00)
+    s.Rect(cpos.x - 5, cpos.y - 5, 10, 10, coll ? 0xFFFF2222 : 0xFF2222FF)
+    s.Pixel(cpos.x, cpos.y, coll ? 0xFFFF2222 : 0xFF2222FF)
+    
+    //s.Rect(cpos2.x - 5, cpos2.y - 5, 10, 10, coll2 ? 0xFFFF2222 : 0xFF2222FF)
+    s.Rect(cpos3.x, cpos3.y, 32, 32, coll3 ? 0xFFFF2222 : 0xFF2222FF)
+end
+
+//RegisterUpdateHook(DoRaycast)
+//RegisterRenderHook(DrawColl)
+
+RegisterRenderHook(DoRaycast2)
+

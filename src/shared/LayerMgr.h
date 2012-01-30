@@ -72,10 +72,10 @@ public:
     void RemoveFromCollisionMap(Object *obj);
     bool CollisionWith(const BaseRect *rect, int32 skip = 4, uint8 flags = LCF_ALL) const; // check if a rectangle overlaps with at least one solid pixel in our collision map.
     
-    bool CastRayAbs(const Vector2df src, const Vector2df& targ, Vector2df& lastpos, Vector2df& collpos, LayerCollisionFlag lcf = LCF_ALL) const;
-    bool CastRayDir(const Vector2df src, const Vector2df& dir, Vector2df& lastpos, Vector2df& collpos, LayerCollisionFlag lcf = LCF_ALL) const;
-    bool CastRaysFromRect(const BaseRect& src, const Vector2df& dir, Vector2df& lastpos, Vector2df& collpos,
-        LayerCollisionFlag lcf = LCF_ALL, float granularity = 1.0f) const;
+    bool CastRayAbs(const Vector2di src, const Vector2di& targ, Vector2di& lastpos, Vector2di& collpos, LayerCollisionFlag lcf = LCF_ALL) const;
+    bool CastRayDir(const Vector2di src, const Vector2di& dir, Vector2di& lastpos, Vector2di& collpos, LayerCollisionFlag lcf = LCF_ALL) const;
+    bool CastRaysFromRect(const BaseRect& src, const Vector2di& dir, Vector2di& lastpos, Vector2di& collpos,
+        LayerCollisionFlag lcf = LCF_ALL) const;
 
     
     

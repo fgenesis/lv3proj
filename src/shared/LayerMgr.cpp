@@ -399,13 +399,13 @@ private:
     const LayerCollisionFlag _lcf;
 };
 
-bool LayerMgr::CastRayAbs(const Vector2df src, const Vector2df& targ, Vector2df& lastpos, Vector2df& collpos, LayerCollisionFlag lcf /* = LCF_ALL */) const
+bool LayerMgr::CastRayAbs(const Vector2di src, const Vector2di& targ, Vector2di& lastpos, Vector2di& collpos, LayerCollisionFlag lcf /* = LCF_ALL */) const
 {
     RayCastCheckDo check(_collisionMap, lcf);
     return CastBresenhamLine(src.x, src.y, targ.x, targ.y, lastpos, collpos, check);
 }
 
-bool LayerMgr::CastRayDir(const Vector2df src, const Vector2df& dir, Vector2df& lastpos, Vector2df& collpos, LayerCollisionFlag lcf /* = LCF_ALL */) const
+bool LayerMgr::CastRayDir(const Vector2di src, const Vector2di& dir, Vector2di& lastpos, Vector2di& collpos, LayerCollisionFlag lcf /* = LCF_ALL */) const
 {
     if(CastRayAbs(src, src + dir, lastpos, collpos, lcf))
     {
@@ -419,36 +419,49 @@ bool LayerMgr::CastRayDir(const Vector2df src, const Vector2df& dir, Vector2df& 
 // increase granularity for faster speed (if you know what you're doing!)
 // WARNING: the code is weird, but it works (somehow)
 // FIXME: the corner pixel is currently MISSING! Will do this later.
-bool LayerMgr::CastRaysFromRect(const BaseRect& src, const Vector2df& dir, Vector2df& lastpos, Vector2df& collpos,
-                                LayerCollisionFlag lcf /* = LCF_ALL */, float granularity /* = 1.0f */) const
+bool LayerMgr::CastRaysFromRect(const BaseRect& srcRect, const Vector2di& dir, Vector2di& lastpos, Vector2di& collpos,
+                                LayerCollisionFlag lcf /* = LCF_ALL */) const
 {
+    // tilemap-raycasting is int32 only, so we need to round floats instead of just truncating them
+    // precision loss may become a problem otherwise!
+    /*
+    Vector2di srcpos(int32(srcRect.x + 0.5f), int32(srcRect.y + 0.5f));
+    int32 w = int32(srcRect.w + 0.5f);
+    int32 h = int32(srcRect.h + 0.5f);
+    */
+
+    // whaaaaa, i think not! [FIXME?]
+    Vector2di srcpos((int32)srcRect.x, (int32)srcRect.y);
+    int32 w = int32(srcRect.w);
+    int32 h = int32(srcRect.h);
     bool collided = false;
 
-    float maxnear = dir.lensq();
-    Vector2df lastp, collp;
+    int32 maxnear = dir.lensq();
+    Vector2di lastp, collp;
 
-    Vector2df offs;
-    Vector2df border;
-    Vector2df start;
+    Vector2di offs;
+    Vector2di start;
+
+    const int32 granularity = 1; // FIXME: make this function param again?
 
     // follow outer border on X axis
     if(dir.y)
     {
-        Vector2df border(0, dir.y < 0 ? -1 : 0); // Y axis correction
-        start = src.pos + border;
+        Vector2di border(0, dir.y < 0 ? -1 : 0); // Y axis correction
+        start = srcpos + border;
         offs.x = 0;
-        offs.y = dir.y > 0 ? src.h: 0;
-        for( ; offs.x < src.w; offs.x += granularity)
+        offs.y = dir.y > 0 ? h: 0;
+        for( ; offs.x < w; offs.x += granularity)
         {
-            Vector2df cast = start + offs;
+            Vector2di cast = start + offs;
 
             if(CastRayDir(cast, dir, lastp, collp, lcf))
             {
-                Vector2df yfix = Vector2df(0, dir.y > 0 ? 1 : -1); // HACK: no idea why, but this is necessary.
-                lastp += yfix;
-                collp += yfix;
+                //Vector2di yfix = Vector2di(0, dir.y > 0 ? 1 : -1); // HACK: no idea why, but this is necessary.
+                //lastp += yfix;
+                //collp += yfix;
                 collided = true;
-                float l = lastp.lensq();
+                int32 l = lastp.lensq();
                 if(l < maxnear)
                 {
                     maxnear = l;
@@ -468,20 +481,20 @@ bool LayerMgr::CastRaysFromRect(const BaseRect& src, const Vector2df& dir, Vecto
     // follow outer border on Y axis
     if(dir.x)
     {
-        Vector2df border(dir.x < 0 ? -1 : 0, 0); // X axis correction
-        start = src.pos + border;
+        Vector2di border(dir.x < 0 ? -1 : 0, 0); // X axis correction
+        start = srcpos + border;
         offs.y = 0;
-        offs.x = dir.x > 0 ? src.w : 0;
-        for( ; offs.y < src.h; offs.y += granularity)
+        offs.x = dir.x > 0 ? w : 0;
+        for( ; offs.y < h; offs.y += granularity)
         {
-            Vector2df cast = start + offs;
+            Vector2di cast = start + offs;
             if(CastRayDir(cast, dir, lastp, collp, lcf))
             {
-                Vector2df xfix = Vector2df(dir.x > 0 ? 1 : -1, 0); // HACK: no idea why, but this is necessary.
-                lastp += xfix;
-                collp += xfix;
+                //Vector2di xfix = Vector2di(dir.x > 0 ? 1 : -1, 0); // HACK: no idea why, but this is necessary.
+                //lastp += xfix;
+                //collp += xfix;
                 collided = true;
-                float l = lastp.lensq();
+                int32 l = lastp.lensq();
                 if(l < maxnear)
                 {
                     maxnear = l;

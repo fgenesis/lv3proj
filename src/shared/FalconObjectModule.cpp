@@ -430,13 +430,15 @@ FALCON_FUNC fal_ActiveRect_CastRay(Falcon::VMachine *vm)
     LayerMgr *lm = Engine::GetInstance()->_GetLayerMgr();
     const bool collv = i_which && i_which->isTrue();
     const LayerCollisionFlag lcf = i_lcf ? LayerCollisionFlag(i_lcf->forceIntegerEx()) : LCF_ALL; // TODO: use object's own LCF
-    const Vector2df dst = Falcon::dyncast<fal_Vector2d*>(i_to->asObjectSafe())->vec();
-    Vector2df lastpos, collpos;
+    const Vector2df dstf = Falcon::dyncast<fal_Vector2d*>(i_to->asObjectSafe())->vec();
+    Vector2di lastpos, collpos;
+
+    const Vector2di dst(dstf.x, dstf.y); // FIXME: round it?
 
     if(lm->CastRaysFromRect(*Falcon::dyncast<ActiveRect*>(self->GetObj()), dst, lastpos, collpos, lcf))
     {
         fal_Vector2d *v = new fal_Vector2d(VECTOR_CLASS_SYMBOL);
-        v->vec() = collv ? collpos : lastpos;
+        v->vec() = collv ? Vector2df(collpos.x, collpos.y) : Vector2df(lastpos.x, lastpos.y);
         vm->retval(v);
     }
 }

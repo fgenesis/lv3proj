@@ -53,7 +53,8 @@ class PlayerEx from SNESControlledPlayer
     function OnUpdate(ms)
         if self.dead: return
         self.UpdateAnim()
-        > "total: ", self.GetSpeed()
+        s = self.GetSpeed()
+        > "total: ", s.x , ", ", s.y, " - ", self.x, " ", self.y
     end
     
     // HACK - this function was removed
@@ -239,7 +240,8 @@ class PlayerEx from SNESControlledPlayer
     function OnTouchWall()
         s = self.GetSpeed()
         > "walltouch! ", s 
-        if not self.CanFallDown()
+        //if not self.CanFallDown()
+        if s.y > 0
             Sound(self.IsFallingDeep() ? "crush.ogg" : "land3.ogg").Play() // TODO: this sound is different for every viking
         end
     end

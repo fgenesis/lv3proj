@@ -1162,18 +1162,21 @@ template <bool DIRECTIONAL> FALCON_FUNC fal_EngineMap_CastRay(Falcon::VMachine *
         throw new Falcon::ParamError(Falcon::ErrorParam( Falcon::e_inv_params, __LINE__ ));
     
     LayerMgr *lm = Engine::GetInstance()->_GetLayerMgr();
-    Vector2df lastpos, collpos;
-    const Vector2df src = Falcon::dyncast<fal_Vector2d*>(i_start->asObjectSafe())->vec();
-    const Vector2df to = Falcon::dyncast<fal_Vector2d*>(i_to->asObjectSafe())->vec();
+    Vector2di lastpos, collpos;
+    const Vector2df srcf = Falcon::dyncast<fal_Vector2d*>(i_start->asObjectSafe())->vec();
+    const Vector2df tof = Falcon::dyncast<fal_Vector2d*>(i_to->asObjectSafe())->vec();
     const bool collv = i_which && i_which->isTrue();
     const LayerCollisionFlag lcf = i_lcf ? LayerCollisionFlag(i_lcf->forceIntegerEx()) : LCF_ALL;
+
+    const Vector2di src(srcf.x, srcf.y); // FIXME: round it??
+    const Vector2di to(tof.x, tof.y); // FIXME: round it??
 
     bool collision = DIRECTIONAL ? lm->CastRayDir(src, to, lastpos, collpos, lcf)
                                  : lm->CastRayAbs(src, to, lastpos, collpos, lcf);
     if(collision)
     {
         fal_Vector2d *v = new fal_Vector2d(VECTOR_CLASS_SYMBOL);
-        v->vec() = collv ? collpos : lastpos;
+        v->vec() = collv ? Vector2df(collpos.x, collpos.y) : Vector2df(lastpos.x, lastpos.y);
         vm->retval(v);
     }
 }
@@ -1190,18 +1193,20 @@ FALCON_FUNC fal_EngineMap_CastRaysFromRect(Falcon::VMachine *vm)
         throw new Falcon::ParamError(Falcon::ErrorParam( Falcon::e_inv_params, __LINE__ ));
 
     LayerMgr *lm = Engine::GetInstance()->_GetLayerMgr();
-    Vector2df lastpos, collpos;
+    Vector2di lastpos, collpos;
     const Vector2df src = Falcon::dyncast<fal_Vector2d*>(i_start->asObjectSafe())->vec();
     const Vector2df sz = Falcon::dyncast<fal_Vector2d*>(i_size->asObjectSafe())->vec();
-    const Vector2df dst = Falcon::dyncast<fal_Vector2d*>(i_to->asObjectSafe())->vec();
+    const Vector2df dstf = Falcon::dyncast<fal_Vector2d*>(i_to->asObjectSafe())->vec();
     const bool collv = i_which && i_which->isTrue();
     const LayerCollisionFlag lcf = i_lcf ? LayerCollisionFlag(i_lcf->forceIntegerEx()) : LCF_ALL;
+
+    const Vector2di dst(dstf.x, dstf.y); // FIXME: round it??
 
     BaseRect r(src, sz);
     if(lm->CastRaysFromRect(r, dst, lastpos, collpos, lcf))
     {
         fal_Vector2d *v = new fal_Vector2d(VECTOR_CLASS_SYMBOL);
-        v->vec() = collv ? collpos : lastpos;
+        v->vec() = collv ? Vector2df(collpos.x, collpos.y) : Vector2df(lastpos.x, lastpos.y);
         vm->retval(v);
     }
 }

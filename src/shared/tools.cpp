@@ -15,6 +15,10 @@
 #   include <mmsystem.h>
 #   include <direct.h>
 #else
+#   if PLATFORM == PLATFORM_APPLE
+#        include <Carbon/Carbon.h>
+#        include <sys/param.h>
+#   endif
 #   include <sys/dir.h>
 #   include <sys/stat.h>
 #   include <sys/timeb.h>
@@ -526,6 +530,22 @@ std::string GetProgramDir(void)
     return path;
 
 #elif PLATFORM == PLATFORM_APPLE
+
+    char parentdir[MAXPATHLEN];
+    std::string path;        
+    CFURLRef url = CFBundleCopyBundleURL(CFBundleGetMainBundle());
+    CFURLRef url2 = CFURLCreateCopyDeletingLastPathComponent(0, url);
+    if (CFURLGetFileSystemRepresentation(url2, 1, (UInt8 *)parentdir, MAXPATHLEN))
+    {
+        path = parentdir;   /* chdir to the binary app's parent */
+    }
+    CFRelease(url);
+    CFRelease(url2);
+    return path;
+
+    // eh.. no idea what that is, but does not compile.
+    // must be mac OS legacy code or something
+#if 0
     std::string path = "./";
     ProcessSerialNumber PSN;
     ProcessInfoRec pinfo;
@@ -562,6 +582,7 @@ std::string GetProgramDir(void)
         }
     }
     return path;
+#endif // #if 0
 
 #endif
 }
@@ -570,9 +591,22 @@ bool SetWorkingDir(std::string d)
 {
 #if PLATFORM == PLATFORM_WIN32
     return !_chdir(d.c_str());
-#elif PLATFORM == PLATFORM_WIN32 || PLATFORM == PLATFORM_APPLE
+#elif PLATFORM == PLATFORM_UNIX || PLATFORM == PLATFORM_APPLE
     return !chdir(d.c_str());
 #endif
+}
+
+std::string GetWorkingDir(void)
+{
+    char *wd;
+#if PLATFORM == PLATFORM_WIN32
+    wd = _getcwd(NULL, 0);
+#elif PLATFORM == PLATFORM_UNIX || PLATFORM == PLATFORM_APPLE
+    wd = getcwd(NULL, 0);
+#endif
+    std::string cp = wd;
+    free(wd);
+    return cp;
 }
 
 void HexStrToByteArray(uint8 *dst, const char *str)

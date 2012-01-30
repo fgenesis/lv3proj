@@ -10,27 +10,6 @@ const float PI = 3.14159265359f;
 const float DEGTORAD = PI / 180.0f;
 const float RADTODEG = 180.0f / PI;
 
-inline float fastabs(float f)
-{
-    int i = ((*(int*)&f) & 0x7fffffff);
-    return (*(float*)&i);
-}
-
-inline float fastneg(float f)
-{
-    int i = ((*(int*)&f) ^ 0x80000000);
-    return (*(float*)&i);
-}
-
-inline int fastsgn(float f)
-{
-    return 1 + (((*(int*)&f) >> 31) << 1);
-}
-
-inline bool fastsgncheck(float f)
-{
-    return (*(int*)&f) & 0x80000000;
-}
 
 inline int32 int32r(float f)
 {
@@ -85,6 +64,15 @@ template <class T> inline const T& clamp (const T& value, const T& low, const T&
 template <class T> inline bool exceeds(const T& v, const T& mx)
 {
     return mx < 0 ? v < mx : v > mx;
+}
+
+template <class T> inline const T sgn(const T val)
+{
+    if(val > 0)
+        return 1;
+    else if(val < 0)
+        return -1;
+    return 0;
 }
 
 

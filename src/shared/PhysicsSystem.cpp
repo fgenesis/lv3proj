@@ -60,13 +60,40 @@ void PhysicsMgr::_ApplyFriction(Object *obj, float tf)
     }
 }
 
+inline static void _UpdatePositionBySpeed(Object *obj, const Vector2df& spd)
+{
+    obj->pos += spd;
+}
+
 void PhysicsMgr::_ApplySpeedAndCollision(Object *obj, float tf)
 {
     // -- obj vs. wall collision --
 
+    bool xblocked = false;
+    bool yblocked = false;
+    bool xhit = false;
+    bool yhit = false;
+    bool hadSpeed = false;
+
+    // effective total speed
+    Vector2df spdf = obj->GetTotalSpeed() * tf;
+
 cast_ray:
     
-    Vector2df spd = obj->GetTotalSpeed() * tf;
+    hadSpeed = hadSpeed || !spdf.isZero();
+
+    if(xblocked)
+    {
+        spdf.x = 0;
+    }
+    if(yblocked)
+    {
+        spdf.y = 0;
+    }
+
+    const Vector2di speedOffset(sgn(spdf.x), sgn(spdf.y));
+    Vector2di spdi (spdf.x, spdf.y);
+    spdi += speedOffset;
 
     // if the object will never collide with wall, we are done after updating its speed
     /*if(obj->GetBlockedByLCF() == LCF_NONE)
@@ -76,11 +103,10 @@ cast_ray:
     }*/
 
 
-    Vector2df lastposWall, collposWall; // will store relative pixel amount of last accessible point
+    Vector2di lastposWall, collposWall; // will store relative pixel amount of last accessible point
                                         // and first point that collides with wall.
 
-    bool recast = false;
-    bool hitwall = obj->CastRay(spd, lastposWall, collposWall, obj->GetBlockedByLCF());
+    bool hitwall = obj->CastRay(spdi, lastposWall, collposWall, obj->GetBlockedByLCF());
     //DEBUG(ASSERT(!hitwall || spd.lensq() >= lastposWall.lensq()));
 
 
@@ -95,49 +121,58 @@ cast_ray:
     {
 
 
-        if(collposWall.x == lastposWall.x) // stuck? can't move then.
+        if(!xblocked)
         {
-            obj->phys[0].speed.x = /*spd.x =*/ 0;
-            recast = true;
-        }
-        else if(exceeds(spd.x, lastposWall.x)) // limit speed to max. movement dir
-        {
-            //spd.x = lastposWall.x;
-            obj->phys[0].speed.x = 0; // clear speed affected by gravity
-            recast = true;
-        }
+            if(collposWall.x == lastposWall.x) // stuck? can't move then.
+            {
+                xblocked = true;
+                spdf.x = 0;
+                goto cast_ray;
+            }
+            else if(exceeds(spdi.x, lastposWall.x)) // limit speed to max. movement dir
+            {
 
-        if(collposWall.y == lastposWall.y)
-        {
-            obj->phys[0].speed.y = /*spd.y =*/ 0;
-            recast = true;
+                xhit = true;
+                spdi.x = lastposWall.x;
+                spdf.x = lastposWall.x;
+            }
         }
-        else if(exceeds(spd.y, lastposWall.y))
+        if(!yblocked)
         {
-            //spd.y = lastposWall.y;
-            obj->phys[0].speed.y = 0;
-            recast = true;
+            if(collposWall.y == lastposWall.y)
+            {
+                yblocked = true;
+                spdf.y = 0;
+                goto cast_ray;
+            }
+            else if(exceeds(spdi.y, lastposWall.y))
+            {
+                yhit = true;
+                spdi.y = lastposWall.y;
+                spdf.y = lastposWall.y;
+            }
         }
-
-        if(recast)
-            goto cast_ray;
 
         //float l = spd.lensq();
         //spd.setLen(l);  //// <-------- FIXME: THIS IS WRONG !!!!!1 ##############
 
-        obj->pos += spd;
+        _UpdatePositionBySpeed(obj, spdf);
         //obj->SetMoved(!spd.isZero());
 
-        if(!spd.isZero())
+        // FIXME: this must also be called if x and y speed are 0 (I don't think tht will always happen here!)
+        if(hadSpeed)
             obj->OnTouchWall();
 
         // clear speed managed by gravity
-        // TODO: what about other speeds pointing into the same direction as spd?
-        //obj->phys[0].speed = Vector2df(0, 0);
+        // -- done AFTER the collision callback, so that the object still knows its impact speed
+        if(xhit || xblocked)
+            obj->phys[0].speed.x = 0;
+        if(yhit || yblocked)
+            obj->phys[0].speed.y = 0;
     }
     else
     {
-        obj->pos += spd;
+        obj->pos += spdf;
     }
     
 
