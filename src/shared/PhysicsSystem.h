@@ -23,11 +23,12 @@ class PhysProps
 public:
 
     PhysProps()
-        : mass(0)
+        : mass(0), gravityMult(1)
     {
     }
 
     float mass;
+    float gravityMult;
     Vector2df speed;
     Vector2df accel;
     Vector2df friction;
@@ -44,7 +45,7 @@ class PhysicsMgr
 public:
     PhysicsMgr();
     void SetDefaults(void);
-    void UpdatePhysics(Object *obj, float frac);
+    void UpdatePhysics(Object *obj, float dt);
 
     EnvPhysProps envPhys;
     

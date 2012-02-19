@@ -13,10 +13,10 @@
 #include "UndefUselessCrap.h"
 
 // raycasting related debug stuff
-#define DEBUG_RAYCAST_VIS
+//#define DEBUG_RAYCAST_VIS
 
 LayerMgr::LayerMgr(Engine *e)
-: _engine(e), _maxdim(0), _collisionMap(LCF_WALL)
+: _engine(e), _maxdim(0), _collisionMap(LCF_WALL), _tileDimX(16), _tileDimY(16)
 {
     for(uint32 i = 0; i < LAYER_MAX; ++i)
         _layers[i] = NULL;
@@ -37,6 +37,8 @@ TileLayer *LayerMgr::CreateLayer(bool collision /* = false */, uint32 xoffs /* =
     layer->yoffs = yoffs;
     layer->camera = _engine->GetCameraPtr();
     layer->mgr = this;
+    layer->_tileDimY = _tileDimX;
+    layer->_tileDimY = _tileDimY;
 
     return layer;
 }
@@ -142,7 +144,7 @@ void LayerMgr::Update(uint32 curtime)
 void LayerMgr::CreateCollisionMap(void)
 {
     _collisionMap.free();
-    _collisionMap.resize(_maxdim * 16, LCF_NONE);
+    _collisionMap.resize(GetMaxPixelDim(), LCF_NONE);
 }
 
 void LayerMgr::CreateInfoLayer(void)
@@ -168,14 +170,14 @@ void LayerMgr::UpdateCollisionMap(uint32 x, uint32 y) // this x and y are tile p
 {
     //DEBUG_LOG("LayerMgr::UpdateCollisionMap(%u, %u)", x, y);
 
-    uint32 x16 = x << 4, y16 = y << 4; // x*16, y*16
+    uint32 x16 = x * _tileDimY, y16 = y * _tileDimY;
 
     // first, check if there is a tile explicitly marked as solid
     if(GetInfoLayer())
         if(_infoLayer(x,y) & TILEFLAG_SOLID)
         {
-            for(uint32 py = 0; py < 16; ++py)
-                for(uint32 px = 0; px < 16; ++px)
+            for(uint32 py = 0; py < _tileDimY; ++py)
+                for(uint32 px = 0; px < _tileDimX; ++px)
                     _collisionMap(x16 + px, y16 + py) |= LCF_WALL;
             return;
         }
@@ -188,8 +190,8 @@ void LayerMgr::UpdateCollisionMap(uint32 x, uint32 y) // this x and y are tile p
             ++counter;
     if(!counter) // no layers to be used, means there is no tile here on any layer -> tile is fully passable. update all 16x16 pixels.
     {
-        for(uint32 py = 0; py < 16; ++py)
-            for(uint32 px = 0; px < 16; ++px)
+        for(uint32 py = 0; py < _tileDimY; ++py)
+            for(uint32 px = 0; px < _tileDimX; ++px)
                 _collisionMap(x16 + px, y16 + py) &= ~LCF_WALL;
         return;
     }
@@ -208,8 +210,8 @@ void LayerMgr::UpdateCollisionMap(uint32 x, uint32 y) // this x and y are tile p
     uint8 r, g, b, a;
     bool solid;
 
-    for(uint32 py = 0; py < 16; ++py)
-        for(uint32 px = 0; px < 16; ++px)
+    for(uint32 py = 0; py < _tileDimY; ++py)
+        for(uint32 px = 0; px < _tileDimX; ++px)
         {
             solid = false;
             for(uint32 i = 0; i < LAYER_MAX; ++i)
@@ -424,15 +426,6 @@ bool LayerMgr::CastRayDir(const Vector2di src, const Vector2di& dir, Vector2di *
 bool LayerMgr::CastRaysFromRect(const BaseRect& srcRect, const Vector2di& dir, Vector2di *lastpos, Vector2di *collpos,
                                 LayerCollisionFlag lcf /* = LCF_ALL */) const
 {
-    // tilemap-raycasting is int32 only, so we need to round floats instead of just truncating them
-    // precision loss may become a problem otherwise!
-    /*
-    Vector2di srcpos(int32(srcRect.x + 0.5f), int32(srcRect.y + 0.5f));
-    int32 w = int32(srcRect.w + 0.5f);
-    int32 h = int32(srcRect.h + 0.5f);
-    */
-
-    // whaaaaa, i think not! [FIXME?]
     Vector2di srcpos((int32)srcRect.x, (int32)srcRect.y);
     int32 w = int32(srcRect.w);
     int32 h = int32(srcRect.h);
@@ -459,9 +452,6 @@ bool LayerMgr::CastRaysFromRect(const BaseRect& srcRect, const Vector2di& dir, V
 
             if(CastRayDir(cast, dir, &lastp, &collp, lcf))
             {
-                //Vector2di yfix = Vector2di(0, dir.y > 0 ? 1 : -1); // HACK: no idea why, but this is necessary.
-                //lastp += yfix;
-                //collp += yfix;
                 collided = true;
                 int32 l = lastp.lensq();
                 if(l < maxnear)
@@ -494,9 +484,6 @@ bool LayerMgr::CastRaysFromRect(const BaseRect& srcRect, const Vector2di& dir, V
             Vector2di cast = start + offs;
             if(CastRayDir(cast, dir, &lastp, &collp, lcf))
             {
-                //Vector2di xfix = Vector2di(dir.x > 0 ? 1 : -1, 0); // HACK: no idea why, but this is necessary.
-                //lastp += xfix;
-                //collp += xfix;
                 collided = true;
                 int32 l = lastp.lensq();
                 if(l < maxnear)

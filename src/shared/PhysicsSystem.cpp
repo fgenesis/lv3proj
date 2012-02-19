@@ -43,14 +43,11 @@ void PhysicsMgr::UpdatePhysics(Object *obj, float dt)
 void PhysicsMgr::_ApplyAccel(Object *obj, float dt)
 {
     obj->phys.speed += (obj->phys.accel * dt);
-
-    const float effectiveMass = clamp(obj->phys.mass, -1.0f, 1.0f);
-    obj->phys.speed += (envPhys.gravity * dt * effectiveMass);
+    obj->phys.speed += (envPhys.gravity * (dt * obj->phys.gravityMult));
 }
 
 void PhysicsMgr::_ApplyFriction(Object *obj, float dt)
 {
-    // FIXME: no idea what this is supposed to do
     const Vector2df u(1.0f, 1.0f);
     Vector2df factor = u - (obj->phys.friction * dt);
     clamp(factor.x, 0.0f, 1.0f);
@@ -65,7 +62,6 @@ inline static void _UpdatePositionBySpeed(Object *obj, const Vector2df& spd)
         obj->pos += spd;
         obj->SetMoved(true);
     }
-    // TODO: anything else?
 }
 
 // scales the speed in such a way that adding it to an object
@@ -100,19 +96,25 @@ static Vector2df _AdjustSpeed(Object *obj, const Vector2df& spd)
     DEBUG(ASSERT(norm.y <= 1.0f));
 
     // start moving the object until it hits the wall.
+    const float spdLen = spd.len();
+    const float normLen = norm.len();
+    const LayerCollisionFlag lcf = obj->GetBlockedByLCF();
     Vector2df ret;
     BaseRect rect(*obj);
+    float retLen = 0;
 
-    while(true) // FIXME
+    while(true)
     {
         rect.pos += norm;
         if(Engine::GetInstance()->_GetLayerMgr()->CollisionWith(&rect, 1, LCF_ALL))
             return ret;
 
-        // HACK: wtf?
-        if(ret.len() > spd.len()) // we exceed the len, something is wrong
+        // we exceed the len, something is wrong. Weren't supposed to move further anyways, so just return.
+        if(retLen > spdLen)
             return ret;
+
         ret += norm;
+        retLen += normLen;
     }
 
     NOT_REACHED_LINE;
@@ -135,7 +137,6 @@ void PhysicsMgr::_ApplySpeedAndCollision(Object *obj, float dt)
 
     // effective total speed
     Vector2df spdf = obj->GetSpeed() * dt;
-    //float spdlen = spdf.len();
 
 cast_ray:
     
@@ -158,29 +159,13 @@ cast_ray:
     if(spdf.isZero())
         return;
 
-    // round spdi up or down, because spdf's mantissa is lost.
-    // integer conversion required because bresenham linecasting is int-only.
-    //const Vector2di speedOffset(sgn(spdf.x), sgn(spdf.y));
-    //Vector2di spdi (spdf.x, spdf.y);
-    //spdi += speedOffset;
-
     const Vector2di spdi(fceili(spdf.x), fceili(spdf.y));
-
-    //Vector2di spdi (spdf.x + 1, spdf.y + 1);
-
-    // if the object will never collide with wall, we are done after updating its speed
-    /*if(obj->GetBlockedByLCF() == LCF_NONE)
-    {
-        obj->pos += spd;
-        return;
-    }*/
 
 
     Vector2di lastposWall, collposWall; // will store relative pixel amount of last accessible point
                                         // and first point that collides with wall.
 
     bool hitwall = obj->CastRay(spdi, &lastposWall, &collposWall, lcf);
-    //DEBUG(ASSERT(!hitwall || spd.lensq() >= lastposWall.lensq()));
 
 
 
@@ -198,32 +183,16 @@ cast_ray:
 
         if(!xblocked)
         {
-            /*if(collposWall.x == lastposWall.x) // stuck? can't move then.
-            {
-                xblocked = true;
-                spdf.x = 0;
-                //goto cast_ray;
-            }
-            else*/ if(exceeds(spdi.x, lastposWall.x)) // limit speed to max. movement dir
+            if(exceeds(spdi.x, lastposWall.x)) // limit speed to max. movement dir
             {
                 xhit = true;
-                //spdi.x = lastposWall.x;
-                //spdf.x = lastposWall.x;
             }
         }
         if(!yblocked)
         {
-            /*if(collposWall.y == lastposWall.y)
-            {
-                yblocked = true;
-                spdf.y = 0;
-                //goto cast_ray;
-            }
-            else*/ if(exceeds(spdi.y, lastposWall.y))
+            if(exceeds(spdi.y, lastposWall.y))
             {
                 yhit = true;
-                //spdi.y = lastposWall.y;
-                //spdf.y = lastposWall.y;
             }
         }
 
@@ -235,7 +204,7 @@ cast_ray:
 
         bool keepSpeed = false;
         if(hadSpeed)
-            keepSpeed = obj->OnTouchWall();
+            keepSpeed = obj->OnTouchWall(); // returns true to indicate it handled the collision in its own way.
 
         if(!keepSpeed)
         {
@@ -248,23 +217,17 @@ cast_ray:
         }
 
         // if there is still momentum left, handle the rest of the speed
-        //if(!obj->phys.speed.isZero())
-        {
-            float len = spdf.len();
-            len -= useSpeed.len();
-            if(len <= 0)
-                return;
-            spdf.setLen(len);
+        float len = spdf.len();
+        len -= useSpeed.len();
+        if(len <= 0)
+            return;
+        spdf.setLen(len);
 
-            //printf("[%p] momentum: x: %f, y: %f\n", obj, spdf.x, spdf.y);
-            goto cast_ray;
-        }
+        goto cast_ray;
 
     }
     else
     {
         _UpdatePositionBySpeed(obj, spdf);
     }
-    
-
 }

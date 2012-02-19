@@ -16,9 +16,11 @@ end
 
 function dbg_HookCountRenderHook() // note: this function is highly unoptimized and slow
     global _difftime
-    dt = Engine.GetTimeDiff()
+    ms = Engine.GetTimeDiff()
     dtr = Engine.GetTimeDiffReal()
     etm = Engine.GetFloatTime()
+    dt = Engine.GetFloatTimeDiff()
+    
     r = GetRenderHookCount()
     u = GetUpdateHookCount()
     i = GetRawInputHookCount()
@@ -46,7 +48,7 @@ function dbg_HookCountRenderHook() // note: this function is highly unoptimized 
     write = Screen.GetSurfaceRaw().Write
     spd = Engine.GetSpeed()
     
-    write(0, h - (fh * 8), font, @ "Timing: Speed = $(spd:.4); Diff = $(dt:3); RealDiff = $(dtr:3); Time = $(etm:.4)")
+    write(0, h - (fh * 8), font, @ "Timing: Speed = $(spd:.4); Diff = $(ms:3); RealDiff = $(dtr:3); Time = $(etm:.4); dt = $(dt:.4)")
     write(0, h - (fh * 7), font, @ "Physics: Gravity = $g")
     write(0, h - (fh * 6), font, @ "Camera: ($camx, $camy)")
     write(0, h - (fh * 5), font, @ "Engine: Joysticks = $ej; ResCount = $rc; ResMem = $rm kB")

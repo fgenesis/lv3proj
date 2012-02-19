@@ -74,11 +74,11 @@ ObjectMap::iterator ObjectMgr::_Remove(uint32 id)
     return it;
 }
 
-void ObjectMgr::Update(uint32 diff, float frac, uint32 frametime)
+void ObjectMgr::Update(float dt, uint32 frametime)
 {
     // if no time passed, do nothing
     // TODO: this is *maybe* wrong, check how it works out
-    if(!frac)
+    if(!dt)
         return;
 
     // first, update all objects, handle physics, movement, etc.
@@ -90,16 +90,15 @@ void ObjectMgr::Update(uint32 diff, float frac, uint32 frametime)
         {
             Object *obj = (Object*)base;
 
-            //if(obj->HasMoved())
-                _layerMgr->RemoveFromCollisionMap(obj);
+            _layerMgr->RemoveFromCollisionMap(obj);
 
             // do not touch objects flagged for deletion
             if(base->CanBeDeleted())
                 continue;
 
             // physics
-            if(obj->IsAffectedByPhysics())        // the collision with walls is handled in here. also sets HasMoved() to true if required.
-                _physMgr->UpdatePhysics(obj, frac); // also takes care of triggering OnTouch() for solid objects vs Players and other specific things
+            if(obj->IsAffectedByPhysics())
+                _physMgr->UpdatePhysics(obj, dt); // the collision with walls is handled in here. also sets HasMoved() to true if required.
             // update layer sets if changed
             if(obj->_NeedsLayerUpdate())
             {
@@ -109,13 +108,12 @@ void ObjectMgr::Update(uint32 diff, float frac, uint32 frametime)
             }
             // update gfx if required
             if(obj->GetSprite() && obj->GetSprite()->GetType() == TILETYPE_ANIMATED)
-                ((AnimatedTile*)(obj->GetSprite()))->Update(frametime);
+                ((AnimatedTile*)(obj->GetSprite()))->Update(frametime); // TODO: remove the frametime here
 
             if(obj->IsUpdate())
-                obj->OnUpdate(diff);
+                obj->OnUpdate(dt);
 
-            //if(obj->HasMoved()) // TODO: is this really correct?
-                _layerMgr->UpdateCollisionMap(obj);
+            _layerMgr->UpdateCollisionMap(obj);
         }
     }
 
@@ -133,16 +131,13 @@ void ObjectMgr::Update(uint32 diff, float frac, uint32 frametime)
         {
             ActiveRect *other = (ActiveRect*)jt->second;
             // never calculate collision with self, invalid, or non-colliding objects
-            if(base == other || other->CanBeDeleted() || !other->IsCollisionEnabled())
-                continue;
-            // skip solid objects, as these are handled in the physics system.
-            if(other->GetType() >= OBJTYPE_OBJECT && ((Object*)other)->IsBlocking())
+            if(base == other || other->CanBeDeleted() || !other->CollisionMaskMatch(base))
                 continue;
 
             // <base> is the object that has moved, trigger collision from it.
-            if(uint8 side = base->CollisionWith(other))
+            if(base->CollisionWith(other))
             {
-                HandleObjectCollision(base, other, side);
+                base->OnCollide(other);
             }
         }
     }
@@ -164,43 +159,6 @@ void ObjectMgr::Update(uint32 diff, float frac, uint32 frametime)
         }
     }
 }
-
-// <base> is the object that has moved, usually; <side> is <base's> side where <other> collided with it
-void ObjectMgr::HandleObjectCollision(ActiveRect *base, ActiveRect *other, uint8 side)
-{
-    // if one of the 2 functions returns true, movement should be stopped and remain "touching" (= no overlap should occur)
-    bool touchResult = base->OnTouch(side, other);
-    bool touchedByResult = other->OnTouchedBy(InvertSide(side), base);
-    if(touchResult || touchedByResult)
-    {
-        // we should only move objects around, since rects are considered static unless manually moved
-        if(base->GetType() >= OBJTYPE_OBJECT)
-        {
-            float xold = base->x, yold = base->y; // TODO: need width and height too?
-            uint8 oside = InvertSide(side);
-            //base->AlignToSideOf(other, oside);
-            // PHYS FIXME
-            // RIGHT NOW THIS IS FAIL
-            if(_layerMgr->CollisionWith(base, 4, ((Object*)base)->IsBlocking() ? ~LCF_BLOCKING_OBJECT : LCF_ALL)) // if object is blocking skip this flag
-            {
-                // ouch, new position collided with wall... reset position to old
-                // and now we HAVE TO call OnEnter()
-                // TODO: try pushing to left or right a little (at an elevator, for example. it never crushes anything)
-                //       (but this can be done in falcon too.. i think)
-                base->x = xold;
-                base->y = yold;
-                base->OnEnter(side, other);
-                other->OnEnteredBy(InvertSide(side), base);
-            }
-        }
-    }
-    else
-    {
-        base->OnEnter(side, other);
-        other->OnEnteredBy(InvertSide(side), base);
-    }
-}
-
 
 // this renders the objects.
 // it is called from LayerMgr::Render(), so that objects on higher layers are drawn over objects on lower layers
@@ -231,18 +189,18 @@ void ObjectMgr::RenderLayer(uint32 id)
     }
 }
 
-void ObjectMgr::GetAllObjectsIn(BaseRect& rect, ObjectWithSideSet& result, uint8 force_side /* = SIDE_NONE */) const
+void ObjectMgr::GetAllObjectsIn(BaseRect& rect, BaseObjectSet& result) const
 {
     for(ObjectMap::const_iterator it = _store.begin(); it != _store.end(); it++)
-        if(uint8 side = ((ActiveRect*)it->second)->CollisionWith(&rect))
-            result.insert(std::pair<BaseObject*,uint8>(it->second, force_side ? force_side : side));
+        if(((ActiveRect*)it->second)->CollisionWith(&rect))
+            result.insert(it->second);
 }
 
 void ObjectMgr::RenderBBoxes(void)
 {
     SDL_Rect r;
     Camera cam = _engine->GetCamera();
-    static const uint32 vCol[6] = // FIXME: fix this for big endian
+    static const uint32 vCol[4] = // FIXME: fix this for big endian
     {
         0xFF9FFF9F,
         0xFFFF0000,

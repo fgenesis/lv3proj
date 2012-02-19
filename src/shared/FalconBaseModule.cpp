@@ -1061,8 +1061,8 @@ FALCON_FUNC fal_Screen_SetCamera(Falcon::VMachine *vm)
 {
     FALCON_REQUIRE_PARAMS_EXTRA(2, "I, I");
     Camera *cam = Engine::GetInstance()->GetCameraPtr();
-    cam->x = (uint32)vm->param(0)->forceInteger();
-    cam->y = (uint32)vm->param(1)->forceInteger();
+    cam->x = vm->param(0)->forceNumeric();
+    cam->y = vm->param(1)->forceNumeric();
 }
 
 FALCON_FUNC fal_Screen_GetCameraX(Falcon::VMachine *vm)

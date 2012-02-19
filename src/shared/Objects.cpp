@@ -95,7 +95,7 @@ float ActiveRect::GetDistance(ActiveRect *other) const
 
 bool ActiveRect::CastRay(const Vector2di& dir, Vector2di *lastpos, Vector2di *collpos, LayerCollisionFlag lcf /* = LCF_ALL*/) const
 {
-    return Engine::GetInstance()->_GetLayerMgr()->CastRaysFromRect(*this, dir, lastpos, collpos, lcf);
+    return lcf && Engine::GetInstance()->_GetLayerMgr()->CastRaysFromRect(*this, dir, lastpos, collpos, lcf);
 }
 
 

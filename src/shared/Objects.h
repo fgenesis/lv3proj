@@ -89,15 +89,7 @@ class ActiveRect : public BaseObject, public BaseRect
 public:
     virtual void Init(void);
 
-    // see SharedDefines.h for the sides enum
-    // TODO: use vector physics here
-    virtual void OnEnter(uint8 side, ActiveRect *who);
-    virtual void OnLeave(uint8 side, ActiveRect *who); // TODO: NYI
-    virtual bool OnTouch(uint8 side, ActiveRect *who);
-
-    virtual void OnEnteredBy(uint8 side, ActiveRect *who);
-    virtual void OnLeftBy(uint8 side, ActiveRect *who); // TODO: NYI
-    virtual bool OnTouchedBy(uint8 side, ActiveRect *who);
+    virtual void OnCollide(ActiveRect *who);
 
     // These take care of moving all objects that are attached to this as well.
     void SetBBox(float x, float y, uint32 w, uint32 h); // ... but only set our own bbox
@@ -113,9 +105,10 @@ public:
 
     inline bool HasMoved(void) const { return _moved; }
     inline void SetMoved(bool moved = true) { _moved = moved; }
-    inline bool IsCollisionEnabled(void) const { return _collisionMask; }
+    inline bool IsCollisionEnabled(void) const { return _collisionMask; } // TODO: deprecate
     inline void SetCollisionMask(uint32 mask) { _collisionMask = mask; }
     inline uint32 GetCollisionMask(void) const { return _collisionMask; }
+    inline bool CollisionMaskMatch(ActiveRect *other) { return (_collisionMask & other->_collisionMask) != 0; }
     inline void SetUpdate(bool b) { _update = b; }
     inline bool IsUpdate(void) const { return _update; }
     bool CastRay(const Vector2di& dir, Vector2di *lastpos, Vector2di *collpos, LayerCollisionFlag lcf = LCF_ALL) const;
@@ -139,7 +132,7 @@ public:
     virtual ~Object();
     virtual void Init(void);
 
-    virtual void OnUpdate(uint32 ms);
+    virtual void OnUpdate(float dt);
     virtual bool OnTouchWall();
 
     inline void SetAffectedByPhysics(bool b) { _physicsAffected = b; }
@@ -159,7 +152,10 @@ public:
     void SetSprite(BasicTile *tile);
     inline BasicTile *GetSprite(void) { return _gfx; }
 
+    // LCF that this object applies to the tile collision map
     inline LayerCollisionFlag GetOwnLCF(void) const { return _ownLCF; }
+
+    // LCF that will stop this object if it is in the way
     inline LayerCollisionFlag GetBlockedByLCF() const { return _blockedByLCF; }
 
     Vector2df GetSpeed(void) const;

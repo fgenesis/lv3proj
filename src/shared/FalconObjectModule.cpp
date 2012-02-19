@@ -264,48 +264,16 @@ void BaseObject::unbind(void)
 // these are called from C++ like regular overloaded member functions, and proxy the call to be handled inside falcon
 // on the correct member overloads.
 
-void ActiveRect::OnEnter(uint8 side, ActiveRect *who)
+void ActiveRect::OnCollide(ActiveRect *who)
 {
     DEBUG_ASSERT_RETURN_VOID(_falObj);
-    _falObj->CallMethod("OnEnter", Falcon::int32(side), who->_falObj->self());
+    _falObj->CallMethod("OnCollide", who->_falObj->self());
 }
 
-void ActiveRect::OnEnteredBy(uint8 side, ActiveRect *who)
+void Object::OnUpdate(float dt)
 {
     DEBUG_ASSERT_RETURN_VOID(_falObj);
-    _falObj->CallMethod("OnEnteredBy", Falcon::int32(side), who->_falObj->self());
-}
-
-void ActiveRect::OnLeave(uint8 side, ActiveRect *who)
-{
-    DEBUG_ASSERT_RETURN_VOID(_falObj);
-    _falObj->CallMethod("OnLeave", Falcon::int32(side), who->_falObj->self());
-}
-
-void ActiveRect::OnLeftBy(uint8 side, ActiveRect *who)
-{
-    DEBUG_ASSERT_RETURN_VOID(_falObj);
-    _falObj->CallMethod("OnLeftBy", Falcon::int32(side), who->_falObj->self());
-}
-
-bool ActiveRect::OnTouch(uint8 side, ActiveRect *who)
-{
-    DEBUG_ASSERT_RETURN(_falObj, true); // no further processing
-    Falcon::Item *result = _falObj->CallMethod("OnTouch", Falcon::int32(side), who->_falObj->self());
-    return result && result->isTrue();
-}
-
-bool ActiveRect::OnTouchedBy(uint8 side, ActiveRect *who)
-{
-    DEBUG_ASSERT_RETURN(_falObj, true); // no further processing
-    Falcon::Item *result = _falObj->CallMethod("OnTouchedBy", Falcon::int32(side), who->_falObj->self());
-    return result && result->isTrue();
-}
-
-void Object::OnUpdate(uint32 ms)
-{
-    DEBUG_ASSERT_RETURN_VOID(_falObj);
-    _falObj->CallMethod("OnUpdate", Falcon::int32(ms));
+    _falObj->CallMethod("OnUpdate", Falcon::numeric(dt));
 }
 
 bool Object::OnTouchWall()
@@ -951,7 +919,7 @@ FALCON_FUNC fal_Objects_GetAllInRect(Falcon::VMachine *vm)
         }
     }
     
-    ObjectWithSideSet li;
+    BaseObjectSet li;
     Engine::GetInstance()->objmgr->GetAllObjectsIn(rect, li);
     if(li.empty())
     {
@@ -959,9 +927,9 @@ FALCON_FUNC fal_Objects_GetAllInRect(Falcon::VMachine *vm)
         return;
     }
     Falcon::CoreArray *arr = new Falcon::CoreArray(li.size());
-    for(ObjectWithSideSet::iterator it = li.begin(); it != li.end(); it++)
+    for(BaseObjectSet::iterator it = li.begin(); it != li.end(); it++)
     {
-        BaseObject *obj = it->first;
+        BaseObject *obj = *it;
         DEBUG(ASSERT(obj->_falObj && obj->_falObj->coreCls));
         fal_ObjectCarrier *co = obj->_falObj->self();
         arr->append(co);

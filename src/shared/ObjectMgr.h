@@ -12,8 +12,8 @@ class PhysicsMgr;
 class AppFalconGame;
 
 typedef std::map<uint32, BaseObject*> ObjectMap;
+typedef std::set<BaseObject*> BaseObjectSet;
 typedef std::set<Object*> ObjectSet;
-typedef std::set<std::pair<BaseObject*,uint8> > ObjectWithSideSet;
 
 
 class ObjectMgr
@@ -25,15 +25,14 @@ public:
     BaseObject *Get(uint32 id);
     inline uint32 GetLastId(void) const { return _curId; }
     inline uint32 GetCount(void) const { return _store.size(); }
-    void Update(uint32 ms, float frac, uint32 frametime);
+    void Update(float dt, uint32 frametime);
     void RenderLayer(uint32 id);
     void RenderBBoxes(void); // debug function
     void FlagForRemove(BaseObject *obj);
     
     void RemoveAll(void);
-    void HandleObjectCollision(ActiveRect *base, ActiveRect *other, uint8 side);
 
-    void GetAllObjectsIn(BaseRect& rect, ObjectWithSideSet& result, uint8 force_side = SIDE_NONE) const;
+    void GetAllObjectsIn(BaseRect& rect, BaseObjectSet& result) const;
     const ObjectMap& GetAllObjects(void) const { return _store; }
 
     inline void SetPhysicsMgr(PhysicsMgr *pm) { _physMgr = pm; }

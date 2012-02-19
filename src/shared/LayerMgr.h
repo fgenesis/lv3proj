@@ -54,7 +54,7 @@ public:
     void SetMaxDim(uint32 dim); // set x and y size of all layers & collision map + resize if necessary
     void SetRenderOffset(int32 x, int32 y);
     inline uint32 GetMaxDim(void) const { return _maxdim; }
-    inline uint32 GetMaxPixelDim(void)  const { return _maxdim * 16; } // TODO: FIXME for tile sizes != 16
+    inline uint32 GetMaxPixelDim(void)  const { return _maxdim * std::max(_tileDimX, _tileDimY); } // TODO: FIXME for tile sizes != 16
 
     // TODO: is the info layer really needed?
     void CreateInfoLayer(void);
@@ -90,6 +90,7 @@ private:
     TileInfoLayer _infoLayer; // TODO: deprecate, or make something useful with this
     CollisionMap _collisionMap;
     uint32 _maxdim; // max dimension for all created layers
+    uint32 _tileDimX, _tileDimY;
 
 };
 

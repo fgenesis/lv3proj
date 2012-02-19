@@ -314,7 +314,7 @@ bool Engine::Setup(void)
 void Engine::_Process(void)
 {
     _layermgr->Update(GetCurFrameTime());
-    objmgr->Update(GetTimeDiff(), GetTimeDiffF(), GetCurFrameTime());
+    objmgr->Update(GetTimeDiffF(), GetCurFrameTime());
 
     _resPoolTimer.Update(s_diffTimeReal);
 

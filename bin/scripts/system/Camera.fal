@@ -76,11 +76,11 @@ end
 class EightWayFocus from FocusObjectBase
     maxspeed = 300.0
     
-    function OnUpdate()
+    function OnUpdate(dt)
         global _activeCam
         if not _activeCam: return
         
-        s = self.maxspeed * Engine.GetFloatTimeDiff()
+        s = self.maxspeed * dt
         
         if self.x < _activeCam.x
             self.x += s
