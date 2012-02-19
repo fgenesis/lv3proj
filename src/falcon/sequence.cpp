@@ -903,18 +903,18 @@ void Sequence::gcMark( uint32 gen )
 
 void Sequence::invalidateAllIters()
 {
-   while( m_iterList != 0 )
+   /*while( m_iterList != 0 )
    {
       m_iterList->invalidate();
       m_iterList = m_iterList->nextIter();
-   }
+   }*/
 }
 
 
 void Sequence::invalidateAnyOtherIter( Iterator* iter )
 {
    // is the iterator really in our list?
-   bool foundMe = false;
+   /*bool foundMe = false;
    
    while( m_iterList != 0 )
    {
@@ -935,29 +935,30 @@ void Sequence::invalidateAnyOtherIter( Iterator* iter )
    {
       iter->nextIter( 0 );
       m_iterList = iter;
-   }
+   }*/
 }
 
 
 void Sequence::getIterator( Iterator& tgt, bool tail ) const
 {
    tgt.sequence( const_cast<Sequence*>(this) );
-   if ( &tgt != m_iterList )
+   /*if ( &tgt != m_iterList )
       tgt.nextIter( m_iterList );
-   m_iterList = &tgt;
+   m_iterList = &tgt;*/
 }
 
 
 void Sequence::copyIterator( Iterator& tgt, const Iterator& source ) const
 {
    tgt.sequence( const_cast<Sequence*>(this) );
-   tgt.nextIter( m_iterList );
-   m_iterList = &tgt;   
+   /*tgt.nextIter( m_iterList );
+   m_iterList = &tgt;*/
 }
 
 
 void Sequence::disposeIterator( Iterator& tgt ) const
 {
+    /*
    Iterator *iter = m_iterList;
    Iterator *piter = 0;
    
@@ -984,10 +985,12 @@ void Sequence::disposeIterator( Iterator& tgt ) const
    
    // we should have found an iterator of ours
    fassert( false );
+   */
 }
 
 void Sequence::invalidateIteratorOnCriterion() const
 {
+    /*
    Iterator *iter = m_iterList;
    Iterator *piter = 0;
    
@@ -1013,7 +1016,8 @@ void Sequence::invalidateIteratorOnCriterion() const
       
       piter = iter;
       iter = iter->nextIter();
-   }  
+   }
+   */
 }
 
 }

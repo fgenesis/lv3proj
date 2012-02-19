@@ -21,8 +21,8 @@ namespace Falcon {
 Iterator::~Iterator()
 {
    // give the owner a chance to de-account us
-   if( m_owner != 0 )
-      m_owner->disposeIterator( *this );
+   /*if( m_owner != 0 )
+      m_owner->disposeIterator( *this );*/
 
    // Then, get rid of deep data, if we have to
    if ( m_deletor != 0 )
