@@ -267,19 +267,14 @@ void ObjectMgr::RenderBBoxes(void)
             origin.y -= cam.y;
             int32 ox = int32(origin.x);
             int32 oy = int32(origin.y);
+
             // render vectors
-            Vector2df cSpeed(origin);
-            for(uint32 i = 0; i < obj->phys.size(); ++i)
-            {
-                dest = origin + obj->phys[i].speed;
-                cSpeed += obj->phys[i].speed;
-                SDLfunc_drawLine(_engine->GetSurface(), ox, oy, dest.x, dest.y, vCol[0]);
-                dest = origin + obj->phys[i].accel;
-                SDLfunc_drawLine(_engine->GetSurface(), ox, oy, dest.x, dest.y, vCol[1]);
-                dest = origin + obj->phys[i].friction;
-                SDLfunc_drawLine(_engine->GetSurface(), ox, oy, dest.x, dest.y, vCol[2]);
-            }
-            SDLfunc_drawLine(_engine->GetSurface(), ox, oy, cSpeed.x, cSpeed.y, vCol[3]);
+            dest = origin + obj->phys.speed;
+            SDLfunc_drawLine(_engine->GetSurface(), ox, oy, dest.x, dest.y, vCol[3]);
+            dest = origin + obj->phys.accel;
+            SDLfunc_drawLine(_engine->GetSurface(), ox, oy, dest.x, dest.y, vCol[1]);
+            dest = origin + obj->phys.friction;
+            SDLfunc_drawLine(_engine->GetSurface(), ox, oy, dest.x, dest.y, vCol[2]);
         }
     }
 }

@@ -126,4 +126,28 @@ function HookClassMethod(obj, mthName, hook)
 end
 
 
+// FIXME: this spams the GC
+function DirectionToVector(d)
+    switch d
+        case DIRECTION_UP
+            return Vector(0, -1)
+        case DIRECTION_UPRIGHT
+            return Vector(1, -1)
+        case DIRECTION_RIGHT
+            return Vector(1, 0)
+        case DIRECTION_DOWNRIGHT
+            return Vector(1, 1)
+        case DIRECTION_DOWN
+            return Vector(0, 1)
+        case DIRECTION_DOWNLEFT
+            return Vector(-1, 1)
+        case DIRECTION_LEFT
+            return Vector(-1, 0)
+        case DIRECTION_UPLEFT
+            return Vector(-1, -1)
+        case DIRECTION_NONE
+            return Vector(0, 0)
+    end
+end
+
 export

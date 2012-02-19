@@ -36,14 +36,14 @@ class Block from Object
                 if self.CanMoveToDir(DIRECTION_RIGHT)
                     //self.x += 1
                     //who.x += 1
-                    self.SetSpeed(1, self.pushSpeed, self.GetSpeed(1).y)
+                    self.SetSpeed(self.pushSpeed, self.GetSpeed().y) // FIXME
                     return true
                 end
             elif side && SIDE_RIGHT // pushing from right, move to left
                 if self.CanMoveToDir(DIRECTION_LEFT)
                     //self.x -= 1
                     //who.x -= 1
-                    self.SetSpeed(1, -self.pushSpeed, self.GetSpeed(1).y)
+                    self.SetSpeed(-self.pushSpeed, self.GetSpeed().y) // FIXME
                     return true
                 end
             end
@@ -53,12 +53,12 @@ class Block from Object
     end
     
     function OnTouch(side, who)
-        //> "Block: OnTouch(", side, ", ", who, ")"
+        > "Block: OnTouch(", side, ", ", who, ")"
         return false
     end
     
     function OnEnter(side, who)
-        //> "Block: OnEnter(", side, ", ", who, ")"
+        > "Block: OnEnter(", side, ", ", who, ")"
         if side && (SIDE_TOP || SIDE_BOTTOM)
             select who
                 case PlayerEx
@@ -72,7 +72,7 @@ class Block from Object
     function OnTouchWall()
         //> "Block::OnTouchWall(", side, ", ", xs, ", ", ys, ")"
         s = self.GetSpeed() // total speed
-        if s.y >= 5
+        if s.y and self.HasMoved()
             if self._sound
                 self._sound.Play()
             end

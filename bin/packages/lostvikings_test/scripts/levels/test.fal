@@ -84,7 +84,7 @@ end
 RegisterRawInputHook( .[DoSomeResets olaf SDLK.TAB] )
 RegisterRawInputHook( .[DisableInputOn SDLK.END])
 RegisterRawInputHook( .[CycleGravityOn SDLK.PAGEDOWN])
-RegisterRawInputHook( .[ToggleBounceOn olaf SDLK.PAGEUP])
+//RegisterRawInputHook( .[ToggleBounceOn olaf SDLK.PAGEUP])
 RegisterRawInputHook( .[ToggleGodmode olaf SDLK.COMMA])
 RegisterRawInputHook( .[ResetBlockTest blk SDLK.m])
 //RegisterRawInputHook("RemovePlayerTest", .[RemovePlayerTest olaf SDLK.q])
@@ -122,14 +122,14 @@ function CycleGravityOn(k, e)
     end
 end
 
-function ToggleBounceOn(who, k, e)
+/*function ToggleBounceOn(who, k, e)
     ty, src, which, value = e
     if ty == EVENT_TYPE_KEYBOARD and which == k and value != 0
         p = who.phys
         p.dbounce = p.dbounce ? 0 : 0.6
         > who, " bounce is now: ", p.dbounce
     end
-end
+end*/
 
 function ToggleGodmode(who, k, e)
     ty, src, which, value = e
@@ -142,15 +142,15 @@ function ToggleGodmode(who, k, e)
 end
 
 function CycleGravity()
-    switch Physics.GetGravity()
+    switch Physics.GetGravity().y
         case 300
-            Physics.SetGravity(60)
+            Physics.SetGravity(0, 60)
             Sound("use.ogg").Play()
         case 60
-            Physics.SetGravity(-80)
+            Physics.SetGravity(0, -80)
             Sound("windup.ogg").Play()
         default
-            Physics.SetGravity(300)
+            Physics.SetGravity(0, 300)
             Sound("blockbreak.ogg").Play()
     end
 end

@@ -1171,8 +1171,8 @@ template <bool DIRECTIONAL> FALCON_FUNC fal_EngineMap_CastRay(Falcon::VMachine *
     const Vector2di src(srcf.x, srcf.y); // FIXME: round it??
     const Vector2di to(tof.x, tof.y); // FIXME: round it??
 
-    bool collision = DIRECTIONAL ? lm->CastRayDir(src, to, lastpos, collpos, lcf)
-                                 : lm->CastRayAbs(src, to, lastpos, collpos, lcf);
+    bool collision = DIRECTIONAL ? lm->CastRayDir(src, to, &lastpos, &collpos, lcf)
+                                 : lm->CastRayAbs(src, to, &lastpos, &collpos, lcf);
     if(collision)
     {
         fal_Vector2d *v = new fal_Vector2d(VECTOR_CLASS_SYMBOL);
@@ -1203,7 +1203,7 @@ FALCON_FUNC fal_EngineMap_CastRaysFromRect(Falcon::VMachine *vm)
     const Vector2di dst(dstf.x, dstf.y); // FIXME: round it??
 
     BaseRect r(src, sz);
-    if(lm->CastRaysFromRect(r, dst, lastpos, collpos, lcf))
+    if(lm->CastRaysFromRect(r, dst, &lastpos, &collpos, lcf))
     {
         fal_Vector2d *v = new fal_Vector2d(VECTOR_CLASS_SYMBOL);
         v->vec() = collv ? Vector2df(collpos.x, collpos.y) : Vector2df(lastpos.x, lastpos.y);

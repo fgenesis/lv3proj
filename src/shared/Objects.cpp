@@ -93,7 +93,7 @@ float ActiveRect::GetDistance(ActiveRect *other) const
     return sqrt(x*x + y*y);
 }
 
-bool ActiveRect::CastRay(const Vector2di& dir, Vector2di& lastpos, Vector2di& collpos, LayerCollisionFlag lcf /* = LCF_ALL*/) const
+bool ActiveRect::CastRay(const Vector2di& dir, Vector2di *lastpos, Vector2di *collpos, LayerCollisionFlag lcf /* = LCF_ALL*/) const
 {
     return Engine::GetInstance()->_GetLayerMgr()->CastRaysFromRect(*this, dir, lastpos, collpos, lcf);
 }
@@ -138,12 +138,9 @@ void Object::SetSprite(BasicTile *tile)
     _gfx = tile;
 }
 
-Vector2df Object::GetTotalSpeed(void) const
+Vector2df Object::GetSpeed(void) const
 {
-    Vector2df v;
-    for(size_t i = 0; i < phys.size(); ++i)
-        v += phys[i].speed;
-    return v;
+    return phys.speed;
 }
 
 void Unit::Init(void)

@@ -118,7 +118,7 @@ public:
     inline uint32 GetCollisionMask(void) const { return _collisionMask; }
     inline void SetUpdate(bool b) { _update = b; }
     inline bool IsUpdate(void) const { return _update; }
-    bool CastRay(const Vector2di& dir, Vector2di& lastpos, Vector2di& collpos, LayerCollisionFlag lcf = LCF_ALL) const;
+    bool CastRay(const Vector2di& dir, Vector2di *lastpos, Vector2di *collpos, LayerCollisionFlag lcf = LCF_ALL) const;
 
     virtual float GetDistanceX(ActiveRect *other) const;
     virtual float GetDistanceY(ActiveRect *other) const;
@@ -140,7 +140,7 @@ public:
     virtual void Init(void);
 
     virtual void OnUpdate(uint32 ms);
-    virtual void OnTouchWall();
+    virtual bool OnTouchWall();
 
     inline void SetAffectedByPhysics(bool b) { _physicsAffected = b; }
     inline bool IsAffectedByPhysics(void) const { return _physicsAffected; }
@@ -156,13 +156,13 @@ public:
     inline void SetBlocking(bool b) { _ownLCF = b ? LCF_BLOCKING_OBJECT : LCF_NONE; }
     inline bool IsBlocking(void) const { return GetOwnLCF() != LCF_NONE; }
 
-    Vector2df GetTotalSpeed(void) const;
-
     void SetSprite(BasicTile *tile);
     inline BasicTile *GetSprite(void) { return _gfx; }
 
     inline LayerCollisionFlag GetOwnLCF(void) const { return _ownLCF; }
     inline LayerCollisionFlag GetBlockedByLCF() const { return _blockedByLCF; }
+
+    Vector2df GetSpeed(void) const;
 
     PhysProps phys;
 

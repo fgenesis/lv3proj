@@ -63,7 +63,7 @@ template <class T> inline const T& clamp (const T& value, const T& low, const T&
 
 template <class T> inline bool exceeds(const T& v, const T& mx)
 {
-    return mx < 0 ? v < mx : v > mx;
+    return (!mx && v) || (mx < 0 ? v < mx : v > mx);
 }
 
 template <class T> inline const T sgn(const T val)
@@ -73,6 +73,32 @@ template <class T> inline const T sgn(const T val)
     else if(val < 0)
         return -1;
     return 0;
+}
+
+//  2.1 ->  2.0 (floor)
+//  2.8 ->  2.0 (floor)
+// -2.1 -> -2.0 (ceil)
+// -2.8 -> -2.0 (ceil)
+inline int ftrunci(float val)
+{
+    if(val > 0)
+        return floor(val);
+    else if(val < 0)
+        return ceil(val);
+    return 0.0f;
+}
+
+//  2.1 ->  3.0 (ceil)
+//  2.8 ->  3.0 (ceil)
+// -2.1 -> -3.0 (floor)
+// -2.8 -> -3.0 (floor)
+inline int fceili(float val)
+{
+    if(val > 0)
+        return ceil(val);
+    else if(val < 0)
+        return floor(val);
+    return 0.0f;
 }
 
 

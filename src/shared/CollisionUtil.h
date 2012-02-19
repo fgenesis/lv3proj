@@ -5,7 +5,7 @@
 
 
 template <typename T> bool CastBresenhamLine(int32 x0, int32 y0, int32 x1, int32 y1,
-                                             Vector2di& last, Vector2di& pos, T callback)
+                                             Vector2di *last, Vector2di *pos, T callback)
 {
     int32 dx = abs(x1-x0);
     int32 dy = abs(y1-y0);
@@ -19,8 +19,10 @@ template <typename T> bool CastBresenhamLine(int32 x0, int32 y0, int32 x1, int32
     {
         if(callback(x0, y0))
         {
-            last = Vector2di(lastx, lasty);
-            pos = Vector2di(x0, y0);
+            if(last)
+                *last = Vector2di(lastx, lasty);
+            if(pos)
+                *pos = Vector2di(x0, y0);
             return true;
         }
         lastx = x0;

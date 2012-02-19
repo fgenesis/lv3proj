@@ -15,7 +15,7 @@ class Olaf from PlayerEx
         if self.shieldUp
             s = self.GetSpeed(0)
             if s.y > self.glideSpeed
-                self.SetSpeed(0, nil, self.glideSpeed)
+                self.SetSpeed(nil, self.glideSpeed) // FIXME
             end
         end
         self.PlayerEx.OnUpdate(ms)

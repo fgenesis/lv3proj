@@ -342,7 +342,7 @@ void LayerMgr::UpdateCollisionMap(Object *obj)
     }
 }
 
-bool LayerMgr::CollisionWith(const BaseRect *rect, int32 skip /* = 4 */, uint8 flags /* = LCF_ALL */) const
+bool LayerMgr::CollisionWith(const BaseRect *rect, int32 skip /* = 1 */, uint8 flags /* = LCF_ALL */) const
 {
     if(!HasCollisionMap())
         return false;
@@ -399,18 +399,20 @@ private:
     const LayerCollisionFlag _lcf;
 };
 
-bool LayerMgr::CastRayAbs(const Vector2di src, const Vector2di& targ, Vector2di& lastpos, Vector2di& collpos, LayerCollisionFlag lcf /* = LCF_ALL */) const
+bool LayerMgr::CastRayAbs(const Vector2di src, const Vector2di& targ, Vector2di *lastpos, Vector2di *collpos, LayerCollisionFlag lcf /* = LCF_ALL */) const
 {
     RayCastCheckDo check(_collisionMap, lcf);
     return CastBresenhamLine(src.x, src.y, targ.x, targ.y, lastpos, collpos, check);
 }
 
-bool LayerMgr::CastRayDir(const Vector2di src, const Vector2di& dir, Vector2di& lastpos, Vector2di& collpos, LayerCollisionFlag lcf /* = LCF_ALL */) const
+bool LayerMgr::CastRayDir(const Vector2di src, const Vector2di& dir, Vector2di *lastpos, Vector2di *collpos, LayerCollisionFlag lcf /* = LCF_ALL */) const
 {
     if(CastRayAbs(src, src + dir, lastpos, collpos, lcf))
     {
-        lastpos -= src;
-        collpos -= src;
+        if(lastpos)
+            *lastpos -= src;
+        if(collpos)
+            *collpos -= src;
         return true;
     }
     return false;
@@ -419,7 +421,7 @@ bool LayerMgr::CastRayDir(const Vector2di src, const Vector2di& dir, Vector2di& 
 // increase granularity for faster speed (if you know what you're doing!)
 // WARNING: the code is weird, but it works (somehow)
 // FIXME: the corner pixel is currently MISSING! Will do this later.
-bool LayerMgr::CastRaysFromRect(const BaseRect& srcRect, const Vector2di& dir, Vector2di& lastpos, Vector2di& collpos,
+bool LayerMgr::CastRaysFromRect(const BaseRect& srcRect, const Vector2di& dir, Vector2di *lastpos, Vector2di *collpos,
                                 LayerCollisionFlag lcf /* = LCF_ALL */) const
 {
     // tilemap-raycasting is int32 only, so we need to round floats instead of just truncating them
@@ -455,7 +457,7 @@ bool LayerMgr::CastRaysFromRect(const BaseRect& srcRect, const Vector2di& dir, V
         {
             Vector2di cast = start + offs;
 
-            if(CastRayDir(cast, dir, lastp, collp, lcf))
+            if(CastRayDir(cast, dir, &lastp, &collp, lcf))
             {
                 //Vector2di yfix = Vector2di(0, dir.y > 0 ? 1 : -1); // HACK: no idea why, but this is necessary.
                 //lastp += yfix;
@@ -465,8 +467,10 @@ bool LayerMgr::CastRaysFromRect(const BaseRect& srcRect, const Vector2di& dir, V
                 if(l < maxnear)
                 {
                     maxnear = l;
-                    lastpos = lastp;
-                    collpos = collp;
+                    if(lastpos)
+                        *lastpos = lastp;
+                    if(collpos)
+                        *collpos = collp;
                 }
                 #ifdef DEBUG_RAYCAST_VIS
                  SDLfunc_putpixel_safe(_engine->GetSurface(), cast.x, cast.y, 0xFF00FF00);
@@ -488,7 +492,7 @@ bool LayerMgr::CastRaysFromRect(const BaseRect& srcRect, const Vector2di& dir, V
         for( ; offs.y < h; offs.y += granularity)
         {
             Vector2di cast = start + offs;
-            if(CastRayDir(cast, dir, lastp, collp, lcf))
+            if(CastRayDir(cast, dir, &lastp, &collp, lcf))
             {
                 //Vector2di xfix = Vector2di(dir.x > 0 ? 1 : -1, 0); // HACK: no idea why, but this is necessary.
                 //lastp += xfix;
@@ -498,8 +502,10 @@ bool LayerMgr::CastRaysFromRect(const BaseRect& srcRect, const Vector2di& dir, V
                 if(l < maxnear)
                 {
                     maxnear = l;
-                    lastpos = lastp;
-                    collpos = collp;
+                    if(lastpos)
+                        *lastpos = lastp;
+                    if(collpos)
+                        *collpos = collp;
                 }
                 #ifdef DEBUG_RAYCAST_VIS
                  SDLfunc_putpixel_safe(_engine->GetSurface(), cast.x, cast.y, 0xFF00FF00);

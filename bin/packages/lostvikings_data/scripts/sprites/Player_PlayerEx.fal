@@ -52,27 +52,39 @@ class PlayerEx from SNESControlledPlayer
     
     function OnUpdate(ms)
         if self.dead: return
+        
+        switch self.movingDir
+            case DIRECTION_LEFT
+                self.SetSpeed(-self.walkSpeed, nil)
+                
+            case DIRECTION_RIGHT
+                self.SetSpeed(self.walkSpeed, nil)
+                
+            case DIRECTION_NONE
+                self.SetSpeed(0, nil)
+                
+            // TODO: ladder climbing
+        end
+        
         self.UpdateAnim()
-        s = self.GetSpeed()
-        > "total: ", s.x , ", ", s.y, " - ", self.x, " ", self.y
     end
     
-    // HACK - this function was removed
     function CanMoveToDir(d)
-        return true
+        v = DirectionToVector(d)
+        return v and not self.CastRay(v)
     end
     
     function CanFallDown() // TODO: ladder climbing etc
         global VDOWN
         d = self.CastRay(VDOWN)  // if it returns nil, there is still space left (checking 1 pixel row only!)
-        //> "can fall: ", d == nil
-        return d == nil
+        //> "can fall: ", d
+        return not d
     end
     
     function UpdateAnim()
         if self.CanFallDown()
             self.AnimFall()
-        elif self.GetSpeed(1).x
+        elif self.movingDir != DIRECTION_NONE // TODO: add up/down (ladder movemen)
             if self.CanMoveToDir(self.movingDir)
                 self.AnimWalk()
             else
@@ -88,16 +100,10 @@ class PlayerEx from SNESControlledPlayer
         switch d
             case DIRECTION_LEFT
                 self.facingDir = DIRECTION_LEFT
-                self.SetSpeed(1, -self.walkSpeed, nil)
             
             case DIRECTION_RIGHT
                 self.facingDir = DIRECTION_RIGHT
-                self.SetSpeed(1, self.walkSpeed, nil)
-            
-            default
-                self.SetSpeed(1, 0, nil)
         end
-        > self.GetSpeed(1)
         self.movingDir = d
     end
     
@@ -123,7 +129,7 @@ class PlayerEx from SNESControlledPlayer
     
     // --DEBUG JUMP--
     function OnKeyUp(pressed)
-        if pressed and self.canDebugJump: self.AddSpeed(0, nil, -128)
+        if pressed and self.canDebugJump: self.AddSpeed(nil, -128)
     end
     
     function OnKeyDown(pressed)
@@ -142,7 +148,7 @@ class PlayerEx from SNESControlledPlayer
     function OnKeyY(pressed)
     end
     
-    function IsFallingDeep(): return self.GetSpeed(0).y >= self.fallSpeed
+    function IsFallingDeep(): return self.GetSpeed().y >= self.fallSpeed
     
     function AnimWalk()
         if self.facingDir == DIRECTION_LEFT
@@ -239,9 +245,9 @@ class PlayerEx from SNESControlledPlayer
     
     function OnTouchWall()
         s = self.GetSpeed()
-        > "walltouch! ", s 
+        //> "walltouch! ", s 
         //if not self.CanFallDown()
-        if s.y > 0
+        if s.y > 0 and self.HasMoved()
             Sound(self.IsFallingDeep() ? "crush.ogg" : "land3.ogg").Play() // TODO: this sound is different for every viking
         end
     end

@@ -308,10 +308,11 @@ void Object::OnUpdate(uint32 ms)
     _falObj->CallMethod("OnUpdate", Falcon::int32(ms));
 }
 
-void Object::OnTouchWall()
+bool Object::OnTouchWall()
 {
     DEBUG_ASSERT_RETURN_VOID(_falObj);
-    _falObj->CallMethod("OnTouchWall");
+    Falcon::Item *result = _falObj->CallMethod("OnTouchWall");
+    return result && result->isTrue();
 }
 
 // -- end object proxy calls --
@@ -418,29 +419,54 @@ FALCON_FUNC fal_ActiveRect_GetDistance(Falcon::VMachine *vm)
     vm->retval(obj->GetDistance(otherobj));
 }
 
+// 
 FALCON_FUNC fal_ActiveRect_CastRay(Falcon::VMachine *vm)
 {
+    FALCON_REQUIRE_PARAMS(1);
+
     fal_ObjectCarrier *self = Falcon::dyncast<fal_ObjectCarrier*>( vm->self().asObject() );
+    ActiveRect *obj = Falcon::dyncast<ActiveRect*>(self->GetObj());
+
     Falcon::Item *i_to    = vm->param(0); // target pos or direction
     Falcon::Item *i_which = vm->param(1); // return last (default) or collision vector
     Falcon::Item *i_lcf   = vm->param(2); // LCF
+
+    fal_Vector2d *fv = Falcon::dyncast<fal_Vector2d*>(i_to->asObject());
+    uint32 which = i_which ? i_which->forceInteger() : 0;
+    const LayerCollisionFlag lcf = i_lcf ? LayerCollisionFlag(i_lcf->forceIntegerEx()) : LCF_ALL; // TODO: use object's own LCF
+
     if(!(i_to && i_to->isOfClass("Vector")))
         throw new Falcon::ParamError(Falcon::ErrorParam( Falcon::e_inv_params, __LINE__ ));
 
     LayerMgr *lm = Engine::GetInstance()->_GetLayerMgr();
-    const bool collv = i_which && i_which->isTrue();
-    const LayerCollisionFlag lcf = i_lcf ? LayerCollisionFlag(i_lcf->forceIntegerEx()) : LCF_ALL; // TODO: use object's own LCF
-    const Vector2df dstf = Falcon::dyncast<fal_Vector2d*>(i_to->asObjectSafe())->vec();
+
+    const Vector2df dstf = fv->vec();
     Vector2di lastpos, collpos;
 
     const Vector2di dst(dstf.x, dstf.y); // FIXME: round it?
 
-    if(lm->CastRaysFromRect(*Falcon::dyncast<ActiveRect*>(self->GetObj()), dst, lastpos, collpos, lcf))
+    bool collided = lm->CastRaysFromRect(*obj, dst, &lastpos, &collpos, lcf);
+
+    switch(which)
     {
-        fal_Vector2d *v = new fal_Vector2d(VECTOR_CLASS_SYMBOL);
-        v->vec() = collv ? Vector2df(collpos.x, collpos.y) : Vector2df(lastpos.x, lastpos.y);
-        vm->retval(v);
+        case 0:
+            vm->retval(collided);
+
+        default:
+            if(collided)
+            {
+                fal_Vector2d *v = new fal_Vector2d(VECTOR_CLASS_SYMBOL);
+                v->vec() = (which == 1) ? Vector2df(collpos.x, collpos.y) : Vector2df(lastpos.x, lastpos.y);
+                vm->retval(v);
+            }
     }
+}
+
+FALCON_FUNC fal_ActiveRect_HasMoved(Falcon::VMachine *vm)
+{
+    fal_ObjectCarrier *self = Falcon::dyncast<fal_ObjectCarrier*>( vm->self().asObject() );
+    ActiveRect *obj = (ActiveRect*)self->GetObj();
+    vm->retval(obj->HasMoved());
 }
 
 FALCON_FUNC fal_Object_SetAffectedByPhysics(Falcon::VMachine *vm)
@@ -470,15 +496,7 @@ FALCON_FUNC fal_Object_GetSpeed(Falcon::VMachine *vm)
     fal_ObjectCarrier *self = Falcon::dyncast<fal_ObjectCarrier*>( vm->self().asObject() );
     Object *obj = (Object*)self->GetObj();
     fal_Vector2d *v = new fal_Vector2d(VECTOR_CLASS_SYMBOL);
-    Falcon::Item *p0 = vm->param(0);
-    if(!p0)
-        v->vec() = obj->GetTotalSpeed();
-    else
-    {
-        size_t idx = p0->forceIntegerEx();
-        if(idx < obj->phys.size())
-            v->vec() = obj->phys[idx].speed;
-    }
+    v->vec() = obj->phys.speed;
     vm->retval(v);
 }
 
@@ -487,14 +505,13 @@ FALCON_FUNC fal_Object_SetSpeed(Falcon::VMachine *vm)
     FALCON_REQUIRE_PARAMS(2);
     fal_ObjectCarrier *self = Falcon::dyncast<fal_ObjectCarrier*>( vm->self().asObject() );
     Object *obj = (Object*)self->GetObj();
-    size_t idx = vm->param(0)->forceIntegerEx();
-    Falcon::Item *p1 = vm->param(1);
+    Falcon::Item *p1 = vm->param(0);
     if(p1->isOfClass("Vector"))
-        obj->phys.get(idx).speed = Falcon::dyncast<fal_Vector2d*>(p1->asObject())->vec(); // auto-extend
+        obj->phys.speed = Falcon::dyncast<fal_Vector2d*>(p1->asObject())->vec();
     else
     {
-        Falcon::Item *p2 = vm->param(2);
-        Vector2df& spd = obj->phys.get(idx).speed; // auto-extend
+        Falcon::Item *p2 = vm->param(1);
+        Vector2df& spd = obj->phys.speed;
         if(!p1->isNil())
             spd.x = (float)p1->forceNumeric();
         if(!p2->isNil())
@@ -507,14 +524,13 @@ FALCON_FUNC fal_Object_AddSpeed(Falcon::VMachine *vm)
     FALCON_REQUIRE_PARAMS(2);
     fal_ObjectCarrier *self = Falcon::dyncast<fal_ObjectCarrier*>( vm->self().asObject() );
     Object *obj = (Object*)self->GetObj();
-    size_t idx = vm->param(0)->forceIntegerEx();
-    Falcon::Item *p1 = vm->param(1);
+    Falcon::Item *p1 = vm->param(0);
     if(p1->isOfClass("Vector"))
-        obj->phys.get(idx).speed += Falcon::dyncast<fal_Vector2d*>(p1->asObject())->vec(); // auto-extend
+        obj->phys.speed += Falcon::dyncast<fal_Vector2d*>(p1->asObject())->vec();
     else
     {
-        Falcon::Item *p2 = vm->param(2);
-        Vector2df& spd = obj->phys.get(idx).speed; // auto-extend
+        Falcon::Item *p2 = vm->param(1);
+        Vector2df& spd = obj->phys.speed;
         if(!p1->isNil())
             spd.x += (float)p1->forceNumeric();
         if(!p2->isNil())
@@ -528,9 +544,7 @@ FALCON_FUNC fal_Object_GetAccel(Falcon::VMachine *vm)
     fal_ObjectCarrier *self = Falcon::dyncast<fal_ObjectCarrier*>( vm->self().asObject() );
     Object *obj = (Object*)self->GetObj();
     fal_Vector2d *v = new fal_Vector2d(VECTOR_CLASS_SYMBOL);
-    size_t idx = vm->param(0)->forceIntegerEx();
-    if(idx < obj->phys.size())
-        v->vec() = obj->phys[idx].accel;
+    v->vec() = obj->phys.accel;
     vm->retval(v);
 }
 
@@ -539,14 +553,13 @@ FALCON_FUNC fal_Object_SetAccel(Falcon::VMachine *vm)
     FALCON_REQUIRE_PARAMS(2);
     fal_ObjectCarrier *self = Falcon::dyncast<fal_ObjectCarrier*>( vm->self().asObject() );
     Object *obj = (Object*)self->GetObj();
-    size_t idx = vm->param(0)->forceIntegerEx();
-    Falcon::Item *p1 = vm->param(1);
+    Falcon::Item *p1 = vm->param(0);
     if(p1->isOfClass("Vector"))
-        obj->phys.get(idx).accel = Falcon::dyncast<fal_Vector2d*>(p1->asObject())->vec(); // auto-extend
+        obj->phys.accel = Falcon::dyncast<fal_Vector2d*>(p1->asObject())->vec();
     else
     {
-        Falcon::Item *p2 = vm->param(2);
-        Vector2df& acl = obj->phys.get(idx).accel; // auto-extend
+        Falcon::Item *p2 = vm->param(1);
+        Vector2df& acl = obj->phys.accel;
         if(!p1->isNil())
             acl.x = (float)p1->forceNumeric();
         if(!p2->isNil())
@@ -560,9 +573,7 @@ FALCON_FUNC fal_Object_GetFrict(Falcon::VMachine *vm)
     fal_ObjectCarrier *self = Falcon::dyncast<fal_ObjectCarrier*>( vm->self().asObject() );
     Object *obj = (Object*)self->GetObj();
     fal_Vector2d *v = new fal_Vector2d(VECTOR_CLASS_SYMBOL);
-    size_t idx = vm->param(0)->forceIntegerEx();
-    if(idx < obj->phys.size())
-        v->vec() = obj->phys[idx].friction;
+    v->vec() = obj->phys.friction;
     vm->retval(v);
 }
 
@@ -572,13 +583,13 @@ FALCON_FUNC fal_Object_SetFrict(Falcon::VMachine *vm)
     fal_ObjectCarrier *self = Falcon::dyncast<fal_ObjectCarrier*>( vm->self().asObject() );
     Object *obj = (Object*)self->GetObj();
     size_t idx = vm->param(0)->forceIntegerEx();
-    Falcon::Item *p1 = vm->param(1);
+    Falcon::Item *p1 = vm->param(0);
     if(p1->isOfClass("Vector"))
-        obj->phys.get(idx).friction = Falcon::dyncast<fal_Vector2d*>(p1->asObject())->vec(); // auto-extend
+        obj->phys.friction = Falcon::dyncast<fal_Vector2d*>(p1->asObject())->vec();
     else
     {
-        Falcon::Item *p2 = vm->param(2);
-        Vector2df& fr = obj->phys.get(idx).friction; // auto-extend
+        Falcon::Item *p2 = vm->param(1);
+        Vector2df& fr = obj->phys.friction;
         if(!p1->isNil())
             fr.x = (float)p1->forceNumeric();
         if(!p2->isNil())
@@ -1045,6 +1056,7 @@ Falcon::Module *FalconObjectModule_create(void)
     m->addClassMethod(clsActiveRect, "SetBlocking", fal_NullFunc); // ActiveRect is never blocking // also see .blocking property
     m->addClassMethod(clsActiveRect, "IsBlocking", fal_FalseFunc);
     m->addClassMethod(clsActiveRect, "CastRay", fal_ActiveRect_CastRay);
+    m->addClassMethod(clsActiveRect, "HasMoved", fal_ActiveRect_HasMoved);
     m->addClassProperty(clsActiveRect, "x");
     m->addClassProperty(clsActiveRect, "y");
     m->addClassProperty(clsActiveRect, "w");
@@ -1068,15 +1080,15 @@ Falcon::Module *FalconObjectModule_create(void)
     m->addClassMethod(clsObject, "GetLayerId", fal_Object_GetLayerId);
     m->addClassMethod(clsObject, "SetAffectedByPhysics", &fal_Object_SetAffectedByPhysics); // also see .physics property
     m->addClassMethod(clsObject, "IsAffectedByPhysics", &fal_Object_IsAffectedByPhysics);
-    m->addClassMethod(clsActiveRect, "SetBlocking", fal_Object_SetBlocking); // also see .blocking property
-    m->addClassMethod(clsActiveRect, "IsBlocking", fal_Object_IsBlocking);
-    m->addClassMethod(clsActiveRect, "SetSpeed", fal_Object_SetSpeed);
-    m->addClassMethod(clsActiveRect, "GetSpeed", fal_Object_GetSpeed);
-    m->addClassMethod(clsActiveRect, "AddSpeed", fal_Object_AddSpeed);
-    m->addClassMethod(clsActiveRect, "SetAccel", fal_Object_SetAccel);
-    m->addClassMethod(clsActiveRect, "GetAccel", fal_Object_GetAccel);
-    m->addClassMethod(clsActiveRect, "SetFrict", fal_Object_SetFrict);
-    m->addClassMethod(clsActiveRect, "GetFrict", fal_Object_GetFrict);
+    m->addClassMethod(clsObject, "SetBlocking", fal_Object_SetBlocking); // also see .blocking property
+    m->addClassMethod(clsObject, "IsBlocking", fal_Object_IsBlocking);
+    m->addClassMethod(clsObject, "SetSpeed", fal_Object_SetSpeed);
+    m->addClassMethod(clsObject, "GetSpeed", fal_Object_GetSpeed);
+    m->addClassMethod(clsObject, "AddSpeed", fal_Object_AddSpeed);
+    m->addClassMethod(clsObject, "SetAccel", fal_Object_SetAccel);
+    m->addClassMethod(clsObject, "GetAccel", fal_Object_GetAccel);
+    m->addClassMethod(clsObject, "SetFrict", fal_Object_SetFrict);
+    m->addClassMethod(clsObject, "GetFrict", fal_Object_GetFrict);
     m->addClassProperty(clsObject, "mass");
     m->addClassProperty(clsObject, "gfxOffsX"); // TODO: deprecate
     m->addClassProperty(clsObject, "gfxOffsY");
