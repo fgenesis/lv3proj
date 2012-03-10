@@ -70,7 +70,7 @@ public:
     void UpdateCollisionMap(void); // recalculates the *whole* collision map - use rarely!
     void UpdateCollisionMap(Object *obj); // uses LCF_BLOCKING_OBJECT to mark the collision map
     void RemoveFromCollisionMap(Object *obj);
-    bool CollisionWith(const BaseRect *rect, int32 skip = 1, uint8 flags = LCF_ALL) const; // check if a rectangle overlaps with at least one solid pixel in our collision map.
+    bool CollisionWith(const BaseRect *rect, int32 skip = 1, uint8 flags = LCF_ALL, Vector2di *result = NULL) const; // check if a rectangle overlaps with at least one solid pixel in our collision map.
     
     bool CastRayAbs(const Vector2di src, const Vector2di& targ, Vector2di *lastpos, Vector2di *collpos, LayerCollisionFlag lcf = LCF_ALL) const;
     bool CastRayDir(const Vector2di src, const Vector2di& dir, Vector2di *lastpos, Vector2di *collpos, LayerCollisionFlag lcf = LCF_ALL) const;

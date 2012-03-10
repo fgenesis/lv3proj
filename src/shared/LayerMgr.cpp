@@ -344,7 +344,8 @@ void LayerMgr::UpdateCollisionMap(Object *obj)
     }
 }
 
-bool LayerMgr::CollisionWith(const BaseRect *rect, int32 skip /* = 1 */, uint8 flags /* = LCF_ALL */) const
+bool LayerMgr::CollisionWith(const BaseRect *rect, int32 skip /* = 1 */, uint8 flags /* = LCF_ALL */,
+                             Vector2di *result /* = NULL */) const
 {
     if(!HasCollisionMap())
         return false;
@@ -355,23 +356,39 @@ bool LayerMgr::CollisionWith(const BaseRect *rect, int32 skip /* = 1 */, uint8 f
     for(y = int32(rect->y); y < y2; y += skip)
         for(x = int32(rect->x); x < x2; x += skip)
             if(_collisionMap(x,y) & flags)
+            {
+                if(result)
+                    *result = Vector2di(x, y);
                 return true;
+            }
 
     // always check bottom edge of the rect, if missed due to skipping
     if(y2 % skip)
         for(x = int32(rect->x); x < x2; x += skip)
             if(_collisionMap(x, y2 - 1) & flags)
+            {
+                if(result)
+                    *result = Vector2di(x, y2 - 1);
                 return true;
+            }
 
     // always check right edge of the rect, if missed due to skipping
     if(x2 % skip)
         for(y = int32(rect->y); y < y2; y += skip)
             if(_collisionMap(x2 - 1, y) & flags)
+            {
+                if(result)
+                    *result = Vector2di(x2 - 1, y);
                 return true;
+            }
 
     // always check bottom right pixel of the rect (if missed due to skipping, but we skip the check for that)
     if(_collisionMap(x2 - 1, y2 - 1) & flags)
+    {
+        if(result)
+            *result = Vector2di(x2 - 1, y2 - 1);
         return true;
+    }
 
     return false;
 }

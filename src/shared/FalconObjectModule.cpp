@@ -170,6 +170,9 @@ bool fal_ObjectCarrier::setProperty( const Falcon::String &prop, const Falcon::I
             extra( prop ) );
     }
 
+    if(prop == "gfxOffsX") { ((Object*)_obj)->gfxoffs.x = value.forceNumeric(); return true; }
+    if(prop == "gfxOffsY") { ((Object*)_obj)->gfxoffs.y = value.forceNumeric(); return true; }
+
     // convenience accessors, bypassing function overloads
     if(prop == "update") { ((Object*)_obj)->SetUpdate(value.isTrue()); return true; }
     if(prop == "blocking")  { ((Object*)_obj)->SetBlocking(value.isTrue()); return true; }
@@ -245,6 +248,9 @@ bool fal_ObjectCarrier::getProperty( const Falcon::String &prop, Falcon::Item &r
         if(prop == "mass") { ret = Falcon::numeric(((Object*)_obj)->phys.mass); return true; }
 
         // TODO: quick accessors for speed, accel, friction?
+
+        if(prop == "gfxOffsX") { ret = Falcon::numeric(((Object*)_obj)->gfxoffs.x); return true; }
+        if(prop == "gfxOffsY") { ret = Falcon::numeric(((Object*)_obj)->gfxoffs.y); return true; }
     }
 
     return FalconObject::getProperty( prop, ret) || defaultProperty( prop, ret); // property not found

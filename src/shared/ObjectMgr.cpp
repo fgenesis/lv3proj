@@ -168,6 +168,8 @@ void ObjectMgr::RenderLayer(uint32 id)
     Camera cam = _engine->GetCamera();
     TileLayer *layer = _engine->_GetLayerMgr()->GetLayer(id);
     float parallaxMulti = layer ? layer->parallaxMulti : 1.0f; // layer may be NULL and still have objects
+    Vector2df draw;
+    SDL_Rect dst;
     for(ObjectSet::iterator it = _renderLayers[id].begin(); it != _renderLayers[id].end(); ++it)
     {
         Object *obj = *it;
@@ -175,12 +177,13 @@ void ObjectMgr::RenderLayer(uint32 id)
         {
             if(BasicTile *sprite = obj->GetSprite())
             {
-                SDL_Rect dst;
-                dst.x = obj->pos.x;
-                dst.y = obj->pos.y;
-                cam.TranslatePoints(dst.x, dst.y);
-                dst.x = int(dst.x * parallaxMulti);
-                dst.y = int(dst.y * parallaxMulti);
+                draw.x = obj->pos.x + obj->gfxoffs.x;
+                draw.y = obj->pos.y + obj->gfxoffs.y;
+                cam.TranslateVector(draw);
+                draw.x *= parallaxMulti;
+                draw.y *= parallaxMulti;
+                dst.x = draw.x;
+                dst.y = draw.y;
                 dst.w = obj->w;
                 dst.h = obj->h;
                 SDL_BlitSurface(sprite->GetSurface(), NULL, esf, &dst);

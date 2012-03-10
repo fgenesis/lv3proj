@@ -12,8 +12,8 @@ struct Camera : public Vector2df
     Camera(const Vector2df& p): Vector2df(p) {}
     inline void TranslatePoints(int32& ax, int32& ay) const
     {
-        ax -= x;
-        ay -= y;
+        ax -= (int32)x;
+        ay -= (int32)y;
     }
     inline void TranslatePoints(int16& ax, int16& ay) const
     {
@@ -22,13 +22,13 @@ struct Camera : public Vector2df
     }
     inline void TranslatePoints(float& ax, float& ay) const
     {
-        ax -= x;
-        ay -= y;
+        ax -= (int32)x;
+        ay -= (int32)y;
     }
     inline void TranslateVector(Vector2df& v) const
     {
-        v.x -= x;
-        v.y -= y;
+        v.x -= (int32)x;
+        v.y -= (int32)y;
     }
 };
 

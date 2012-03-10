@@ -161,6 +161,7 @@ public:
     Vector2df GetSpeed(void) const;
 
     PhysProps phys;
+    Vector2df gfxoffs;
 
     struct
     {
