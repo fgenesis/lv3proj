@@ -471,6 +471,14 @@
 					>
 				</File>
 				<File
+					RelativePath=".\shared\RenderDefs.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\shared\RenderDefs.h"
+					>
+				</File>
+				<File
 					RelativePath=".\shared\SDL_func.cpp"
 					>
 				</File>

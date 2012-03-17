@@ -97,24 +97,50 @@ static Vector2df _AdjustSpeed(Object *obj, const Vector2df& spd)
 
     // start moving the object until it hits the wall.
     const float spdLen = spd.len();
-    const float normLen = norm.len();
+    float normLen = norm.len();
     const LayerCollisionFlag lcf = obj->GetBlockedByLCF();
     Vector2df ret;
     BaseRect rect(*obj);
     float retLen = 0;
 
+    uint32 c = 0;
+
     while(true)
     {
         rect.pos += norm;
-        if(Engine::GetInstance()->_GetLayerMgr()->CollisionWith(&rect, 1, LCF_ALL))
-            return ret;
+        if(Engine::GetInstance()->_GetLayerMgr()->CollisionWith(&rect, 1, lcf))
+        {
+            // time for last pixel-perfect adjustment and alignment-to-grid.
+            //BaseRect last = rect;
+            //last.pos -= norm; // undo last movement
+            //Vector2df sp(sgn(spd.x), sgn(spd.y));
+            //last.x = ftrunci(last.x);
+            //last.y = ftrunci(last.y);
 
-        // we exceed the len, something is wrong. Weren't supposed to move further anyways, so just return.
-        if(retLen > spdLen)
+            //last.pos += sp;
+            //if(Engine::GetInstance()->_GetLayerMgr()->CollisionWith(&last, 1, lcf))
+            //    last.pos -= sp; // nope
+
+            //last.pos.x += sp.x;
+            //if(Engine::GetInstance()->_GetLayerMgr()->CollisionWith(&last, 1, lcf))
+            //    last.pos.x -= sp.x;
+
+            //last.pos.y += sp.y;
+            //if(Engine::GetInstance()->_GetLayerMgr()->CollisionWith(&last, 1, lcf))
+            //    last.pos.y -= sp.y;
+
+            //Vector2df diff = last.pos - rect.pos;
+            //ret += diff;
+
             return ret;
+        }
 
         ret += norm;
         retLen += normLen;
+
+        // we exceed the len, something is wrong. Weren't supposed to move further anyways, so just return.
+        if(retLen >= spdLen)
+            return ret;
     }
 
     NOT_REACHED_LINE;
@@ -196,9 +222,16 @@ cast_ray:
             }
         }
 
+        //Vector2df useSpeed(spdi.x, spdi.y);
         Vector2df useSpeed = spdf;
         if(xhit || yhit || xblocked || yblocked)
-            useSpeed = _AdjustSpeed(obj, spdf);
+        {
+            useSpeed = _AdjustSpeed(obj, useSpeed); // FIXME: use plain integers only!!
+            /*if(!xhit)
+                useSpeed.x = 0;
+            if(!yhit)
+                useSpeed.y = 0;*/
+        }
 
         _UpdatePositionBySpeed(obj, useSpeed);
 
@@ -215,6 +248,9 @@ cast_ray:
             if(yblocked)
                 obj->phys.speed.y = 0;
         }
+
+        //if(useSpeed.isZero())
+        //    return;
 
         // if there is still momentum left, handle the rest of the speed
         float len = spdf.len();

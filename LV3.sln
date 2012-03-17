@@ -67,6 +67,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tests", "src\tests.vcproj",
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gme", "src\gme.vcproj", "{59F78766-EBB2-4E59-B478-DB6420F91A0A}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "render_SDL", "src\render_sdl.vcproj", "{2810B869-59E9-45AA-9EFF-83C593B39A21}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -125,6 +127,10 @@ Global
 		{59F78766-EBB2-4E59-B478-DB6420F91A0A}.Debug|Win32.Build.0 = Debug|Win32
 		{59F78766-EBB2-4E59-B478-DB6420F91A0A}.Release|Win32.ActiveCfg = Release|Win32
 		{59F78766-EBB2-4E59-B478-DB6420F91A0A}.Release|Win32.Build.0 = Release|Win32
+		{2810B869-59E9-45AA-9EFF-83C593B39A21}.Debug|Win32.ActiveCfg = Debug|Win32
+		{2810B869-59E9-45AA-9EFF-83C593B39A21}.Debug|Win32.Build.0 = Debug|Win32
+		{2810B869-59E9-45AA-9EFF-83C593B39A21}.Release|Win32.ActiveCfg = Release|Win32
+		{2810B869-59E9-45AA-9EFF-83C593B39A21}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

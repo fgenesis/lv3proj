@@ -26,18 +26,18 @@ Physics.SetGravity(300)
 
 
 // create olaf character for testing
-olaf = Olaf()
+/*olaf = Olaf()
 olaf.SetLayerId(4)
 olaf.SetPos(72,48)
 olaf.canDebugJump = true
 
-Camera.SetFocusPoint(olaf.x, olaf.y)
+Camera.SetFocusPoint(olaf.x, olaf.y)*/
 
 // another one for more testing
-/*olaf = Olaf()
+olaf = Olaf()
 olaf.SetLayerId(4)
 olaf.SetPos(180,305)
-olaf.canDebugJump = true*/
+olaf.canDebugJump = true
 
 cam = CameraObject()
 cam.Focus()
@@ -55,6 +55,7 @@ RegisterUpdateHook(f) // lock camera to olaf
 img = ImageObject("sprites/lv3logo.png")
 CallScheduler.Schedule(img.remove, 4000)
 
+/*
 blk = IronBlock()
 blk.SetPos(424,36)
 
@@ -69,7 +70,7 @@ blk4.SetPos(495,299)
 
 blk5 = IronBlock()
 blk5.SetPos(536,320)
-
+*/
 
 
 function DoSomeResets(who, k, e)
@@ -86,7 +87,7 @@ RegisterRawInputHook( .[DisableInputOn SDLK.END])
 RegisterRawInputHook( .[CycleGravityOn SDLK.PAGEDOWN])
 //RegisterRawInputHook( .[ToggleBounceOn olaf SDLK.PAGEUP])
 RegisterRawInputHook( .[ToggleGodmode olaf SDLK.COMMA])
-RegisterRawInputHook( .[ResetBlockTest blk SDLK.m])
+//RegisterRawInputHook( .[ResetBlockTest blk SDLK.m])
 //RegisterRawInputHook("RemovePlayerTest", .[RemovePlayerTest olaf SDLK.q])
 PlayerAliveCheck(olaf)
 
