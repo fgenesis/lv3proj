@@ -5,9 +5,9 @@
 #include <SDL/SDL.h>
 #include <SDL/SDL_mixer.h>
 #include <falcon/mt.h>
-#include "UndefUselessCrap.h"
+#include <VFS.h>
 
-#include "VFSHelper.h"
+#include "UndefUselessCrap.h"
 #include "DelayedDeletable.h"
 
 struct Anim;
@@ -59,7 +59,7 @@ public:
     uint32 GetUsedCount(void); // amount of resources
     uint32 GetUsedMem(void); // estimated total resource memory consumption
 
-    VFSHelper vfs;
+    ttvfs::VFSHelper vfs;
     DeletablePool pool;
 
 private:

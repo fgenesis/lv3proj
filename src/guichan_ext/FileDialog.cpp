@@ -1,6 +1,4 @@
 #include "common.h"
-#include "VFSDir.h"
-#include "VFSFile.h"
 #include "ResourceMgr.h"
 #include "FileDialog.h"
 #include "GuichanExt.h"
@@ -150,10 +148,10 @@ void FileDialog::_HandleSelection(void)
     }
     --sel; // skip [../]
 
-    VFSDir *vd = _GetCurrentVFSDir();
+    ttvfs::VFSDir *vd = _GetCurrentVFSDir();
     if(sel < vd->_subdirs.size())
     {
-        VFSDirMap::iterator it = vd->_subdirs.begin();
+        ttvfs::DirIter it = vd->_subdirs.begin();
         advance(it, sel);
         _Descend(it->second->name());
     }
@@ -165,7 +163,7 @@ void FileDialog::_HandleSelection(void)
             logerror("FileDialog::_HandleSelection: sel=%u, vd->_files.size()=%u. HUH??", sel, vd->_files.size());
             return; // oops?!
         }
-        VFSFileMap::iterator it = vd->_files.begin();
+        ttvfs::FileIter it = vd->_files.begin();
         advance(it, sel);
         _selFile = it->second;
 
@@ -174,12 +172,12 @@ void FileDialog::_HandleSelection(void)
 
 }
 
-VFSDir *FileDialog::_GetCurrentVFSDir(void)
+ttvfs::VFSDir *FileDialog::_GetCurrentVFSDir(void)
 {
     if(!_curDir)
     {
-        VFSDir *vd = resMgr.vfs.GetDirRoot();
-        VFSDir *next;
+        ttvfs::VFSDir *vd = resMgr.vfs.GetDirRoot();
+        ttvfs::VFSDir *next;
         for(std::list<std::string>::iterator it = _dirstack.begin(); it != _dirstack.end(); ++it)
         {
             next = vd->getDir(it->c_str());
@@ -214,10 +212,10 @@ std::string FileDialog::getElementAt(int i)
         return "[../]";
     --i;
     // directories first, then files
-    VFSDir *vd = _GetCurrentVFSDir();
+    ttvfs::VFSDir *vd = _GetCurrentVFSDir();
     if(uint32(i) < vd->_subdirs.size())
     {
-        VFSDirMap::iterator it = vd->_subdirs.begin();
+        ttvfs::DirIter it = vd->_subdirs.begin();
         advance(it, i);
         std::string name("[");
         name += it->second->name();
@@ -229,7 +227,7 @@ std::string FileDialog::getElementAt(int i)
         i -= vd->_subdirs.size();
         if(uint32(i) >= vd->_files.size())
             return "";
-        VFSFileMap::iterator it = vd->_files.begin();
+        ttvfs::FileIter it = vd->_files.begin();
         advance(it, i);
         return it->second->name();
     }
@@ -237,7 +235,7 @@ std::string FileDialog::getElementAt(int i)
 
 int FileDialog::getNumberOfElements(void)
 {
-    VFSDir *cur = _GetCurrentVFSDir();
+    ttvfs::VFSDir *cur = _GetCurrentVFSDir();
     return cur->_subdirs.size() + cur->_files.size() + 1; // +1 because of [../] at index 0
 }
 

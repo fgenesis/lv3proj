@@ -9,7 +9,6 @@
 #include "Engine.h"
 #include "PhysicsSystem.h"
 #include "ObjectMgr.h"
-#include "MyCrc32.h"
 #include "MapFile.h"
 
 

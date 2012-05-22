@@ -383,7 +383,7 @@
 
 #ifndef PNG_VERSION_INFO_ONLY
 /* Include the compression library's header */
-#include "zlib.h"
+#include <zlib/zlib.h>
 #endif
 
 #ifdef AIX

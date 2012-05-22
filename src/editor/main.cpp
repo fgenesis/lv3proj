@@ -7,7 +7,7 @@
 int main(int argc, char *argv[])
 {
     uint32 loglevel = 1;
-    DEBUG(loglevel = 3);
+    //DEBUG(loglevel = 3);
     log_setloglevel(loglevel);
 
     EditorEngine::RelocateWorkingDir(); // a pity that this has to be done before opening the log file ...

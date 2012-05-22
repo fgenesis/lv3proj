@@ -5,7 +5,7 @@
 #include "Panel.h"
 
 class FileDialogCallback;
-class VFSDir;
+namespace ttvfs { class VFSDir; class VFSFile; }
 
 // a file dialog that works directly on the VFS
 class FileDialog : public gcn::Window, gcn::ActionListener, gcn::ListModel,
@@ -18,7 +18,7 @@ public:
     void Open(bool save, const char *opr = NULL); // true: save, false: open
     void Close(void);
     std::string GetFileName(void);
-    inline VFSFile *GetFile(void) { return _selFile; }
+    inline ttvfs::VFSFile *GetFile(void) { return _selFile; }
     std::string GetDirName(void);
     inline void SetCallback(FileDialogCallback *cb) { _callback = cb; }
     inline const char *GetOperation(void) { return _operation.c_str(); }
@@ -37,13 +37,13 @@ protected:
     void _HandleSelection(void);
     void _Descend(const std::string& subdir);
     void _Ascend(void);
-    VFSDir *_GetCurrentVFSDir(void);
+    ttvfs::VFSDir *_GetCurrentVFSDir(void);
     bool _save;
     std::string _operation; // unique name to be able to identify the process later
     std::list<std::string> _dirstack;
-    VFSFile *_selFile;
+    ttvfs::VFSFile *_selFile;
     FileDialogCallback *_callback;
-    VFSDir *_curDir; // caches current dir, re-scan if NULL
+    ttvfs::VFSDir *_curDir; // caches current dir, re-scan if NULL
 
     // GUI elements
     gcn::ListBox *lbFiles;

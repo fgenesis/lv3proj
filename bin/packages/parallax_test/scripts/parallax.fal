@@ -5,17 +5,17 @@ LVTestLoadMapScript("test.fal")
 
 bg_back = ImageObject("fractal_back.anim")
 bg_front = ImageObject("fractal_front.png")
-overlay = ImageObject("clouds.png")
+//overlay = ImageObject("clouds.png")
 
 //Screen.SetBGColor()
 
 bg_back.SetPos(-160, -120)
 bg_front.SetPos(-280, -170)
-overlay.SetPos(-800, -420)
+//overlay.SetPos(-800, -420)
 
 bg_back.SetLayerId(0)
 bg_front.SetLayerId(1)
-overlay.SetLayerId(31)
+//overlay.SetLayerId(31)
 
 layer0 = EngineMap.GetLayer(0)
 layer1 = EngineMap.GetLayer(1)
@@ -58,4 +58,4 @@ function SpawnCloud()
     CallScheduler.Schedule(fself, random(500, 2500))
 end
 
-SpawnCloud()
+//SpawnCloud()

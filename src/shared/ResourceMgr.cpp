@@ -8,9 +8,6 @@
 #include "AnimParser.h"
 #include "PropParser.h"
 
-#include "VFSHelper.h"
-#include "VFSFile.h"
-
 // internally referenced files get this postfix to make the file ref map happy
 #define FILENAME_TMP_INDIC "|tmp"
 #define FILENAME_MUSIC_INDIC "|music"
@@ -243,7 +240,7 @@ SDL_Surface *ResourceMgr::LoadImg(const char *name)
     }
     else
     {
-        VFSFile *vf = NULL;
+        ttvfs::VFSFile *vf = NULL;
         SDL_RWops *rwop = NULL;
 
         // we got additional properties
@@ -325,7 +322,7 @@ SDL_Surface *ResourceMgr::LoadImg(const char *name)
             img = newimg;
         }
 
-        logdebug("LoadImg: '%s' [%s] -> "PTRFMT , origfn.c_str(), vf ? vf->getSource() : "*", img);
+        logdebug("LoadImg: '%s' [%s] -> "PTRFMT , origfn.c_str(), vf ? vf->getType() : "*", img);
 
         _accountMem(SDLfunc_GetSurfaceBytes(img));
         _SetPtr(origfn, (void*)img);
@@ -382,7 +379,7 @@ Anim *ResourceMgr::LoadAnim(const char *name)
                 }
             }
 
-         logdebug("LoadAnim: '%s' [%s] -> "PTRFMT , fn.c_str(), vfs.GetFile(fn.c_str())->getSource(), ani); // the file must exist
+         logdebug("LoadAnim: '%s' [%s] -> "PTRFMT , fn.c_str(), vfs.GetFile(fn.c_str())->getType(), ani); // the file must exist
 
          _SetPtr(fn, (void*)ani);
          _InitRef((void*)ani, RESTYPE_ANIM);
@@ -425,7 +422,7 @@ Mix_Music *ResourceMgr::LoadMusic(const char *name)
             return NULL;
         }
         
-        logdebug("LoadMusic: '%s' [%s] -> "PTRFMT , name, vfs.GetFile(fn.c_str())->getSource(), music);
+        logdebug("LoadMusic: '%s' [%s] -> "PTRFMT , name, vfs.GetFile(fn.c_str())->getType(), music);
 
         _SetPtr(fn + FILENAME_MUSIC_INDIC, (void*)music);
         _InitRef((void*)music, RESTYPE_MIX_MUSIC, mb, rwop); // note that this music depends on mb and the rwop, save for later deletion
@@ -446,7 +443,7 @@ Mix_Chunk *ResourceMgr::LoadSound(const char *name)
     }
     else
     {
-        VFSFile *vf = vfs.GetFile(fn.c_str());
+        ttvfs::VFSFile *vf = vfs.GetFile(fn.c_str());
         SDL_RWops *rwop = NULL;
         if(vf)
         {
@@ -465,7 +462,7 @@ Mix_Chunk *ResourceMgr::LoadSound(const char *name)
             return NULL;
         }
 
-        logdebug("LoadSound: '%s' [%s] -> "PTRFMT , name, vf->getSource(), sound);
+        logdebug("LoadSound: '%s' [%s] -> "PTRFMT , name, vf->getType(), sound);
 
         _accountMem(sound->alen);
         _SetPtr(fn, (void*)sound);
@@ -493,7 +490,7 @@ memblock *ResourceMgr::_LoadFileInternal(const char *name, const char *indic)
     }
     else
     {
-        VFSFile *vf = vfs.GetFile(name); // this must be the *real* name
+        ttvfs::VFSFile *vf = vfs.GetFile(name); // this must be the *real* name
         uint32 size;
         if(vf)
         {
@@ -532,7 +529,7 @@ memblock *ResourceMgr::_LoadFileInternal(const char *name, const char *indic)
             return NULL;
         }
 
-        logdebug("LoadFile: '%s' [%s], %u bytes -> "PTRFMT" ["PTRFMT"]" , name, vf->getSource(), mb->size, mb, mb->ptr);
+        logdebug("LoadFile: '%s' [%s], %u bytes -> "PTRFMT" ["PTRFMT"]" , name, vf->getType(), mb->size, mb, mb->ptr);
 
         _accountMem(size);
         _SetPtr(fn, (void*)mb);
@@ -560,7 +557,7 @@ memblock *ResourceMgr::_LoadTextFileInternal(const char *name, const char *indic
     }
     else
     {
-        VFSFile *vf = vfs.GetFile(name);
+        ttvfs::VFSFile *vf = vfs.GetFile(name);
         if(vf)
         {
             if(vf->isopen())
@@ -571,7 +568,7 @@ memblock *ResourceMgr::_LoadTextFileInternal(const char *name, const char *indic
             {
                 mb = new memblock(&g_emptyData[0], 0);
             }
-            else if(vf->open(NULL, "r"))
+            else if(vf->open("r"))
             {
                 mb = new memblock(new uint8[size + 4], size); // extra padding
                 uint8 *writeptr = mb->ptr;
@@ -594,7 +591,7 @@ memblock *ResourceMgr::_LoadTextFileInternal(const char *name, const char *indic
             return NULL;
         }
 
-        logdebug("LoadTextFile: '%s' [%s] -> "PTRFMT" ["PTRFMT"]" , name, vf->getSource(), mb, mb->ptr);
+        logdebug("LoadTextFile: '%s' [%s] -> "PTRFMT" ["PTRFMT"]" , name, vf->getType(), mb, mb->ptr);
 
         _accountMem(mb->size);
         _SetPtr(fn, (void*)mb);

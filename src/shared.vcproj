@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="include;libpng;guichan_ext;shared;gme"
+				AdditionalIncludeDirectories="include;libpng;guichan_ext;shared;gme;LVPA;LVPA\include;ttvfs"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -272,34 +272,6 @@
 				</File>
 			</Filter>
 			<Filter
-				Name="LVPA"
-				>
-				<File
-					RelativePath=".\shared\LVPAFile.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\shared\LVPAFile.h"
-					>
-				</File>
-				<File
-					RelativePath=".\shared\LVPAStreamCipher.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\shared\LVPAStreamCipher.h"
-					>
-				</File>
-				<File
-					RelativePath=".\shared\MyCrc32.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\shared\MyCrc32.h"
-					>
-				</File>
-			</Filter>
-			<Filter
 				Name="lzma"
 				>
 				<File
@@ -396,66 +368,6 @@
 				</File>
 				<File
 					RelativePath=".\shared\SysDefs.h"
-					>
-				</File>
-			</Filter>
-			<Filter
-				Name="VFS"
-				>
-				<File
-					RelativePath=".\shared\VFSDir.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\shared\VFSDir.h"
-					>
-				</File>
-				<File
-					RelativePath=".\shared\VFSDirLVPA.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\shared\VFSDirLVPA.h"
-					>
-				</File>
-				<File
-					RelativePath=".\shared\VFSFile.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\shared\VFSFile.h"
-					>
-				</File>
-				<File
-					RelativePath=".\shared\VFSFileLVPA.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\shared\VFSFileLVPA.h"
-					>
-				</File>
-				<File
-					RelativePath=".\shared\VFSHelper.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\shared\VFSHelper.h"
-					>
-				</File>
-				<File
-					RelativePath=".\shared\VFSLoader.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\shared\VFSLoader.h"
-					>
-				</File>
-				<File
-					RelativePath=".\shared\VFSLoaderLVPA.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\shared\VFSLoaderLVPA.h"
 					>
 				</File>
 			</Filter>

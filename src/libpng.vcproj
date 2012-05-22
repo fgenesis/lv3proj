@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories=""
+				AdditionalIncludeDirectories="LVPA"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -109,7 +109,7 @@
 				InlineFunctionExpansion="2"
 				EnableIntrinsicFunctions="true"
 				FavorSizeOrSpeed="1"
-				AdditionalIncludeDirectories=""
+				AdditionalIncludeDirectories="LVPA"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE"
 				StringPooling="true"
 				RuntimeLibrary="2"
@@ -155,104 +155,6 @@
 	<References>
 	</References>
 	<Files>
-		<Filter
-			Name="zlib"
-			Filter="h;hpp;hxx;hm;inl;inc;xsd"
-			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
-			>
-			<File
-				RelativePath=".\libpng\adler32.c"
-				>
-			</File>
-			<File
-				RelativePath=".\libpng\compress.c"
-				>
-			</File>
-			<File
-				RelativePath=".\libpng\crc32.c"
-				>
-			</File>
-			<File
-				RelativePath=".\libpng\crc32.h"
-				>
-			</File>
-			<File
-				RelativePath=".\libpng\deflate.c"
-				>
-			</File>
-			<File
-				RelativePath=".\libpng\deflate.h"
-				>
-			</File>
-			<File
-				RelativePath=".\libpng\gzio.c"
-				>
-			</File>
-			<File
-				RelativePath=".\libpng\infback.c"
-				>
-			</File>
-			<File
-				RelativePath=".\libpng\inffast.c"
-				>
-			</File>
-			<File
-				RelativePath=".\libpng\inffast.h"
-				>
-			</File>
-			<File
-				RelativePath=".\libpng\inffixed.h"
-				>
-			</File>
-			<File
-				RelativePath=".\libpng\inflate.c"
-				>
-			</File>
-			<File
-				RelativePath=".\libpng\inflate.h"
-				>
-			</File>
-			<File
-				RelativePath=".\libpng\inftrees.c"
-				>
-			</File>
-			<File
-				RelativePath=".\libpng\inftrees.h"
-				>
-			</File>
-			<File
-				RelativePath=".\libpng\trees.c"
-				>
-			</File>
-			<File
-				RelativePath=".\libpng\trees.h"
-				>
-			</File>
-			<File
-				RelativePath=".\libpng\uncompr.c"
-				>
-			</File>
-			<File
-				RelativePath=".\libpng\zconf.h"
-				>
-			</File>
-			<File
-				RelativePath=".\libpng\zconf.in.h"
-				>
-			</File>
-			<File
-				RelativePath=".\libpng\zlib.h"
-				>
-			</File>
-			<File
-				RelativePath=".\libpng\zutil.c"
-				>
-			</File>
-			<File
-				RelativePath=".\libpng\zutil.h"
-				>
-			</File>
-		</Filter>
 		<Filter
 			Name="libpng"
 			Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav"
